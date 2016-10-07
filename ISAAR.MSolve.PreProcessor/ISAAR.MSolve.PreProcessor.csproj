@@ -92,6 +92,7 @@
   <ItemGroup>
     <Compile Include="Cluster.cs" />
     <Compile Include="Elements\Hexa8u8pWithStochasticMaterial.cs" />
+    <Compile Include="Elements\Shell8disp.cs" />
     <Compile Include="Interfaces\IMassAccelerationHistoryLoad.cs" />
     <Compile Include="MassAccelerationSinusoidalLoad.cs" />
     <Compile Include="Elements\ConcentratedMass3D.cs" />

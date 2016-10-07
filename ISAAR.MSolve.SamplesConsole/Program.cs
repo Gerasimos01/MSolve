@@ -57,9 +57,9 @@ namespace ISAAR.MSolve.SamplesConsole
         }
 
 
-        static void Main(string[] args)
-        {
-            SolveBuildingInNoSoilSmall();
-        }
+        //static void Main(string[] args)
+        //{
+        //    SolveBuildingInNoSoilSmall();
+        //}
     }
 }
