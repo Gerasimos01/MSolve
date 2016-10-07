@@ -182,9 +182,9 @@ namespace ISAAR.MSolve.SamplesConsole
                     {
                         Node[] sub1AdjacentNodes = GetAdjacentNodes(model, sub1Nodes[i]);
                         Node[] sub2AdjacentNodes = GetAdjacentNodes(model, sub2Nodes[i]);
-                        e = new Element() { ID = elementID, ElementType = new Beam3D(material, sub2AdjacentNodes, sub1AdjacentNodes)
+                        e = new Element() { ID = elementID, ElementType = new Beam3D(material, sub2AdjacentNodes, sub1AdjacentNodes)// kaleitai kai me tria orismata kai me ligotera
                         {
-                            Density = 7.85,
+                            Density = 7.85, // tha mporousan apo edw na xekinoun na grafontai ta ID= elementID to element type klp 
                             SectionArea = b * h,
                             MomentOfInertiaY = b * b * b * h,
                             MomentOfInertiaZ = b * h * h * h,
