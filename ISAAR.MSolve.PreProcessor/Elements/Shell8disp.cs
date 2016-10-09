@@ -255,7 +255,6 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         }
 
                     }
-                        J_0[j] [1,2]= GetJ_0a()[j][1, 2];
                 }
                 endeixiJ_0 = 2;
                 return J_0;
@@ -378,6 +377,143 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             else
             { return BL11a; }
         }
+
+        private double[][,] BL12;
+        public static int endeixiBL12 = 1;
+        private double[][,] GetBL12(Element element)
+        {
+            if (endeixiBL12 == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                BL12 = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                { BL12[j] = new double[9, 9]; }
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 9; k++)
+                    {for (int l = 0; l < 9; l++)
+                        { BL12[j][k, l] = 0; }}
+
+                    for (int k = 0; k < 3; k++)
+                    {for (int l = 0; l < 3; l++)
+                        { BL12[j][k, 3* k + l] = GetJ_0inv(element)[j][0, l]; }}
+
+                    for (int k = 0; k < 3; k++)
+                    {for (int l = 0; l < 3; l++)
+                        { BL12[j][3+k, 3 * k + l] = GetJ_0inv(element)[j][1, l]; }}
+
+                    for (int k = 0; k < 3; k++)
+                    {for (int l = 0; l < 3; l++)
+                        { BL12[j][6+k, 3 * k + l] = GetJ_0inv(element)[j][2, l]; }}
+                }
+                endeixiBL12 = 2;
+                return BL12;
+            }
+            else
+            { return BL12; }
+        }
+
+        private double[][,] BNL1;
+        public static int endeixiBNL1 = 1;
+        private double[][,] GetBNL1(Element element)
+        {
+            if (endeixiBNL1 == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                BNL1 = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                { BNL1[j] = new double[9, 9]; }
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 9; k++)
+                    {for (int l = 0; l < 9; l++)
+                        { BNL1[j][k, l] = 0; }}
+
+                    for (int m = 0; m < 3; m++)
+                    {for (int k = 0; k < 3; k++)
+                    {for (int l = 0; l < 3; l++)
+                            { BNL1[j][3*m+k,3*m+l] = GetJ_0inv(element)[j][k, l]; }}}
+                }
+                endeixiBNL1 = 2;
+                return BNL1;
+            }
+            else
+            { return BNL1; }
+        }
+
+        // theseis metavlhtwn pou ANANEWNONTAI
+        // kai kapoies apo aftes tha xreiastoun kai upol/smous GET INITIAL....
+        private double[][] tx_i; //8 arrays twn 3 stoixeiwn //den einai apo afta pou orizei o xrhsths
+        private double[][] tU;   //8 arrays twn 6 stoixeiwn 
+        private double[][] tUvec;//8 arrays twn 6 stoixeiwn
+
+        // methodoi dhmiourgias pinakwn pou periexoun stoixeia pou ananewnontai
+
+        private double[,] ll2;
+        public static int endeixill2 = 1;
+        private double[,] Getll2() //meta apo enhmerwsh h initialize
+        {
+            if (endeixill2 == 1)
+            {
+                ll2 = new double[24,3];
+                for (int j = 0; j < 8; j++)
+                {for (int k = 0; k < 3; k++)
+                    { ll2[3 * j + 0, k] = tU[j][k];
+                      ll2[3 * j + 1, k] = tU[j][3 + k];
+                      ll2[3 * j + 2, k] = oVn_i[j][k];}}
+
+                endeixill2 = 2;
+                return ll2;
+            }
+            else
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        ll2[3 * j + 0, k] = tU[j][k];
+                        ll2[3 * j + 1, k] = tU[j][3 + k];
+                    }
+                }
+                return ll2;
+            }
+        }
+
+        private double[][,] l_circumflex;
+        public static int endeixil_circumflex = 1;
+        private double[][,] Getl_circumflex() //afou periexei getll2: meta apo enhmerwsh h initialize
+        {
+            if (endeixil_circumflex == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                l_circumflex = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                { l_circumflex[j] = new double[3, 3]; }
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            l_circumflex[j][k, l] = 0;
+                            for (int m = 0; m < 24; m++)
+                            {
+                                l_circumflex[j][k, l] += Getll1()[j][k, m] * Getll2()[m, l];
+                            }
+
+                        }
+
+                    }
+                    
+                }
+                endeixil_circumflex = 2;
+                return l_circumflex;
+            }
+            else
+            { return l_circumflex; }
+        }
+
+
     }
 }
 
