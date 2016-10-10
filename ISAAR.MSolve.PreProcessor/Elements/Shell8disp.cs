@@ -239,7 +239,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 nGaussPoints = gp_d1 * gp_d2 * gp_d3;
                 J_0 = new double[nGaussPoints][,];
                 for (int j = 0; j < nGaussPoints; j++)
-                { J_0[j] = new double[3,3]; }
+                { J_0[j] = new double[3, 3]; }
                 for (int j = 0; j < nGaussPoints; j++)
                 {
                     for (int k = 0; k < 3; k++)
@@ -288,7 +288,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         throw new InvalidOperationException("The Jacobian Determinant is negative.");
                     }
 
-                    detJ_0[j]=jacobianDeterminant;
+                    detJ_0[j] = jacobianDeterminant;
                 }
                 endeixiDetJ_0 = 2;
                 return detJ_0;
@@ -332,7 +332,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 return J_0inv;
             }
             else
-            { return J_0inv;}
+            { return J_0inv; }
         }
 
         private double[][,] BL11a;
@@ -348,30 +348,38 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 for (int j = 0; j < nGaussPoints; j++)
                 {
                     for (int k = 0; k < 6; k++)
-                    {for (int l = 0; l < 9; l++)
-                        { BL11a[j][k, l] = 0; } }
+                    {
+                        for (int l = 0; l < 9; l++)
+                        { BL11a[j][k, l] = 0; }
+                    }
 
                     for (int k = 0; k < 3; k++)
-                    {for (int l = 0; l < 3; l++)
-                        { BL11a[j][k, 3 * k + l] = GetJ_0inv(element)[j][k, l]; }}
+                    {
+                        for (int l = 0; l < 3; l++)
+                        { BL11a[j][k, 3 * k + l] = GetJ_0inv(element)[j][k, l]; }
+                    }
 
                     //gemisma [4,4] ews [4,6] kai [5,7] ews [5,9]
                     for (int k = 0; k < 2; k++)
-                    {for (int l = 0; l < 3; l++)
-                        { BL11a[j][3 + k, 3 + 3 * k + l] = GetJ_0inv(element)[j][k, l]; }}
+                    {
+                        for (int l = 0; l < 3; l++)
+                        { BL11a[j][3 + k, 3 + 3 * k + l] = GetJ_0inv(element)[j][k, l]; }
+                    }
 
                     //gemisma [4,1] ews [4,3] kai [5,4] ews [5,6]
                     for (int k = 0; k < 2; k++)
-                    {for (int l = 0; l < 3; l++)
-                        { BL11a[j][3 + k, 3 * k + l] = GetJ_0inv(element)[j][1+k, l]; }}
+                    {
+                        for (int l = 0; l < 3; l++)
+                        { BL11a[j][3 + k, 3 * k + l] = GetJ_0inv(element)[j][1 + k, l]; }
+                    }
 
                     for (int l = 0; l < 3; l++)
                     { BL11a[j][5, l] = GetJ_0inv(element)[j][2, l]; }
 
                     for (int l = 0; l < 3; l++)
-                    { BL11a[j][5, 6+l] = GetJ_0inv(element)[j][0, l]; }
+                    { BL11a[j][5, 6 + l] = GetJ_0inv(element)[j][0, l]; }
                 }
-                endeixiBL11a= 2;
+                endeixiBL11a = 2;
                 return BL11a;
             }
             else
@@ -391,20 +399,28 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 for (int j = 0; j < nGaussPoints; j++)
                 {
                     for (int k = 0; k < 9; k++)
-                    {for (int l = 0; l < 9; l++)
-                        { BL12[j][k, l] = 0; }}
+                    {
+                        for (int l = 0; l < 9; l++)
+                        { BL12[j][k, l] = 0; }
+                    }
 
                     for (int k = 0; k < 3; k++)
-                    {for (int l = 0; l < 3; l++)
-                        { BL12[j][k, 3* k + l] = GetJ_0inv(element)[j][0, l]; }}
+                    {
+                        for (int l = 0; l < 3; l++)
+                        { BL12[j][k, 3 * k + l] = GetJ_0inv(element)[j][0, l]; }
+                    }
 
                     for (int k = 0; k < 3; k++)
-                    {for (int l = 0; l < 3; l++)
-                        { BL12[j][3+k, 3 * k + l] = GetJ_0inv(element)[j][1, l]; }}
+                    {
+                        for (int l = 0; l < 3; l++)
+                        { BL12[j][3 + k, 3 * k + l] = GetJ_0inv(element)[j][1, l]; }
+                    }
 
                     for (int k = 0; k < 3; k++)
-                    {for (int l = 0; l < 3; l++)
-                        { BL12[j][6+k, 3 * k + l] = GetJ_0inv(element)[j][2, l]; }}
+                    {
+                        for (int l = 0; l < 3; l++)
+                        { BL12[j][6 + k, 3 * k + l] = GetJ_0inv(element)[j][2, l]; }
+                    }
                 }
                 endeixiBL12 = 2;
                 return BL12;
@@ -426,13 +442,19 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 for (int j = 0; j < nGaussPoints; j++)
                 {
                     for (int k = 0; k < 9; k++)
-                    {for (int l = 0; l < 9; l++)
-                        { BNL1[j][k, l] = 0; }}
+                    {
+                        for (int l = 0; l < 9; l++)
+                        { BNL1[j][k, l] = 0; }
+                    }
 
                     for (int m = 0; m < 3; m++)
-                    {for (int k = 0; k < 3; k++)
-                    {for (int l = 0; l < 3; l++)
-                            { BNL1[j][3*m+k,3*m+l] = GetJ_0inv(element)[j][k, l]; }}}
+                    {
+                        for (int k = 0; k < 3; k++)
+                        {
+                            for (int l = 0; l < 3; l++)
+                            { BNL1[j][3 * m + k, 3 * m + l] = GetJ_0inv(element)[j][k, l]; }
+                        }
+                    }
                 }
                 endeixiBNL1 = 2;
                 return BNL1;
@@ -455,12 +477,16 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         {
             if (endeixill2 == 1)
             {
-                ll2 = new double[24,3];
+                ll2 = new double[24, 3];
                 for (int j = 0; j < 8; j++)
-                {for (int k = 0; k < 3; k++)
-                    { ll2[3 * j + 0, k] = tU[j][k];
-                      ll2[3 * j + 1, k] = tU[j][3 + k];
-                      ll2[3 * j + 2, k] = oVn_i[j][k];}}
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        ll2[3 * j + 0, k] = tU[j][k];
+                        ll2[3 * j + 1, k] = tU[j][3 + k];
+                        ll2[3 * j + 2, k] = oVn_i[j][k];
+                    }
+                }
 
                 endeixill2 = 2;
                 return ll2;
@@ -504,13 +530,80 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         }
 
                     }
-                    
+
                 }
                 endeixil_circumflex = 2;
                 return l_circumflex;
             }
             else
             { return l_circumflex; }
+        }
+
+        private double[][,] BL11b;
+        public static int endeixiBL11b = 1;
+        private double[][,] GetBL11b() //afou periexei Getl_circumflex:getll2: meta apo enhmerwsh h initialize
+        {
+            if (endeixiBL11b == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                BL11b = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                { BL11b[j] = new double[9, 9]; }
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 9; k++)
+                    {
+                        for (int l = 0; l < 9; l++)
+                        { BL11b[j][k, l] = 0; }
+                    }
+
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            for (int m = 0; m < 3; m++)
+                            { BL11b[j][3 * k + l, 3 * k + m] = Getl_circumflex()[j][l, m]; }
+                        }
+                    }
+                }
+                endeixiBL11b = 2;
+                return BL11b;
+            }
+            else
+            { return BL11b; }
+        }
+
+        private double[][,] BL11;
+        public static int endeixiBL11 = 1;
+        private double[][,] GetBL11(Element element) //afou periexei BL11:Getl_circumflex:getll2: meta apo enhmerwsh h initialize
+        {
+            if (endeixiBL11 == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                BL11 = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                { BL11[j] = new double[6, 9]; }
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 6; k++)
+                    {
+                        for (int l = 0; l < 9; l++)
+                        {
+                            BL11[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++)
+                            {
+                                BL11[j][k, l] += GetBL11a(element)[j][k, m] * GetBL11b()[j][m, l];
+                            }
+
+                        }
+
+                    }
+                }
+                endeixiBL11 = 2;
+                return BL11;
+            }
+            else
+            { return BL11; }
         }
 
 
