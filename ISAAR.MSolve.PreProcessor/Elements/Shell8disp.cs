@@ -513,6 +513,49 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             { return l_circumflex; }
         }
 
+        private double[][,] BL11b;
+        public static int endeixilBL11b = 1;
+        private double[][,] GetBL11b() //afou periexei Getl_circumflex: getll2: Xrhsimopoieitai meta apo enhmerwsh h initialize
+        {
+            if (endeixiBL11a == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                BL11b = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                { BL11b[j] = new double[9, 9]; }
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 9; k++)
+                    {
+                        for (int l = 0; l < 9; l++)
+                        { BL11b[j][k, l] = 0; }
+                    }
+
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            for (int m = 0; m < 3; m++)
+                            { BL11b[j][3 * k + l, 3 * k + m] = Getl_circumflex()[j][l, m]; }
+                        }
+                    }
+                }
+                endeixilBL11b = 2;
+                return BL11b;
+            }
+            else
+            { return BL11b; }
+        }
+
+        private double[][,] BL13;
+        public static int endeixilBL13 = 1;
+        private double[][,] GetBL13() //afou periexei Getll2: Xrhsimopoieitai meta apo ENHMERWSH h INITIALIZE
+        {
+            if (endeixilBL13 == 1)
+            {
+
+            }
+        }
 
     }
 }
