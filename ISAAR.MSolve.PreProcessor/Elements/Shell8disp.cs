@@ -582,11 +582,39 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
 
         private double[][,] BL13;
-        public static int endeixilBL13 = 1;
-        private double[][,] GetBL13() //afou periexei Getll2: Xrhsimopoieitai meta apo ENHMERWSH h INITIALIZE
+        public static int endeixilBL13 = 1; //analogws endeixi
+        private double[][,] GetBL13() //afou periexei tVn_i kai Getll2: Xrhsimopoieitai meta apo 2)ENHMERWSH h 1)INITIALIZE 
         {
             if (endeixilBL13 == 1)
             {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                BL13 = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                { BL13[j] = new double[9, 40]; }
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 9; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            BL13[j][k, l] = 0;
+                        }
+                    }
+
+                    for (int m = 0; m < 8; m++)
+                    {
+                        for (int k = 0; k < 3; k++)
+                        {
+                            for (int l = 0; l < 2; l++)
+                            {
+                                BL13[j][3 * k + l, 5 * m + k] = GetShapeFunctionDerivatives()[m + 8 * l][j];
+                            }
+                        }
+                    }
+
+
+
+                }
 
             }
         }
