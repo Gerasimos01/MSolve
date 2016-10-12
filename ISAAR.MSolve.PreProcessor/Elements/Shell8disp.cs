@@ -721,7 +721,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         for (int l = 0; l < 3; l++)
                         {
                             J_1[j][k, l] = 0;
-                            for (int m = 0; m < 16added; m++)
+                            for (int m = 0; m < 16; m++)
                             {
                                 J_1[j][k, l] += GetJ_0a()[j][k, m] * J_1b[m, l];
                             }
@@ -733,6 +733,261 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
 
         }
+
+        private double[][,] DefGradTr;       //den einai to idio gia ola ta gausspoint
+        public static int endeixiDefGradTr = 1;
+        private void CalculateDefGradTr(Element element) // Meta apo CalculateJ_1 profanws
+        {
+            if (endeixiDefGradTr == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                DefGradTr = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                { DefGradTr[j] = new double[3, 3]; }
+                //gemisma pol/smos
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            DefGradTr[j][k, l] = 0;
+                            for (int m = 0; m < 3; m++)
+                            {
+                                DefGradTr[j][k, l] += GetJ_0inv(element)[j][k, m] * J_1[j][m, l];
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+            else
+            {
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            DefGradTr[j][k, l] = 0;
+                            for (int m = 0; m < 3; m++)
+                            {
+                                DefGradTr[j][k, l] += GetJ_0inv(element)[j][k, m] * J_1[j][m, l];
+                            }
+
+                        }
+
+                    }
+                }
+
+            }
+        }
+
+        private double[][,] GL;       //den einai to idio gia ola ta gausspoint
+        public static int endeixiGL = 1;
+        private void CalculateGL() // Meta apo CalculateDefGradTr profanws
+        {
+            if (endeixiGL == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                GL = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    GL[j] = new double[3, 3];
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            GL[j][k, l] = 0;
+                            for (int m = 0; m < 3; m++)
+                            {
+                                GL[j][k, l] += DefGradTr[j][k, m] * DefGradTr[j][l,m];
+                            }
+
+                        }
+
+                    }
+                    for (int k = 0; k < 3; k++)
+                    {
+                        GL[j][k, k] = GL[j][k, k] - 1;
+                    }
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        { GL[j][k, l] = 0.5 * GL[j][k, l]; }
+                    }
+
+                }
+            }
+            else
+            {
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            GL[j][k, l] = 0;
+                            for (int m = 0; m < 3; m++)
+                            {
+                                GL[j][k, l] += DefGradTr[j][k, m] * DefGradTr[j][l, m];
+                            }
+
+                        }
+
+                    }
+                    for (int k = 0; k < 3; k++)
+                    {
+                        GL[j][k, k] = GL[j][k, k] - 1;
+                    }
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        { GL[j][k, l] = 0.5 * GL[j][k, l]; }
+                    }
+                }
+            }
+        }
+
+        private double[][] GLvec;
+        public static int endeixiGLvec = 1;
+        private void CalculateGLvec()//meta apo calculate Gl
+        {
+            if (endeixiGLvec == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                GLvec = new double[nGaussPoints][];
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    GLvec[j] = new double[6];
+                    for (int k = 0; k < 3; k++)
+                    { GLvec[j][k] = GL[j][k, k]; }
+                    GLvec[j][3] = 2 * GL[j][0, 1];
+                    GLvec[j][4] = 2 * GL[j][1, 2];
+                    GLvec[j][5] = 2 * GL[j][2, 0];
+                }
+            }
+            else
+            {
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    { GLvec[j][k] = GL[j][k, k]; }
+                    GLvec[j][3] = 2 * GL[j][0, 1];
+                    GLvec[j][4] = 2 * GL[j][1, 2];
+                    GLvec[j][5] = 2 * GL[j][2, 0];
+                }
+            }
+        }
+
+
+        private double[][,] ConsCartes;
+        private void CalculateCons()
+        {
+            nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+            ConsCartes = new double[nGaussPoints][,];
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                ConsCartes[j] = new double[6, 6];
+            }
+        }
+
+        private double[][] SPKvec;
+        private double[][,] SPK_circumflex;
+        private int endeixiSPK = 1;
+        private void CalculateSPK()
+        {
+            if (endeixiSPK == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                SPKvec = new double[nGaussPoints][];
+                SPK_circumflex = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    SPKvec[j] = new double[6];
+                    SPK_circumflex[j] = new double[9, 9];
+                    for (int l = 0; l < 3; l++)
+                        {
+                            SPKvec[j][l] = 0;
+                            for (int m = 0; m < 3; m++)
+                            {
+                            SPKvec[j][l] += ConsCartes[j][l, m] * GLvec[j][m];
+                            }
+
+                        }
+                    for (int k = 0; k < 9; k++)
+                    {
+                        for (int l = 0; l < 9; l++)
+                        { SPK_circumflex[j][k, l] = 0; }
+                    }
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            SPK_circumflex[j][3 * k + l, 3 * k + l] = SPKvec[j][l];
+                        }
+                        SPK_circumflex[j][3 * k + 1, 3 * k] = SPKvec[j][3];
+                        SPK_circumflex[j][3 * k + 2, 3 * k+1] = SPKvec[j][4];
+                        SPK_circumflex[j][3 * k + 1, 3 * k+2] = SPKvec[j][5];
+                        SPK_circumflex[j][ 3 * k,3 * k + 1] = SPKvec[j][3];
+                        SPK_circumflex[j][ 3 * k + 1,3 * k + 2] = SPKvec[j][4];
+                        SPK_circumflex[j][3 * k + 2, 3 * k + 1] = SPKvec[j][5];
+                    }
+
+                }
+            }
+            else
+            {
+                for (int j = 0; j < nGaussPoints; j++)
+                {                   
+                    for (int l = 0; l < 3; l++)
+                    {
+                        SPKvec[j][l] = 0;
+                        for (int m = 0; m < 3; m++)
+                        {
+                            SPKvec[j][l] += ConsCartes[j][l, m] * GLvec[j][m];
+                        }
+
+                    }                    
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            SPK_circumflex[j][3 * k + l, 3 * k + l] = SPKvec[j][l];
+                        }
+                        SPK_circumflex[j][3 * k + 1, 3 * k] = SPKvec[j][3];
+                        SPK_circumflex[j][3 * k + 2, 3 * k + 1] = SPKvec[j][4];
+                        SPK_circumflex[j][3 * k + 1, 3 * k + 2] = SPKvec[j][5];
+                        SPK_circumflex[j][3 * k, 3 * k + 1] = SPKvec[j][3];
+                        SPK_circumflex[j][3 * k + 1, 3 * k + 2] = SPKvec[j][4];
+                        SPK_circumflex[j][3 * k + 2, 3 * k + 1] = SPKvec[j][5];
+                    }
+
+                }
+            }
+        }
+
+
+
+
+        private double[][,] KL;
+        private double[][,] BL1_2;
+        private double[][,] BL1;
+        private double[][,] BL0;
+        private double[][,] BL;
+        private int endeixiKL = 1;
+        private void CalculateKL()
+        {
+        if (endeixiKL==1)
+            { }
+        }
+
+
 
     }
 }
