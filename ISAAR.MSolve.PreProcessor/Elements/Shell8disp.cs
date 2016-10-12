@@ -234,7 +234,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         public static int endeixiJ_0 = 1;
         private double[][,] GetJ_0(Element element)   // einai teliko kai oxi prok
         {
-            if (endeixiJ_0a == 1)
+            if (endeixiJ_0 == 1)
             {
                 nGaussPoints = gp_d1 * gp_d2 * gp_d3;
                 J_0 = new double[nGaussPoints][,];
@@ -247,7 +247,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         for (int l = 0; l < 3; l++)
                         {
                             J_0[j][k, l] = 0;
-                            for (int m = 0; m < 3; m++)
+                            for (int m = 0; m < 16; m++)
                             {
                                 J_0[j][k, l] += GetJ_0a()[j][k, m] * GetJ_0b(element)[m, l];
                             }
@@ -266,7 +266,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private double[] detJ_0; //[] osa kai ta gauss points
         public static int endeixiDetJ_0 = 1;
-        private double[] GetDetJ_0b(Element element)
+        private double[] GetDetJ_0(Element element)
         {
             if (endeixiDetJ_0 == 1)
             {
@@ -310,23 +310,23 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 for (int j = 0; j < nGaussPoints; j++)
                 {
                     J_0inv[j][0, 0] = ((GetJ_0(element)[j][1, 1] * GetJ_0(element)[j][2, 2]) - (GetJ_0(element)[j][2, 1] * GetJ_0(element)[j][1, 2])) *
-                                    (1 / GetDetJ_0b(element)[j]);
+                                    (1 / GetDetJ_0(element)[j]);
                     J_0inv[j][0, 1] = ((GetJ_0(element)[j][2, 1] * GetJ_0(element)[j][0, 2]) - (GetJ_0(element)[j][0, 1] * GetJ_0(element)[j][2, 2])) *
-                                            (1 / GetDetJ_0b(element)[j]);
+                                            (1 / GetDetJ_0(element)[j]);
                     J_0inv[j][0, 2] = ((GetJ_0(element)[j][0, 1] * GetJ_0(element)[j][1, 2]) - (GetJ_0(element)[j][1, 1] * GetJ_0(element)[j][0, 2])) *
-                                            (1 / GetDetJ_0b(element)[j]);
+                                            (1 / GetDetJ_0(element)[j]);
                     J_0inv[j][1, 0] = ((GetJ_0(element)[j][2, 0] * GetJ_0(element)[j][1, 2]) - (GetJ_0(element)[j][1, 0] * GetJ_0(element)[j][2, 2])) *
-                                            (1 / GetDetJ_0b(element)[j]);
+                                            (1 / GetDetJ_0(element)[j]);
                     J_0inv[j][1, 1] = ((GetJ_0(element)[j][0, 0] * GetJ_0(element)[j][2, 2]) - (GetJ_0(element)[j][2, 0] * GetJ_0(element)[j][0, 2])) *
-                                            (1 / GetDetJ_0b(element)[j]);
+                                            (1 / GetDetJ_0(element)[j]);
                     J_0inv[j][1, 2] = ((GetJ_0(element)[j][1, 0] * GetJ_0(element)[j][0, 2]) - (GetJ_0(element)[j][0, 0] * GetJ_0(element)[j][1, 2])) *
-                                            (1 / GetDetJ_0b(element)[j]);
+                                            (1 / GetDetJ_0(element)[j]);
                     J_0inv[j][2, 0] = ((GetJ_0(element)[j][1, 0] * GetJ_0(element)[j][2, 1]) - (GetJ_0(element)[j][2, 0] * GetJ_0(element)[j][1, 1])) *
-                                            (1 / GetDetJ_0b(element)[j]);
+                                            (1 / GetDetJ_0(element)[j]);
                     J_0inv[j][2, 1] = ((GetJ_0(element)[j][2, 0] * GetJ_0(element)[j][0, 1]) - (GetJ_0(element)[j][2, 1] * GetJ_0(element)[j][0, 0])) *
-                                            (1 / GetDetJ_0b(element)[j]);
+                                            (1 / GetDetJ_0(element)[j]);
                     J_0inv[j][2, 2] = ((GetJ_0(element)[j][0, 0] * GetJ_0(element)[j][1, 1]) - (GetJ_0(element)[j][1, 0] * GetJ_0(element)[j][0, 1])) *
-                                            (1 / GetDetJ_0b(element)[j]);
+                                            (1 / GetDetJ_0(element)[j]);
                 }
                 endeixiJ_0inv = 2;
                 return J_0inv;
@@ -583,7 +583,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private double[][,] BL13;
         public static int endeixilBL13 = 1; //analogws endeixi
-        private double[][,] GetBL13() //afou periexei tVn_i kai Getll2: Xrhsimopoieitai meta apo 2)ENHMERWSH h 1)INITIALIZE 
+        private void CalculateBL13() //afou periexei tVn_i kai Getll2: Xrhsimopoieitai meta apo 2)ENHMERWSH h 1)INITIALIZE 
         {
             if (endeixilBL13 == 1)
             {
@@ -601,6 +601,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         }
                     }
 
+                    //sthles 1:3
                     for (int m = 0; m < 8; m++)
                     {
                         for (int k = 0; k < 3; k++)
@@ -612,11 +613,125 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         }
                     }
 
-
-
+                    //sthles 4:5
+                    for (int m = 0; m < 8; m++)
+                    {
+                        for (int k = 0; k < 3; k++)
+                        {
+                            for (int l = 0; l < 3; l++)
+                            {
+                                BL13[j][3 * k + l, 5 * m + 3] = -GetJ_0a()[j][l, m * 2 + 1] * tUvec[m][3 + k];
+                                BL13[j][3 * k + l, 5 * m + 4] = +GetJ_0a()[j][l, m * 2 + 1] * tUvec[m][k];
+                            }
+                        }
+                    }
                 }
-
+                endeixilBL13 = 2;
+                //return BL13;
             }
+            else
+            {
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    //sthles 4:5
+                    for (int m = 0; m < 8; m++)
+                    {
+                        for (int k = 0; k < 3; k++)
+                        {
+                            for (int l = 0; l < 3; l++)
+                            {
+                                BL13[j][3 * k + l, 5 * m + 3] = -GetJ_0a()[j][l, m * 2 + 1] * tUvec[m][3 + k];
+                                BL13[j][3 * k + l, 5 * m + 4] = +GetJ_0a()[j][l, m * 2 + 1] * tUvec[m][k];
+                            }
+                        }
+                    }
+                }
+                //return BL13;
+            }
+        }
+
+        private double[,] J_1b;    //einai idio gia ola ta gauss points
+        public static int endeixiJ_1b = 1;
+        private void CalculateJ_1b(Element element) // meta apo enhmerwsi i initialize twn tx_i,tVn_i
+        {
+            if (endeixiJ_1b == 1)
+            {
+                J_1b = new double[16, 3];
+                for (int j = 0; j < 8; j++)
+                {
+                    J_1b[2 * j, 0] = tx_i[j][0];
+                    J_1b[2 * j + 1, 0] = tUvec[j][3];
+                    J_1b[2 * j, 1] = tx_i[j][1];
+                    J_1b[2 * j + 1, 1] = tUvec[j][4];
+                    J_1b[2 * j, 2] = tx_i[j][2];
+                    J_1b[2 * j + 1, 2] = tUvec[j][5];
+                }
+                endeixiJ_1b = 2;
+                
+            }
+            else
+            { 
+                for (int j = 0; j < 8; j++)
+                {
+                    J_1b[2 * j, 0] = tx_i[j][0];
+                    J_1b[2 * j + 1, 0] = tUvec[j][3];
+                    J_1b[2 * j, 1] = tx_i[j][1];
+                    J_1b[2 * j + 1, 1] = tUvec[j][4];
+                    J_1b[2 * j, 2] = tx_i[j][2];
+                    J_1b[2 * j + 1, 2] = tUvec[j][5];
+                }
+            }
+        }
+
+        private double[][,] J_1;       //den einai to idio gia ola ta gausspoint
+        public static int endeixiJ_1 = 1;
+        private void CalculateJ_1(Element element)   // meta apo enhmerwsi i initialize twn tx_i,tVn_i
+        {                                              //Meta Apo CALCULATE J_1b 
+            if (endeixiJ_1 == 1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                J_1 = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                { J_1[j] = new double[3, 3]; }
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            J_1[j][k, l] = 0;
+                            for (int m = 0; m < 16; m++)
+                            {
+                                J_1[j][k, l] += GetJ_0a()[j][k, m] * J_1b[m, l];
+                            }
+
+                        }
+
+                    }
+                }
+                endeixiJ_1 = 2;
+                
+            }
+            else
+            {
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            J_1[j][k, l] = 0;
+                            for (int m = 0; m < 16added; m++)
+                            {
+                                J_1[j][k, l] += GetJ_0a()[j][k, m] * J_1b[m, l];
+                            }
+
+                        }
+
+                    }
+                }
+            }
+
         }
 
     }
