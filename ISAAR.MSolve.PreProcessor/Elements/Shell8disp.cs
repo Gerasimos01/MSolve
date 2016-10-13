@@ -510,7 +510,26 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 return l_circumflex;
             }
             else
-            { return l_circumflex; }
+            {
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            l_circumflex[j][k, l] = 0;
+                            for (int m = 0; m < 24; m++)
+                            {
+                                l_circumflex[j][k, l] += Getll1()[j][k, m] * Getll2()[m, l];
+                            }
+
+                        }
+
+                    }
+
+                }
+                return l_circumflex;
+            }
         }
 
         private double[][,] BL11b; 
@@ -545,7 +564,27 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                  return BL11b; 
              } 
              else 
-             { return BL11b; } 
+             {
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 9; k++)
+                    {
+                        for (int l = 0; l < 9; l++)
+                        { BL11b[j][k, l] = 0; }
+                    }
+
+
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            for (int m = 0; m < 3; m++)
+                            { BL11b[j][3 * k + l, 3 * k + m] = Getl_circumflex()[j][l, m]; }
+                        }
+                    }
+                }
+                return BL11b;
+            } 
          } 
  
  
@@ -577,7 +616,23 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                  return BL11; 
              } 
              else 
-             { return BL11; } 
+             {
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 6; k++)
+                    {
+                        for (int l = 0; l < 9; l++)
+                        {
+                            BL11[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++)
+                            {
+                                BL11[j][k, l] += GetBL11a(element)[j][k, m] * GetBL11b()[j][m, l];
+                            }
+                        }
+                    }
+                }
+                return BL11;
+             } 
         }
 
 
@@ -972,8 +1027,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
         }
 
+        private double[][,] ck;// 1 ana komvo kai ana gauss Point dld [GP][diastash9,8komvoi]
+        private double[][] kck;// 1 ana komvo kai (ana Gauss point+1 gia to athroiskma) [GP][8 vathmoi komvoi]
 
-
+        private double[][,] BNL;
+        private double[][,] KNL;
 
         private double[][,] KL;
         private double[][,] BL1_2;
