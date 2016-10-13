@@ -451,7 +451,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private double[,] ll2;
         public static int endeixill2 = 1;
-        private double[,] Getll2() //meta apo enhmerwsh h initialize
+        private void Calculatell2() //meta apo enhmerwsh h initialize
         {
             if (endeixill2 == 1)
             {
@@ -463,7 +463,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                       ll2[3 * j + 2, k] = oVn_i[j][k];}}
 
                 endeixill2 = 2;
-                return ll2;
+                //return ll2;
             }
             else
             {
@@ -475,13 +475,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         ll2[3 * j + 1, k] = tU[j][3 + k];
                     }
                 }
-                return ll2;
+                //return ll2;
             }
         }
 
         private double[][,] l_circumflex;
         public static int endeixil_circumflex = 1;
-        private double[][,] Getl_circumflex() //afou periexei getll2: meta apo enhmerwsh h initialize
+        private void Calculatel_circumflex() //afou periexei getll2: meta apo enhmerwsh h initialize
         {
             if (endeixil_circumflex == 1)
             {
@@ -498,7 +498,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                             l_circumflex[j][k, l] = 0;
                             for (int m = 0; m < 24; m++)
                             {
-                                l_circumflex[j][k, l] += Getll1()[j][k, m] * Getll2()[m, l];
+                                l_circumflex[j][k, l] += Getll1()[j][k, m] * ll2[m, l];
                             }
 
                         }
@@ -507,7 +507,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     
                 }
                 endeixil_circumflex = 2;
-                return l_circumflex;
+                //return l_circumflex;
             }
             else
             {
@@ -520,7 +520,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                             l_circumflex[j][k, l] = 0;
                             for (int m = 0; m < 24; m++)
                             {
-                                l_circumflex[j][k, l] += Getll1()[j][k, m] * Getll2()[m, l];
+                                l_circumflex[j][k, l] += Getll1()[j][k, m] * ll2[m, l];
                             }
 
                         }
@@ -528,13 +528,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
 
                 }
-                return l_circumflex;
+                //return l_circumflex;
             }
         }
 
         private double[][,] BL11b; 
         public static int endeixiBL11b = 1; 
-        private double[][,] GetBL11b() //afou periexei Getl_circumflex:getll2: meta apo enhmerwsh h initialize 
+        private void CalculateBL11b() //afou periexei Getl_circumflex:getll2: meta apo enhmerwsh h initialize 
         { 
              if (endeixiBL11b == 1) 
              { 
@@ -556,12 +556,12 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                          for (int l = 0; l< 3; l++) 
                          { 
                              for (int m = 0; m< 3; m++) 
-                             { BL11b[j][3 * k + l, 3 * k + m] = Getl_circumflex()[j][l, m]; } 
+                             { BL11b[j][3 * k + l, 3 * k + m] = l_circumflex[j][l, m]; } 
                          } 
                      } 
                  } 
                  endeixiBL11b = 2; 
-                 return BL11b; 
+                 //return BL11b; 
              } 
              else 
              {
@@ -579,18 +579,18 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         for (int l = 0; l < 3; l++)
                         {
                             for (int m = 0; m < 3; m++)
-                            { BL11b[j][3 * k + l, 3 * k + m] = Getl_circumflex()[j][l, m]; }
+                            { BL11b[j][3 * k + l, 3 * k + m] = l_circumflex[j][l, m]; }
                         }
                     }
                 }
-                return BL11b;
+                //return BL11b;
             } 
          } 
  
  
          private double[][,] BL11; 
          public static int endeixiBL11 = 1; 
-         private double[][,] GetBL11(Element element) //afou periexei BL11:Getl_circumflex:getll2: meta apo enhmerwsh h initialize 
+         private void CalculateBL11(Element element) //afou periexei BL11:Getl_circumflex:getll2: meta apo enhmerwsh h initialize 
          { 
              if (endeixiBL11 == 1) 
              { 
@@ -607,13 +607,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                              BL11[j][k, l] = 0; 
                              for (int m = 0; m< 9; m++) 
                              { 
-                                 BL11[j][k, l] += GetBL11a(element)[j][k, m] * GetBL11b()[j][m, l]; 
+                                 BL11[j][k, l] += GetBL11a(element)[j][k, m] * BL11b[j][m, l]; 
                              } 
                          } 
                      } 
                  } 
                  endeixiBL11 = 2; 
-                 return BL11; 
+                 //return BL11; 
              } 
              else 
              {
@@ -626,12 +626,12 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                             BL11[j][k, l] = 0;
                             for (int m = 0; m < 9; m++)
                             {
-                                BL11[j][k, l] += GetBL11a(element)[j][k, m] * GetBL11b()[j][m, l];
+                                BL11[j][k, l] += GetBL11a(element)[j][k, m] * BL11b[j][m, l];
                             }
                         }
                     }
                 }
-                return BL11;
+                //return BL11;
              } 
         }
 
