@@ -1027,8 +1027,55 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
         }
 
-        private double[][,] ck;// 1 ana komvo kai ana gauss Point dld [GP][diastash9,8komvoi]
+        private double[][,] ck;// 1 ana komvo kai ana gauss Point dld [GP][8komvoi,diastash9]
+        private int endeixiCk = 1;
+        private void CalculateCk()
+        {
+            if (endeixiCk == 1)
+            {
+                //initialize
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                ck = new double[nGaussPoints][,];
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    ck[j] = new double[8,9];
+                }
+                //tupoi
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int m = 0; m < 8; m++)
+                    {
+                        for (int k = 0; k < 3; k++)
+                        {
+                            for (int l = 0; l < 3; l++)
+                            {
+                                ck[m][m, 3 * k + l] = GetJ_0a()[j][l, 2 * m + 1] * tU[m][3 + k];
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int m = 0; m < 8; m++)
+                    {
+                        for (int k = 0; k < 3; k++)
+                        {
+                            for (int l = 0; l < 3; l++)
+                            {
+                                ck[m][m, 3 * k + l] = GetJ_0a()[j][l, 2 * m + 1] * tU[m][3 + k];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
         private double[][] kck;// 1 ana komvo kai (ana Gauss point+1 gia to athroiskma) [GP][8 vathmoi komvoi]
+                               // to initialize tou einai comment out parapanw
 
         private double[][,] BNL;
         private double[][,] KNL;
@@ -1038,11 +1085,42 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double[][,] BL1;
         private double[][,] BL0;
         private double[][,] BL;
-        private int endeixiKL = 1;
-        private void CalculateKL()
+        private int endeixiKmatrices = 1;
+        private void CalculateKmatrices()
         {
-        if (endeixiKL==1)
-            { }
+        if (endeixiKmatrices==1)
+            {
+                nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                BNL = new double[nGaussPoints][,];
+                BL1_2 = new double[nGaussPoints][,];
+                BL1 = new double[nGaussPoints][,];
+                BL0 = new double[nGaussPoints][,];
+                BL = new double[nGaussPoints][,];
+
+                kck = new double[nGaussPoints+1][];
+                KL = new double[nGaussPoints + 1][,];
+                KNL = new double[nGaussPoints + 1][,];
+
+
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    BNL[j] = new double[9, 40];
+                    BL1_2[j] = new double[6, 9];
+                    BL1[j] = new double[6, 40];
+                    BL0[j] =new double[6, 40];
+                    BL[j]= new double[6, 40];
+                }
+
+                for (int j = 0; j < nGaussPoints+1; j++)
+                {
+                    kck[j] = new double[8];
+                    KL[j] = new double[40, 40];
+                    KNL[j] = new double[40, 40];
+                }
+
+                //prepei na ginei gemisma twn parapanw mhtrwwn pollaplasiasmoi
+                //athroisma olwn twn gausspoints kai prosthesi K Knl kai kck ana orous
+            }
         }
 
 
