@@ -1082,12 +1082,15 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private double[][,] KL;
         private double[][,] BL1_2;
-        private double[][,] BL1;
-        private double[][,] BL0;
+        //private double[][,] BL1;
+        //private double[][,] BL0;
         private double[][,] BL;
 
         private double[][,] ConsBL;
         private double[][,] S_BNL;
+
+        private double[][,] BL01plus1_2;
+        private double[][] BL01plus1_2tSPKvec;
 
         private int endeixiKmatrices = 1;
         private void CalculateKmatrices()
@@ -1097,8 +1100,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 nGaussPoints = gp_d1 * gp_d2 * gp_d3;
                 BNL = new double[nGaussPoints][,];
                 BL1_2 = new double[nGaussPoints][,];
-                BL1 = new double[nGaussPoints][,];
-                BL0 = new double[nGaussPoints][,];
+                //BL1 = new double[nGaussPoints][,];
+                //BL0 = new double[nGaussPoints][,];
                 BL = new double[nGaussPoints][,];
 
                 kck = new double[nGaussPoints+1][];
@@ -1110,18 +1113,24 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
                 kck = new double[nGaussPoints + 1][];
 
+                BL01plus1_2 = new double[nGaussPoints][,];
+                BL01plus1_2tSPKvec = new double[nGaussPoints][];
+
                 for (int j = 0; j < nGaussPoints; j++)
                 {
                     BNL[j] = new double[9, 40];
                     BL1_2[j] = new double[6, 9];
-                    BL1[j] = new double[6, 40];
-                    BL0[j] =new double[6, 40];
+                    //BL1[j] = new double[6, 40];
+                    //BL0[j] =new double[6, 40];
                     BL[j]= new double[6, 40];
 
                     ConsBL[j] = new double[6,40];
                     S_BNL[j] = new double[9, 40];
 
                     kck[j] = new double[8];
+
+                    BL01plus1_2[j] = new double[6, 9];
+                    BL01plus1_2tSPKvec[j] = new double[9];
                 }
 
                 for (int j = 0; j < nGaussPoints+1; j++)
@@ -1164,20 +1173,60 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
                     }
 
+                    //for (int k = 0; k < 6; k++)
+                    //{
+                    //    for (int l = 0; l < 40; l++)
+                    //    {
+                    //        BL1[j][k, l] = 0;
+                    //        BL0[j][k, l] = 0;
+                    //        for (int m = 0; m < 9; m++) //panw apo to for BLx=BL1_2+BL11 kai mesa sto for BL=BLx*BL13
+                    //        {
+                    //            BL1[j][k, l] += BL1_2[j][k, m] * BL13[j][m, l];
+                    //            BL0[j][k, l] += BL11[j][k, m]* BL13[j][m, l];
+                    //        }
+                    //        BL[j][k, l] = BL0[j][k, l] + BL1[j][k, l];
+                    //    }
+                    //}
+
+                    for (int k = 0; k < 6; k++)
+                    {
+                        for (int l = 0; l < 9; l++)
+                        {
+                            BL01plus1_2[j][k, l] = BL1_2[j][k, l] + BL11[j][k, l];
+                        }
+                    }
+
                     for (int k = 0; k < 6; k++)
                     {
                         for (int l = 0; l < 40; l++)
                         {
-                            BL1[j][k, l] = 0;
-                            BL0[j][k, l] = 0;
-                            for (int m = 0; m < 9; m++) //panw apo to for BLx=BL1_2+BL11 kai mesa sto for BL=BLx*BL13
+                            BL[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++) 
                             {
-                                BL1[j][k, l] += BL1_2[j][k, m] * BL13[j][m, l];
-                                BL0[j][k, l] += BL11[j][k, m]* BL13[j][m, l];
+                                BL[j][k, l] += BL01plus1_2[j][k,m] * BL13[j][m, l];
                             }
-                            BL[j][k, l] = BL0[j][k, l] + BL1[j][k, l];
                         }
                     }
+
+                    for (int k = 0; k < 9; k++)
+                    {                    
+                            BL01plus1_2tSPKvec[j][k] = 0;
+                            for (int m = 0; m < 9; m++)
+                            {
+                                BL01plus1_2tSPKvec[j][k] += BL01plus1_2[j][m, k] * SPKvec[j][m];
+                            }
+                    }
+
+                    for (int k = 0; k < 8; k++)
+                    {
+                        kck[j][k] = 0;
+                        for (int m = 0; m < 9; m++)
+                        {
+                            kck[j][k] += ck[j][k,m] * BL01plus1_2tSPKvec[j][m];
+                        }
+                    }
+
+                    // porsthetoume kai to kck ws extra(den prokuptei apo ta comment out
 
                     for (int k = 0; k < 6; k++)
                     {
@@ -1226,6 +1275,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                             }
                         }
                     }
+
+
 
 
                 }
