@@ -1085,6 +1085,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double[][,] BL1;
         private double[][,] BL0;
         private double[][,] BL;
+
+        private double[][,] ConsBL;
+        private double[][,] S_BNL;
+
         private int endeixiKmatrices = 1;
         private void CalculateKmatrices()
         {
@@ -1101,6 +1105,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 KL = new double[nGaussPoints + 1][,];
                 KNL = new double[nGaussPoints + 1][,];
 
+                ConsBL = new double[nGaussPoints][,];
+                S_BNL = new double[nGaussPoints][,];
+
+                kck = new double[nGaussPoints + 1][];
 
                 for (int j = 0; j < nGaussPoints; j++)
                 {
@@ -1109,6 +1117,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     BL1[j] = new double[6, 40];
                     BL0[j] =new double[6, 40];
                     BL[j]= new double[6, 40];
+
+                    ConsBL[j] = new double[6,40];
+                    S_BNL[j] = new double[9, 40];
+
+                    kck[j] = new double[8];
                 }
 
                 for (int j = 0; j < nGaussPoints+1; j++)
@@ -1120,6 +1133,105 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
                 //prepei na ginei gemisma twn parapanw mhtrwwn pollaplasiasmoi
                 //athroisma olwn twn gausspoints kai prosthesi K Knl kai kck ana orous
+
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 9; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            BNL[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++)
+                            {
+                                BNL[j][k, l] += BNL1[j][k, m] * BL13[j][m, l];
+                            }
+
+                        }
+
+                    }
+
+                    for (int k = 0; k < 6; k++)
+                    {
+                        for (int l = 0; l < 9; l++)
+                        {
+                            BL1_2[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++)
+                            {
+                                BL1_2[j][k, l] += BL11[j][k, m] * BL12[j][m, l];
+                            }
+
+                        }
+
+                    }
+
+                    for (int k = 0; k < 6; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            BL1[j][k, l] = 0;
+                            BL0[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++) //panw apo to for BLx=BL1_2+BL11 kai mesa sto for BL=BLx*BL13
+                            {
+                                BL1[j][k, l] += BL1_2[j][k, m] * BL13[j][m, l];
+                                BL0[j][k, l] += BL11[j][k, m]* BL13[j][m, l];
+                            }
+                            BL[j][k, l] = BL0[j][k, l] + BL1[j][k, l];
+                        }
+                    }
+
+                    for (int k = 0; k < 6; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            ConsBL[j][k, l] = 0;
+                            for (int m = 0; m < 6; m++) 
+                            {
+                                ConsBL[j][k, l] += ConsCartes[j][k, m] * BL[j][m, l];
+                            }
+                        }
+                    }
+
+                    for (int k = 0; k < 9; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            S_BNL[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++) 
+                            {
+                                S_BNL[j][k, l] += SPK_circumflex[j][k, m] * BNL[j][m, l];
+                            }
+                        }
+                    }
+
+                    for (int k = 0; k < 40; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            KNL[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++) 
+                            {
+                                KNL[j][k, l] += BNL[j][m, k] * S_BNL[j][m, l];
+                            }
+                        }
+                    }
+
+                    for (int k = 0; k < 40; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            KL[j][k, l] = 0;
+                            for (int m = 0; m < 6; m++) 
+                            {
+                                KL[j][k, l] += BL[j][m, k] * ConsBL[j][m, l];
+                            }
+                        }
+                    }
+
+
+                }
+
+
+
             }
         }
 
