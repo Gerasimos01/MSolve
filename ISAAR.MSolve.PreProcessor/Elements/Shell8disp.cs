@@ -10,7 +10,7 @@ using ISAAR.MSolve.PreProcessor.Elements.SupportiveClasses;
 
 namespace ISAAR.MSolve.PreProcessor.Elements
 {
-    class Shell8disp //: IStructuralFiniteElement
+    class Shell8disp : IStructuralFiniteElement
     {
         public double[][] oVn_i { get; set; }
         private double[][] ox_i; //den einai apo afta pou orizei o xrhsths
@@ -1092,6 +1092,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double[][,] BL01plus1_2;
         private double[][] BL01plus1_2tSPKvec;
 
+        private double[,] Kt;
+
+        private double[][] Fxk;
+
         private int endeixiKmatrices = 1;
         private void CalculateKmatrices()
         {
@@ -1116,6 +1120,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 BL01plus1_2 = new double[nGaussPoints][,];
                 BL01plus1_2tSPKvec = new double[nGaussPoints][];
 
+                Kt = new double[40, 40];
+
+                Fxk = new double[nGaussPoints + 1][];
+
                 for (int j = 0; j < nGaussPoints; j++)
                 {
                     BNL[j] = new double[9, 40];
@@ -1138,6 +1146,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     kck[j] = new double[8];
                     KL[j] = new double[40, 40];
                     KNL[j] = new double[40, 40];
+
+                    Fxk[j]= new double[40];
                 }
 
                 //prepei na ginei gemisma twn parapanw mhtrwwn pollaplasiasmoi
@@ -1275,19 +1285,296 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                             }
                         }
                     }
-
-
-
-
                 }
 
+                // morfwsi telikou mhtrwou
+                for (int k = 0; k < 40; k++)
+                {
+                    for (int l = 0; l < 40; l++)
+                    { Kt[k, l] = 0; }
+                }
+                for (int j = 0; j < nGaussPoints; j++)
+                {
 
+                    for (int k = 0; k < 40; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        { Kt[k, l] += KL[j][k,l]+KNL[j][k,l]; }
+                    }
+                                        
+                    for (int l = 0; l < 8; l++)
+                    {
+                        Kt[5 * l + 3, 5 * l + 3] += kck[j][l];
+                        Kt[5 * l + 4, 5 * l + 4] += kck[j][l];
+                    }                                                        
+                }
 
+                //mprfwsi drasewn   
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 40; k++)
+                    {
+                        Fxk[j][k] = 0;
+                        for (int m = 0; m < 6; m++)
+                        { Fxk[j][k] += BL[j][k, m] * SPKvec[j][m]; }
+                    }
+                }
+                for (int k = 0; k < 40; k++)
+                {
+                    Fxk[nGaussPoints][k] = 0;
+                    for (int j = 0; j < nGaussPoints; j++)
+                    { Fxk[nGaussPoints][k] += Fxk[j][k]; }
+                }
+
+                endeixiKmatrices = 2;
+            }
+
+        else
+            {
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 9; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            BNL[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++)
+                            {
+                                BNL[j][k, l] += BNL1[j][k, m] * BL13[j][m, l];
+                            }
+
+                        }
+
+                    }
+
+                    for (int k = 0; k < 6; k++)
+                    {
+                        for (int l = 0; l < 9; l++)
+                        {
+                            BL1_2[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++)
+                            {
+                                BL1_2[j][k, l] += BL11[j][k, m] * BL12[j][m, l];
+                            }
+
+                        }
+
+                    }
+
+                    //for (int k = 0; k < 6; k++)
+                    //{
+                    //    for (int l = 0; l < 40; l++)
+                    //    {
+                    //        BL1[j][k, l] = 0;
+                    //        BL0[j][k, l] = 0;
+                    //        for (int m = 0; m < 9; m++) //panw apo to for BLx=BL1_2+BL11 kai mesa sto for BL=BLx*BL13
+                    //        {
+                    //            BL1[j][k, l] += BL1_2[j][k, m] * BL13[j][m, l];
+                    //            BL0[j][k, l] += BL11[j][k, m]* BL13[j][m, l];
+                    //        }
+                    //        BL[j][k, l] = BL0[j][k, l] + BL1[j][k, l];
+                    //    }
+                    //}
+
+                    for (int k = 0; k < 6; k++)
+                    {
+                        for (int l = 0; l < 9; l++)
+                        {
+                            BL01plus1_2[j][k, l] = BL1_2[j][k, l] + BL11[j][k, l];
+                        }
+                    }
+
+                    for (int k = 0; k < 6; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            BL[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++)
+                            {
+                                BL[j][k, l] += BL01plus1_2[j][k, m] * BL13[j][m, l];
+                            }
+                        }
+                    }
+
+                    for (int k = 0; k < 9; k++)
+                    {
+                        BL01plus1_2tSPKvec[j][k] = 0;
+                        for (int m = 0; m < 9; m++)
+                        {
+                            BL01plus1_2tSPKvec[j][k] += BL01plus1_2[j][m, k] * SPKvec[j][m];
+                        }
+                    }
+
+                    for (int k = 0; k < 8; k++)
+                    {
+                        kck[j][k] = 0;
+                        for (int m = 0; m < 9; m++)
+                        {
+                            kck[j][k] += ck[j][k, m] * BL01plus1_2tSPKvec[j][m];
+                        }
+                    }
+
+                    // porsthetoume kai to kck ws extra(den prokuptei apo ta comment out
+
+                    for (int k = 0; k < 6; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            ConsBL[j][k, l] = 0;
+                            for (int m = 0; m < 6; m++)
+                            {
+                                ConsBL[j][k, l] += ConsCartes[j][k, m] * BL[j][m, l];
+                            }
+                        }
+                    }
+
+                    for (int k = 0; k < 9; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            S_BNL[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++)
+                            {
+                                S_BNL[j][k, l] += SPK_circumflex[j][k, m] * BNL[j][m, l];
+                            }
+                        }
+                    }
+
+                    for (int k = 0; k < 40; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            KNL[j][k, l] = 0;
+                            for (int m = 0; m < 9; m++)
+                            {
+                                KNL[j][k, l] += BNL[j][m, k] * S_BNL[j][m, l];
+                            }
+                        }
+                    }
+
+                    for (int k = 0; k < 40; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        {
+                            KL[j][k, l] = 0;
+                            for (int m = 0; m < 6; m++)
+                            {
+                                KL[j][k, l] += BL[j][m, k] * ConsBL[j][m, l];
+                            }
+                        }
+                    }
+                }
+
+                // morfwsi telikou mhtrwou
+                for (int k = 0; k < 40; k++)
+                {
+                    for (int l = 0; l < 40; l++)
+                    { Kt[k, l] = 0; }
+                }
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+
+                    for (int k = 0; k < 40; k++)
+                    {
+                        for (int l = 0; l < 40; l++)
+                        { Kt[k, l] += KL[j][k, l] + KNL[j][k, l]; }
+                    }
+
+                    for (int l = 0; l < 8; l++)
+                    {
+                        Kt[5 * l + 3, 5 * l + 3] += kck[j][l];
+                        Kt[5 * l + 4, 5 * l + 4] += kck[j][l];
+                    }
+                }
+
+                //mprfwsi drasewn   
+                for (int j = 0; j < nGaussPoints; j++)
+                {
+                    for (int k = 0; k < 40; k++)
+                    {
+                        Fxk[j][k] = 0;
+                        for (int m = 0; m < 6; m++)
+                        { Fxk[j][k] += BL[j][k, m] * SPKvec[j][m]; }
+                    }
+                }
+                for (int k = 0; k < 40; k++)
+                {
+                    Fxk[nGaussPoints][k] = 0;
+                    for (int j = 0; j < nGaussPoints; j++)
+                    { Fxk[nGaussPoints][k] += Fxk[j][k]; }
+                }
             }
         }
 
+        // ANANEWSH thw thesis tou stoixeiou-----------------------------------------
+        // voithitikes metavlhtes gia upologismo strofhs-----------------------------
+        private double[] ak_total;
+        private double[] bk_total;
 
+        // metavlhtes gia anafora stis strofes kai voithitikoi pinakes
+        private double ak;
+        private double bk;
+        private double gk;
+        private double gk1;
+        private double[,] s_k;
+        private double[,] Q;
+        private double[,] Q2;
 
+        private void UpdateCoordinateData(double[] localdisplacements)
+        {
+            for (int k = 0; k < 8; k++)
+            {
+                for (int l = 0; l < 3; l++)
+                {
+                    tx_i[k][l] = ox_i[k][l] + localdisplacements[5 * k + l];
+                }
+                ak = localdisplacements[5 * k + 3] - ak_total[k];
+                ak_total[k] = localdisplacements[5 * k + 3];
+                bk = localdisplacements[5 * k + 4] - bk_total[k];
+                bk_total[k] = localdisplacements[5 * k + 4];
+                gk = (ak * ak) + (bk * bk);
+                gk1 = 0.5 * ((Math.Sin(0.5 * gk) / (0.5 * gk)) * (Math.Sin(0.5 * gk) / (0.5 * gk)));
+                if (gk>0)
+                {
+                    s_k[0, 2] = bk;
+                    s_k[1, 2] = -ak;
+                    s_k[2, 0] = -bk;
+                    s_k[2, 1] = ak;
+
+                    for (int j = 0; j < 3; j++)
+                    {
+                        for (int m = 0; m < 3; m++)
+                        {
+                            Q[j, m] = (Math.Sin(gk) / gk) * s_k[j, m];
+                        }
+                    }
+
+                    for (int m = 0; m < 3; m++)
+                    {
+                        Q[m, m] +=1;
+                    }
+
+                    for (int j = 0; j < 3; j++)
+                    { for (int m = 0; m < 3; m++)
+                        {
+                            Q2[j, m] = 0;
+                            for (int n = 0; n < 3; n++)
+                            { Q2[j, m] += gk1 * s_k[j, n] * s_k[n, m]; }
+                        }
+                    }
+
+                    for (int j = 0; j < 3; j++)
+                    {
+                        for (int m = 0; m < 3; m++)
+                        {
+                            Q[j, m] += Q2[j, m];
+                        }
+                    }
+                }
+            }
+        }
+
+        //prepei sto telos tou upologismou drasewn na enhmerwnontai oi ak_total kai bk_total
     }
 }
 
