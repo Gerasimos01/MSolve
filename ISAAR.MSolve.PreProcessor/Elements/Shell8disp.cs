@@ -35,6 +35,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private static double zeta;
         private static int npoint;
 
+        private double[] a_123g;
+        private double a_1g;
+        private double a_2g;
+        private double a_3g;
+
         public static int endeixiGaussCoordinates = 1;
         private double[][] gausscoordinates;
         private double[][] GetGaussCoordinates() //3 dianysmata me tis timew tvn ksi heta zeta se ola ta gauss points
@@ -42,6 +47,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             if (endeixiGaussCoordinates == 1)
             {
                 nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+                a_123g = new double[nGaussPoints];
                 gausscoordinates = new double[3][];
                 for (int l = 0; l < 3; l++)
                 { gausscoordinates[l] = new double[nGaussPoints]; }
@@ -52,15 +58,41 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         for (int j = 0; j < gp_d1; j++)
                         {
                             npoint = l * (gp_d1 * gp_d2) + k * gp_d1 + j;
-                            if (gp_d1 == 3) { ksi = 0.5 * (j - 1) * (j - 2) * (-0.774596669241483) + (-1) * (j) * (j - 2) * (0) + 0.5 * (j) * (j - 1) * (0.774596669241483); }
-                            if (gp_d1 == 2) { ksi = (-0.577350269189626) * (j - 1) * (-1) + (0.577350269189626) * (j) * (+1); }
-                            if (gp_d2 == 3) { heta = 0.5 * (k - 1) * (k - 2) * (-0.774596669241483) + (-1) * (k) * (k - 2) * (0) + 0.5 * (k) * (k - 1) * (0.774596669241483); }
-                            if (gp_d2 == 2) { heta = (-0.577350269189626) * (k - 1) * (-1) + (0.577350269189626) * (k) * (+1); }
-                            if (gp_d3 == 3) { zeta = 0.5 * (l - 1) * (l - 2) * (-0.774596669241483) + (-1) * (l) * (l - 2) * (0) + 0.5 * (l) * (l - 1) * (0.774596669241483); }
-                            if (gp_d3 == 2) { zeta = (-0.577350269189626) * (l - 1) * (-1) + (0.577350269189626) * (l) * (+1); }
+                            if (gp_d1 == 3)
+                            {
+                                ksi = 0.5 * (j - 1) * (j - 2) * (-0.774596669241483) + (-1) * (j) * (j - 2) * (0) + 0.5 * (j) * (j - 1) * (0.774596669241483);
+                                a_1g = 0.5 * (j - 1) * (j - 2) * (0.555555555555555) + (-1) * (j) * (j - 2) * (0.888888888888888) + 0.5 * (j) * (j - 1) * (0.555555555555555);
+                            }
+                            if (gp_d1 == 2)
+                            {
+                                ksi = (-0.577350269189626) * (j - 1) * (-1) + (0.577350269189626) * (j) * (+1);
+                                a_1g = 1;
+                            }                                            
+                            if (gp_d2 == 3)
+                            {
+                                heta = 0.5 * (k - 1) * (k - 2) * (-0.774596669241483) + (-1) * (k) * (k - 2) * (0) + 0.5 * (k) * (k - 1) * (0.774596669241483);
+                                a_2g = 0.5 * (k - 1) * (k - 2) * (0.555555555555555) + (-1) * (k) * (k - 2) * (0.888888888888888) + 0.5 * (k) * (k - 1) * (0.555555555555555);
+                            }
+                            if (gp_d2 == 2)
+                            {
+                                heta = (-0.577350269189626) * (k - 1) * (-1) + (0.577350269189626) * (k) * (+1);
+                                a_2g = 1;
+                            }
+                            if (gp_d3 == 3)
+                            {
+                                zeta = 0.5 * (l - 1) * (l - 2) * (-0.774596669241483) + (-1) * (l) * (l - 2) * (0) + 0.5 * (l) * (l - 1) * (0.774596669241483);
+                                a_3g = 0.5 * (l - 1) * (l - 2) * (0.555555555555555) + (-1) * (l) * (l - 2) * (0.888888888888888) + 0.5 * (l) * (l - 1) * (0.555555555555555);
+                            }
+                            if (gp_d3 == 2)
+                            {
+                                zeta = (-0.577350269189626) * (l - 1) * (-1) + (0.577350269189626) * (l) * (+1);
+                                a_3g = 1;
+                            }
                             gausscoordinates[0][npoint] = ksi;
                             gausscoordinates[1][npoint] = heta;
                             gausscoordinates[2][npoint] = zeta;
+
+                            a_123g[npoint] = a_1g * a_2g * a_3g;
                         }
                     }
                 }
@@ -71,6 +103,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             { return gausscoordinates; }
         }
 
+        
         private double[][] shapeFunctions;
         public static int endeixiShapeFunctions = 1;
         private double[][] GetShapeFunctions() // 8 dianusmata me tis times twn N1....N8 se kathe gauss point
@@ -206,12 +239,33 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             { return J_0a; }
         }
 
-        private void GetInitialGeometricData(Element element)
+        private void GetInitialGeometricData(Element element) //TODO mhpws me endeixiInitialGeometricD...
         {
             ox_i = new double[8][];
+            tx_i = new double[8][];
+            tU = new double[8][];
+            tUvec = new double[8][];
             for (int j = 0; j < 8; j++)
             {
                 ox_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
+                tx_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
+                tU[j] = new double[6];
+                tUvec[j] = new double[6];
+                for (int k = 0; k < 3; k++) { tU[j][3 + k] = oV1_i[j][k]; }
+
+                tUvec[j][0] = tU[j][5];
+                tUvec[j][1] = 0;
+                tUvec[j][2] = -tU[j][3];
+
+                tV1norm = Math.Sqrt(tUvec[j][0] * tUvec[j][0] + tUvec[j][1] * tUvec[j][1] + tUvec[j][2] * tUvec[j][2]);
+
+                tUvec[j][0] = tUvec[j][0] / tV1norm;
+                tUvec[j][1] = tUvec[j][1] / tV1norm;
+                tUvec[j][2] = tUvec[j][2] / tV1norm;
+
+                tUvec[j][3] = tU[j][3 + 1] * tUvec[j][2] - tU[j][3 + 2] * tUvec[j][1];
+                tUvec[j][4] = tU[j][3 + 2] * tUvec[j][0] - tU[j][3 + 0] * tUvec[j][2];
+                tUvec[j][5] = tU[j][3 + 0] * tUvec[j][1] - tU[j][3 + 1] * tUvec[j][0];
             }
 
         }
@@ -1034,24 +1088,44 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     T_e[1, i] = (V2[i] * V2[i]);
                     T_e[2, i] = (V3[i] * V3[i]);
 
-                    T_e[3, i] = (2*V1[i] * V2[i]);
-                    T_e[4, i] = (2*V2[i] * V3[i]);
-                    T_e[5, i] = (2*V3[i] * V1[i]);
+                    T_e[3, i] = (2 * V1[i] * V2[i]);
+                    T_e[4, i] = (2 * V2[i] * V3[i]);
+                    T_e[5, i] = (2 * V3[i] * V1[i]);
 
                     T_e[0, 3 + i] = (V1[i] * V1[1 + i - 3 * i * (i - 1) / 2]);
                     T_e[1, 3 + i] = (V2[i] * V2[1 + i - 3 * i * (i - 1) / 2]);
                     T_e[2, 3 + i] = (V3[i] * V3[1 + i - 3 * i * (i - 1) / 2]);
 
-                    T_e[3, 3 + i] = (V1[i]* V2[1 + i - 3 * i * (i - 1) / 2] + V2[i] * V1[1 + i - 3 * i * (i - 1) / 2]);
+                    T_e[3, 3 + i] = (V1[i] * V2[1 + i - 3 * i * (i - 1) / 2] + V2[i] * V1[1 + i - 3 * i * (i - 1) / 2]);
                     T_e[4, 3 + i] = (V2[i] * V3[1 + i - 3 * i * (i - 1) / 2] + V3[i] * V2[1 + i - 3 * i * (i - 1) / 2]);
                     T_e[5, 3 + i] = (V3[i] * V1[1 + i - 3 * i * (i - 1) / 2] + V1[i] * V3[1 + i - 3 * i * (i - 1) / 2]);
                 }
 
                 // multiplication [Te']*[cons]*[Te];
-                //prosthesi ston upologismo mhtrwwn a_1g*a_2g*a_3g*detJ_0*
 
+                for (int i = 0; i < 6; i++)
+                {
+                    for (int k = 0; k < 6; k++)
+                    {
+                        Cons_T_e[i, k] = 0;
+                        for (int l = 0; l < 6; l++)
+                        { Cons_T_e[i, k] += Cons[i, l] * T_e[l, k]; }
+                    }
+                }
+
+                for (int i = 0; i < 6; i++)
+                {
+                    for (int k = 0; k < 6; k++)
+                    {
+                        ConsCartes[j][i, k] = 0;
+                        for (int l = 0; l < 6; l++)
+                        { ConsCartes[j][i, k] += T_e[l, i] * Cons_T_e[l, k]; }
+                    }
+                }
             }
+
         }
+       
     
 
         private double[][] SPKvec;
@@ -1199,7 +1273,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double[][] Fxk;
 
         private int endeixiKmatrices = 1;
-        private void CalculateKmatrices()
+        private void CalculateKmatrices(Element element)
         {
         if (endeixiKmatrices==1)
             {
@@ -1401,13 +1475,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     for (int k = 0; k < 40; k++)
                     {
                         for (int l = 0; l < 40; l++)
-                        { Kt[k, l] += KL[j][k,l]+KNL[j][k,l]; }
+                        { Kt[k, l] += a_123g[j] * GetDetJ_0(element)[j]*(KL[j][k,l]+KNL[j][k,l]); }
                     }
                                         
                     for (int l = 0; l < 8; l++)
                     {
-                        Kt[5 * l + 3, 5 * l + 3] += kck[j][l];
-                        Kt[5 * l + 4, 5 * l + 4] += kck[j][l];
+                        Kt[5 * l + 3, 5 * l + 3] += a_123g[j] * GetDetJ_0(element)[j]*kck[j][l];
+                        Kt[5 * l + 4, 5 * l + 4] += a_123g[j] * GetDetJ_0(element)[j]*kck[j][l];
                     }                                                        
                 }
 
@@ -1425,7 +1499,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 {
                     Fxk[nGaussPoints][k] = 0;
                     for (int j = 0; j < nGaussPoints; j++)
-                    { Fxk[nGaussPoints][k] += Fxk[j][k]; }
+                    { Fxk[nGaussPoints][k] += a_123g[j] * GetDetJ_0(element)[j]*Fxk[j][k]; }
                 }
 
                 endeixiKmatrices = 2;
@@ -1579,13 +1653,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     for (int k = 0; k < 40; k++)
                     {
                         for (int l = 0; l < 40; l++)
-                        { Kt[k, l] += KL[j][k, l] + KNL[j][k, l]; }
+                        { Kt[k, l] += a_123g[j]*GetDetJ_0(element)[j]*(KL[j][k, l] + KNL[j][k, l]); }
                     }
 
                     for (int l = 0; l < 8; l++)
                     {
-                        Kt[5 * l + 3, 5 * l + 3] += kck[j][l];
-                        Kt[5 * l + 4, 5 * l + 4] += kck[j][l];
+                        Kt[5 * l + 3, 5 * l + 3] += a_123g[j] * GetDetJ_0(element)[j] * kck[j][l];
+                        Kt[5 * l + 4, 5 * l + 4] += a_123g[j] * GetDetJ_0(element)[j] * kck[j][l];
                     }
                 }
 
@@ -1603,7 +1677,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 {
                     Fxk[nGaussPoints][k] = 0;
                     for (int j = 0; j < nGaussPoints; j++)
-                    { Fxk[nGaussPoints][k] += Fxk[j][k]; }
+                    { Fxk[nGaussPoints][k] += a_123g[j] * GetDetJ_0(element)[j]*Fxk[j][k]; }
                 }
             }
         }
@@ -1726,7 +1800,88 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         {
             this.dofEnumerator = dofEnumerator;
         }
-        // ews edw 
+        // ews edw
+
+        // aparaithta tou IStructuralFiniteElement
+
+        public int ID
+        {
+            get { return 12; }
+        }
+
+        public ElementDimensions ElementDimensions
+        {
+            get { return ElementDimensions.ThreeD; }
+        }
+
+        public virtual IList<IList<DOFType>> GetElementDOFTypes(Element element)
+        {
+            return dofTypes;
+        }
+
+        public IFiniteElementDOFEnumerator DOFEnumerator
+        {
+            get { return dofEnumerator; }
+            set { dofEnumerator = value; }
+        }
+
+        //aparaithta tou IstructuralElement gia to material
+        public void ClearMaterialState()
+        {
+            foreach (IFiniteElementMaterial3D m in materialsAtGaussPoints) m.ClearState();
+        }
+
+        public void SaveMaterialState()
+        {
+            foreach (IFiniteElementMaterial3D m in materialsAtGaussPoints) m.SaveState();
+        }
+
+        public void ClearMaterialStresses()
+        {
+            foreach (IFiniteElementMaterial3D m in materialsAtGaussPoints) m.ClearStresses();
+        }
+
+        public bool MaterialModified
+        {
+            get
+            {
+                foreach (IFiniteElementMaterial3D material in materialsAtGaussPoints)
+                    if (material.Modified) return true;
+                return false;
+            }
+        }
+
+        public void ResetMaterialModified()
+        {
+            foreach (IFiniteElementMaterial3D material in materialsAtGaussPoints) material.ResetModified();
+        }
+
+        public Tuple<double[], double[]> CalculateStresses(Element element, double[] localDisplacements, double[] localdDisplacements)
+        {
+            return new Tuple<double[], double[]>(new double[123], materialsAtGaussPoints[materialsAtGaussPoints.Length - 1].Stresses);
+        }
+
+        //aparaithta tou Istructural gia th dunamiki analusi
+        public double[] CalculateAccelerationForces(Element element, IList<MassAccelerationLoad> loads)
+        {
+            return new double[123];
+        }
+
+        public virtual IMatrix2D<double> MassMatrix(Element element)
+        {
+            return new Matrix2D<double>(1,1);
+        }
+
+        public virtual IMatrix2D<double> DampingMatrix(Element element)
+        {
+            
+            return new Matrix2D<double>(1, 1);            
+        }
+
+        // forces tha exei ena if me initial geometric data
+        // kai to else me strofi kai meta olous tous upologismous.
+
+        // mporei kai me ena if ean einai to trito dianusma mhdeniko. na mhn ektelountai kapoioi upologismoi. 
     }
 }
 
