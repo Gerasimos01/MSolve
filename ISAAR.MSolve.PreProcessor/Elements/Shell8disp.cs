@@ -20,7 +20,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         protected IFiniteElementDOFEnumerator dofEnumerator = new GenericDOFEnumerator();
         // ews edw 
 
-        public double[][] oVn_i { get; set; }
+        public double[][] oVn_i { get; set; } 
         public double[][] oV1_i { get; set; }
         //public double[][] oV2_i { get; set; }
         private double[][] ox_i; //den einai apo afta pou orizei o xrhsths
@@ -1881,7 +1881,67 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         // forces tha exei ena if me initial geometric data
         // kai to else me strofi kai meta olous tous upologismous.
 
-        // mporei kai me ena if ean einai to trito dianusma mhdeniko. na mhn ektelountai kapoioi upologismoi. 
+        // mporei kai me ena if ean einai to trito dianusma mhdeniko. na mhn ektelountai kapoioi upologismoi.
+
+        //implementation of basic methods
+
+        private int endeixiArxikDianusmatwn = 1;
+        public double[] CalculateForces(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
+        {
+            if (endeixiArxikDianusmatwn==1)
+            {
+                CalculateCons();
+                this.GetInitialGeometricData(element);
+
+                this.UpdateCoordinateData(localTotalDisplacements);
+                Calculatell2();
+                Calculatel_circumflex();
+                CalculateBL11b();
+                CalculateBL11(element);
+                CalculateBL13();
+                CalculateJ_1b(element);
+                CalculateJ_1(element);
+                CalculateDefGradTr(element);
+                CalculateGL();
+                CalculateGLvec();
+                CalculateSPK();
+                CalculateCk();
+                CalculateKmatrices(element);
+
+                endeixiArxikDianusmatwn = 2;
+                return Fxk[nGaussPoints];
+            }
+            else
+            {
+                this.UpdateCoordinateData(localTotalDisplacements);// mporei dokimastika na ginei sxoleio meta
+                Calculatell2();
+                Calculatel_circumflex();
+                CalculateBL11b();
+                CalculateBL11(element);
+                CalculateBL13();
+                CalculateJ_1b(element);
+                CalculateJ_1(element);
+                CalculateDefGradTr(element);
+                CalculateGL();
+                CalculateGLvec();
+                CalculateSPK();
+                CalculateCk();
+                CalculateKmatrices(element);
+
+                return Fxk[nGaussPoints];
+            }
+        }
+
+        public virtual IMatrix2D<double> StiffnessMatrix(Element element)
+        {
+            IMatrix2D<double> iGlobalStiffnessMatrix = new Matrix2D<double>(Kt);
+            return dofEnumerator.GetTransformedMatrix(iGlobalStiffnessMatrix);
+        }
+
+        public double[] CalculateForcesForLogging(Element element, double[] localDisplacements)
+        {
+            return CalculateForces(element, localDisplacements, new double[localDisplacements.Length]);
+        }
     }
 }
 
