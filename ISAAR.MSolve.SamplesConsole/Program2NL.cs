@@ -11,7 +11,7 @@ using System.Text;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    class Program2
+    class Program2NL
     {
         private static void SolveHexaBuilding()
         { 
@@ -19,24 +19,26 @@ namespace ISAAR.MSolve.SamplesConsole
             Model model = new Model();
             model.SubdomainsDictionary.Add(1, new Subdomain() { ID = 1 });
     
-            HexaBuilder2.MakeHexaBuilding(model);
+            ArchBuilder.MakeArchBuilding(model);
 
             model.ConnectDataStructures();
 
             SolverSkyline solver = new SolverSkyline(model);
             ProblemStructural provider = new ProblemStructural(model, solver.SubdomainsDictionary);
-            LinearAnalyzer analyzer = new LinearAnalyzer(solver, solver.SubdomainsDictionary);
+            //LinearAnalyzer analyzer = new LinearAnalyzer(solver, solver.SubdomainsDictionary);
+            Analyzers.NewtonRaphsonNonLinearAnalyzer2 analyzer = new NewtonRaphsonNonLinearAnalyzer2(solver, solver.SubdomainsDictionary, provider, 10, model.TotalDOFs);//1. increments einai to 10
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, analyzer, solver.SubdomainsDictionary);
-
+            analyzer.SetMaxIterations = 100;
+            analyzer.SetIterationsForMatrixRebuild = 1;
             //analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] { 420 });
 
             // apo theofilo
             analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
-            model.NodalDOFsDictionary[12][DOFType.X],
-            model.NodalDOFsDictionary[12][DOFType.Y],
-            model.NodalDOFsDictionary[12][DOFType.Z],
+            model.NodalDOFsDictionary[4][DOFType.X],
+            model.NodalDOFsDictionary[4][DOFType.Y],
+            model.NodalDOFsDictionary[4][DOFType.Z] });
             //model.ElementsDictionary[1][]
-            model.NodalDOFsDictionary[17][DOFType.Z]});
+            //model.NodalDOFsDictionary[17][DOFType.Z]});
             //ews edw
 
             //// apo theofilo
@@ -57,9 +59,9 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        //static void Main(string[] args)
-        //{
-        //    SolveHexaBuilding();
-        //}
+        static void Main(string[] args)
+        {
+            SolveHexaBuilding();
+        }
     }
 }

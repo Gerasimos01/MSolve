@@ -166,7 +166,7 @@ namespace ISAAR.MSolve.SamplesConsole
             for (int j = 0; j < 4; j++)
             {
                 n4 = new EmbeddedNode(model.NodesDictionary[ID2], model.ElementsDictionary[1], doftypelist1);
-                model.ElementsDictionary[1].EmbeddedNodes.Add(n4);
+                //model.ElementsDictionary[1].EmbeddedNodes.Add(n4);
                 ID2++;
             }
 

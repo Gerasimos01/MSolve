@@ -10,7 +10,7 @@ using ISAAR.MSolve.PreProcessor.Elements.SupportiveClasses;
 
 namespace ISAAR.MSolve.PreProcessor.Elements
 {
-    class Shell8disp : IStructuralFiniteElement
+    public class Shell8disp : IStructuralFiniteElement
     {
         //metavlhtes opws sto hexa8
         protected readonly static DOFType[] nodalDOFTypes = new DOFType[] { DOFType.X, DOFType.Y, DOFType.Z, DOFType.RotX, DOFType.RotZ };
@@ -24,10 +24,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         public double[][] oV1_i { get; set; }
         //public double[][] oV2_i { get; set; }
         private double[][] ox_i; //den einai apo afta pou orizei o xrhsths
-        public static int gp_d1 { get; set; }
-        public static int gp_d2 { get; set; }
-        public static int gp_d3 { get; set; }
-        public static int[] tk { get; set; }
+        public static int gp_d1  { get; set; }
+        public static int gp_d2  { get; set; }
+        public static int gp_d3  { get; set; }
+        public double [] tk { get; set; } //public static int[] tk { get; set; }
         private static int nGaussPoints;
 
         private static double ksi;
@@ -39,6 +39,26 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double a_1g;
         private double a_2g;
         private double a_3g;
+        
+        protected Shell8disp()//consztructor apo to hexa8
+        {
+        }
+
+        public Shell8disp(IFiniteElementMaterial3D material,int gp_d1,int gp_d2,int gp_d3)
+        {
+            nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+            materialsAtGaussPoints = new IFiniteElementMaterial3D[nGaussPoints];
+            for (int i = 0; i < nGaussPoints; i++)
+                materialsAtGaussPoints[i] = (IFiniteElementMaterial3D)material.Clone();
+
+        }
+
+        public Shell8disp(IFiniteElementMaterial3D material, IFiniteElementDOFEnumerator dofEnumerator)//pithanotata den xreiazetai
+            : this(material, gp_d1, gp_d2, gp_d3)
+        {
+            this.dofEnumerator = dofEnumerator;
+        }
+        // ews edw
 
         public static int endeixiGaussCoordinates = 1;
         private double[][] gausscoordinates;
@@ -251,7 +271,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 tx_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
                 tU[j] = new double[6];
                 tUvec[j] = new double[6];
-                for (int k = 0; k < 3; k++) { tU[j][3 + k] = oV1_i[j][k]; }
+                for (int k = 0; k < 3; k++) { tU[j][3 + k] = oVn_i[j][k]; }
 
                 tUvec[j][0] = tU[j][5];
                 tUvec[j][1] = 0;
@@ -1268,7 +1288,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double[][,] BL01plus1_2;
         private double[][] BL01plus1_2tSPKvec;
 
-        private double[,] Kt;
+        private double[,] Kt = new double[40, 40];
 
         private double[][] Fxk;
 
@@ -1296,7 +1316,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 BL01plus1_2 = new double[nGaussPoints][,];
                 BL01plus1_2tSPKvec = new double[nGaussPoints][];
 
-                Kt = new double[40, 40];
+                //Kt = new double[40, 40];
 
                 Fxk = new double[nGaussPoints + 1][];
 
@@ -1782,25 +1802,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         //prepei sto telos tou upologismou drasewn na enhmerwnontai oi ak_total kai bk_total
 
-        //consztructor apo to hexa8
-        protected Shell8disp()
-        {
-        }
-
-        public Shell8disp(IFiniteElementMaterial3D material,int gp_d1,int gp_d2,int gp_d3)
-        {
-            nGaussPoints = gp_d1 * gp_d2 * gp_d3;
-            materialsAtGaussPoints = new IFiniteElementMaterial3D[nGaussPoints];
-            for (int i = 0; i < nGaussPoints; i++)
-                materialsAtGaussPoints[i] = (IFiniteElementMaterial3D)material.Clone();
-        }
-
-        public Shell8disp(IFiniteElementMaterial3D material, IFiniteElementDOFEnumerator dofEnumerator)//pithanotata den xreiazetai
-            : this(material, gp_d1, gp_d2, gp_d3)
-        {
-            this.dofEnumerator = dofEnumerator;
-        }
-        // ews edw
+        
 
         // aparaithta tou IStructuralFiniteElement
 
@@ -1893,7 +1895,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 CalculateCons();
                 this.GetInitialGeometricData(element);
 
-                this.UpdateCoordinateData(localTotalDisplacements);
+                //this.UpdateCoordinateData(localTotalDisplacements);
                 Calculatell2();
                 Calculatel_circumflex();
                 CalculateBL11b();
@@ -1932,10 +1934,35 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
         }
 
+        private int endeixiStiffness = 1;
         public virtual IMatrix2D<double> StiffnessMatrix(Element element)
         {
-            IMatrix2D<double> iGlobalStiffnessMatrix = new Matrix2D<double>(Kt);
-            return dofEnumerator.GetTransformedMatrix(iGlobalStiffnessMatrix);
+            if (endeixiStiffness == 1)
+            {
+                CalculateCons();
+                this.GetInitialGeometricData(element);
+                //this.UpdateCoordinateData(localTotalDisplacements);
+                Calculatell2();
+                Calculatel_circumflex();
+                CalculateBL11b();
+                CalculateBL11(element);
+                CalculateBL13();
+                CalculateJ_1b(element);
+                CalculateJ_1(element);
+                CalculateDefGradTr(element);
+                CalculateGL();
+                CalculateGLvec();
+                CalculateSPK();
+                CalculateCk();
+                CalculateKmatrices(element);
+                IMatrix2D<double> iGlobalStiffnessMatrix = new Matrix2D<double>(Kt);
+                return dofEnumerator.GetTransformedMatrix(iGlobalStiffnessMatrix);
+            }
+            else
+            {
+                IMatrix2D<double> iGlobalStiffnessMatrix = new Matrix2D<double>(Kt);
+                return dofEnumerator.GetTransformedMatrix(iGlobalStiffnessMatrix);
+            }
         }
 
         public double[] CalculateForcesForLogging(Element element, double[] localDisplacements)
