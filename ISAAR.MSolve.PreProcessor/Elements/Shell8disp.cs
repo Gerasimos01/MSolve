@@ -24,16 +24,16 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         public double[][] oV1_i { get; set; }
         //public double[][] oV2_i { get; set; }
         private double[][] ox_i; //den einai apo afta pou orizei o xrhsths
-        public static int gp_d1  { get; set; }
-        public static int gp_d2  { get; set; }
-        public static int gp_d3  { get; set; }
+        public  int gp_d1  { get; set; } // den prepei na einai static--> shmainei idio gia ola taantikeimena afthw ths klashs
+        public  int gp_d2  { get; set; }
+        public  int gp_d3  { get; set; }
         public double [] tk { get; set; } //public static int[] tk { get; set; }
-        private static int nGaussPoints;
+        private  int nGaussPoints;
 
-        private static double ksi;
-        private static double heta;
-        private static double zeta;
-        private static int npoint;
+        private  double ksi;
+        private  double heta;
+        private  double zeta;
+        private  int npoint;
 
         private double[] a_123g;
         private double a_1g;
@@ -44,23 +44,26 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         {
         }
 
-        public Shell8disp(IFiniteElementMaterial3D material,int gp_d1,int gp_d2,int gp_d3)
+        public Shell8disp(IFiniteElementMaterial3D material,int gp_d1c,int gp_d2c,int gp_d3c)
         {
-            nGaussPoints = gp_d1 * gp_d2 * gp_d3;
+            this.gp_d1 = gp_d1c;
+            this.gp_d2 = gp_d2c;
+            this.gp_d3 = gp_d3c;
+            this.nGaussPoints = this.gp_d1 * this.gp_d2 * this.gp_d3;
             materialsAtGaussPoints = new IFiniteElementMaterial3D[nGaussPoints];
             for (int i = 0; i < nGaussPoints; i++)
                 materialsAtGaussPoints[i] = (IFiniteElementMaterial3D)material.Clone();
 
         }
 
-        public Shell8disp(IFiniteElementMaterial3D material, IFiniteElementDOFEnumerator dofEnumerator)//pithanotata den xreiazetai
-            : this(material, gp_d1, gp_d2, gp_d3)
-        {
-            this.dofEnumerator = dofEnumerator;
-        }
+        //public Shell8disp(IFiniteElementMaterial3D material, IFiniteElementDOFEnumerator dofEnumerator)//pithanotata den xreiazetai
+        //    : this(material, gp_d1, gp_d2, gp_d3)
+        //{
+        //    this.dofEnumerator = dofEnumerator;
+        //}
         // ews edw
 
-        public static int endeixiGaussCoordinates = 1;
+        public int endeixiGaussCoordinates = 1;
         private double[][] gausscoordinates;
         private double[][] GetGaussCoordinates() //3 dianysmata me tis timew tvn ksi heta zeta se ola ta gauss points
         {
@@ -125,7 +128,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         
         private double[][] shapeFunctions;
-        public static int endeixiShapeFunctions = 1;
+        public  int endeixiShapeFunctions = 1;
         private double[][] GetShapeFunctions() // 8 dianusmata me tis times twn N1....N8 se kathe gauss point
         {
             if (endeixiShapeFunctions == 1)
@@ -154,7 +157,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][] shapeFunctionDerivatives;
-        public static int endeixiShapeFunctionDerivatives = 1;
+        public  int endeixiShapeFunctionDerivatives = 1;
         private double[][] GetShapeFunctionDerivatives() // 16 dianusmata me tis times twn N1ksi....N8ksi,N1heta,....N8heta se kathe gauss point
         {
             if (endeixiShapeFunctionDerivatives == 1)
@@ -193,7 +196,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] ll1;
-        public static int endeixill1 = 1;
+        public  int endeixill1 = 1;
         private double[][,] Getll1() //einai teliko kai oxi prok
         {
             if (endeixill1 == 1)
@@ -230,7 +233,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
 
         private double[][,] J_0a;
-        public static int endeixiJ_0a = 1;
+        public  int endeixiJ_0a = 1;
         private double[][,] GetJ_0a() //einai teliko kai oxi prok
         {
             if (endeixiJ_0a == 1)
@@ -265,12 +268,14 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             tx_i = new double[8][];
             tU = new double[8][];
             tUvec = new double[8][];
+            oV1_i = new double[8][];
             for (int j = 0; j < 8; j++)
             {
                 ox_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
                 tx_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
                 tU[j] = new double[6];
                 tUvec[j] = new double[6];
+                oV1_i[j] = new double[3];
                 for (int k = 0; k < 3; k++) { tU[j][3 + k] = oVn_i[j][k]; }
 
                 tUvec[j][0] = tU[j][5];
@@ -283,6 +288,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 tUvec[j][1] = tUvec[j][1] / tV1norm;
                 tUvec[j][2] = tUvec[j][2] / tV1norm;
 
+                oV1_i[j][0] = tUvec[j][0];
+                oV1_i[j][1] = tUvec[j][1];
+                oV1_i[j][2] = tUvec[j][2];
+
                 tUvec[j][3] = tU[j][3 + 1] * tUvec[j][2] - tU[j][3 + 2] * tUvec[j][1];
                 tUvec[j][4] = tU[j][3 + 2] * tUvec[j][0] - tU[j][3 + 0] * tUvec[j][2];
                 tUvec[j][5] = tU[j][3 + 0] * tUvec[j][1] - tU[j][3 + 1] * tUvec[j][0];
@@ -291,7 +300,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[,] J_0b;    //einai idio gia ola ta gauss points
-        public static int endeixiJ_0b = 1;
+        public int endeixiJ_0b = 1;
         private double[,] GetJ_0b(Element element)
         {
             if (endeixiJ_0b == 1)
@@ -315,7 +324,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] J_0;       //den einai to idio gia ola ta gausspoint
-        public static int endeixiJ_0 = 1;
+        public  int endeixiJ_0 = 1;
         private double[][,] GetJ_0(Element element)   // einai teliko kai oxi prok
         {
             if (endeixiJ_0 == 1)
@@ -349,7 +358,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[] detJ_0; //[] osa kai ta gauss points
-        public static int endeixiDetJ_0 = 1;
+        public  int endeixiDetJ_0 = 1;
         private double[] GetDetJ_0(Element element)
         {
             if (endeixiDetJ_0 == 1)
@@ -382,7 +391,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] J_0inv;
-        public static int endeixiJ_0inv = 1;
+        public  int endeixiJ_0inv = 1;
         private double[][,] GetJ_0inv(Element element)
         {
             if (endeixiDetJ_0 == 1)
@@ -420,7 +429,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] BL11a;
-        public static int endeixiBL11a = 1;
+        public  int endeixiBL11a = 1;
         private double[][,] GetBL11a(Element element)
         {
             if (endeixiBL11a == 1)
@@ -463,7 +472,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] BL12;
-        public static int endeixiBL12 = 1;
+        public int endeixiBL12 = 1;
         private double[][,] GetBL12(Element element)
         {
             if (endeixiBL12 == 1)
@@ -498,7 +507,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] BNL1;
-        public static int endeixiBNL1 = 1;
+        public int endeixiBNL1 = 1;
         private double[][,] GetBNL1(Element element)
         {
             if (endeixiBNL1 == 1)
@@ -534,7 +543,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         // methodoi dhmiourgias pinakwn pou periexoun stoixeia pou ananewnontai
 
         private double[,] ll2;
-        public static int endeixill2 = 1;
+        public int endeixill2 = 1;
         private void Calculatell2() //meta apo enhmerwsh h initialize
         {
             if (endeixill2 == 1)
@@ -564,7 +573,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] l_circumflex;
-        public static int endeixil_circumflex = 1;
+        public int endeixil_circumflex = 1;
         private void Calculatel_circumflex() //afou periexei getll2: meta apo enhmerwsh h initialize
         {
             if (endeixil_circumflex == 1)
@@ -617,7 +626,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] BL11b;
-        public static int endeixiBL11b = 1;
+        public int endeixiBL11b = 1;
         private void CalculateBL11b() //afou periexei Getl_circumflex:getll2: meta apo enhmerwsh h initialize 
         {
             if (endeixiBL11b == 1)
@@ -673,7 +682,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
 
         private double[][,] BL11;
-        public static int endeixiBL11 = 1;
+        public int endeixiBL11 = 1;
         private void CalculateBL11(Element element) //afou periexei BL11:Getl_circumflex:getll2: meta apo enhmerwsh h initialize 
         {
             if (endeixiBL11 == 1)
@@ -721,7 +730,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
 
         private double[][,] BL13;
-        public static int endeixilBL13 = 1; //analogws endeixi
+        public int endeixilBL13 = 1; //analogws endeixi
         private void CalculateBL13() //afou periexei tVn_i kai Getll2: Xrhsimopoieitai meta apo 2)ENHMERWSH h 1)INITIALIZE 
         {
             if (endeixilBL13 == 1)
@@ -790,7 +799,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[,] J_1b;    //einai idio gia ola ta gauss points
-        public static int endeixiJ_1b = 1;
+        public int endeixiJ_1b = 1;
         private void CalculateJ_1b(Element element) // meta apo enhmerwsi i initialize twn tx_i,tVn_i
         {
             if (endeixiJ_1b == 1)
@@ -823,7 +832,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] J_1;       //den einai to idio gia ola ta gausspoint
-        public static int endeixiJ_1 = 1;
+        public int endeixiJ_1 = 1;
         private void CalculateJ_1(Element element)   // meta apo enhmerwsi i initialize twn tx_i,tVn_i
         {                                              //Meta Apo CALCULATE J_1b 
             if (endeixiJ_1 == 1)
@@ -874,7 +883,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] DefGradTr;       //den einai to idio gia ola ta gausspoint
-        public static int endeixiDefGradTr = 1;
+        public int endeixiDefGradTr = 1;
         private void CalculateDefGradTr(Element element) // Meta apo CalculateJ_1 profanws
         {
             if (endeixiDefGradTr == 1)
@@ -928,7 +937,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][,] GL;       //den einai to idio gia ola ta gausspoint
-        public static int endeixiGL = 1;
+        public int endeixiGL = 1;
         private void CalculateGL() // Meta apo CalculateDefGradTr profanws
         {
             if (endeixiGL == 1)
@@ -994,7 +1003,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][] GLvec;
-        public static int endeixiGLvec = 1;
+        public int endeixiGLvec = 1;
         private void CalculateGLvec()//meta apo calculate Gl
         {
             if (endeixiGLvec == 1)
@@ -1053,7 +1062,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             T_e = new double[6, 6];
             nGaussPoints = gp_d1 * gp_d2 * gp_d3;
             ConsCartes = new double[nGaussPoints][,];
+            E = new double[nGaussPoints];
+            ni = new double[nGaussPoints];
             Cons = new double[6, 6];
+            Cons_T_e = new double[6, 6];
             for (int j = 0; j < nGaussPoints; j++)
             {
                 E[j] = materialsAtGaussPoints[j].YoungModulus;
@@ -1074,8 +1086,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 {
                     for (int l = 0; l < 3; l++)
                     {
-                        V3[l] += shapeFunctions[k][j] * oVn_i[k][l];
-                        V1[l] += shapeFunctions[k][j] * oV1_i[k][l];
+                        V3[l] += GetShapeFunctions()[k][j] * oVn_i[k][l];
+                        V1[l] += GetShapeFunctions()[k][j] * oV1_i[k][l];
                     }
                 }
                 V3_norm = Math.Sqrt(V3[0] * V3[0] + V3[1] * V3[1] + V3[2] * V3[2]);
@@ -1358,7 +1370,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                             BNL[j][k, l] = 0;
                             for (int m = 0; m < 9; m++)
                             {
-                                BNL[j][k, l] += BNL1[j][k, m] * BL13[j][m, l];
+                                BNL[j][k, l] += GetBNL1(element)[j][k, m] * BL13[j][m, l]; 
                             }
 
                         }
@@ -1372,8 +1384,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                             BL1_2[j][k, l] = 0;
                             for (int m = 0; m < 9; m++)
                             {
-                                BL1_2[j][k, l] += BL11[j][k, m] * BL12[j][m, l];
-                            }
+                                BL1_2[j][k, l] += BL11[j][k, m] * GetBL12(element)[j][m, l]; //TODO BL11 keno kai BL12 null thelei getbl12 edw kai parakatw
+                            }                                                   //vriskomaste sto calculate Kmatrices eprepe na trexei to calculate BL11 prwta
 
                         }
 
@@ -1417,7 +1429,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     for (int k = 0; k < 9; k++)
                     {                    
                             BL01plus1_2tSPKvec[j][k] = 0;
-                            for (int m = 0; m < 9; m++)
+                            for (int m = 0; m < 6; m++)
                             {
                                 BL01plus1_2tSPKvec[j][k] += BL01plus1_2[j][m, k] * SPKvec[j][m];
                             }
@@ -1512,7 +1524,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     {
                         Fxk[j][k] = 0;
                         for (int m = 0; m < 6; m++)
-                        { Fxk[j][k] += BL[j][k, m] * SPKvec[j][m]; }
+                        { Fxk[j][k] += BL[j][m, k] * SPKvec[j][m]; }
                     }
                 }
                 for (int k = 0; k < 40; k++)
@@ -1536,7 +1548,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                             BNL[j][k, l] = 0;
                             for (int m = 0; m < 9; m++)
                             {
-                                BNL[j][k, l] += BNL1[j][k, m] * BL13[j][m, l];
+                                BNL[j][k, l] += GetBNL1(element)[j][k, m] * BL13[j][m, l];
                             }
 
                         }
@@ -1550,7 +1562,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                             BL1_2[j][k, l] = 0;
                             for (int m = 0; m < 9; m++)
                             {
-                                BL1_2[j][k, l] += BL11[j][k, m] * BL12[j][m, l];
+                                BL1_2[j][k, l] += BL11[j][k, m] * GetBL12(element)[j][m, l];
                             }
 
                         }
@@ -1595,7 +1607,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     for (int k = 0; k < 9; k++)
                     {
                         BL01plus1_2tSPKvec[j][k] = 0;
-                        for (int m = 0; m < 9; m++)
+                        for (int m = 0; m < 6; m++)
                         {
                             BL01plus1_2tSPKvec[j][k] += BL01plus1_2[j][m, k] * SPKvec[j][m];
                         }
@@ -1690,7 +1702,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     {
                         Fxk[j][k] = 0;
                         for (int m = 0; m < 6; m++)
-                        { Fxk[j][k] += BL[j][k, m] * SPKvec[j][m]; }
+                        { Fxk[j][k] += BL[j][m, k] * SPKvec[j][m]; }
                     }
                 }
                 for (int k = 0; k < 40; k++)
@@ -1704,8 +1716,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         // ANANEWSH thw thesis tou stoixeiou-----------------------------------------
         // voithitikes metavlhtes gia upologismo strofhs-----------------------------
-        private double[] ak_total;
-        private double[] bk_total;
+        private double[] ak_total = new double[8];
+        private double[] bk_total = new double[8];
 
         // metavlhtes gia anafora stis strofes kai voithitikoi pinakes
         private double ak;
@@ -1891,9 +1903,9 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         public double[] CalculateForces(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
         {
             if (endeixiArxikDianusmatwn==1)
-            {
-                CalculateCons();
+            {                
                 this.GetInitialGeometricData(element);
+                CalculateCons();
 
                 //this.UpdateCoordinateData(localTotalDisplacements);
                 Calculatell2();
@@ -1939,8 +1951,9 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         {
             if (endeixiStiffness == 1)
             {
-                CalculateCons();
                 this.GetInitialGeometricData(element);
+                this.CalculateCons();
+                
                 //this.UpdateCoordinateData(localTotalDisplacements);
                 Calculatell2();
                 Calculatel_circumflex();
