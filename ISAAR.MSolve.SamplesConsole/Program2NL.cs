@@ -53,7 +53,7 @@ namespace ISAAR.MSolve.SamplesConsole
             parentAnalyzer.Solve();
 
             //Console.WriteLine("checkPoint1 reached");
-            Console.WriteLine("Writing results for node 5");
+            Console.WriteLine("Writing results for node 4");
             Console.WriteLine("Dof and Values for Displacement X, Y, Z");
             Console.WriteLine(analyzer.Logs[1][0]);
 

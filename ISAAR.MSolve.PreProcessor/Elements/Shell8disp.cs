@@ -13,7 +13,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
     public class Shell8disp : IStructuralFiniteElement
     {
         //metavlhtes opws sto hexa8
-        protected readonly static DOFType[] nodalDOFTypes = new DOFType[] { DOFType.X, DOFType.Y, DOFType.Z, DOFType.RotX, DOFType.RotZ };
+        protected readonly static DOFType[] nodalDOFTypes = new DOFType[] { DOFType.X, DOFType.Y, DOFType.Z, DOFType.RotX, DOFType.RotY };
         protected readonly static DOFType[][] dofTypes = new DOFType[][] { nodalDOFTypes, nodalDOFTypes, nodalDOFTypes,
             nodalDOFTypes, nodalDOFTypes, nodalDOFTypes, nodalDOFTypes, nodalDOFTypes };
         protected readonly IFiniteElementMaterial3D[] materialsAtGaussPoints;
@@ -808,11 +808,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 for (int j = 0; j < 8; j++)
                 {
                     J_1b[2 * j, 0] = tx_i[j][0];
-                    J_1b[2 * j + 1, 0] = tUvec[j][3];
+                    J_1b[2 * j + 1, 0] = tU[j][3];
                     J_1b[2 * j, 1] = tx_i[j][1];
-                    J_1b[2 * j + 1, 1] = tUvec[j][4];
+                    J_1b[2 * j + 1, 1] = tU[j][4];
                     J_1b[2 * j, 2] = tx_i[j][2];
-                    J_1b[2 * j + 1, 2] = tUvec[j][5];
+                    J_1b[2 * j + 1, 2] = tU[j][5];
                 }
                 endeixiJ_1b = 2;
 
@@ -822,11 +822,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 for (int j = 0; j < 8; j++)
                 {
                     J_1b[2 * j, 0] = tx_i[j][0];
-                    J_1b[2 * j + 1, 0] = tUvec[j][3];
+                    J_1b[2 * j + 1, 0] = tU[j][3];
                     J_1b[2 * j, 1] = tx_i[j][1];
-                    J_1b[2 * j + 1, 1] = tUvec[j][4];
+                    J_1b[2 * j + 1, 1] = tU[j][4];
                     J_1b[2 * j, 2] = tx_i[j][2];
-                    J_1b[2 * j + 1, 2] = tUvec[j][5];
+                    J_1b[2 * j + 1, 2] = tU[j][5];
                 }
             }
         }
@@ -1076,8 +1076,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 Cons[0, 1] = ni[j] * E[j] / (1 - Math.Pow(ni[j], 2));
                 Cons[1, 0] = ni[j] * E[j] / (1 - Math.Pow(ni[j], 2));
                 Cons[3, 3] = (1 - ni[j]) * (0.5) * E[j] / (1 - Math.Pow(ni[j], 2));
-                for (int k = 0; k < 2; k++)
-                { Cons[4 + k, 4 + k] = (5 / 6) * (1 - ni[j]) * (0.5) * E[j] / (1 - Math.Pow(ni[j], 2)); }
+                Cons[4, 4] = (1 - ni[j]) * (0.41666666667) * E[j] / (1 - Math.Pow(ni[j], 2));
+                Cons[5, 5] = (1 - ni[j]) * (0.41666666667) * E[j] / (1 - Math.Pow(ni[j], 2));
+                //for (int k = 0; k < 2; k++)
+                //{ Cons[4 + k, 4 + k] = (5 / 6) * (1 - ni[j]) * (0.5) * E[j] / (1 - Math.Pow(ni[j], 2)); }
 
                 for (int k = 0; k < 3; k++)
                 { V3[k] = 0; V1[k] = 0; V2[k] = 0; }
@@ -1257,7 +1259,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         {
                             for (int l = 0; l < 3; l++)
                             {
-                                ck[m][m, 3 * k + l] = GetJ_0a()[j][l, 2 * m + 1] * tU[m][3 + k];
+                                ck[j][m, 3 * k + l] = GetJ_0a()[j][l, 2 * m + 1] * tU[m][3 + k];
                             }
                         }
                     }
@@ -1273,7 +1275,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         {
                             for (int l = 0; l < 3; l++)
                             {
-                                ck[m][m, 3 * k + l] = GetJ_0a()[j][l, 2 * m + 1] * tU[m][3 + k];
+                                ck[j][m, 3 * k + l] = GetJ_0a()[j][l, 2 * m + 1] * tU[m][3 + k];
                             }
                         }
                     }
@@ -1410,7 +1412,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     {
                         for (int l = 0; l < 9; l++)
                         {
-                            BL01plus1_2[j][k, l] = BL1_2[j][k, l] + BL11[j][k, l];
+                            BL01plus1_2[j][k, l] = BL1_2[j][k, l] + GetBL11a(element)[j][k, l];
                         }
                     }
 
@@ -1588,7 +1590,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     {
                         for (int l = 0; l < 9; l++)
                         {
-                            BL01plus1_2[j][k, l] = BL1_2[j][k, l] + BL11[j][k, l];
+                            BL01plus1_2[j][k, l] = BL1_2[j][k, l] + GetBL11a(element)[j][k, l];
                         }
                     }
 
@@ -1724,10 +1726,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double bk;
         private double gk;
         private double gk1;
-        private double[,] s_k;
-        private double[,] Q;
-        private double[,] Q2;
-        private double[] tdtVn;
+        private double[,] s_k = new double[3,3];
+        private double[,] Q = new double[3,3];
+        private double[,] Q2 = new double[3, 3];
+        private double[] tdtVn = new double[3];
         private double tV1norm;
 
         private void UpdateCoordinateData(double[] localdisplacements)
@@ -1968,6 +1970,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 CalculateSPK();
                 CalculateCk();
                 CalculateKmatrices(element);
+                endeixiStiffness = 2;
                 IMatrix2D<double> iGlobalStiffnessMatrix = new Matrix2D<double>(Kt);
                 return dofEnumerator.GetTransformedMatrix(iGlobalStiffnessMatrix);
             }
