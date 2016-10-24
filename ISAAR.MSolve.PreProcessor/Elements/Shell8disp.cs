@@ -1176,10 +1176,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 {
                     SPKvec[j] = new double[6];
                     SPK_circumflex[j] = new double[9, 9];
-                    for (int l = 0; l < 3; l++)
+                    for (int l = 0; l < 6; l++)
                         {
                             SPKvec[j][l] = 0;
-                            for (int m = 0; m < 3; m++)
+                            for (int m = 0; m < 6; m++)
                             {
                             SPKvec[j][l] += ConsCartes[j][l, m] * GLvec[j][m];
                             }
@@ -1196,12 +1196,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         {
                             SPK_circumflex[j][3 * k + l, 3 * k + l] = SPKvec[j][l];
                         }
-                        SPK_circumflex[j][3 * k + 1, 3 * k] = SPKvec[j][3];
-                        SPK_circumflex[j][3 * k + 2, 3 * k+1] = SPKvec[j][4];
-                        SPK_circumflex[j][3 * k + 1, 3 * k+2] = SPKvec[j][5];
-                        SPK_circumflex[j][ 3 * k,3 * k + 1] = SPKvec[j][3];
-                        SPK_circumflex[j][ 3 * k + 1,3 * k + 2] = SPKvec[j][4];
-                        SPK_circumflex[j][3 * k + 2, 3 * k + 1] = SPKvec[j][5];
+                        SPK_circumflex[j][3 * k , 3 * k +1] = SPKvec[j][3];
+                        SPK_circumflex[j][3 * k , 3 * k+2] = SPKvec[j][5];
+                        SPK_circumflex[j][3 * k + 1, 3 * k+2] = SPKvec[j][4];
+
+                        SPK_circumflex[j][3 * k+1, 3 * k ] = SPKvec[j][3];
+                        SPK_circumflex[j][3 * k+2, 3 * k] = SPKvec[j][5];
+                        SPK_circumflex[j][3 * k + 2, 3 * k + 1] = SPKvec[j][4];                        
                     }
 
                 }
@@ -1210,10 +1211,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             {
                 for (int j = 0; j < nGaussPoints; j++)
                 {                   
-                    for (int l = 0; l < 3; l++)
+                    for (int l = 0; l < 6; l++)
                     {
                         SPKvec[j][l] = 0;
-                        for (int m = 0; m < 3; m++)
+                        for (int m = 0; m < 6; m++)
                         {
                             SPKvec[j][l] += ConsCartes[j][l, m] * GLvec[j][m];
                         }
@@ -1225,12 +1226,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         {
                             SPK_circumflex[j][3 * k + l, 3 * k + l] = SPKvec[j][l];
                         }
-                        SPK_circumflex[j][3 * k + 1, 3 * k] = SPKvec[j][3];
-                        SPK_circumflex[j][3 * k + 2, 3 * k + 1] = SPKvec[j][4];
-                        SPK_circumflex[j][3 * k + 1, 3 * k + 2] = SPKvec[j][5];
                         SPK_circumflex[j][3 * k, 3 * k + 1] = SPKvec[j][3];
+                        SPK_circumflex[j][3 * k, 3 * k + 2] = SPKvec[j][5];
                         SPK_circumflex[j][3 * k + 1, 3 * k + 2] = SPKvec[j][4];
-                        SPK_circumflex[j][3 * k + 2, 3 * k + 1] = SPKvec[j][5];
+
+                        SPK_circumflex[j][3 * k + 1, 3 * k] = SPKvec[j][3];
+                        SPK_circumflex[j][3 * k + 2, 3 * k] = SPKvec[j][5];
+                        SPK_circumflex[j][3 * k + 2, 3 * k + 1] = SPKvec[j][4];
                     }
 
                 }
@@ -1797,6 +1799,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         tU[k][3 + j] = tdtVn[j];
                     }
 
+                    tU[k][0] = localdisplacements[5 * k + 0];
+                    tU[k][1] = localdisplacements[5 * k + 1];
+                    tU[k][2] = localdisplacements[5 * k + 2];
+
                     tUvec[k][0] = tU[k][5];
                     tUvec[k][1] = 0;
                     tUvec[k][2] = -tU[k][3];
@@ -1906,10 +1912,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         {
             if (endeixiArxikDianusmatwn==1)
             {                
-                this.GetInitialGeometricData(element);
-                CalculateCons();
+                //this.GetInitialGeometricData(element);
+                //CalculateCons();
 
-                //this.UpdateCoordinateData(localTotalDisplacements);
+                this.UpdateCoordinateData(localTotalDisplacements);
                 Calculatell2();
                 Calculatel_circumflex();
                 CalculateBL11b();
