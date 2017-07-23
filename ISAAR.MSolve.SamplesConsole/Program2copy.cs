@@ -11,7 +11,7 @@ using System.Text;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    class Program2NL
+    class Program2copy
     {
         private static void SolveHexaBuilding()
         { 
@@ -19,7 +19,7 @@ namespace ISAAR.MSolve.SamplesConsole
             Model model = new Model();
             model.SubdomainsDictionary.Add(1, new Subdomain() { ID = 1 });
     
-            ArchBuilder.MakeArchBuilding(model);
+            HexaBuilder2.MakeHexaBuilding(model);
 
             model.ConnectDataStructures();
 
@@ -34,9 +34,9 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // apo theofilo
             analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
-            model.NodalDOFsDictionary[4][DOFType.X],
-            model.NodalDOFsDictionary[4][DOFType.Y],
-            model.NodalDOFsDictionary[4][DOFType.Z] });
+            model.NodalDOFsDictionary[12][DOFType.X],
+            model.NodalDOFsDictionary[12][DOFType.Y],
+            model.NodalDOFsDictionary[12][DOFType.Z]});
             //model.ElementsDictionary[1][]
             //model.NodalDOFsDictionary[17][DOFType.Z]});
             //ews edw
@@ -53,7 +53,7 @@ namespace ISAAR.MSolve.SamplesConsole
             parentAnalyzer.Solve();
 
             //Console.WriteLine("checkPoint1 reached");
-            Console.WriteLine("Writing results for node 4");
+            Console.WriteLine("Writing results for node 5");
             Console.WriteLine("Dof and Values for Displacement X, Y, Z");
             Console.WriteLine(analyzer.Logs[1][0]);
 

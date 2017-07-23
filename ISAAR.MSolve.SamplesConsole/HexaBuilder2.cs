@@ -108,7 +108,7 @@ namespace ISAAR.MSolve.SamplesConsole
                     Node = model.NodesDictionary[ID2],
                     //DOF = doftype1,
                     DOF = DOFType.Z,
-                    Amount = 5
+                    Amount = 500
                     
                 };
                 model.Loads.Add(load1);

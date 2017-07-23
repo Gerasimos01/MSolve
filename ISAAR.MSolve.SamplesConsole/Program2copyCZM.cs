@@ -11,7 +11,7 @@ using System.Text;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    class Program2NL
+    class Program2copyCZM
     {
         private static void SolveHexaBuilding()
         { 
@@ -19,14 +19,14 @@ namespace ISAAR.MSolve.SamplesConsole
             Model model = new Model();
             model.SubdomainsDictionary.Add(1, new Subdomain() { ID = 1 });
     
-            ArchBuilder.MakeArchBuilding(model);
+            HexaBuilder2CZM.MakeHexaBuilding(model);
 
             model.ConnectDataStructures();
 
             SolverSkyline solver = new SolverSkyline(model);
             ProblemStructural provider = new ProblemStructural(model, solver.SubdomainsDictionary);
             //LinearAnalyzer analyzer = new LinearAnalyzer(solver, solver.SubdomainsDictionary);
-            Analyzers.NewtonRaphsonNonLinearAnalyzer2 analyzer = new NewtonRaphsonNonLinearAnalyzer2(solver, solver.SubdomainsDictionary, provider, 10, model.TotalDOFs);//1. increments einai to 10
+            Analyzers.NewtonRaphsonNonLinearAnalyzer2 analyzer = new NewtonRaphsonNonLinearAnalyzer2(solver, solver.SubdomainsDictionary, provider, 26, model.TotalDOFs);//1. increments einai to 26
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, analyzer, solver.SubdomainsDictionary);
             analyzer.SetMaxIterations = 100;
             analyzer.SetIterationsForMatrixRebuild = 1;
@@ -36,7 +36,7 @@ namespace ISAAR.MSolve.SamplesConsole
             analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
             model.NodalDOFsDictionary[4][DOFType.X],
             model.NodalDOFsDictionary[4][DOFType.Y],
-            model.NodalDOFsDictionary[4][DOFType.Z] });
+            model.NodalDOFsDictionary[4][DOFType.Z]});
             //model.ElementsDictionary[1][]
             //model.NodalDOFsDictionary[17][DOFType.Z]});
             //ews edw
@@ -59,9 +59,9 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        //static void Main(string[] args)
-        //{
-        //    SolveHexaBuilding();
-        //}
+        static void Main(string[] args)
+        {
+            SolveHexaBuilding();
+        }
     }
 }

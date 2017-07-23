@@ -34,9 +34,9 @@ namespace ISAAR.MSolve.SamplesConsole
             analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
             model.NodalDOFsDictionary[12][DOFType.X],
             model.NodalDOFsDictionary[12][DOFType.Y],
-            model.NodalDOFsDictionary[12][DOFType.Z],
+            model.NodalDOFsDictionary[12][DOFType.Z]});
             //model.ElementsDictionary[1][]
-            model.NodalDOFsDictionary[17][DOFType.Z]});
+            //model.NodalDOFsDictionary[17][DOFType.Z]});
             //ews edw
 
             //// apo theofilo

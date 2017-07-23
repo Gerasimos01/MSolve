@@ -91,6 +91,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cluster.cs" />
+    <Compile Include="Elements\cohesive8node.cs" />
+    <Compile Include="Elements\cohesive16node.cs" />
     <Compile Include="Elements\Hexa8u8pWithStochasticMaterial.cs" />
     <Compile Include="Elements\Shell8disp.cs" />
     <Compile Include="Interfaces\IMassAccelerationHistoryLoad.cs" />
@@ -102,6 +104,7 @@
     <Compile Include="Elements\SupportiveClasses\ShapeFunctionNaturalDerivatives3D.cs" />
     <Compile Include="Embedding\Hexa8TranslationAndRotationTransformationVector.cs" />
     <Compile Include="Embedding\ElementEmbedder.cs" />
+    <Compile Include="Materials\BenzeggaghKenaneCohMat.cs" />
     <Compile Include="Stochastic\GaussianPCFileStochasticCoefficientsProvider.cs" />
     <Compile Include="GenericDOFEnumerator.cs" />
     <Compile Include="Embedding\Hexa8TranslationTransformationVector.cs" />

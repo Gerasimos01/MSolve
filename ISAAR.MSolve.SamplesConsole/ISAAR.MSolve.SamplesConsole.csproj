@@ -43,11 +43,14 @@
   <ItemGroup>
     <Compile Include="BeamBuildingBuilder.cs" />
     <Compile Include="ArchBuilder.cs" />
+    <Compile Include="HexaBuilder2CZM.cs" />
     <Compile Include="HexaBuilder3beam.cs" />
     <Compile Include="HexaBuilder3dok.cs" />
     <Compile Include="HexaBuilder2.cs" />
     <Compile Include="HexaBuilder.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Program2copyCZM.cs" />
+    <Compile Include="Program2copy.cs" />
     <Compile Include="Program2NL.cs" />
     <Compile Include="Program2.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
