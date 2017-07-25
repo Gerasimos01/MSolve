@@ -75,11 +75,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 N1_ksi[l] = new double[8];
                 N1_heta[l] = new double[8];
             }
-            for (int k = 0; k < gp_d2_coh; k++)
+            for (int j = 0; j < gp_d1_coh; j++)
             {
-                for (int j = 0; j < gp_d1_coh; j++)
+                for (int k = 0; k < gp_d2_coh; k++)
                 {
-                    npoint = k * gp_d1_coh + j;
+                    npoint = j * gp_d1_coh + k;
                     if (gp_d1_coh == 3)
                     {
                         ksi = 0.5 * (j - 1) * (j - 2) * (-0.774596669241483) + (-1) * (j) * (j - 2) * (0) + 0.5 * (j) * (j - 1) * (0.774596669241483);
@@ -316,19 +316,18 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 }
             }
             // sunexeia ews upologismou tou Delta gia ola ta gp
-            for (int k = 0; k < gp_d2_coh; k++)
+
+            for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
             {
-                for (int j = 0; j < gp_d1_coh; j++)
-                {
-                    npoint = k * gp_d1_coh + j;
+                    
                     for (int l = 0; l < 3; l++)
                     {
                         e_ksi[l] = 0;
                         e_heta[l] = 0;
                         for (int m = 0; m < 8; m++) // tha ginei 4 sto cohesive 8 node
                         {
-                            e_ksi[l] += GetN1_ksi()[npoint][m] * x_pavla[l, m];
-                            e_heta[l] += GetN1_heta()[npoint][m] * x_pavla[l, m];
+                            e_ksi[l] += GetN1_ksi()[npoint1][m] * x_pavla[l, m];
+                            e_heta[l] += GetN1_heta()[npoint1][m] * x_pavla[l, m];
                         }
                         e_ksi[l] = 0.5 * e_ksi[l];
                         e_heta[l] = 0.5 * e_heta[l];
@@ -344,9 +343,9 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     this.cross(e_1, e_3, e_2);
                     for (int l = 0; l < 3; l++)
                     {
-                        R[npoint][l, 0] = e_1[l];
-                        R[npoint][l, 1] = e_2[l];
-                        R[npoint][l, 2] = e_3[l];
+                        R[npoint1][l, 0] = e_1[l];
+                        R[npoint1][l, 1] = e_2[l];
+                        R[npoint1][l, 2] = e_3[l];
 
                     }
                     for (int l = 0; l < 3; l++)
@@ -355,26 +354,23 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     {
                         for (int m = 0; m < 8; m++)  // pithanws gia to cohesive 8
                         {
-                            u[l] += u_prok[l, m] * GetN1()[npoint][m];
+                            u[l] += u_prok[l, m] * GetN1()[npoint1][m];
                         }
                     }
                     for (int l = 0; l < 3; l++)
-                    { Delta[npoint][l] = 0; }
+                    { Delta[npoint1][l] = 0; }
                     for (int l = 0; l < 3; l++)
                     {
                         for (int m = 0; m < 3; m++)
                         {
-                            Delta[npoint][l] += R[npoint][m, l] * u[m];
+                            Delta[npoint1][l] += R[npoint1][m, l] * u[m];
                         }
                     }
 
-                    this.cross(e_ksi, e_heta, c_1[npoint]);
-                    coh_det_J_t[npoint]=Math.Sqrt(c_1[npoint][0] * c_1[npoint][0] + c_1[npoint][1] * c_1[npoint][1] + c_1[npoint][2] * c_1[npoint][2]);
-                    sunt_olokl[npoint] = coh_det_J_t[npoint] * Get_a_12g()[npoint];
-                }
-            }
-
-
+                    this.cross(e_ksi, e_heta, c_1[npoint1]);
+                    coh_det_J_t[npoint1]=Math.Sqrt(c_1[npoint1][0] * c_1[npoint1][0] + c_1[npoint1][1] * c_1[npoint1][1] + c_1[npoint1][2] * c_1[npoint1][2]);
+                    sunt_olokl[npoint1] = coh_det_J_t[npoint1] * Get_a_12g()[npoint1];
+             }            
         }
 
         private void cross(double[] A, double[] B, double[] C)
@@ -386,16 +382,15 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private void InitializeRN3()
         {
-            for (int k = 0; k < gp_d2_coh; k++)
+
+            for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
             {
-                for (int j = 0; j < gp_d1_coh; j++)
-                {
-                    npoint = k * gp_d1_coh + j;
+                    
                     for (int l = 0; l < 3; l++)
                     {
                         for (int m = 0; m < 24; m++)
                         {
-                            RN3[npoint][l, m] = 0;
+                            RN3[npoint1][l, m] = 0;
                         }
                     }
                     for (int l = 0; l < 3; l++)
@@ -403,11 +398,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         for (int m = 0; m < 24; m++)
                         {
                             for (int n = 0; n < 3; n++)
-                            { RN3[npoint][l, m] += R[npoint][l, n] * GetN3()[npoint][n, m]; }
+                            { RN3[npoint1][l, m] += R[npoint1][l, n] * GetN3()[npoint1][n, m]; }
                         }
                     }
                 }
-            }
+            
         }
 
 
@@ -417,16 +412,14 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             {
                 fxk1_coh[j] = 0;
             }
-            for (int k = 0; k < gp_d2_coh; k++)
+
+            for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
             {
-                for (int j = 0; j < gp_d1_coh; j++)
-                {
-                    npoint = k * gp_d1_coh + j;
                     for (int l = 0; l < 3; l++)
                     {
                         for (int m = 0; m < 24; m++)
                         {
-                            RN3[npoint][l, m] = 0;
+                            RN3[npoint1][l, m] = 0;
                         }
                     }
                     for (int l = 0; l < 3; l++)
@@ -434,19 +427,19 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         for (int m = 0; m < 24; m++)
                         {
                             for (int n = 0; n < 3; n++)
-                            { RN3[npoint][l, m] += R[npoint][l, n] * GetN3()[npoint][n,m]; }
+                            { RN3[npoint1][l, m] += R[npoint1][l, n] * GetN3()[npoint1][n,m]; }
                         }
                     }
                     for (int l = 0; l < 3; l++)
                     {
-                        T_int_sunt_ol[l] = T_int[npoint][l] * Get_a_12g()[npoint];
+                        T_int_sunt_ol[l] = T_int[npoint1][l] * sunt_olokl[npoint1];
                     }
                     for (int l = 0; l < 24; l++)
                     { r_int_1[l] = 0; }
                     for (int l = 0; l < 24; l++)
                     {
                         for (int m = 0; m < 3; m++)
-                        { r_int_1[l] = RN3[npoint][m, l] * T_int_sunt_ol[m]; }
+                        { r_int_1[l] += RN3[npoint1][m, l] * T_int_sunt_ol[m]; }
                     }
                     for (int l = 0; l < 24; l++)
                     {
@@ -454,7 +447,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         fxk1_coh[24 + l] += (-r_int_1[l]);
                     }
                 }
-            }
+            
         }
 
         private void UpdateKmatrices()
@@ -466,16 +459,15 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     k_stoixeiou_coh[k, j] = 0;
                 }
             }
-            for (int k = 0; k < gp_d2_coh; k++)
+
+            for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
             {
-                for (int j = 0; j < gp_d1_coh; j++)
-                {
-                    npoint = k * gp_d1_coh + j;
+                    
                     for (int l = 0; l < 3; l++)
                     {
                         for (int m = 0; m < 3; m++)
                         {
-                            D_tan_sunt_ol[l, m] = D_tan[npoint][l, m] * sunt_olokl[npoint];
+                            D_tan_sunt_ol[l, m] = D_tan[npoint1][l, m] * sunt_olokl[npoint1];
                         }
                     }
 
@@ -492,7 +484,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         for (int m = 0; m < 24; m++)
                         {
                             for (int n = 0; n < 3; n++)
-                            { D_RN3_sunt_ol[l, m] += D_tan_sunt_ol[l, n] * RN3[npoint][n, m]; }
+                            { D_RN3_sunt_ol[l, m] += D_tan_sunt_ol[l, n] * RN3[npoint1][n, m]; }
                         }
                     }
                     for (int l = 0; l < 24; l++)
@@ -508,7 +500,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         {
                             for (int n = 0; n < 3; n++)
                             {
-                                M[l, m] += RN3[npoint][n, l] * D_RN3_sunt_ol[n, m];
+                                M[l, m] += RN3[npoint1][n, l] * D_RN3_sunt_ol[n, m];
                             }
                         }
                     }
@@ -525,7 +517,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
 
                 }
-            }
+            
         }
 
         public Tuple<double[], double[]> CalculateStresses(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
