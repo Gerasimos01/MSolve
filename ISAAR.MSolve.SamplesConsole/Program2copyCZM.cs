@@ -26,7 +26,7 @@ namespace ISAAR.MSolve.SamplesConsole
             SolverSkyline solver = new SolverSkyline(model);
             ProblemStructural provider = new ProblemStructural(model, solver.SubdomainsDictionary);
             //LinearAnalyzer analyzer = new LinearAnalyzer(solver, solver.SubdomainsDictionary);
-            Analyzers.NewtonRaphsonNonLinearAnalyzer2 analyzer = new NewtonRaphsonNonLinearAnalyzer2(solver, solver.SubdomainsDictionary, provider, 26, model.TotalDOFs);//1. increments einai to 26
+            Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, 17, model.TotalDOFs);//1. increments einai to 17 (arxika eixame thesei2 26 incr)
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, analyzer, solver.SubdomainsDictionary);
             analyzer.SetMaxIterations = 100;
             analyzer.SetIterationsForMatrixRebuild = 1;

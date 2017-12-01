@@ -10,7 +10,7 @@ using System.Diagnostics;
 
 namespace ISAAR.MSolve.Analyzers
 {
-    public class NewtonRaphsonNonLinearAnalyzer2 : IAnalyzer
+    public class NewtonRaphsonNonLinearAnalyzer3 : IAnalyzer
     {
         private readonly IDictionary<int, ISolverSubdomain> subdomains;
         private readonly int increments;
@@ -30,7 +30,7 @@ namespace ISAAR.MSolve.Analyzers
         private readonly Dictionary<int, LinearAnalyzerLogFactory> logFactories = new Dictionary<int, LinearAnalyzerLogFactory>();
         private readonly Dictionary<int, IAnalyzerLog[]> logs = new Dictionary<int, IAnalyzerLog[]>();
 
-        public NewtonRaphsonNonLinearAnalyzer2(ISolver solver, IDictionary<int, ISolverSubdomain> subdomains, 
+        public NewtonRaphsonNonLinearAnalyzer3(ISolver solver, IDictionary<int, ISolverSubdomain> subdomains, 
             INonLinearProvider provider, int increments, int totalDOFs)
         {
             this.solver = solver;
@@ -142,7 +142,7 @@ namespace ISAAR.MSolve.Analyzers
             {
                 Vector<double> subdomainRHS = ((Vector<double>)subdomain.RHS);
                 rhs[subdomain.ID].CopyTo(subdomainRHS.Data, 0);
-                subdomainRHS.Multiply(step + 1);
+                //subdomainRHS.Multiply(step + 1);
             }
         }
 
@@ -163,7 +163,7 @@ namespace ISAAR.MSolve.Analyzers
                 for (step = 0; step < maxSteps; step++)
                 {
                     solver.Solve();
-                    errorNorm = rhsNorm != 0 ? CalculateInternalRHS(increment, step) / rhsNorm : 0;
+                    errorNorm = rhsNorm != 0 ? CalculateInternalRHS(increment, step) / rhsNorm : 0; // (rhsNorm*increment/increments) : 0;
                     if (step == 0) firstError = errorNorm;
                     if (errorNorm < tolerance) break;
 

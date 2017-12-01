@@ -228,6 +228,9 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double[,] D_tan_sunt_ol;
         private double[,] D_RN3_sunt_ol;
         private double[] T_int_sunt_ol;
+        //temporary
+        private int n_incr = 0;
+        private int n_iter = 0;
         private void GetInitialGeometricDataAndInitializeMatrices(Element element)
         {
             ox_i = new double[8][];
@@ -433,7 +436,6 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         fxk1_coh[12 + l] += (-r_int_1[l]);
                     }
                 }
-
         }
 
         private void UpdateKmatrices()
@@ -523,7 +525,12 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 { T_int[i][j] = materialsAtGaussPoints[i].Stresses[j]; }
             }
             this.UpdateForces();
-            return fxk1_coh;
+            //temporary
+            n_iter += 1;
+            if (n_iter == 1)
+            { n_iter += 0; }
+
+            return fxk1_coh;           
         }
 
         public double[] CalculateForcesForLogging(Element element, double[] localDisplacements)
@@ -577,6 +584,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         public void SaveMaterialState()
         {
             foreach (IFiniteElementMaterial3D m in materialsAtGaussPoints) m.SaveState();
+            //temporary
+            n_incr += 1;
+            if (n_incr == 17)
+            { n_incr += 0; }
         }
 
         public void ClearMaterialStresses()

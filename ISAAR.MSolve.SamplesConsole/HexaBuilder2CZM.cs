@@ -124,7 +124,7 @@ namespace ISAAR.MSolve.SamplesConsole
                     Node = model.NodesDictionary[ID2],
                     //DOF = doftype1,
                     DOF = DOFType.X,
-                    Amount = 4.2
+                    Amount = 2.7462 //(17/26)*4.2
                     
                 };
                 model.Loads.Add(load1);
@@ -133,7 +133,7 @@ namespace ISAAR.MSolve.SamplesConsole
                     Node = model.NodesDictionary[ID2],
                     //DOF = doftype1,
                     DOF = DOFType.Z,
-                    Amount = 0.84
+                    Amount = 0.5492 //(17/26)*0.84
 
                 };
                 model.Loads.Add(load1);

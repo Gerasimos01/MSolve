@@ -167,7 +167,7 @@ namespace ISAAR.MSolve.PreProcessor.Materials
                     D_tan[j, j] = (1 - d) * E;
                 }
 
-                H = (D_f / D_o) / ((D_f - D_o) * Math.Pow(lamda, 3));
+                H = (D_f * D_o) / ((D_f - D_o) * Math.Pow(lamda, 3));
                 EH = E * H;
                 D_tan[0, 0] += - EH * Math.Pow(Delta[0], 2);
                 D_tan[1, 1] += - EH * Math.Pow(Delta[1], 2);

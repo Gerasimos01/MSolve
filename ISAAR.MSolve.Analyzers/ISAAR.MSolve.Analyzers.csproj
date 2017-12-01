@@ -99,6 +99,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NewtonRaphsonNonLinearAnalyzer3.cs" />
     <Compile Include="NewtonRaphsonNonLinearAnalyzer2.cs" />
     <Compile Include="VRFMonteCarloAnalyzerWithStochasticMaterial.cs" />
     <Compile Include="PolynomialChaosAnalyzer.cs" />
