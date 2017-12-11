@@ -182,6 +182,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][] ox_i; //den einai apo afta pou orizei o xrhsths 8 arrays twn 3 stoixeiwn
+        private double[][] tx_i;
+        private double[][] tu_i;
         private double[][,] J_0b_hexa; // exoume tosa [,] osa einai kai ta gpoints
         private double[][,] J_0_hexa;
         private double[][,] J_0inv_hexa;
@@ -197,6 +199,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private void GetInitialGeometricDataAndInitializeMatrices(Element element)
         {
             ox_i = new double[8][];
+            tx_i = new double[8][];
+            tu_i = new double[8][]; // apla initialized edw kai tpt allo
             J_0b_hexa = new double[nGaussPoints][,];
             J_0_hexa = new double[nGaussPoints][,];
             J_0inv_hexa = new double[nGaussPoints][,];
@@ -211,6 +215,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             for (int j = 0; j < 8; j++)
             {
                 ox_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
+                tx_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
+                //tu_i[j] = new double[] { 0, 0, 0 }; den ananewnontai se afth th methodo ta mhtrwa pou periexoun tu_i
             }
 
             for (int npoint = 0; npoint < nGaussPoints; npoint++)
@@ -396,9 +402,646 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
             }
+
+            this.InitializeMatrices();
         }
 
-        // implement update coordinate data
+
+        private double[,] ll2; //einai anexarthto twn GP // initialize gia to update coordinate
+        private double[,] J_1b;
+        private double[][,] J_1;// exoume tosa [,] osa einai kai ta gpoints        
+        private double[][,] BL11b;
+        private double[][,] DG;
+        private double[][,] GL;
+        private double[][] GLvec;
+        private double[][]Spkvec;
+
+        private double[,] l_perisp; // voithitikos upologismwn // initialize gia to update forces
+        private double[][] sunt_ol_Spkvec;
+        private double[][,] BL11;
+        private double[][,] BL1112sun01_hexa;
+        private double[][,] BL;
+        private double[][] fxk1; // fxk1 exei diastaseis omoiws me to shell8disp to Fxk dld mia nGausspoints+1 logw tou oti kratoume sthn
+                                 // teleftaia extra thesh to athroisma
+
+        private double[][,] sunt_ol_Spk; // initialize gia to updateKmatrices
+        private double[,] sunt_ol_SPK_epi_BNL_hexa;
+        private double[][,] kl_;
+        private double[][,] knl_;
+        private double[,] k_stoixeiou ;
+        private double[][,] Cons_disp; // upologismos apo to updatematerial
+        private double[,] sunt_ol_cons_disp; // voithitiko upologismwn
+        private double[,] sunt_ol_cons_disp_epi_BL;
+
+
+        private void InitializeMatrices()
+        {
+            // initialize gia to update coordinate 
+            ll2 = new double[8, 3];
+            J_1b = new double[8, 3];
+            J_1 = new double[nGaussPoints][,];
+            //BL11b= new double[nGaussPoints][,];
+            DG = new double[nGaussPoints][,];
+            GL = new double[nGaussPoints][,];
+            GLvec = new double[nGaussPoints][];
+            Spkvec = new double[nGaussPoints][];
+            for (int npoint = 0; npoint < nGaussPoints; npoint++)
+            {
+                J_1[npoint] = new double[3, 3];
+                //BL11b[npoint] = new double[9,9];                
+                DG[npoint] = new double[3, 3];
+                GL[npoint] = new double[3, 3];
+                GLvec[npoint] = new double[6];
+                Spkvec[npoint] = new double[6];
+                // epiprosthtws mhdenizoueme gia efkolia edw osa apo ta parapanw the tha gemisoun plhrws 
+                //for (int j = 0; j < 9; j++)
+                //{
+                //    for (int k = 0; k < 9; k++)
+                //    {
+                //        BL11b[npoint][j, k] = 0;
+                //    }
+                //}
+            }
+
+            // initialize gia to update forces
+            l_perisp = new double[3, 3];
+            sunt_ol_Spkvec = new double[nGaussPoints][];
+            BL11 = new double[nGaussPoints][,];
+            BL1112sun01_hexa = new double[nGaussPoints][,];
+            BL = new double[nGaussPoints][,];
+            fxk1 = new double[nGaussPoints+1][];
+            for (int npoint = 0; npoint < nGaussPoints; npoint++)
+            {
+                sunt_ol_Spkvec[npoint] = new double[6];
+                BL11[npoint] = new double[6, 9];
+                BL1112sun01_hexa[npoint] = new double[6, 9];
+                BL[npoint] = new double[6, 24];
+                
+            }
+            for (int npoint = 0; npoint < nGaussPoints+1; npoint++)
+            {
+                fxk1[npoint] = new double[24];
+            }
+
+            // initialize gia to updateKmatrices
+            sunt_ol_Spk = new double[nGaussPoints][,];
+            sunt_ol_SPK_epi_BNL_hexa = new double[9,24];
+            kl_ = new double[nGaussPoints + 1][,]; 
+            knl_ = new double[nGaussPoints + 1][,]; 
+            k_stoixeiou = new double[24,24]; ;
+            Cons_disp = new double[nGaussPoints ][,] ; // upologismos apo to updatematerial
+            sunt_ol_cons_disp = new double [6,6];
+            sunt_ol_cons_disp_epi_BL = new double[6, 24];
+            for (int npoint = 0; npoint < nGaussPoints ; npoint++)
+            {
+                sunt_ol_Spk[npoint] = new double[3,3];
+                Cons_disp[npoint] = new double[6, 6];
+            }
+            for (int npoint = 0; npoint < nGaussPoints + 1; npoint++)
+            {
+                kl_[npoint] = new double[24,24];
+                knl_[npoint] = new double[24, 24];
+            }
+
+
+        }
+
+
+
+        private void UpdateCoordinateData(double[] localdisplacements) // sto shell8disp sto calculate forces kaleitai me this.UpdateCoordinateData(localTotalDisplacements);
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    tu_i[j][k]= localdisplacements[3 * j + k];
+                    tx_i[j][k] = ox_i[j][k] + tu_i[j][k];
+                }
+            }
+
+            //
+            for (int m = 0; m < 8; m++)
+            {
+                for (int n = 0; n < 3; n++)
+                {
+                    ll2[m, n] = tu_i[m][n];
+                    J_1b[m,n] = tx_i[m][n];
+                }
+            }
+
+            // //
+            for (int npoint = 0; npoint < nGaussPoints; npoint++)
+            {
+
+                //
+                for (int m = 0; m < 3; m++)
+                {
+                    for (int n = 0; n < 3; n++)
+                    {
+                        J_1[npoint][m, n] = 0;
+                        for (int p = 0; p < 8; p++)
+                        {
+                            J_1[npoint][m, n] += ll1_hexa[npoint][m, p] * J_1b[p, n];
+                        }
+                    }
+                }
+
+                
+                //
+                //for (int m = 0; m < 3; m++)
+                //{
+                //    for (int n = 0; n < 3; n++)
+                //    {
+                //        for (int p = 0; p < 3; p++)
+                //        {
+                //            BL11b[npoint][3 * m + n, 3 * m + p] = l_perisp[n, p]; 
+                //        }
+                //    }
+                //}
+
+                //
+                for (int m = 0; m < 3; m++)
+                {
+                    for (int n = 0; n < 3; n++)
+                    {
+                        DG[npoint][m, n] = 0;
+                        for (int p = 0; p < 3; p++)
+                        {
+                            DG[npoint][m, n] += J_0inv_hexa[npoint][m, p] * J_1[npoint][n, p];
+                        }
+                    }
+                }
+
+                //
+                for (int m = 0; m < 3; m++)
+                {
+                    for (int n = 0; n < 3; n++)
+                    {
+                        GL[npoint][m, n] = 0;
+                        for (int p = 0; p < 3; p++)
+                        {
+                            GL[npoint][m, n] += DG[npoint][p,m] * DG[npoint][p,n];
+                        }
+                    }
+                }
+                for (int m = 0; m < 3; m++)
+                {
+                    GL[npoint][m, m] += -1;
+                }
+                for (int m = 0; m < 3; m++)
+                {
+                    for (int n = 0; n < 3; n++)
+                    {
+                        GL[npoint][m, n] = 0.5 * GL[npoint][m, n];
+                    }
+                }
+
+                //
+                for (int m = 0; m < 3; m++)
+                {
+                    GLvec[npoint][m] = GL[npoint][m, m];
+                }
+                GLvec[npoint][3] = 2 * GL[npoint][0, 1];
+                GLvec[npoint][4] = 2 * GL[npoint][1, 2];
+                GLvec[npoint][5] = 2 * GL[npoint][2, 0];
+            }
+
+            }
+
+
+        // apo uliko tha einai gnwsto to SpkVec[npoint][1:6] gia ola ta npoints
+        // me vash afto programmatizontai oi forces
+
+
+        private void UpdateForces()
+        {
+
+
+            for (int npoint = 0; npoint < nGaussPoints; npoint++)
+            {
+
+                //
+                for (int m = 0; m < 6; m++)
+                {
+                    sunt_ol_Spkvec[npoint][m] = sunt_oloklhrwmatos[npoint] * Spkvec[npoint][m];
+                }
+
+                //
+                for (int m = 0; m < 3; m++)
+                {
+                    for (int n = 0; n < 3; n++)
+                    {
+                        l_perisp[m, n] = 0;
+                        for (int p = 0; p < 8; p++)
+                        {
+                            l_perisp[m, n] += ll1_hexa[npoint][m, p] * ll2[p, n];
+                        }
+                    }
+                }
+
+                //
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 9; n++)
+                    {
+                        BL11[npoint][m,n] = 0;
+                    }
+                }
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 3; n++)
+                    {
+                        for (int p = 0; p < 3; p++)
+                        {
+                            BL11[npoint][m, n] += BL11a_hexa[npoint][m, p] * l_perisp[p, n];
+                            BL11[npoint][m,3+n]+= BL11a_hexa[npoint][m, 3+p] * l_perisp[p, n];
+                            BL11[npoint][m, 6 + n] += BL11a_hexa[npoint][m, 6 + p] * l_perisp[p, n];
+                        }
+                    }
+                }
+
+                //
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 9; n++)
+                    {
+                        BL1112sun01_hexa[npoint][m, n] = 0;
+                        for (int p = 0; p < 9; p++)
+                        {
+                            BL1112sun01_hexa[npoint][m, n] += BL11[npoint][m, p] * BL12_hexa[npoint][p, n];
+                        }
+                    }
+                }
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 9; n++)
+                    {
+                        BL1112sun01_hexa[npoint][m, n] += BL01_hexa[npoint][m, n];
+                    }
+                }
+
+                //
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 24; n++)
+                    {
+                        BL[npoint][m, n] = 0;
+                        for (int p = 0; p < 9; p++)
+                        {
+                            BL[npoint][m, n] += BL1112sun01_hexa[npoint][m, p] * BL13_hexa[npoint][p, n];
+                        }
+                    }
+                }
+
+                //
+                for (int m = 0; m < 24; m++)
+                {
+                    fxk1[npoint][m] = 0;
+                    for (int n = 0; n < 6; n++)
+                    {
+                        fxk1[npoint][m] += BL[npoint][n, m] * sunt_ol_Spkvec[npoint][n];
+                    }
+                }
+            }
+
+            //
+            for (int m = 0; m < 24; m++)
+            {
+                fxk1[nGaussPoints][m] = 0;
+            }
+            for (int npoint = 0; npoint < nGaussPoints; npoint++)
+            {
+                for (int m = 0; m < 24; m++)
+                {
+                    fxk1[nGaussPoints][m] += fxk1[npoint][m];
+                }
+            }
+
+        }
+
+        private void InitializeBland_sunt_ol_Spkvec() //.first_calc_for_Kmatrices
+        {
+            for (int npoint = 0; npoint < nGaussPoints; npoint++)
+            {
+
+                //
+                for (int m = 0; m < 6; m++)
+                {
+                    sunt_ol_Spkvec[npoint][m] = sunt_oloklhrwmatos[npoint] * Spkvec[npoint][m];
+                }
+
+                //
+                for (int m = 0; m < 3; m++)
+                {
+                    for (int n = 0; n < 3; n++)
+                    {
+                        l_perisp[m, n] = 0;
+                        for (int p = 0; p < 8; p++)
+                        {
+                            l_perisp[m, n] += ll1_hexa[npoint][m, p] * ll2[p, n];
+                        }
+                    }
+                }
+
+                //
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 9; n++)
+                    {
+                        BL11[npoint][m, n] = 0;
+                    }
+                }
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 3; n++)
+                    {
+                        for (int p = 0; p < 3; p++)
+                        {
+                            BL11[npoint][m, n] += BL11a_hexa[npoint][m, p] * l_perisp[p, n];
+                            BL11[npoint][m, 3 + n] += BL11a_hexa[npoint][m, 3 + p] * l_perisp[p, n];
+                            BL11[npoint][m, 6 + n] += BL11a_hexa[npoint][m, 6 + p] * l_perisp[p, n];
+                        }
+                    }
+                }
+
+                //
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 9; n++)
+                    {
+                        BL1112sun01_hexa[npoint][m, n] = 0;
+                        for (int p = 0; p < 9; p++)
+                        {
+                            BL1112sun01_hexa[npoint][m, n] += BL11[npoint][m, p] * BL12_hexa[npoint][p, n];
+                        }
+                    }
+                }
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 9; n++)
+                    {
+                        BL1112sun01_hexa[npoint][m, n] += BL01_hexa[npoint][m, n];
+                    }
+                }
+
+                //
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 24; n++)
+                    {
+                        BL[npoint][m, n] = 0;
+                        for (int p = 0; p < 9; p++)
+                        {
+                            BL[npoint][m, n] += BL1112sun01_hexa[npoint][m, p] * BL13_hexa[npoint][p, n];
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+        private void UpdateKmatrices()
+        {
+            for (int npoint = 0; npoint < nGaussPoints; npoint++)
+            {
+                //
+                sunt_ol_Spk[npoint][0, 0] = sunt_ol_Spkvec[npoint][0];
+                sunt_ol_Spk[npoint][0, 1] = sunt_ol_Spkvec[npoint][3];
+                sunt_ol_Spk[npoint][0, 2] = sunt_ol_Spkvec[npoint][5];
+                sunt_ol_Spk[npoint][1, 0] = sunt_ol_Spkvec[npoint][3];
+                sunt_ol_Spk[npoint][1, 1] = sunt_ol_Spkvec[npoint][1];
+                sunt_ol_Spk[npoint][1, 2] = sunt_ol_Spkvec[npoint][4];
+                sunt_ol_Spk[npoint][2, 0] = sunt_ol_Spkvec[npoint][5];
+                sunt_ol_Spk[npoint][2, 1] = sunt_ol_Spkvec[npoint][4];
+                sunt_ol_Spk[npoint][2, 2] = sunt_ol_Spkvec[npoint][2];
+
+                //
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 6; n++)
+                    {
+                        sunt_ol_cons_disp[m, n] = sunt_oloklhrwmatos[npoint] * Cons_disp[npoint][m, n];
+                    }
+                }
+
+                //
+                for (int m = 0; m < 6; m++)
+                {
+                    for (int n = 0; n < 24; n++)
+                    {
+                        sunt_ol_cons_disp_epi_BL[m, n] = 0;
+                        for (int p = 0; p < 6; p++)
+                        {
+                            sunt_ol_cons_disp_epi_BL[m, n] += sunt_ol_cons_disp[m, p] * BL[npoint][p, n];
+                        }
+                    }
+                }
+
+                //
+                for (int m = 0; m < 24; m++)
+                {
+                    for (int n = 0; n < 24; n++)
+                    {
+                        kl_[npoint][m, n] = 0;
+                        for (int p = 0; p < 6; p++)
+                        {
+                            kl_[npoint][m, n] += BL[npoint][p, m] * sunt_ol_cons_disp_epi_BL[p, n];
+                        }
+                    }
+                }
+                //tha athroisoume meta ola ta kl- sthn teleftaia thesi
+
+                //
+                for (int m = 0; m < 3; m++) //prwtes 3x24 grammes
+                {
+                    for (int n = 0; n < 24; n++)
+                    {
+                        sunt_ol_SPK_epi_BNL_hexa[m, n] = 0;
+                        sunt_ol_SPK_epi_BNL_hexa[3+m, n] = 0;
+                        sunt_ol_SPK_epi_BNL_hexa[6 + m, n] = 0;
+                        for (int p = 0; p < 3; p++)
+                        {
+                            sunt_ol_SPK_epi_BNL_hexa[m, n] += sunt_ol_Spk[npoint][m,p] * BNL_hexa[npoint][p, n];
+                            sunt_ol_SPK_epi_BNL_hexa[3+m, n] += sunt_ol_Spk[npoint][m, p] * BNL_hexa[npoint][3+p, n];
+                            sunt_ol_SPK_epi_BNL_hexa[6 + m, n] += sunt_ol_Spk[npoint][m, p] * BNL_hexa[npoint][6 + p, n];
+                        }
+                    }
+                }
+
+                //
+                for (int m = 0; m < 24; m++)
+                {
+                    for (int n = 0; n < 24; n++)
+                    {
+                        knl_[npoint][m, n] = 0;
+                        for (int p = 0; p < 9; p++)
+                        {
+                            knl_[npoint][m, n] += BNL_hexa[npoint][p, m] * sunt_ol_SPK_epi_BNL_hexa[p, n];
+                        }
+                    }
+                }
+                //tha athroisoume meta ola ta knl_ sthn teleftaia thesi i kateftheian sto k_stoixeiou
+
+            }
+
+            // athroisma olwn twn gpoints se k_stoixeiou kai prwta mhdenismos aftou
+            for (int m = 0; m < 24; m++)
+            {
+                for (int n = 0; n < 24; n++)
+                {
+                    kl_[nGaussPoints][m, n] = 0;
+                    knl_[nGaussPoints][m, n] = 0;
+                }
+            }
+            for (int npoint = 0; npoint < nGaussPoints; npoint++)
+            {
+                for (int m = 0; m < 24; m++)
+                {
+                    for (int n = 0; n < 24; n++)
+                    {
+                        kl_[nGaussPoints][m, n] += kl_[npoint][m, n];
+                        knl_[nGaussPoints][m, n] += knl_[npoint][m, n];
+                    }
+                }
+            }
+            for (int m = 0; m < 24; m++)
+            {
+                for (int n = 0; n < 24; n++)
+                {
+                    k_stoixeiou[m, n] = kl_[nGaussPoints][m, n] + knl_[nGaussPoints][m, n];
+                }
+            }
+      }
+
+        // telikes entoles kai mhtrwo mazas apo to hexa8
+
+        public Tuple<double[], double[]> CalculateStresses(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
+        {
+            this.UpdateCoordinateData(localTotalDisplacements);
+            for (int npoint = 0; npoint < materialsAtGaussPoints.Length; npoint++)
+            {
+                materialsAtGaussPoints[npoint].UpdateMaterial(GLvec[npoint]);
+            }
+            return new Tuple<double[], double[]>(GLvec[materialsAtGaussPoints.Length - 1], materialsAtGaussPoints[materialsAtGaussPoints.Length - 1].Stresses);
+            //TODO mono to teleftaio dianusma tha epistrefei?
+        }
+
+        public double[] CalculateForces(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
+        {
+            for (int npoint = 0; npoint < materialsAtGaussPoints.Length; npoint++)
+            {
+                for (int j = 0; j < 6; j++)
+                { Spkvec[npoint][j] = materialsAtGaussPoints[npoint].Stresses[j]; }
+            }
+            this.UpdateForces();
+            return fxk1[nGaussPoints];
+        }
+
+        public double[] CalculateForcesForLogging(Element element, double[] localDisplacements)
+        {
+            return CalculateForces(element, localDisplacements, new double[localDisplacements.Length]);
+        }
+
+        public virtual IMatrix2D<double> StiffnessMatrix(Element element)
+        {
+            if (Cons_disp == null)
+            {
+                this.CalculateShapeFunctionAndGaussPointData();
+                this.GetInitialGeometricDataAndInitializeMatrices(element);
+                this.UpdateCoordinateData(new double[24]);
+                for (int npoint = 0; npoint < materialsAtGaussPoints.Length; npoint++)// loop gia getfirstStressesFromMaterial
+                {
+                    for (int j = 0; j < 6; j++)
+                    { Spkvec[npoint][j] = materialsAtGaussPoints[npoint].Stresses[j]; }
+                }
+                this.InitializeMatrices(); // meta to get twn stresses apo to material dioiti periexei ton pol/smo suntol epi Spkvec
+                
+
+            }
+            for (int npoint = 0; npoint < materialsAtGaussPoints.Length; npoint++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    for (int k = 0; k < 6; k++)
+                    { Cons_disp[npoint][j, k] = materialsAtGaussPoints[npoint].ConstitutiveMatrix[j, k]; }
+                }
+            }
+            this.UpdateKmatrices();
+            IMatrix2D<double> element_stiffnessMatrix = new Matrix2D<double>(k_stoixeiou); // TODO giati de ginetai return dof.Enumerator.GetTransformedMatrix, xrhsh symmetric
+            return element_stiffnessMatrix;
+        }
+
+        public bool MaterialModified
+        {
+            get
+            {
+                foreach (IFiniteElementMaterial3D material in materialsAtGaussPoints)
+                    if (material.Modified) return true;
+                return false;
+            }
+        }
+
+        public void ResetMaterialModified()
+        {
+            foreach (IFiniteElementMaterial3D material in materialsAtGaussPoints) material.ResetModified();
+        }
+
+        public void ClearMaterialState()
+        {
+            foreach (IFiniteElementMaterial3D m in materialsAtGaussPoints) m.ClearState();
+        }
+
+        public void SaveMaterialState()
+        {
+            foreach (IFiniteElementMaterial3D m in materialsAtGaussPoints) m.SaveState();
+        }
+
+        public void ClearMaterialStresses()
+        {
+            foreach (IFiniteElementMaterial3D m in materialsAtGaussPoints) m.ClearStresses();
+        }
+
+        // omoiws me hexa 8 shell8disp implemented
+        public int ID
+        {
+            get { return 13; }
+        }
+        public ElementDimensions ElementDimensions
+        {
+            get { return ElementDimensions.ThreeD; }
+        }
+
+        public IFiniteElementDOFEnumerator DOFEnumerator
+        {
+            get { return dofEnumerator; }
+            set { dofEnumerator = value; }
+        }
+
+        public virtual IList<IList<DOFType>> GetElementDOFTypes(Element element)
+        {
+            return dofTypes;
+        }
+
+        //NOT IMPLEMENTED
+        public double[] CalculateAccelerationForces(Element element, IList<MassAccelerationLoad> loads)
+        {
+            return new double[24];
+        }
+
+        public virtual IMatrix2D<double> MassMatrix(Element element)
+        {
+            return new Matrix2D<double>(24, 24);
+        }
+
+        public virtual IMatrix2D<double> DampingMatrix(Element element)
+        {
+
+            return new Matrix2D<double>(24, 24);
+        }
+        //NOT IMPLEMENTED ews edw
+
+
     }
 
     

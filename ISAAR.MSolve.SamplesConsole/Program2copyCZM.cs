@@ -18,25 +18,44 @@ namespace ISAAR.MSolve.SamplesConsole
             VectorExtensions.AssignTotalAffinityCount();
             Model model = new Model();
             model.SubdomainsDictionary.Add(1, new Subdomain() { ID = 1 });
-    
-            HexaBuilder2CZM.MakeHexaBuilding(model);
+
+            // EPILOGH MONTELOU
+            int HexaBuilder__CZM_choice;
+            HexaBuilder__CZM_choice = 3;
+            if (HexaBuilder__CZM_choice == 2)
+            { HexaBuilder2CZM.MakeHexaBuilding(model); }
+            if (HexaBuilder__CZM_choice == 3)
+            { HexaBuilder3CZM.MakeHexaBuilding(model); }
+
 
             model.ConnectDataStructures();
 
             SolverSkyline solver = new SolverSkyline(model);
             ProblemStructural provider = new ProblemStructural(model, solver.SubdomainsDictionary);
             //LinearAnalyzer analyzer = new LinearAnalyzer(solver, solver.SubdomainsDictionary);
-            Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, 17, model.TotalDOFs);//1. increments einai to 17 (arxika eixame thesei2 26 incr)
+            //gia 2CZM
+            //Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, 17, model.TotalDOFs);//1. increments einai to 17 (arxika eixame thesei2 26 incr)
+            //gia 3CZM
+            Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, 1, model.TotalDOFs);//1. increments einai to 1 (arxika eixame thesei2 26 incr)
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, analyzer, solver.SubdomainsDictionary);
             analyzer.SetMaxIterations = 100;
             analyzer.SetIterationsForMatrixRebuild = 1;
             //analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] { 420 });
 
             // apo theofilo
-            analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            if (HexaBuilder__CZM_choice == 2)
+            { analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
             model.NodalDOFsDictionary[4][DOFType.X],
             model.NodalDOFsDictionary[4][DOFType.Y],
-            model.NodalDOFsDictionary[4][DOFType.Z]});
+            model.NodalDOFsDictionary[4][DOFType.Z]}); }
+            if (HexaBuilder__CZM_choice == 3)
+            {
+                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            model.NodalDOFsDictionary[1][DOFType.X],
+            model.NodalDOFsDictionary[1][DOFType.Y],
+            model.NodalDOFsDictionary[1][DOFType.Z]});
+            }
+            
             //model.ElementsDictionary[1][]
             //model.NodalDOFsDictionary[17][DOFType.Z]});
             //ews edw

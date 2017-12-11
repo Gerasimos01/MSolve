@@ -10,7 +10,7 @@ using ISAAR.MSolve.PreProcessor.Elements.SupportiveClasses;
 
 namespace ISAAR.MSolve.PreProcessor.Elements
 {
-    public class cohesive_shell_to_hexa //: IStructuralFiniteElement
+    public class cohesive_shell_to_hexa : IStructuralFiniteElement
     {
         //metavlhtes opws sto hexa8
         protected readonly static DOFType[] nodalDOFTypes = new DOFType[] { DOFType.X, DOFType.Y, DOFType.Z };
@@ -653,6 +653,9 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         }
 
+        // 2 metavlhtes gia print pou tha kanoume gia debug PROSTHIKI_PRINT_1
+        new double[,] k_stoixeiou_coh_2_A;
+        new double[,] k_stoixeiou_coh_2_B;
         private void UpdateTMatrix()
         {
             if (endeixi_element_2 == 0)
@@ -801,6 +804,29 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         k_stoixeiou_coh2[40 + n,40 + p] = k_stoixeiou_coh[24+n,24+p];
                     }
                 }
+
+                // PROSTHIKI PRINT 2
+                k_stoixeiou_coh_2_A = new double[40, 64];
+                k_stoixeiou_coh_2_B = new double[24, 64];
+                for (int n = 0; n < 40; n++)
+                {
+                    for (int p = 0; p < 64; p++)
+                    {
+                        k_stoixeiou_coh_2_A[n,p]=k_stoixeiou_coh2[n,p] ;
+                    }
+                }
+                for (int n = 0; n < 24; n++)
+                {
+                    for (int p = 0; p < 64; p++)
+                    {
+                        k_stoixeiou_coh_2_B[n, p] = k_stoixeiou_coh2[n+40, p];
+                    }
+                }
+                PrintUtilities.WriteToFile(k_stoixeiou_coh_2_A, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_A_1.txt");
+                PrintUtilities.WriteToFile(k_stoixeiou_coh_2_B, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_B_1.txt");
+                //PrintUtilities.WriteToFile(k_stoixeiou_coh2, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\apotelesmata_MSOLVE\abc_1.txt");
+                //PrintUtilities.WriteToFile(k_stoixeiou_coh2, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\abc_1.txt");
+
             }
             else
             {
@@ -1036,6 +1062,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         public Tuple<double[], double[]> CalculateStresses(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
         {
+            PrintUtilities.WriteToFileVector(localTotalDisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\abc_vec.txt");
             this.UpdateCoordinateData(localTotalDisplacements);
             for (int i = 0; i < materialsAtGaussPoints.Length; i++)
             {
@@ -1067,7 +1094,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             if (D_tan == null)
             {
                 this.GetInitialGeometricDataAndInitializeMatrices(element);
-                this.UpdateCoordinateData(new double[48]);
+                this.UpdateCoordinateData(new double[64]);
                 this.InitializeRN3();
             }
             for (int i = 0; i < materialsAtGaussPoints.Length; i++)

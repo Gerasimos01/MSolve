@@ -91,11 +91,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cluster.cs" />
+    <Compile Include="Elements\PrintUtilities.cs" />
     <Compile Include="Elements\cohesive8node.cs" />
     <Compile Include="Elements\cohesive16node.cs" />
-    <Compile Include="Elements\Cohesive_shell_to_hexa.cs" />
+    <Compile Include="Elements\cohesive_shell_to_hexa.cs" />
     <Compile Include="Elements\Hexa8NL.cs" />
     <Compile Include="Elements\Hexa8u8pWithStochasticMaterial.cs" />
+    <Compile Include="Elements\Shell8dispCopyPrint.cs" />
     <Compile Include="Elements\Shell8disp.cs" />
     <Compile Include="Interfaces\IMassAccelerationHistoryLoad.cs" />
     <Compile Include="MassAccelerationSinusoidalLoad.cs" />
