@@ -1499,12 +1499,12 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
 
-                PrintUtilities.WriteToFile(KL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KL_gp1_1.txt");
-                PrintUtilities.WriteToFile(KNL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KNL_gp1_1.txt");
-                PrintUtilities.WriteToFile(KL[1], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KL_gp2.txt");
-                PrintUtilities.WriteToFile(KNL[1], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KNL_gp2.txt");
-                PrintUtilities.WriteToFile(BL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\BL_gp1_1.txt");
-                PrintUtilities.WriteToFile(BNL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\BNL_gp1_1.txt");
+                //PrintUtilities.WriteToFile(KL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KL_gp1_1.txt");
+                //PrintUtilities.WriteToFile(KNL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KNL_gp1_1.txt");
+                //PrintUtilities.WriteToFile(KL[1], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KL_gp2.txt");
+                //PrintUtilities.WriteToFile(KNL[1], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KNL_gp2.txt");
+                //PrintUtilities.WriteToFile(BL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\BL_gp1_1.txt");
+                //PrintUtilities.WriteToFile(BNL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\BNL_gp1_1.txt");
 
 
 
@@ -1735,12 +1735,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         // metavlhtes gia anafora stis strofes kai voithitikoi pinakes
         private double ak;
         private double bk;
-        private double gk;
         private double gk1;
-        private double[,] s_k = new double[3,3];
         private double[,] Q = new double[3,3];
         private double[,] Q2 = new double[3, 3];
-        private double[] tdtVn = new double[3];
+        //private double[] tdtVn = new double[3];
         private double tV1norm;
 
         private void UpdateCoordinateData(double[] localdisplacements)
@@ -1751,87 +1749,117 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 {
                     tx_i[k][l] = ox_i[k][l] + localdisplacements[5 * k + l];
                 }
+                //update twn tU kai tUvec 
+                tU[k][0] = localdisplacements[5 * k + 0];
+                tU[k][1] = localdisplacements[5 * k + 1];
+                tU[k][2] = localdisplacements[5 * k + 2];
                 ak = localdisplacements[5 * k + 3] - ak_total[k];
                 ak_total[k] = localdisplacements[5 * k + 3];
                 bk = localdisplacements[5 * k + 4] - bk_total[k];
                 bk_total[k] = localdisplacements[5 * k + 4];
-                gk = (ak * ak) + (bk * bk);
-                gk1 = 0.5 * ((Math.Sin(0.5 * gk) / (0.5 * gk)) * (Math.Sin(0.5 * gk) / (0.5 * gk)));
-                if (gk>0)
+                this.RotateNodalDirectionVectors(ak, bk, k);
+                // update twn tU kai tUvec ews edw         
+            }
+        }
+        //prepei sto telos tou upologismou drasewn na enhmerwnontai oi ak_total kai bk_total
+
+        // voithitikes metavlhtes gia thn peristrofh
+        private double[] tdtVn = new double[3];
+        private double[] tdtV1 = new double[3];
+        private double[] tdtV2 = new double[3];
+        private double theta;
+        private double[] theta_vec = new double[3];
+        private double[,] s_k = new double[3, 3];
+        private void RotateNodalDirectionVectors(double ak, double bk, int n_vector)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                theta_vec[j] = ak * tUvec[n_vector][j] + bk * tUvec[n_vector][3 + j];
+            }
+            theta = Math.Sqrt((theta_vec[0] * theta_vec[0]) + (theta_vec[1] * theta_vec[1]) + (theta_vec[2] * theta_vec[2]));
+            if (theta > 0)
+            {
+                s_k[0, 1] = -theta_vec[2];
+                s_k[0, 2] = theta_vec[1];
+                s_k[1, 0] = theta_vec[2];
+                s_k[1, 2] = -theta_vec[0];
+                s_k[2, 0] = -theta_vec[1];
+                s_k[2, 1] = theta_vec[0];
+
+                for (int j = 0; j < 3; j++)
                 {
-                    s_k[0, 2] = bk;
-                    s_k[1, 2] = -ak;
-                    s_k[2, 0] = -bk;
-                    s_k[2, 1] = ak;
-
-                    for (int j = 0; j < 3; j++)
-                    {
-                        for (int m = 0; m < 3; m++)
-                        {
-                            Q[j, m] = (Math.Sin(gk) / gk) * s_k[j, m];
-                        }
-                    }
-
                     for (int m = 0; m < 3; m++)
                     {
-                        Q[m, m] +=1;
+                        Q[j, m] = (Math.Sin(theta) / theta) * s_k[j, m];
                     }
+                }
 
-                    for (int j = 0; j < 3; j++)
-                    { for (int m = 0; m < 3; m++)
-                        {
-                            Q2[j, m] = 0;
-                            for (int n = 0; n < 3; n++)
-                            { Q2[j, m] += gk1 * s_k[j, n] * s_k[n, m]; }
-                        }
-                    }
-
-                    for (int j = 0; j < 3; j++)
+                for (int m = 0; m < 3; m++)
+                {
+                    Q[m, m] += 1;
+                }
+                gk1 = 0.5 * ((Math.Sin(0.5 * theta) / (0.5 * theta)) * (Math.Sin(0.5 * theta) / (0.5 * theta)));
+                for (int j = 0; j < 3; j++)
+                {
+                    for (int m = 0; m < 3; m++)
                     {
-                        for (int m = 0; m < 3; m++)
-                        {
-                            Q[j, m] += Q2[j, m];
-                        }
+                        Q2[j, m] = 0;
+                        for (int n = 0; n < 3; n++)
+                        { Q2[j, m] += gk1 * s_k[j, n] * s_k[n, m]; }
                     }
-
-                    for (int j = 0; j < 3; j++)
+                }
+                for (int j = 0; j < 3; j++)
+                {
+                    for (int m = 0; m < 3; m++)
                     {
-                        tdtVn[j] = 0;
-                        for (int m = 0; m < 3; m++)
-                        {
-                            tdtVn[j] += Q[j, m] * tU[k][3 + m];
-                        }
+                        Q[j, m] += Q2[j, m];
                     }
-
-                    for (int j = 0; j < 3; j++)
+                }
+                //
+                for (int j = 0; j < 3; j++)
+                {
+                    tdtVn[j] = 0;
+                    for (int m = 0; m < 3; m++)
                     {
-                        tU[k][3 + j] = tdtVn[j];
+                        tdtVn[j] += Q[j, m] * tU[n_vector][3 + m];
                     }
+                }
 
-                    tU[k][0] = localdisplacements[5 * k + 0];
-                    tU[k][1] = localdisplacements[5 * k + 1];
-                    tU[k][2] = localdisplacements[5 * k + 2];
+                for (int j = 0; j < 3; j++)
+                {
+                    tU[n_vector][3 + j] = tdtVn[j];
+                }
+                //
+                for (int j = 0; j < 3; j++)
+                {
+                    tdtV1[j] = 0;
+                    for (int m = 0; m < 3; m++)
+                    {
+                        tdtV1[j] += Q[j, m] * tUvec[n_vector][m];
+                    }
+                }
 
-                    tUvec[k][0] = tU[k][5];
-                    tUvec[k][1] = 0;
-                    tUvec[k][2] = -tU[k][3];
+                for (int j = 0; j < 3; j++)
+                {
+                    tUvec[n_vector][j] = tdtV1[j];
+                }
+                //
+                for (int j = 0; j < 3; j++)
+                {
+                    tdtV2[j] = 0;
+                    for (int m = 0; m < 3; m++)
+                    {
+                        tdtV2[j] += Q[j, m] * tUvec[n_vector][3 + m];
+                    }
+                }
 
-                    tV1norm = Math.Sqrt(tUvec[k][0] * tUvec[k][0] + tUvec[k][1] * tUvec[k][1] + tUvec[k][2] * tUvec[k][2]);
-
-                    tUvec[k][0] = tUvec[k][0] / tV1norm;
-                    tUvec[k][1] = tUvec[k][1] / tV1norm;
-                    tUvec[k][2] = tUvec[k][2] / tV1norm;
-
-                    tUvec[k][3] = tU[k][3 + 1] * tUvec[k][2] - tU[k][3 + 2] * tUvec[k][1];
-                    tUvec[k][4] = tU[k][3 + 2] * tUvec[k][0] - tU[k][3 + 0] * tUvec[k][2];
-                    tUvec[k][5] = tU[k][3 + 0] * tUvec[k][1] - tU[k][3 + 1] * tUvec[k][0];
+                for (int j = 0; j < 3; j++)
+                {
+                    tUvec[n_vector][3 + j] = tdtV2[j];
                 }
             }
         }
 
-        //prepei sto telos tou upologismou drasewn na enhmerwnontai oi ak_total kai bk_total
-
-        
 
         // aparaithta tou IStructuralFiniteElement
 

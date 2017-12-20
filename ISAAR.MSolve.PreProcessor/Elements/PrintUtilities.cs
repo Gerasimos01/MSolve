@@ -36,5 +36,50 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         }
 
+        public static void ConvertAndWriteToFileVector(double[][] array, string path3)
+        {
+            int length1 = array.GetLength(0);
+            int length2 = array[0].GetLength(0);
+            int vec_length = length1 * length2;
+            double[] vector = new double[vec_length];
+            for (int i = 0; i < array.GetLength(0); ++i)
+            {
+                for (int j = 0; j < array[0].GetLength(0); ++j)
+                {
+                    vector[length2 * i + j] = array[i][j];
+                }
+            }
+            WriteToFileVector(vector, path3);
+        }
+
+        public static void SeparateAndWriteToFile(double[,] array, string path_A, string path_B)
+        {
+            
+            int length1 = array.GetLength(0);
+            int length2 = array.GetLength(1);
+            double[,] array_A;
+            double[,] array_B;
+            array_A = new double[40, length2];
+            array_B = new double[length1-40, length2];
+            // opou 24 --> length1-40
+            for (int n = 0; n < 40; n++)
+            {
+                for (int p = 0; p < length2; p++)
+                {
+                    array_A[n, p] = array[n, p];
+                }
+            }
+            for (int n = 0; n < length1-40; n++)
+            {
+                for (int p = 0; p < length2; p++)
+                {
+                    array_B[n, p] = array[n + 40, p];
+                }
+            }
+
+            WriteToFile(array_A, path_A);
+            WriteToFile(array_B, path_B);
+
+        }
     }
 }

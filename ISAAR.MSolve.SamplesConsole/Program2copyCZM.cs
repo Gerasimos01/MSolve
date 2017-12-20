@@ -21,12 +21,13 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int HexaBuilder__CZM_choice;
-            HexaBuilder__CZM_choice = 3;
+            HexaBuilder__CZM_choice = 4;
             if (HexaBuilder__CZM_choice == 2)
             { HexaBuilder2CZM.MakeHexaBuilding(model); }
             if (HexaBuilder__CZM_choice == 3)
             { HexaBuilder3CZM.MakeHexaBuilding(model); }
-
+            if (HexaBuilder__CZM_choice == 4)
+            { HexaBuilder3CZM.MakeHexaBuilding2(model); }
 
             model.ConnectDataStructures();
 
@@ -49,6 +50,13 @@ namespace ISAAR.MSolve.SamplesConsole
             model.NodalDOFsDictionary[4][DOFType.Y],
             model.NodalDOFsDictionary[4][DOFType.Z]}); }
             if (HexaBuilder__CZM_choice == 3)
+            {
+                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            model.NodalDOFsDictionary[1][DOFType.X],
+            model.NodalDOFsDictionary[1][DOFType.Y],
+            model.NodalDOFsDictionary[1][DOFType.Z]});
+            }
+            if (HexaBuilder__CZM_choice == 4)
             {
                 analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
             model.NodalDOFsDictionary[1][DOFType.X],

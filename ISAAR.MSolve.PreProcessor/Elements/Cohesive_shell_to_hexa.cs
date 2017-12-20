@@ -90,12 +90,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         // metavlhtes gia anafora stis strofes kai voithitikoi pinakes
         private double ak;
         private double bk;
-        private double gk;
         private double gk1;
-        private double[,] s_k = new double[3, 3];
         private double[,] Q = new double[3, 3];
         private double[,] Q2 = new double[3, 3];
-        private double[] tdtVn = new double[3];
+        //private double[] tdtVn = new double[3];
 
         private void UpdateCoordinateDataForDirectVectorsAndMidsurface(double[] localdisplacements)
         {
@@ -105,85 +103,118 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 {
                     tx_i_shell_midsurface[k][l] = ox_i_shell_midsurface[k][l] + localdisplacements[5 * k + l];
                 }
+                //update twn tU kai tUvec 
+                tU[k][0] = localdisplacements[5 * k + 0];
+                tU[k][1] = localdisplacements[5 * k + 1];
+                tU[k][2] = localdisplacements[5 * k + 2];
                 ak = localdisplacements[5 * k + 3] - ak_total[k];
                 ak_total[k] = localdisplacements[5 * k + 3];
                 bk = localdisplacements[5 * k + 4] - bk_total[k];
                 bk_total[k] = localdisplacements[5 * k + 4];
-                gk = (ak * ak) + (bk * bk);
-                gk1 = 0.5 * ((Math.Sin(0.5 * gk) / (0.5 * gk)) * (Math.Sin(0.5 * gk) / (0.5 * gk)));
-                if (gk > 0)
+                this.RotateNodalDirectionVectors(ak, bk, k);
+                // update twn tU kai tUvec ews edw                
+            }
+            // shmeio print dedomenwn gia debug
+            ////PrintUtilities.ConvertAndWriteToFileVector(tU, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\tU_local_msolve1.txt");
+            ////PrintUtilities.ConvertAndWriteToFileVector(tUvec, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\tUvec_local_msolve1.txt");
+        }
+
+        // voithitikes metavlhtes gia thn peristrofh
+        private double[] tdtVn = new double [3];
+        private double[] tdtV1 = new double[3];
+        private double[] tdtV2 = new double[3];
+        private double theta;
+        private double[] theta_vec = new double[3];
+        private double[,] s_k = new double[3, 3];
+        private void RotateNodalDirectionVectors(double ak, double bk,int n_vector)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                theta_vec[j] = ak * tUvec[n_vector][j] + bk * tUvec[n_vector][3 + j];
+            }
+            theta = Math.Sqrt((theta_vec[0] * theta_vec[0]) + (theta_vec[1] * theta_vec[1]) + (theta_vec[2] * theta_vec[2]));
+            if(theta>0)
+            {
+                s_k[0, 1] = -theta_vec[2];
+                s_k[0, 2] = theta_vec[1];
+                s_k[1, 0] = theta_vec[2];
+                s_k[1, 2] = -theta_vec[0];
+                s_k[2, 0] = -theta_vec[1];
+                s_k[2, 1] = theta_vec[0];
+
+                for (int j = 0; j < 3; j++)
                 {
-                    s_k[0, 2] = bk;
-                    s_k[1, 2] = -ak;
-                    s_k[2, 0] = -bk;
-                    s_k[2, 1] = ak;
-
-                    for (int j = 0; j < 3; j++)
-                    {
-                        for (int m = 0; m < 3; m++)
-                        {
-                            Q[j, m] = (Math.Sin(gk) / gk) * s_k[j, m];
-                        }
-                    }
-
                     for (int m = 0; m < 3; m++)
                     {
-                        Q[m, m] += 1;
+                        Q[j, m] = (Math.Sin(theta) / theta) * s_k[j, m];
                     }
+                }
 
-                    for (int j = 0; j < 3; j++)
+                for (int m = 0; m < 3; m++)
+                {
+                    Q[m, m] += 1;
+                }
+                gk1 = 0.5 * ((Math.Sin(0.5 * theta) / (0.5 * theta)) * (Math.Sin(0.5 * theta) / (0.5 * theta)));
+                for (int j = 0; j < 3; j++)
+                {
+                    for (int m = 0; m < 3; m++)
                     {
-                        for (int m = 0; m < 3; m++)
-                        {
-                            Q2[j, m] = 0;
-                            for (int n = 0; n < 3; n++)
-                            { Q2[j, m] += gk1 * s_k[j, n] * s_k[n, m]; }
-                        }
+                        Q2[j, m] = 0;
+                        for (int n = 0; n < 3; n++)
+                        { Q2[j, m] += gk1 * s_k[j, n] * s_k[n, m]; }
                     }
-
-                    for (int j = 0; j < 3; j++)
+                }
+                for (int j = 0; j < 3; j++)
+                {
+                    for (int m = 0; m < 3; m++)
                     {
-                        for (int m = 0; m < 3; m++)
-                        {
-                            Q[j, m] += Q2[j, m];
-                        }
+                        Q[j, m] += Q2[j, m];
                     }
-
-                    for (int j = 0; j < 3; j++)
+                }
+                //
+                for (int j = 0; j < 3; j++)
+                {
+                    tdtVn[j] = 0;
+                    for (int m = 0; m < 3; m++)
                     {
-                        tdtVn[j] = 0;
-                        for (int m = 0; m < 3; m++)
-                        {
-                            tdtVn[j] += Q[j, m] * tU[k][3 + m];
-                        }
+                        tdtVn[j] += Q[j, m] * tU[n_vector][3 + m];
                     }
+                }
 
-                    for (int j = 0; j < 3; j++)
+                for (int j = 0; j < 3; j++)
+                {
+                    tU[n_vector][3 + j] = tdtVn[j];
+                }
+                //
+                for (int j = 0; j < 3; j++)
+                {
+                    tdtV1[j] = 0;
+                    for (int m = 0; m < 3; m++)
                     {
-                        tU[k][3 + j] = tdtVn[j];
+                        tdtV1[j] += Q[j, m] * tUvec[n_vector][m];
                     }
+                }
 
-                    tU[k][0] = localdisplacements[5 * k + 0];
-                    tU[k][1] = localdisplacements[5 * k + 1];
-                    tU[k][2] = localdisplacements[5 * k + 2];
+                for (int j = 0; j < 3; j++)
+                {
+                    tUvec[n_vector][j] = tdtV1[j];
+                }
+                //
+                for (int j = 0; j < 3; j++)
+                {
+                    tdtV2[j] = 0;
+                    for (int m = 0; m < 3; m++)
+                    {
+                        tdtV2[j] += Q[j, m] * tUvec[n_vector][3+m];
+                    }
+                }
 
-                    tUvec[k][0] = tU[k][5];
-                    tUvec[k][1] = 0;
-                    tUvec[k][2] = -tU[k][3];
-
-                    tV1norm = Math.Sqrt(tUvec[k][0] * tUvec[k][0] + tUvec[k][1] * tUvec[k][1] + tUvec[k][2] * tUvec[k][2]);
-
-                    tUvec[k][0] = tUvec[k][0] / tV1norm;
-                    tUvec[k][1] = tUvec[k][1] / tV1norm;
-                    tUvec[k][2] = tUvec[k][2] / tV1norm;
-
-                    tUvec[k][3] = tU[k][3 + 1] * tUvec[k][2] - tU[k][3 + 2] * tUvec[k][1];
-                    tUvec[k][4] = tU[k][3 + 2] * tUvec[k][0] - tU[k][3 + 0] * tUvec[k][2];
-                    tUvec[k][5] = tU[k][3 + 0] * tUvec[k][1] - tU[k][3 + 1] * tUvec[k][0];
+                for (int j = 0; j < 3; j++)
+                {
+                    tUvec[n_vector][3+j] = tdtV2[j];
                 }
             }
         }
-
 
         // prokatarktikes Methodoi kai metavlhtes apo to cohesive 16 node
 
@@ -402,8 +433,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             if ( endeixi_element_2 == 0)
             {
                 for (int j = 0; j < 8; j++)
-                { ox_i[j] = new double[] { ox_i_shell_midsurface[j][0]-0,5* tk[j] * tU[j][3], ox_i_shell_midsurface[j][1] - 0, 5 * tk[j] * tU[j][4],
-                                             ox_i_shell_midsurface[j][2]-0,5* tk[j] * tU[j][5], };}
+                { ox_i[j] = new double[] { ox_i_shell_midsurface[j][0]-0.5* tk[j] * tU[j][3], ox_i_shell_midsurface[j][1] - 0.5 * tk[j] * tU[j][4],
+                                             ox_i_shell_midsurface[j][2]-0.5* tk[j] * tU[j][5], };}
                 for (int j = 8; j < 16; j++)
                 {ox_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };}
             }
@@ -412,8 +443,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 for (int j = 0; j < 8; j++)
                 {ox_i[j] = new double[] { element.Nodes[j + 8].X, element.Nodes[j + 8].Y, element.Nodes[j + 8].Z, };}
                 for (int j = 8; j < 16; j++)
-                {ox_i[j] = new double[] { ox_i_shell_midsurface[j-8][0]+0,5* tk[j-8] * tU[j-8][3], ox_i_shell_midsurface[j-8][1] + 0, 5 * tk[j-8] * tU[j-8][4],
-                                             ox_i_shell_midsurface[j-8][2]+0,5* tk[j-8] * tU[j-8][5], };}
+                {ox_i[j] = new double[] { ox_i_shell_midsurface[j-8][0]+0.5* tk[j-8] * tU[j-8][3], ox_i_shell_midsurface[j-8][1] + 0.5 * tk[j-8] * tU[j-8][4],
+                                             ox_i_shell_midsurface[j-8][2]+0.5* tk[j-8] * tU[j-8][5], };}
             }
             // prosarmogh methodou ews edw
 
@@ -566,7 +597,38 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 coh_det_J_t[npoint1] = Math.Sqrt(c_1[npoint1][0] * c_1[npoint1][0] + c_1[npoint1][1] * c_1[npoint1][1] + c_1[npoint1][2] * c_1[npoint1][2]);
                 sunt_olokl[npoint1] = coh_det_J_t[npoint1] * Get_a_12g()[npoint1];
             }
+            if (print_counter == 0)
+            {
+                PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\x_local_arxiko_an.txt");
+                PrintUtilities.WriteToFileVector(localdisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\localdisplacements_arxiko_mh_1.txt");
+                PrintUtilities.ConvertAndWriteToFileVector(tU, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\tU_arxiko_an.txt");
+                PrintUtilities.ConvertAndWriteToFileVector(tUvec, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\tUvec_arxiko_an.txt");
+
+            }
+            if (print_counter == 1)
+            {
+                PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\x_local_updated_an_1.txt");
+                PrintUtilities.WriteToFileVector(localdisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\localdisplacements_updated_an_1.txt");
+                PrintUtilities.ConvertAndWriteToFileVector(tU, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\tU_updated_an.txt");
+                PrintUtilities.ConvertAndWriteToFileVector(tUvec, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\tUvec_updated_an.txt");
+
+            }
+            if (print_counter == 3)
+            {
+                PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\x_local_2.txt");
+            }
+            ////PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\x_local_output.txt");
+            ////PrintUtilities.WriteToFile(x_pavla, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\x_pavla_output.txt");
+            ////PrintUtilities.ConvertAndWriteToFileVector(Delta, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\Delta_output.txt");
             this.UpdateTMatrix();
+            print_counter += 1;
+            //if (print_counter == 1)
+            //{
+            //    PrintUtilities.ConvertAndWriteToFileVector(ox_i, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\ox_i_anestra.txt");
+            //    PrintUtilities.ConvertAndWriteToFileVector(ox_i_shell_midsurface, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\ox_i_shell_midsurface_anestra.txt");
+
+            //}
+
         }
 
         private void cross(double[] A, double[] B, double[] C)
@@ -653,9 +715,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         }
 
-        // 2 metavlhtes gia print pou tha kanoume gia debug PROSTHIKI_PRINT_1
-        new double[,] k_stoixeiou_coh_2_A;
-        new double[,] k_stoixeiou_coh_2_B;
+
         private void UpdateTMatrix()
         {
             if (endeixi_element_2 == 0)
@@ -680,7 +740,17 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
             }
-        }
+            //
+            //if (print_counter == 2)
+            //{
+            //    PrintUtilities.WriteToFile(T, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\T_output_1.txt");
+            //}
+            //if (print_counter == 3)
+            //{
+            //    PrintUtilities.WriteToFile(T, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\T_output_2.txt");
+            //}
+            //
+            }
 
         // telikh morfh pinakwn gia embeding kai endiameses metavlhtes
 
@@ -707,14 +777,17 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             {
                 for (int n = 0; n < 24; n++)
                 {
-                    fxk2_coh[n] = fxk1_coh[n];
+                    //fxk2_coh[n] = fxk1_coh[n];
+                    fxk2_coh[40+n] = fxk1_coh[n];
                 }
                 for (int n = 0; n < 40; n++)
                 {
-                    fxk2_coh[n+24] = 0;
+                    //fxk2_coh[n+24] = 0;
+                    fxk2_coh[n] = 0;
                     for (int p = 0; p < 24; p++)
                     {
-                        fxk2_coh[n+24] += T[p, n] * fxk1_coh[p+24];
+                        //fxk2_coh[n+24] += T[p, n] * fxk1_coh[p+24];
+                        fxk2_coh[n] += T[p, n] * fxk1_coh[p + 24];
                     }
                 }
             }
@@ -804,29 +877,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         k_stoixeiou_coh2[40 + n,40 + p] = k_stoixeiou_coh[24+n,24+p];
                     }
                 }
-
-                // PROSTHIKI PRINT 2
-                k_stoixeiou_coh_2_A = new double[40, 64];
-                k_stoixeiou_coh_2_B = new double[24, 64];
-                for (int n = 0; n < 40; n++)
-                {
-                    for (int p = 0; p < 64; p++)
-                    {
-                        k_stoixeiou_coh_2_A[n,p]=k_stoixeiou_coh2[n,p] ;
-                    }
-                }
-                for (int n = 0; n < 24; n++)
-                {
-                    for (int p = 0; p < 64; p++)
-                    {
-                        k_stoixeiou_coh_2_B[n, p] = k_stoixeiou_coh2[n+40, p];
-                    }
-                }
-                PrintUtilities.WriteToFile(k_stoixeiou_coh_2_A, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_A_1.txt");
-                PrintUtilities.WriteToFile(k_stoixeiou_coh_2_B, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_B_1.txt");
+                //PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh2,
+                //    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_A_1.txt",
+                //    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_B_1.txt");
+                //PrintUtilities.WriteToFile(k_stoixeiou_coh_2_A, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_A_1.txt");
+                //PrintUtilities.WriteToFile(k_stoixeiou_coh_2_B, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_B_1.txt");
                 //PrintUtilities.WriteToFile(k_stoixeiou_coh2, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\apotelesmata_MSOLVE\abc_1.txt");
                 //PrintUtilities.WriteToFile(k_stoixeiou_coh2, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\abc_1.txt");
-
             }
             else
             {
@@ -848,20 +905,22 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         }
                     }
                 }
-                // upologismos perioxhs 11 tou Tt_K_T (copy paste apo k_stoixeiou_coh)
+                // upologismos perioxhs 11 tou Tt_K_T (copy paste apo k_stoixeiou_coh) -->22
                 for (int n = 0; n < 24; n++)
                 {
                     for (int p = 0; p < 24; p++)
                     {
-                        k_stoixeiou_coh2[n,p] = k_stoixeiou_coh[n,p];
+                        //k_stoixeiou_coh2[n,p] = k_stoixeiou_coh[n,p];
+                        k_stoixeiou_coh2[40+n,40+ p] = k_stoixeiou_coh[n, p];
                     }
                 }
-                // upologismos perioxhs 12 tou Tt_K_T (mhdenismos kai upologismoi)
+                // upologismos perioxhs 12 tou Tt_K_T (mhdenismos kai upologismoi) --> 21
                 for (int n = 0; n < 24; n++)
                 {
                     for (int p = 0; p < 40; p++)
                     {
-                        k_stoixeiou_coh2[ n, 24+p] = 0;
+                        //k_stoixeiou_coh2[ n, 24+p] = 0;
+                        k_stoixeiou_coh2[40+n, p] = 0;
                     }
                 }
                 for (int n = 0; n < 24; n++)
@@ -870,16 +929,18 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     {
                         for (int k = 0; k < 24; k++)
                         {
-                            k_stoixeiou_coh2[n,24+ p] += k_stoixeiou_coh[n, 24+k] * T[k, p];
+                            //k_stoixeiou_coh2[n,24+ p] += k_stoixeiou_coh[n, 24+k] * T[k, p];
+                            k_stoixeiou_coh2[40+n, p] += k_stoixeiou_coh[n, 24 + k] * T[k, p];
                         }
                     }
                 }
-                // upologismos perioxhs 21 tou Tt_K_T (mhdenismos kai upologismoi)
+                // upologismos perioxhs 21 tou Tt_K_T (mhdenismos kai upologismoi) -->12
                 for (int n = 0; n < 40; n++)
                 {
                     for (int p = 0; p < 24; p++)
                     {
-                        k_stoixeiou_coh2[24+n, p] = 0;
+                        //k_stoixeiou_coh2[24+n, p] = 0;
+                        k_stoixeiou_coh2[n,40+ p] = 0;
                     }
                 }
                 for (int n = 0; n < 40; n++)
@@ -888,16 +949,18 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     {
                         for (int k = 0; k < 24; k++)
                         {
-                            k_stoixeiou_coh2[24+n, p] += T[k, n] * k_stoixeiou_coh[24+k, p];
+                            //k_stoixeiou_coh2[24+n, p] += T[k, n] * k_stoixeiou_coh[24+k, p];
+                            k_stoixeiou_coh2[n,40+ p] += T[k, n] * k_stoixeiou_coh[24 + k, p];
                         }
                     }
                 }
-                // upologismos perioxhs 11 tou Tt_K_T (mhdenismos kai upologismoi)
+                // upologismos perioxhs 22 tou Tt_K_T (mhdenismos kai upologismoi) -->11
                 for (int n = 0; n < 40; n++)
                 {
                     for (int p = 0; p < 40; p++)
                     {
-                        k_stoixeiou_coh2[24+n, 24+p] = 0;
+                        //k_stoixeiou_coh2[24+n, 24+p] = 0;
+                        k_stoixeiou_coh2[n, p] = 0;
                     }
                 }
                 for (int n = 0; n < 40; n++)
@@ -906,11 +969,24 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     {
                         for (int k = 0; k < 24; k++)
                         {
-                            k_stoixeiou_coh2[24 + n, 24 + p] += T[k, n] * Kii_A[k, p];
+                            //k_stoixeiou_coh2[24 + n, 24 + p] += T[k, n] * Kii_A[k, p];
+                            k_stoixeiou_coh2[ n,  p] += T[k, n] * Kii_A[k, p];
                         }
                     }
                 }
-
+                
+            }
+            if (print_counter == 0)
+            {
+                PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
+                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh___A_1__an.txt",
+                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh___B_1__an.txt");
+            }
+            if (print_counter == 1)
+            {
+                PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
+                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh__A_1__an.txt",
+                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh__B_1__an.txt");
             }
         }
 
@@ -987,8 +1063,27 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     fxk1_coh[24 + l] += (-r_int_1[l]);
                 }
             }
-
+            //
+            //if (print_counter == 2)
+            //{
+            //    PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\fxk1_coh_output_1.txt");
+            //}
+            //if (print_counter == 3)
+            //{
+            //    PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\fxk1_coh_output_2.txt");
+            //}
+            //
             this.multiply_forces_for_embeding();
+            //
+            if (print_counter == 2)
+            {
+                PrintUtilities.WriteToFileVector(fxk2_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\fxk2_coh_output_1.txt");
+            }
+            if (print_counter == 3)
+            {
+                PrintUtilities.WriteToFileVector(fxk2_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\fxk2_coh_output_2.txt");
+            }
+            //
         }
 
         private void UpdateKmatrices()
@@ -1058,11 +1153,28 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
 
             this.multiply_stifnessMatrix_for_embeding();
+            if (print_counter == 1)
+            {
+                PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh2,
+                        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_A_1_an.txt",
+                        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_B_1_an.txt");
+            }
+            if (print_counter == 2)
+            {
+                //    PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh2,
+                //            @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_A_2.txt",
+                //            @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\K_stoixeiou_coh_2_B_2.txt");
+            }
+
         }
 
+        int print_counter = 0;
         public Tuple<double[], double[]> CalculateStresses(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
-        {
-            PrintUtilities.WriteToFileVector(localTotalDisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\abc_vec.txt");
+        {          
+            if (print_counter == 3)
+            {
+                //PrintUtilities.WriteToFileVector(localTotalDisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\abc_vec.txt");
+            }
             this.UpdateCoordinateData(localTotalDisplacements);
             for (int i = 0; i < materialsAtGaussPoints.Length; i++)
             {
@@ -1070,6 +1182,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
             return new Tuple<double[], double[]>(Delta[materialsAtGaussPoints.Length - 1], materialsAtGaussPoints[materialsAtGaussPoints.Length - 1].Stresses);
             //TODO mono to teleftaio dianusma tha epistrefei?
+            
         }
 
         public double[] CalculateForces(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
