@@ -10,7 +10,7 @@ using ISAAR.MSolve.PreProcessor.Elements.SupportiveClasses;
 
 namespace ISAAR.MSolve.PreProcessor.Elements
 {
-    public class cohesive_shell_to_hexa : IStructuralFiniteElement
+    public class cohesive_shell_to_hexaCopyGet : IStructuralFiniteElement
     {
         //metavlhtes opws sto hexa8
         protected readonly static DOFType[] nodalDOFTypes = new DOFType[] { DOFType.X, DOFType.Y, DOFType.Z };
@@ -30,11 +30,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         public double[] tk { get; set; } //
         public int endeixi_element_2 { get; set; }
 
-        protected cohesive_shell_to_hexa()//consztructor apo to hexa8
+        protected cohesive_shell_to_hexaCopyGet()//consztructor apo to hexa8
         {
         }
 
-        public cohesive_shell_to_hexa(IFiniteElementMaterial3D material, int gp_d1c, int gp_d2c)
+        public cohesive_shell_to_hexaCopyGet(IFiniteElementMaterial3D material, int gp_d1c, int gp_d2c)
         {
             this.gp_d1_coh = gp_d1c;
             this.gp_d2_coh = gp_d2c;
@@ -115,8 +115,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 // update twn tU kai tUvec ews edw                
             }
             // shmeio print dedomenwn gia debug
-            ////PrintUtilities.ConvertAndWriteToFileVector(tU, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\tU_local_msolve1.txt");
-            ////PrintUtilities.ConvertAndWriteToFileVector(tUvec, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\tUvec_local_msolve1.txt");
+            ////PrintUtilities.ConvertAndWriteToFileVector(tU, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\tU_local_msolve1.txt");
+            ////PrintUtilities.ConvertAndWriteToFileVector(tUvec, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\tUvec_local_msolve1.txt");
         }
 
         // voithitikes metavlhtes gia thn peristrofh
@@ -335,60 +335,60 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             endeixiShapeFunctionAndGaussPointData = 2;
         }
 
-        private double[] Get_a_12g()
-        {
-            if (endeixiShapeFunctionAndGaussPointData == 1)
-            {
-                CalculateShapeFunctionAndGaussPointData();
-                return a_12g;
-            }
-            else
-            { return a_12g; }
-        }
+        //private double[] Get_a_12g()
+        //{
+        //    if (endeixiShapeFunctionAndGaussPointData == 1)
+        //    {
+        //        CalculateShapeFunctionAndGaussPointData();
+        //        return a_12g;
+        //    }
+        //    else
+        //    { return a_12g; }
+        //}
 
-        private double[][] GetN1()
-        {
-            if (endeixiShapeFunctionAndGaussPointData == 1)
-            {
-                CalculateShapeFunctionAndGaussPointData();
-                return N1;
-            }
-            else
-            { return N1; }
-        }
+        //private double[][] GetN1()
+        //{
+        //    if (endeixiShapeFunctionAndGaussPointData == 1)
+        //    {
+        //        CalculateShapeFunctionAndGaussPointData();
+        //        return N1;
+        //    }
+        //    else
+        //    { return N1; }
+        //}
 
-        private double[][,] GetN3()
-        {
-            if (endeixiShapeFunctionAndGaussPointData == 1)
-            {
-                CalculateShapeFunctionAndGaussPointData();
-                return N3;
-            }
-            else
-            { return N3; }
-        }
+        //private double[][,] GetN3()
+        //{
+        //    if (endeixiShapeFunctionAndGaussPointData == 1)
+        //    {
+        //        CalculateShapeFunctionAndGaussPointData();
+        //        return N3;
+        //    }
+        //    else
+        //    { return N3; }
+        //}
 
-        private double[][] GetN1_ksi()
-        {
-            if (endeixiShapeFunctionAndGaussPointData == 1)
-            {
-                CalculateShapeFunctionAndGaussPointData();
-                return N1_ksi;
-            }
-            else
-            { return N1_ksi; }
-        }
+        //private double[][] GetN1_ksi()
+        //{
+        //    if (endeixiShapeFunctionAndGaussPointData == 1)
+        //    {
+        //        CalculateShapeFunctionAndGaussPointData();
+        //        return N1_ksi;
+        //    }
+        //    else
+        //    { return N1_ksi; }
+        //}
 
-        private double[][] GetN1_heta()
-        {
-            if (endeixiShapeFunctionAndGaussPointData == 1)
-            {
-                CalculateShapeFunctionAndGaussPointData();
-                return N1_heta;
-            }
-            else
-            { return N1_heta; }
-        }
+        //private double[][] GetN1_heta()
+        //{
+        //    if (endeixiShapeFunctionAndGaussPointData == 1)
+        //    {
+        //        CalculateShapeFunctionAndGaussPointData();
+        //        return N1_heta;
+        //    }
+        //    else
+        //    { return N1_heta; }
+        //}
 
 
         // metavlhtes vasikwn methodwn apo to cohesive 16 node
@@ -552,8 +552,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     e_heta[l] = 0;
                     for (int m = 0; m < 8; m++) // tha ginei 4 sto cohesive 8 node
                     {
-                        e_ksi[l] += GetN1_ksi()[npoint1][m] * x_pavla[l, m];
-                        e_heta[l] += GetN1_heta()[npoint1][m] * x_pavla[l, m];
+                        e_ksi[l] += N1_ksi[npoint1][m] * x_pavla[l, m];
+                        e_heta[l] += N1_heta[npoint1][m] * x_pavla[l, m];
                     }
                     e_ksi[l] = 0.5 * e_ksi[l];
                     e_heta[l] = 0.5 * e_heta[l];
@@ -580,7 +580,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 {
                     for (int m = 0; m < 8; m++)  // pithanws gia to cohesive 8
                     {
-                        u[l] += u_prok[l, m] * GetN1()[npoint1][m];
+                        u[l] += u_prok[l, m] * N1[npoint1][m];
                     }
                 }
                 for (int l = 0; l < 3; l++)
@@ -595,38 +595,38 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
                 this.cross(e_ksi, e_heta, c_1[npoint1]);
                 coh_det_J_t[npoint1] = Math.Sqrt(c_1[npoint1][0] * c_1[npoint1][0] + c_1[npoint1][1] * c_1[npoint1][1] + c_1[npoint1][2] * c_1[npoint1][2]);
-                sunt_olokl[npoint1] = coh_det_J_t[npoint1] * Get_a_12g()[npoint1];
+                sunt_olokl[npoint1] = coh_det_J_t[npoint1] * a_12g[npoint1];
             }
             if (print_counter == 0)
             {
-                PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\x_local_arxiko_mh_an.txt");
-                PrintUtilities.WriteToFileVector(localdisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\localdisplacements_arxiko_mh_an_1.txt");
-                PrintUtilities.ConvertAndWriteToFileVector(tU, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\tU_arxiko_mh_an.txt");
-                PrintUtilities.ConvertAndWriteToFileVector(tUvec, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\tUvec_arxiko_mh_an.txt");
+                PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\x_local_arxiko_mh_an.txt");
+                PrintUtilities.WriteToFileVector(localdisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\localdisplacements_arxiko_mh_an_1.txt");
+                PrintUtilities.ConvertAndWriteToFileVector(tU, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\tU_arxiko_mh_an.txt");
+                PrintUtilities.ConvertAndWriteToFileVector(tUvec, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\tUvec_arxiko_mh_an.txt");
 
             }
             if (print_counter == 1)
             {
-                PrintUtilities.WriteToFile(x_pavla, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\x_pavla_updated_mh_an_1.txt");
-                PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\x_local_updated_mh_an_1.txt");
-                PrintUtilities.WriteToFileVector(localdisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\localdisplacements_updated_mh_an_1.txt");
-                PrintUtilities.ConvertAndWriteToFileVector(tU, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\tU_updated_mh_an.txt");
-                PrintUtilities.ConvertAndWriteToFileVector(tUvec, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\tUvec_updated_mh_an.txt");
+                PrintUtilities.WriteToFile(x_pavla, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\x_pavla_updated_mh_an_1.txt");
+                PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\x_local_updated_mh_an_1.txt");
+                PrintUtilities.WriteToFileVector(localdisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\localdisplacements_updated_mh_an_1.txt");
+                PrintUtilities.ConvertAndWriteToFileVector(tU, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\tU_updated_mh_an.txt");
+                PrintUtilities.ConvertAndWriteToFileVector(tUvec, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\tUvec_updated_mh_an.txt");
 
             }
             if (print_counter == 3)
             {
-                PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\x_local_2.txt");
+                PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\x_local_2.txt");
             }
-            ////PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\x_local_output.txt");
-            ////PrintUtilities.WriteToFile(x_pavla, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\x_pavla_output.txt");
-            ////PrintUtilities.ConvertAndWriteToFileVector(Delta, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\Delta_output.txt");
+            ////PrintUtilities.WriteToFileVector(x_local, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\x_local_output.txt");
+            ////PrintUtilities.WriteToFile(x_pavla, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\x_pavla_output.txt");
+            ////PrintUtilities.ConvertAndWriteToFileVector(Delta, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\Delta_output.txt");
             this.UpdateTMatrix();
             print_counter += 1;
             //if (print_counter == 1)
             //{
-            //    PrintUtilities.ConvertAndWriteToFileVector(ox_i, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\ox_i_anestra.txt");
-            //    PrintUtilities.ConvertAndWriteToFileVector(ox_i_shell_midsurface, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\ox_i_shell_midsurface_anestra.txt");
+            //    PrintUtilities.ConvertAndWriteToFileVector(ox_i, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\ox_i_anestra.txt");
+            //    PrintUtilities.ConvertAndWriteToFileVector(ox_i_shell_midsurface, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\ox_i_shell_midsurface_anestra.txt");
 
             //}
 
@@ -744,11 +744,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //
             //if (print_counter == 2)
             //{
-            //    PrintUtilities.WriteToFile(T, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\T_output_1.txt");
+            //    PrintUtilities.WriteToFile(T, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\T_output_1.txt");
             //}
             //if (print_counter == 3)
             //{
-            //    PrintUtilities.WriteToFile(T, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\T_output_2.txt");
+            //    PrintUtilities.WriteToFile(T, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\T_output_2.txt");
             //}
             //
         }
@@ -793,8 +793,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 }
             }
 
-            PrintUtilities.WriteToFile(T,
-                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\T_updated_A_1__mh_an.txt");
+            //PrintUtilities.WriteToFile(T,
+            //       @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\T_updated_A_1__mh_an.txt");
         }
 
         private void multiply_stifnessMatrix_for_embeding()
@@ -882,12 +882,12 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
                 //PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh2,
-                //    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_2_A_1.txt",
-                //    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_2_B_1.txt");
-                //PrintUtilities.WriteToFile(k_stoixeiou_coh_2_A, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_2_A_1.txt");
-                //PrintUtilities.WriteToFile(k_stoixeiou_coh_2_B, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_2_B_1.txt");
+                //    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_2_A_1.txt",
+                //    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_2_B_1.txt");
+                //PrintUtilities.WriteToFile(k_stoixeiou_coh_2_A, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_2_A_1.txt");
+                //PrintUtilities.WriteToFile(k_stoixeiou_coh_2_B, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_2_B_1.txt");
                 //PrintUtilities.WriteToFile(k_stoixeiou_coh2, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\apotelesmata_MSOLVE\abc_1.txt");
-                //PrintUtilities.WriteToFile(k_stoixeiou_coh2, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\abc_1.txt");
+                //PrintUtilities.WriteToFile(k_stoixeiou_coh2, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\abc_1.txt");
             }
             else
             {
@@ -983,14 +983,23 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             if (print_counter == 0)
             {
                 PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
-                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_arxiko_A_1_mh_an.txt",
-                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_arxiko_B_1_mh_an.txt");
+                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_arxiko_A_1_mh_an.txt",
+                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_arxiko_B_1_mh_an.txt");
             }
             if (print_counter == 1)
             {
                 PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
-                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_updated_A_1_mh_an.txt",
-                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_updated_B_1_mh_an.txt");
+                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_updated_A_1_mh_an.txt",
+                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_updated_B_1_mh_an.txt");
+            }
+            if (print_counter == 2)
+            {
+                PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
+                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_local_updated_swsto_A_mh_an.txt",
+                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_local_updated_swsto_B_mh_an.txt");
+                PrintUtilities.WriteToFile(T,
+                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\T_updated_swsto_mh_an.txt");
+                PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk1_updated_swsto_mh_an.txt");
             }
         }
 
@@ -1018,7 +1027,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     for (int m = 0; m < 24; m++)
                     {
                         for (int n = 0; n < 3; n++)
-                        { RN3[npoint1][l, m] += R[npoint1][l, n] * GetN3()[npoint1][n, m]; }
+                        { RN3[npoint1][l, m] += R[npoint1][l, n] * N3[npoint1][n, m]; }
                     }
                 }
             }
@@ -1047,7 +1056,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     for (int m = 0; m < 24; m++)
                     {
                         for (int n = 0; n < 3; n++)
-                        { RN3[npoint1][l, m] += R[npoint1][l, n] * GetN3()[npoint1][n, m]; }
+                        { RN3[npoint1][l, m] += R[npoint1][l, n] * N3[npoint1][n, m]; }
                     }
                 }
                 for (int l = 0; l < 3; l++)
@@ -1070,28 +1079,28 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //
             //if (print_counter == 2)
             //{
-            //    PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\fxk1_coh_output_1.txt");
+            //    PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk1_coh_output_1.txt");
             //}
             //if (print_counter == 3)
             //{
-            //    PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\fxk1_coh_output_2.txt");
+            //    PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk1_coh_output_2.txt");
             //}
             //
             this.multiply_forces_for_embeding();
-            PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\fxk1_mh_an.txt");
-            //
-            if (print_counter == 1)
-            {
-                PrintUtilities.WriteToFileVector(fxk2_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\fxk2_coh_output_0_mh_an.txt");
-            }
-            if (print_counter == 2)
-            {
-                PrintUtilities.WriteToFileVector(fxk2_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\fxk2_coh_output_1_mh_an.txt");
-            }
-            if (print_counter == 3)
-            {
-                PrintUtilities.WriteToFileVector(fxk2_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\fxk2_coh_output_2_mh_an.txt");
-            }
+            //PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk1_mh_an.txt");
+            ////
+            //if (print_counter == 1)
+            //{
+            //    PrintUtilities.WriteToFileVector(fxk2_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk2_coh_output_0_mh_an.txt");
+            //}
+            //if (print_counter == 2)
+            //{
+            //    PrintUtilities.WriteToFileVector(fxk2_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk2_coh_output_1_mh_an.txt");
+            //}
+            //if (print_counter == 3)
+            //{
+            //    PrintUtilities.WriteToFileVector(fxk2_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk2_coh_output_2_mh_an.txt");
+            //}
             //
         }
 
@@ -1165,14 +1174,14 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             if (print_counter == 1)
             {
                 PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh2,
-                        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_2_A_1_mh_an.txt",
-                        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_2_B_1_mh_an.txt");
+                        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_2_A_1_mh_an.txt",
+                        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_2_B_1_mh_an.txt");
             }
             if (print_counter == 2)
             {
-                //    PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh2,
-                //            @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_2_A_2.txt",
-                //            @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\K_stoixeiou_coh_2_B_2.txt");
+                PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh2,
+                        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh2_updated_swsto_A_mh_an.txt",
+                        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh2_updated_swsto_B_mh_an.txt");
             }
 
         }
@@ -1182,7 +1191,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         {          
             if (print_counter == 3)
             {
-                //PrintUtilities.WriteToFileVector(localTotalDisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused\abc_vec.txt");
+                //PrintUtilities.WriteToFileVector(localTotalDisplacements, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\abc_vec.txt");
             }
             this.UpdateCoordinateData(localTotalDisplacements);
             for (int i = 0; i < materialsAtGaussPoints.Length; i++)
@@ -1215,6 +1224,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         {
             if (D_tan == null)
             {
+                this.CalculateShapeFunctionAndGaussPointData();
                 this.GetInitialGeometricDataAndInitializeMatrices(element);
                 this.UpdateCoordinateData(new double[64]);
                 this.InitializeRN3();

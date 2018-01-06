@@ -143,10 +143,11 @@ namespace ISAAR.MSolve.SamplesConsole
             e2 = new Element()
             {
                 ID = 2,
-                ElementType = new cohesive_shell_to_hexa(material1, 3, 3)
+                ElementType = new cohesive_shell_to_hexaCopyGet(material1, 3, 3)
                 {
                     oVn_i = VH,
                     tk = Tk_vec,
+                    endeixi_element_2=0,
                 }
             };
 
@@ -161,7 +162,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // perioxh loads
             double value_ext;
-            value_ext =2.5* 0.5 ;
+            value_ext = 2.5 * 0.5 ;
             
             int[] points_with_negative_load;
             points_with_negative_load= new int [] { 1,3,6,8 };
@@ -352,7 +353,7 @@ namespace ISAAR.MSolve.SamplesConsole
             e2 = new Element()
             {
                 ID = 2,
-                ElementType = new cohesive_shell_to_hexa(material1, 3, 3)
+                ElementType = new cohesive_shell_to_hexaCopyGet(material1, 3, 3)
                 {
                     oVn_i = VH,
                     tk = Tk_vec,

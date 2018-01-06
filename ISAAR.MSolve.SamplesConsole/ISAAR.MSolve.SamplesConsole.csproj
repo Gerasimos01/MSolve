@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="BeamBuildingBuilder.cs" />
     <Compile Include="ArchBuilder.cs" />
+    <Compile Include="HexaBuilder4CZM.cs" />
     <Compile Include="HexaBuilder3CZM.cs" />
     <Compile Include="HexaBuilder2CZM.cs" />
     <Compile Include="HexaBuilder3beam.cs" />
@@ -54,6 +55,7 @@
     <Compile Include="Program2copy.cs" />
     <Compile Include="Program2NL.cs" />
     <Compile Include="Program2.cs" />
+    <Compile Include="ProgramRotateCheck.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

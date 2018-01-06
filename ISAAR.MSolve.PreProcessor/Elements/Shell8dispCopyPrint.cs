@@ -1499,12 +1499,12 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
 
-                //PrintUtilities.WriteToFile(KL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KL_gp1_1.txt");
-                //PrintUtilities.WriteToFile(KNL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KNL_gp1_1.txt");
-                //PrintUtilities.WriteToFile(KL[1], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KL_gp2.txt");
-                //PrintUtilities.WriteToFile(KNL[1], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\KNL_gp2.txt");
-                //PrintUtilities.WriteToFile(BL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\BL_gp1_1.txt");
-                //PrintUtilities.WriteToFile(BNL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\BNL_gp1_1.txt");
+                //PrintUtilities.WriteToFile(KL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\KL_gp1_1.txt");
+                //PrintUtilities.WriteToFile(KNL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\KNL_gp1_1.txt");
+                //PrintUtilities.WriteToFile(KL[1], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\KL_gp2.txt");
+                //PrintUtilities.WriteToFile(KNL[1], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\KNL_gp2.txt");
+                //PrintUtilities.WriteToFile(BL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\BL_gp1_1.txt");
+                //PrintUtilities.WriteToFile(BNL[0], @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\BNL_gp1_1.txt");
 
 
 
@@ -1760,6 +1760,9 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 this.RotateNodalDirectionVectors(ak, bk, k);
                 // update twn tU kai tUvec ews edw         
             }
+            // shmeio print dedomenwn gia debug
+            ////PrintUtilities.ConvertAndWriteToFileVector(tU, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\tU_SHELL_local_msolve1.txt");
+            ////PrintUtilities.ConvertAndWriteToFileVector(tUvec, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\tUvec_SHELL_local_msolve1.txt");
         }
         //prepei sto telos tou upologismou drasewn na enhmerwnontai oi ak_total kai bk_total
 
@@ -2014,7 +2017,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 CalculateCk();
                 CalculateKmatrices(element);
                 endeixiStiffness = 2;
-                PrintUtilities.WriteToFile(Kt, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\Copy_of_apo_ta_shell_New_Load_Case\Kt_1.txt");
+                //PrintUtilities.WriteToFile(Kt, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\Kt_1.txt");
                 IMatrix2D<double> iGlobalStiffnessMatrix = new Matrix2D<double>(Kt);
                 return dofEnumerator.GetTransformedMatrix(iGlobalStiffnessMatrix);
             }

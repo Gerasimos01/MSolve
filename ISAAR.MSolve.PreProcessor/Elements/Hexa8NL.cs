@@ -10,12 +10,11 @@ using ISAAR.MSolve.PreProcessor.Elements.SupportiveClasses;
 
 namespace ISAAR.MSolve.PreProcessor.Elements
 {
-    class Hexa8NL //: IStructuralFiniteElement
+    public class Hexa8NL : IStructuralFiniteElement //, IEmbeddedHostElement
     {
         //metavlhtes opws sto hexa8
         protected readonly static DOFType[] nodalDOFTypes = new DOFType[] { DOFType.X, DOFType.Y, DOFType.Z };
         protected readonly static DOFType[][] dofTypes = new DOFType[][] { nodalDOFTypes, nodalDOFTypes, nodalDOFTypes,
-            nodalDOFTypes, nodalDOFTypes, nodalDOFTypes, nodalDOFTypes, nodalDOFTypes,nodalDOFTypes, nodalDOFTypes, nodalDOFTypes,
             nodalDOFTypes, nodalDOFTypes, nodalDOFTypes, nodalDOFTypes, nodalDOFTypes };
         protected readonly IFiniteElementMaterial3D[] materialsAtGaussPoints;
         protected IFiniteElementDOFEnumerator dofEnumerator = new GenericDOFEnumerator();
@@ -68,7 +67,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             Ni = new double[8,nGaussPoints]; // den sxetizetai me ta coh elements alla
             Ni_ksi = new double[8, nGaussPoints]; // me to prokat_disp (einai shapefunctionData)
             Ni_heta = new double[8, nGaussPoints]; // 
-            Ni_heta = new double[8, nGaussPoints];
+            Ni_zeta = new double[8, nGaussPoints];
 
             ll1_hexa= new double[nGaussPoints][,];
             BL13_hexa = new double[nGaussPoints][,];
@@ -436,7 +435,9 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private void InitializeMatrices()
         {
-            // initialize gia to update coordinate 
+            // initialize gia to update coordinate
+            tu_i = new double[8][];
+            tx_i = new double[8][];
             ll2 = new double[8, 3];
             J_1b = new double[8, 3];
             J_1 = new double[nGaussPoints][,];
@@ -461,6 +462,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 //        BL11b[npoint][j, k] = 0;
                 //    }
                 //}
+            }
+            for (int k=0; k < 8; k++)
+            {
+                tu_i[k] = new double[3];
+                tx_i[k] = new double[3];
             }
 
             // initialize gia to update forces
@@ -955,9 +961,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     for (int j = 0; j < 6; j++)
                     { Spkvec[npoint][j] = materialsAtGaussPoints[npoint].Stresses[j]; }
                 }
-                this.InitializeMatrices(); // meta to get twn stresses apo to material dioiti periexei ton pol/smo suntol epi Spkvec
-                
-
+                this.InitializeBland_sunt_ol_Spkvec();// meta to get twn stresses apo to material dioiti periexei ton pol/smo suntol epi Spkvec
             }
             for (int npoint = 0; npoint < materialsAtGaussPoints.Length; npoint++)
             {
