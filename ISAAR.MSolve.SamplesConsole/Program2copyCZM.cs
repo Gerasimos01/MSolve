@@ -21,7 +21,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int HexaBuilder__CZM_choice;
-            HexaBuilder__CZM_choice = 4;
+            HexaBuilder__CZM_choice = 7;
             if (HexaBuilder__CZM_choice == 2)
             { HexaBuilder2CZM.MakeHexaBuilding(model); }
             if (HexaBuilder__CZM_choice == 3)
@@ -31,6 +31,15 @@ namespace ISAAR.MSolve.SamplesConsole
             { // shell kai cohesive shell anestrameno
                 HexaBuilder3CZM.MakeHexaBuilding2(model); }
             if (HexaBuilder__CZM_choice == 5)
+            { // shell mono tou
+                HexaBuilder3CZM.MakeHexaBuilding3(model);}
+            if (HexaBuilder__CZM_choice == 6)
+            { // shell mono tou anestrameno
+                HexaBuilder3CZM.MakeHexaBuilding4(model);}
+            if (HexaBuilder__CZM_choice == 7)
+            { // shell kai cohesive shell anestrameno isio
+                HexaBuilder3CZM.MakeHexaBuilding5(model);}
+            if (HexaBuilder__CZM_choice == 8)
             { // hexa kai cohesive building
                 HexaBuilder4CZM.MakeHexaBuilding(model);
             }
@@ -71,10 +80,32 @@ namespace ISAAR.MSolve.SamplesConsole
             if (HexaBuilder__CZM_choice == 5)
             {
                 analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            model.NodalDOFsDictionary[1][DOFType.X],
+            model.NodalDOFsDictionary[1][DOFType.Y],
+            model.NodalDOFsDictionary[1][DOFType.Z]});
+            }
+            if (HexaBuilder__CZM_choice == 6)
+            {
+                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            model.NodalDOFsDictionary[1][DOFType.X],
+            model.NodalDOFsDictionary[1][DOFType.Y],
+            model.NodalDOFsDictionary[1][DOFType.Z]});
+            }
+            if (HexaBuilder__CZM_choice == 7)
+            {
+                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            model.NodalDOFsDictionary[1][DOFType.X],
+            model.NodalDOFsDictionary[1][DOFType.Y],
+            model.NodalDOFsDictionary[1][DOFType.Z]});
+            }
+            if (HexaBuilder__CZM_choice == 8)
+            {
+                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
             model.NodalDOFsDictionary[8][DOFType.X],
             model.NodalDOFsDictionary[8][DOFType.Y],
             model.NodalDOFsDictionary[8][DOFType.Z]});
             }
+
 
             //model.ElementsDictionary[1][]
             //model.NodalDOFsDictionary[17][DOFType.Z]});
@@ -98,9 +129,9 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        static void Main(string[] args)
-        {
-            SolveHexaBuilding();
-        }
+        //static void Main(string[] args)
+        //{
+        //    SolveHexaBuilding();
+        //}
     }
 }

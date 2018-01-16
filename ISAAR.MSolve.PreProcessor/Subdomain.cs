@@ -217,7 +217,11 @@ namespace ISAAR.MSolve.PreProcessor
             int pos = 0;
             for (int i = 0; i < element.ElementType.DOFEnumerator.GetDOFTypes(element).Count; i++)
             {
-                Node node = element.Nodes[i];
+                //Arxikh diatupwsi MSOLVE
+                //Node node = element.Nodes[i];
+                //Diorthosi diatupwsis MSOLVE
+                Node node = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element)[i];
+                //ews edw
                 foreach (DOFType dofType in element.ElementType.DOFEnumerator.GetDOFTypes(element)[i])
                 {
                     int dof = NodalDOFsDictionary[node.ID][dofType];
@@ -233,7 +237,11 @@ namespace ISAAR.MSolve.PreProcessor
             int pos = 0;
             for (int i = 0; i < element.ElementType.DOFEnumerator.GetDOFTypes(element).Count; i++)
             {
-                Node node = element.Nodes[i];
+                //Arxikh diatupwsi MSOLVE
+                //Node node = element.Nodes[i];
+                //Diorthosi diatupwsis MSOLVE
+                Node node = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element)[i];
+                //ews edw
                 foreach (DOFType dofType in element.ElementType.DOFEnumerator.GetDOFTypes(element)[i])
                 {
                     int dof = NodalDOFsDictionary[node.ID][dofType];

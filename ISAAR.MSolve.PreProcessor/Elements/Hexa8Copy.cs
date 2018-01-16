@@ -11,7 +11,7 @@ using ISAAR.MSolve.PreProcessor.Elements.SupportiveClasses;
 
 namespace ISAAR.MSolve.PreProcessor.Elements
 {
-    public class Hexa8 : IStructuralFiniteElement, IEmbeddedHostElement
+    public class Hexa8Copy : IStructuralFiniteElement, IEmbeddedHostElement
     {
         protected static double determinantTolerance = 0.00000001;
         protected static int iInt = 2;
@@ -61,18 +61,18 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             [MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[] faM);
         #endregion
 
-        protected Hexa8()
+        protected Hexa8Copy()
         {
         }
 
-        public Hexa8(IFiniteElementMaterial3D material)
+        public Hexa8Copy(IFiniteElementMaterial3D material)
         {
             materialsAtGaussPoints = new IFiniteElementMaterial3D[iInt3];
             for (int i = 0; i < iInt3; i++)
                 materialsAtGaussPoints[i] = (IFiniteElementMaterial3D)material.Clone();
         }
 
-        public Hexa8(IFiniteElementMaterial3D material, IFiniteElementDOFEnumerator dofEnumerator)
+        public Hexa8Copy(IFiniteElementMaterial3D material, IFiniteElementDOFEnumerator dofEnumerator)
             : this(material)
         {
             this.dofEnumerator = dofEnumerator;
@@ -450,63 +450,30 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //return new SymmetricMatrix2D<double>(faD);
         }
 
-        //public Tuple<double[], double[]> CalculateStresses(Element element, double[] localDisplacements, double[] localdDisplacements)
-        //{
-        //    double[,] faXYZ = GetCoordinates(element);
-        //    double[,] faDS = new double[iInt3, 24];
-        //    double[,] faS = new double[iInt3, 8];
-        //    double[, ,] faB = new double[iInt3, 24, 6];
-        //    double[] faDetJ = new double[iInt3];
-        //    double[, ,] faJ = new double[iInt3, 3, 3];
-        //    double[] faWeight = new double[iInt3];
-        //    double[,] fadStrains = new double[iInt3, 6];
-        //    double[,] faStrains = new double[iInt3, 6];
-        //    CalcH8GaussMatrices(ref iInt, faXYZ, faWeight, faS, faDS, faJ, faDetJ, faB);
-        //    CalcH8Strains(ref iInt, faB, localDisplacements, faStrains);
-        //    CalcH8Strains(ref iInt, faB, localdDisplacements, fadStrains);
-
-        //    double[] dStrains = new double[6];
-        //    double[] strains = new double[6];
-        //    for (int i = 0; i < materialsAtGaussPoints.Length; i++)
-        //    {
-        //        for (int j = 0; j < 6; j++) dStrains[j] = fadStrains[i, j];
-        //        for (int j = 0; j < 6; j++) strains[j] = faStrains[i, j];
-        //        materialsAtGaussPoints[i].UpdateMaterial(dStrains);
-        //    }
-
-        //    return new Tuple<double[], double[]>(strains, materialsAtGaussPoints[materialsAtGaussPoints.Length - 1].Stresses);
-        //}
-
         public Tuple<double[], double[]> CalculateStresses(Element element, double[] localDisplacements, double[] localdDisplacements)
         {
-            double[,] nodalCoordinates = GetCoordinates(element);
-            GaussLegendrePoint3D[] gaussMatrices = CalculateGaussMatrices(nodalCoordinates);
-            int gaussPointsCount = iInt3;
-            if (gaussMatrices.Count() != gaussPointsCount)
-                throw new Exception("There must have been " + gaussPointsCount + " gauss points, but there are "
-                    + gaussMatrices.Count());
-            if (materialsAtGaussPoints.Length != gaussPointsCount)
-                throw new Exception("There must have been " + gaussPointsCount + " material points, but there are "
-                   + materialsAtGaussPoints.Length);
+            double[,] faXYZ = GetCoordinates(element);
+            double[,] faDS = new double[iInt3, 24];
+            double[,] faS = new double[iInt3, 8];
+            double[, ,] faB = new double[iInt3, 24, 6];
+            double[] faDetJ = new double[iInt3];
+            double[, ,] faJ = new double[iInt3, 3, 3];
+            double[] faWeight = new double[iInt3];
+            double[,] fadStrains = new double[iInt3, 6];
+            double[,] faStrains = new double[iInt3, 6];
+            CalcH8GaussMatrices(ref iInt, faXYZ, faWeight, faS, faDS, faJ, faDetJ, faB);
+            CalcH8Strains(ref iInt, faB, localDisplacements, faStrains);
+            CalcH8Strains(ref iInt, faB, localdDisplacements, fadStrains);
 
-            Vector<double> nodalDisplacements = new Vector<double>(localDisplacements);
-            Vector<double> nodalDeltaDisplacements = new Vector<double>(localdDisplacements);
-            double[] deltaStrains = new double[6];
+            double[] dStrains = new double[6];
             double[] strains = new double[6];
-            for (int gp = 0; gp < gaussPointsCount; ++gp)
+            for (int i = 0; i < materialsAtGaussPoints.Length; i++)
             {
-                Matrix2D<double> deformationMatrix = new Matrix2D<double>(6, 24);
-                for (int i = 0; i < 6; i++)
-                {
-                    for (int j = 0; j < 24; j++)
-                    {
-                        deformationMatrix[i, j] = gaussMatrices[gp].DeformationMatrix[i, j];
-                    }
-                }
-                deformationMatrix.Multiply(nodalDisplacements, strains);
-                deformationMatrix.Multiply(nodalDeltaDisplacements, deltaStrains);
-                materialsAtGaussPoints[gp].UpdateMaterial(deltaStrains);
+                for (int j = 0; j < 6; j++) dStrains[j] = fadStrains[i, j];
+                for (int j = 0; j < 6; j++) strains[j] = faStrains[i, j];
+                materialsAtGaussPoints[i].UpdateMaterial(dStrains);
             }
+
             return new Tuple<double[], double[]>(strains, materialsAtGaussPoints[materialsAtGaussPoints.Length - 1].Stresses);
         }
 
@@ -515,67 +482,31 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             return CalculateForces(element, localDisplacements, new double[localDisplacements.Length]);
         }
 
-        //public double[] CalculateForces(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
-        //{
-        //    //Vector<double> d = new Vector<double>(localdDisplacements.Length);
-        //    //for (int i = 0; i < localdDisplacements.Length; i++) 
-        //    //    //d[i] = localdDisplacements[i] + localTotalDisplacements[i];
-        //    //    d[i] = localTotalDisplacements[i];
-        //    //double[] faForces = new double[24];
-        //    //StiffnessMatrix(element).Multiply(d, faForces);
-
-        //    double[,] faStresses = new double[iInt3, 6];
-        //    for (int i = 0; i < materialsAtGaussPoints.Length; i++)
-        //        for (int j = 0; j < 6; j++) faStresses[i, j] = materialsAtGaussPoints[i].Stresses[j];
-
-        //    double[,] faXYZ = GetCoordinates(element);
-        //    double[,] faDS = new double[iInt3, 24];
-        //    double[,] faS = new double[iInt3, 8];
-        //    double[, ,] faB = new double[iInt3, 24, 6];
-        //    double[] faDetJ = new double[iInt3];
-        //    double[, ,] faJ = new double[iInt3, 3, 3];
-        //    double[] faWeight = new double[iInt3];
-        //    double[] faForces = new double[24];
-        //    CalcH8GaussMatrices(ref iInt, faXYZ, faWeight, faS, faDS, faJ, faDetJ, faB);
-        //    CalcH8Forces(ref iInt, faB, faWeight, faStresses, faForces);
-
-        //    return faForces;
-        //}
         public double[] CalculateForces(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
         {
-            double[,] nodalCoordinates = GetCoordinates(element);
-            GaussLegendrePoint3D[] gaussMatrices = CalculateGaussMatrices(nodalCoordinates);
-            int gaussPointsCount = iInt3;
-            if (gaussMatrices.Count() != gaussPointsCount)
-                throw new Exception("There must have been " + gaussPointsCount + " gauss points, but there are "
-                    + gaussMatrices.Count());
-            if (materialsAtGaussPoints.Length != gaussPointsCount)
-                throw new Exception("There must have been " + gaussPointsCount + " material points, but there are "
-                   + materialsAtGaussPoints.Length);
+            //Vector<double> d = new Vector<double>(localdDisplacements.Length);
+            //for (int i = 0; i < localdDisplacements.Length; i++) 
+            //    //d[i] = localdDisplacements[i] + localTotalDisplacements[i];
+            //    d[i] = localTotalDisplacements[i];
+            //double[] faForces = new double[24];
+            //StiffnessMatrix(element).Multiply(d, faForces);
 
-            int dofsCount = 24; // 8 nodes * 3 dofs per node
-            double[] internalForces = new double[dofsCount];
-            for (int gp = 0; gp < gaussPointsCount; ++gp)
-            {
-                Vector<double> stressVector = new Vector<double>(materialsAtGaussPoints[gp].Stresses); // Risky if stressVector is modified
-                                                                                                       //var stressesClone = new double[tensorComponentsCount];
-                                                                                                       //Array.Copy(materialsAtGaussPoints[gp].Stresses, stressesClone, tensorComponentsCount);
-                                                                                                       //Vector stressVector = new Vector(stressesClone);
-                Matrix2D<double> transposeDeformationMatrix = new Matrix2D<double>(24, 6);
-                Matrix2D<double> deformationMatrix = (new Matrix2D<double>(gaussMatrices[gp].DeformationMatrix)).Transpose();
-                double[] transposeBtimesStress = new double[dofsCount];
-                for (int i = 0; i < 24; i++)
-                {
-                    for (int j = 0; j < 6; j++)
-                    {
-                        transposeDeformationMatrix[i, j] = deformationMatrix[i, j];
-                    }
-                }
-                transposeDeformationMatrix.Multiply(stressVector, transposeBtimesStress);
-                for (int i = 0; i < dofsCount; ++i)
-                    internalForces[i] += transposeBtimesStress[i] * gaussMatrices[gp].WeightFactor;
-            }
-            return internalForces;
+            double[,] faStresses = new double[iInt3, 6];
+            for (int i = 0; i < materialsAtGaussPoints.Length; i++)
+                for (int j = 0; j < 6; j++) faStresses[i, j] = materialsAtGaussPoints[i].Stresses[j];
+
+            double[,] faXYZ = GetCoordinates(element);
+            double[,] faDS = new double[iInt3, 24];
+            double[,] faS = new double[iInt3, 8];
+            double[, ,] faB = new double[iInt3, 24, 6];
+            double[] faDetJ = new double[iInt3];
+            double[, ,] faJ = new double[iInt3, 3, 3];
+            double[] faWeight = new double[iInt3];
+            double[] faForces = new double[24];
+            CalcH8GaussMatrices(ref iInt, faXYZ, faWeight, faS, faDS, faJ, faDetJ, faB);
+            CalcH8Forces(ref iInt, faB, faWeight, faStresses, faForces);
+
+            return faForces;
         }
 
         public double[] CalculateAccelerationForces(Element element, IList<MassAccelerationLoad> loads)

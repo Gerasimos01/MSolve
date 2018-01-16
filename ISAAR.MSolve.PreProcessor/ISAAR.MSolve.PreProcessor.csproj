@@ -92,6 +92,7 @@
   <ItemGroup>
     <Compile Include="Cluster.cs" />
     <Compile Include="Elements\cohesive_shell_to_hexaCopyGet.cs" />
+    <Compile Include="Elements\Hexa8Copy.cs" />
     <Compile Include="Elements\PrintUtilities.cs" />
     <Compile Include="Elements\cohesive8node.cs" />
     <Compile Include="Elements\cohesive16node.cs" />
