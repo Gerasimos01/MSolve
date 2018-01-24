@@ -11,5 +11,7 @@ namespace ISAAR.MSolve.PreProcessor.Interfaces
         IList<Node> GetNodesForMatrixAssembly(Element element);
         IMatrix2D<double> GetTransformedMatrix(IMatrix2D<double> matrix);
         double[] GetTransformedVector(double[] vector);
+        // prosthiki MSolve
+        double[] GetTransformedForcesVector(double[] vector);
     }
 }

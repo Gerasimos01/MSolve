@@ -11,9 +11,9 @@ using System.Text;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    class Program2copyElegxoiEmbedded
+    class Program2copyElegxoiRVE
     {
-        private static void SolveExample()
+        private static void SolveRVEExample()
         {
             VectorExtensions.AssignTotalAffinityCount();
             Model model = new Model();
@@ -21,14 +21,14 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 3;
+            model__builder_choice = 1;
 
             if (model__builder_choice == 1) // Hexa8 kanoniko me NL analyzer
-            { EmbeddedExamplesBuilder.HexaElementsOnly(model); }
-            if (model__builder_choice == 2) // Beam3d me NL analyzer
-            { EmbeddedExamplesBuilder.BeamElementOnly(model); }
-            if (model__builder_choice == 3) // Beam3d me NL analyzer
-            { EmbeddedExamplesBuilder.ExampleWithEmbedded(model); }
+            { RVEExamplesBuilder.OneElementRVECheckExample(model); }
+            //if (model__builder_choice == 2) // Beam3d me NL analyzer
+            //{ EmbeddedExamplesBuilder.BeamElementOnly(model); }
+            //if (model__builder_choice == 3) // Beam3d me NL analyzer
+            //{ EmbeddedExamplesBuilder.ExampleWithEmbedded(model); }
 
             model.ConnectDataStructures();
 
@@ -52,21 +52,21 @@ namespace ISAAR.MSolve.SamplesConsole
             model.NodalDOFsDictionary[12][DOFType.Z]});
             }
 
-            if (model__builder_choice == 2)
-            {
-                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
-            model.NodalDOFsDictionary[14][DOFType.X],
-            model.NodalDOFsDictionary[14][DOFType.Y],
-            model.NodalDOFsDictionary[14][DOFType.Z]});
-            }
+            //if (model__builder_choice == 2)
+            //{
+            //    analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            //model.NodalDOFsDictionary[14][DOFType.X],
+            //model.NodalDOFsDictionary[14][DOFType.Y],
+            //model.NodalDOFsDictionary[14][DOFType.Z]});
+            //}
 
-            if (model__builder_choice == 3)
-            {
-                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
-            model.NodalDOFsDictionary[12][DOFType.X],
-            model.NodalDOFsDictionary[12][DOFType.Y],
-            model.NodalDOFsDictionary[12][DOFType.Z]});
-            }
+            //if (model__builder_choice == 3)
+            //{
+            //    analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            //model.NodalDOFsDictionary[12][DOFType.X],
+            //model.NodalDOFsDictionary[12][DOFType.Y],
+            //model.NodalDOFsDictionary[12][DOFType.Z]});
+            //}
 
             parentAnalyzer.BuildMatrices();
             parentAnalyzer.Initialize();
@@ -79,10 +79,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        //static void Main(string[] args)
-        //{
-        //    SolveExample();
-        //}
+        static void Main(string[] args)
+        {
+            SolveRVEExample(); //|
+        }
 
     }
 }

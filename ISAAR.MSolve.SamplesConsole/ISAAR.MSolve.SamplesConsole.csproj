@@ -69,11 +69,13 @@
     <Compile Include="Program.cs" />
     <Compile Include="Program2copyCZM.cs" />
     <Compile Include="Program2copy.cs" />
+    <Compile Include="Program2copyElegxoiRVE.cs" />
     <Compile Include="Program2copyElegxoiEmbedded.cs" />
     <Compile Include="Program2NL.cs" />
     <Compile Include="Program2.cs" />
     <Compile Include="ProgramRotateCheck.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RVEExamplesBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ISAAR.MSolve.Logging\ISAAR.MSolve.Logging.csproj">

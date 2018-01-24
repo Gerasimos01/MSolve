@@ -33,5 +33,10 @@ namespace ISAAR.MSolve.PreProcessor
         {
             return vector;
         }
+
+        public double[] GetTransformedForcesVector(double[] vector)
+        {
+            return vector;
+        }
     }
 }

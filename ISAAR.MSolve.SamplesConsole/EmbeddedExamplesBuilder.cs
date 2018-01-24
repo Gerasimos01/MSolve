@@ -72,7 +72,6 @@ namespace ISAAR.MSolve.SamplesConsole
             // ews edw
 
             //eisagwgh defterou element
-            
             Element e2 = new Element()
             {
                 ID = 2,
@@ -81,15 +80,17 @@ namespace ISAAR.MSolve.SamplesConsole
             ID2 = 1;
             for (int j = 0; j < 2; j++)
             {
-                e2.NodesDictionary.Add(4 * (ID2-1) + 5, model.NodesDictionary[4 * (ID2-1) + 5]); // na allaxthei h arithmisi swsth seira
-                e2.NodesDictionary.Add(4 * (ID2-1) + 6, model.NodesDictionary[4 * (ID2-1) + 6]);
-                e2.NodesDictionary.Add(4 * (ID2-1) + 8, model.NodesDictionary[4 * (ID2-1) + 8]);
-                e2.NodesDictionary.Add(4 * (ID2-1) + 7, model.NodesDictionary[4 * (ID2-1) + 7]);
+                e2.NodesDictionary.Add(4 * (ID2 - 1) + 5, model.NodesDictionary[4 * (ID2 - 1) + 5]); // na allaxthei h arithmisi swsth seira
+                e2.NodesDictionary.Add(4 * (ID2 - 1) + 6, model.NodesDictionary[4 * (ID2 - 1) + 6]);
+                e2.NodesDictionary.Add(4 * (ID2 - 1) + 8, model.NodesDictionary[4 * (ID2 - 1) + 8]);
+                e2.NodesDictionary.Add(4 * (ID2 - 1) + 7, model.NodesDictionary[4 * (ID2 - 1) + 7]);
                 ID2++;
             }
             model.ElementsDictionary.Add(e2.ID, e2);
             model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e2.ID, e2);
             // ews edw
+
+
 
 
             //model.Loads.Add()

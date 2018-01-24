@@ -218,6 +218,16 @@ namespace ISAAR.MSolve.PreProcessor.Embedding
             return (transformationMatrix * new Vector<double>(vector)).Data;
         }
 
+        public double[] GetTransformedForcesVector(double[] vector)
+        {
+            var e = embeddedElement.ElementType as IEmbeddedElement;
+            //if (e == null || !isElementEmbedded) return matrix;
+            if (e == null) return vector;
+            if (e.EmbeddedNodes.Count == 0) return vector;
+
+            return (transformationMatrix.Transpose() * new Vector<double>(vector)).Data;
+        }
+
         public IList<IList<DOFType>> GetDOFTypes(Element element)
         {
             //return element.ElementType.GetElementDOFTypes(element);

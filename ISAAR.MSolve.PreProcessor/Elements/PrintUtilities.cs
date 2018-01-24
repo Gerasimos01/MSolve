@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ISAAR.MSolve.PreProcessor.Elements
 {
-    static class PrintUtilities
+    public static class PrintUtilities
     {
         public static void WriteToFile(double[,] array, string path)
         {
@@ -21,6 +21,21 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 writer.WriteLine();
             }
             writer.Flush();
+        }
+
+        public static double [] ReadVector( string path)
+        {
+            
+            var reader = new StreamReader(path);
+            var lines = File.ReadLines(path).Count();
+            double[] data = new double[lines];
+            for (int i = 0; i < lines; ++i)
+            {
+                 data[i] = Convert.ToDouble(reader.ReadLine());
+                                            
+            }
+            reader.Close();
+            return data;
         }
 
         public static void WriteToFileVector(double[] array, string path2)
