@@ -21,14 +21,14 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 1;
+            model__builder_choice = 2;
 
-            if (model__builder_choice == 1) // Hexa8 kanoniko me NL analyzer
+            if (model__builder_choice == 1) // 
+            { RVEExamplesBuilder.OneElementRVECheckExampleConstrained(model); }
+            if (model__builder_choice == 2) // 
             { RVEExamplesBuilder.OneElementRVECheckExample(model); }
-            //if (model__builder_choice == 2) // Beam3d me NL analyzer
-            //{ EmbeddedExamplesBuilder.BeamElementOnly(model); }
-            //if (model__builder_choice == 3) // Beam3d me NL analyzer
-            //{ EmbeddedExamplesBuilder.ExampleWithEmbedded(model); }
+            if (model__builder_choice == 3) // Beam3d me NL analyzer
+            { RVEExamplesBuilder.OriginalRVECholExample(model); }
 
             model.ConnectDataStructures();
 
@@ -52,21 +52,21 @@ namespace ISAAR.MSolve.SamplesConsole
             model.NodalDOFsDictionary[12][DOFType.Z]});
             }
 
-            //if (model__builder_choice == 2)
-            //{
-            //    analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
-            //model.NodalDOFsDictionary[14][DOFType.X],
-            //model.NodalDOFsDictionary[14][DOFType.Y],
-            //model.NodalDOFsDictionary[14][DOFType.Z]});
-            //}
+            if (model__builder_choice == 2)
+            {
+                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            model.NodalDOFsDictionary[12][DOFType.X],
+            model.NodalDOFsDictionary[12][DOFType.Y],
+            model.NodalDOFsDictionary[12][DOFType.Z]});
+            }
 
-            //if (model__builder_choice == 3)
-            //{
-            //    analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
-            //model.NodalDOFsDictionary[12][DOFType.X],
-            //model.NodalDOFsDictionary[12][DOFType.Y],
-            //model.NodalDOFsDictionary[12][DOFType.Z]});
-            //}
+            if (model__builder_choice == 3)
+            {
+                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            model.NodalDOFsDictionary[12][DOFType.X],
+            model.NodalDOFsDictionary[12][DOFType.Y],
+            model.NodalDOFsDictionary[12][DOFType.Z]});
+            }
 
             parentAnalyzer.BuildMatrices();
             parentAnalyzer.Initialize();

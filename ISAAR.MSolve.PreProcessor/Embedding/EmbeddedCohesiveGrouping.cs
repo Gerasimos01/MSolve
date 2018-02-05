@@ -70,13 +70,13 @@ namespace ISAAR.MSolve.PreProcessor.Embedding
                                 if (!currentElementType.EmbeddedNodes.Contains(embeddedNode))
                                 {
                                     currentElementType.EmbeddedNodes.Add(embeddedNode);
-                                    element.ElementType.DOFEnumerator = new ElementEmbedder(model, element, transformer);
+                                    element.ElementType.DOFEnumerator = new CohesiveElementEmbedder(model, element, transformer);
                                 }
                             }
                     }
                 }
 
-                embeddedElement.ElementType.DOFEnumerator = new ElementEmbedder(model, embeddedElement, transformer);
+                embeddedElement.ElementType.DOFEnumerator = new CohesiveElementEmbedder(model, embeddedElement, transformer);
             }
         }
     }

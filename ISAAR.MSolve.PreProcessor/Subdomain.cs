@@ -253,7 +253,9 @@ namespace ISAAR.MSolve.PreProcessor
 
         public IVector<double> GetRHSFromSolution(IVector<double> solution, IVector<double> dSolution)
         {
+            solution.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\U_sunol.txt");
             Vector<double> forces = new Vector<double>(TotalDOFs);
+            int current_element = 0;
             foreach (Element element in elementsDictionary.Values)
             {
                 double[] localSolution = GetLocalVectorFromGlobal(element, ((Vector<double>)solution).Data);
@@ -263,7 +265,13 @@ namespace ISAAR.MSolve.PreProcessor
                     element.Subdomain.MaterialsModified = true;
                 double[] f = element.ElementType.CalculateForces(element, localSolution, localdSolution);
                 AddLocalVectorToGlobal(element, f, forces.Data);
+                current_element += 1;
+                if(current_element==12)
+                {
+                    forces.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Forces_sunol_mono_shell_hexa.txt");
+                }
             }
+            forces.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Forces_sunol.txt");
             return forces;
         }
 

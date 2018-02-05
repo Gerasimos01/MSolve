@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ISAAR.MSolve.Matrices;
 
 namespace ISAAR.MSolve.PreProcessor.Elements
 {
@@ -16,6 +17,21 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 for (int j = 0; j < array.GetLength(1); ++j)
                 {
                     writer.Write(array[i, j]);
+                    writer.Write(' ');
+                }
+                writer.WriteLine();
+            }
+            writer.Flush();
+        }
+
+        public static void WriteToFile(SkylineMatrix2D<double> Mat,int i1,int j1, string path)
+        {
+            var writer = new StreamWriter(path);
+            for (int i = 0; i < 40; ++i)
+            {
+                for (int j = 0; j < 40; ++j)
+                {
+                    writer.Write(Mat[i+i1, j+j1]);
                     writer.Write(' ');
                 }
                 writer.WriteLine();

@@ -103,6 +103,7 @@
     <Compile Include="Elements\Hexa8u8pWithStochasticMaterial.cs" />
     <Compile Include="Elements\Shell8dispCopyPrint.cs" />
     <Compile Include="Elements\Shell8disp.cs" />
+    <Compile Include="Embedding\CohesiveElementEmbedder.cs" />
     <Compile Include="Embedding\EmbeddedCohesiveGrouping.cs" />
     <Compile Include="Embedding\Hexa8NLTranslationTransformationVector.cs" />
     <Compile Include="Interfaces\IMassAccelerationHistoryLoad.cs" />

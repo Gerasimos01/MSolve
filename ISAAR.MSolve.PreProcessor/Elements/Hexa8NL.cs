@@ -177,7 +177,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
             }
-
+            //PrintUtilities.WriteToFile(Ni, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Ni_data_8epi27.txt");
             endeixiShapeFunctionAndGaussPointData = 2;
         }
 
@@ -411,7 +411,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double[,] J_1b;
         private double[][,] J_1;// exoume tosa [,] osa einai kai ta gpoints        
         private double[][,] BL11b;
-        private double[][,] DG;
+        private double[][,] DGtr;
         private double[][,] GL;
         private double[][] GLvec;
         private double[][]Spkvec;
@@ -443,7 +443,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             J_1b = new double[8, 3];
             J_1 = new double[nGaussPoints][,];
             //BL11b= new double[nGaussPoints][,];
-            DG = new double[nGaussPoints][,];
+            DGtr = new double[nGaussPoints][,];
             GL = new double[nGaussPoints][,];
             GLvec = new double[nGaussPoints][];
             Spkvec = new double[nGaussPoints][];
@@ -451,7 +451,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             {
                 J_1[npoint] = new double[3, 3];
                 //BL11b[npoint] = new double[9,9];                
-                DG[npoint] = new double[3, 3];
+                DGtr[npoint] = new double[3, 3];
                 GL[npoint] = new double[3, 3];
                 GLvec[npoint] = new double[6];
                 Spkvec[npoint] = new double[6];
@@ -571,10 +571,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 {
                     for (int n = 0; n < 3; n++)
                     {
-                        DG[npoint][m, n] = 0;
+                        DGtr[npoint][m, n] = 0;
                         for (int p = 0; p < 3; p++)
                         {
-                            DG[npoint][m, n] += J_0inv_hexa[npoint][m, p] * J_1[npoint][n, p];
+                            DGtr[npoint][m, n] += J_0inv_hexa[npoint][m, p] * J_1[npoint][p,n];
                         }
                     }
                 }
@@ -587,7 +587,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         GL[npoint][m, n] = 0;
                         for (int p = 0; p < 3; p++)
                         {
-                            GL[npoint][m, n] += DG[npoint][p,m] * DG[npoint][p,n];
+                            GL[npoint][m, n] += DGtr[npoint][m,p] * DGtr[npoint][n,p];
                         }
                     }
                 }

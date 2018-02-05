@@ -1076,8 +1076,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 Cons[0, 1] = ni[j] * E[j] / (1 - Math.Pow(ni[j], 2));
                 Cons[1, 0] = ni[j] * E[j] / (1 - Math.Pow(ni[j], 2));
                 Cons[3, 3] = (1 - ni[j]) * (0.5) * E[j] / (1 - Math.Pow(ni[j], 2));
-                Cons[4, 4] = (1 - ni[j]) * (0.41666666667) * E[j] / (1 - Math.Pow(ni[j], 2));
-                Cons[5, 5] = (1 - ni[j]) * (0.41666666667) * E[j] / (1 - Math.Pow(ni[j], 2));
+                Cons[4, 4] = (1 - ni[j]) * (0.5) * E[j] / (1 - Math.Pow(ni[j], 2)); //Cons[4, 4] = (1 - ni[j]) * (0.41666666667) * E[j] / (1 - Math.Pow(ni[j], 2));
+                Cons[5, 5] = (1 - ni[j]) * (0.5) * E[j] / (1 - Math.Pow(ni[j], 2)); //Cons[5, 5] = (1 - ni[j]) * (0.41666666667) * E[j] / (1 - Math.Pow(ni[j], 2));
                 //for (int k = 0; k < 2; k++)
                 //{ Cons[4 + k, 4 + k] = (5 / 6) * (1 - ni[j]) * (0.5) * E[j] / (1 - Math.Pow(ni[j], 2)); }
 

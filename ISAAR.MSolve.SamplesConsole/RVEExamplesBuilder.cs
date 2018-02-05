@@ -133,7 +133,7 @@ namespace ISAAR.MSolve.SamplesConsole
         }
 
 
-        public static void AddGrapheneSheet(Model model,grapheneSheetParameters gp)
+        public static void AddGrapheneSheet(Model model,grapheneSheetParameters gp,double [] ekk_xyz)
         {
             // Perioxh parametroi Graphene sheet
             // parametroi shell
@@ -176,7 +176,7 @@ namespace ISAAR.MSolve.SamplesConsole
             double nodeCoordY;
             double nodeCoordZ;
 
-            o_xsunol = ox_sunol_Builder(new_rows,new_lines, L1, L2,elem1,elem2, a1_shell);
+            o_xsunol = ox_sunol_Builder_ekk(new_rows,new_lines, L1, L2,elem1,elem2, a1_shell,ekk_xyz);
 
             for (int nNode = 0; nNode < o_xsunol.GetLength(0)/6; nNode++) //nNode einai zero based
             {
@@ -367,6 +367,135 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
+        public static void AddConstraintsForNonSingularStiffnessMatrix(Model model, int hexa1, int hexa2, int hexa3)
+        {
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+            int nodeID;
+
+            nodeID = Topol_rve(1, 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka); 
+            model.NodesDictionary[nodeID].Constraints.Add(DOFType.X);
+            model.NodesDictionary[nodeID].Constraints.Add(DOFType.Y);
+            model.NodesDictionary[nodeID].Constraints.Add(DOFType.Z);
+
+            nodeID = Topol_rve(hexa1+1, 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka);
+            model.NodesDictionary[nodeID].Constraints.Add(DOFType.Y);
+            model.NodesDictionary[nodeID].Constraints.Add(DOFType.Z);
+
+            nodeID = Topol_rve(1,hexa2+ 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka);
+            model.NodesDictionary[nodeID].Constraints.Add(DOFType.X);
+            model.NodesDictionary[nodeID].Constraints.Add(DOFType.Z);
+
+            nodeID = Topol_rve(1, 1, hexa3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka);
+            model.NodesDictionary[nodeID].Constraints.Add(DOFType.X);
+            model.NodesDictionary[nodeID].Constraints.Add(DOFType.Y);
+        }
+
+        public static void AddLoadsOnRveFromFile(Model model, int hexa1, int hexa2, int hexa3,string vectorpath)
+        {
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            double[] Fxk_p_komvoi_rve;
+            //Fxk_p_komvoi_rve = PrintUtilities.ReadVector(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Fxk_p_komvoi_rve.txt");
+            Fxk_p_komvoi_rve = PrintUtilities.ReadVector(vectorpath);
+            int komvoi_rve = (hexa1 + 1) * (hexa2 + 1) * (hexa3 + 1);
+            int f_komvoi_rve = kuvos;
+            int p_komvoi_rve = komvoi_rve - f_komvoi_rve;
+            int komvos;
+
+            Load load_i;
+            for (int j = 0; j < p_komvoi_rve; j++)
+            {
+                komvos = f_komvoi_rve + j + 1;
+                load_i = new Load()
+                {
+                    Node = model.NodesDictionary[komvos],
+                    DOF = DOFType.X,
+                    Amount = Fxk_p_komvoi_rve[3*(j)+0]
+                };
+                model.Loads.Add(load_i);
+
+                load_i = new Load()
+                {
+                    Node = model.NodesDictionary[komvos],
+                    DOF = DOFType.Y,
+                    Amount = Fxk_p_komvoi_rve[3 * (j) + 1]
+                };
+                model.Loads.Add(load_i);
+
+                load_i = new Load()
+                {
+                    Node = model.NodesDictionary[komvos],
+                    DOF = DOFType.Z,
+                    Amount = Fxk_p_komvoi_rve[3 * (j) + 2]
+                };
+                model.Loads.Add(load_i);
+            }
+
+            // Afairesh fortiwn apo tous desmevmenous vathmous eleftherias 
+            int nodeID;
+            int[] supportedDOFs=new int[9];
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+            nodeID = Topol_rve(1, 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka);
+            supportedDOFs[0] = 3 * (nodeID - f_komvoi_rve - 1) + 0;
+            supportedDOFs[1] = 3 * (nodeID - f_komvoi_rve - 1) + 1;
+            supportedDOFs[2] = 3 * (nodeID - f_komvoi_rve - 1) + 2;
+
+            nodeID = Topol_rve(hexa1 + 1, 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka);
+            supportedDOFs[3] = 3 * (nodeID - f_komvoi_rve - 1) + 1;
+            supportedDOFs[4] = 3 * (nodeID - f_komvoi_rve - 1) + 2;
+
+            nodeID = Topol_rve(1, hexa2 + 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka);
+            supportedDOFs[5] = 3 * (nodeID - f_komvoi_rve - 1) + 0;
+            supportedDOFs[6] = 3 * (nodeID - f_komvoi_rve - 1) + 2;
+
+            nodeID = Topol_rve(1, 1, hexa3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka);
+            supportedDOFs[7] = 3 * (nodeID - f_komvoi_rve - 1) + 0;
+            supportedDOFs[8] = 3 * (nodeID - f_komvoi_rve - 1) + 1;
+
+            for (int j = 0; j < 9; j++)
+            {
+                model.Loads.RemoveAt(supportedDOFs[8 - j]); // afairoume apo pisw pros ta mpros gia na mh xalaei h thesh twn epomenwn pou tha afairethoun
+            }
+
+        }
+
+        public static void AddXLoadsOnYZConstrainedOneElementRVE(Model model)
+        {
+
+            Load load_i;
+            int[] LoadedNodes = new int[] { 2, 4, 6, 8 };
+            for (int j = 0; j < 4; j++)
+            {
+                load_i = new Load()
+                {
+                    Node = model.NodesDictionary[LoadedNodes[j]],
+                    DOF = DOFType.X,
+                    Amount = 5.4218569154
+                };
+                model.Loads.Add(load_i);
+            }
+        }
+
+        public static void AddConstraintsForYZConstraindeOneElementRVE(Model model)
+        {
+            int[] paktwmenaNodes = new int[] { 1, 3, 5, 7 };
+            int[] NodesKulhshX = new int[] { 2, 4, 6, 8  };
+
+            for (int j = 0; j < 4; j++)
+            {
+                model.NodesDictionary[paktwmenaNodes[j]].Constraints.Add(DOFType.X);
+                model.NodesDictionary[paktwmenaNodes[j]].Constraints.Add(DOFType.Y);
+                model.NodesDictionary[paktwmenaNodes[j]].Constraints.Add(DOFType.Z);
+                model.NodesDictionary[NodesKulhshX[j]].Constraints.Add(DOFType.Y);
+                model.NodesDictionary[NodesKulhshX[j]].Constraints.Add(DOFType.Z);
+            }
+                
+        }
+
+
+
         private static int[,] topologia_shell_coh(int elements, int elem1, int elem2, object komvoi_8)
         {
             int elem;
@@ -523,6 +652,101 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
+        public static double[] ox_sunol_Builder_ekk(int new_rows, int new_lines, double L1, double L2, int elem1, int elem2, double a1_shell,double[] ekk_xyz)
+        {
+            double[] o_xsunol = new double[6 * new_lines * new_rows];
+            int npoint;
+            double ksi_1;
+            double heta_1;
+            double k1;
+            double l1;
+            double[] e_ksi_1 = new double[3];
+            double[] e_heta_1 = new double[3];
+            double[] e_3 = new double[3];
+            double e_3norm;
+
+            k1 = 2 * Math.PI / L1;
+            l1 = 2 * Math.PI / L2;
+            for (int nrow = 0; nrow < new_rows; nrow++)
+            {
+                for (int nline = 0; nline < new_lines; nline++)
+                {
+                    npoint = (nrow + 1 - 1) * new_lines + nline + 1; // nrow+1 kai nline +1 dioti einai zero based
+                    ksi_1 = (nrow + 1 - 1) * (L1 / (2 * elem1));
+                    heta_1 = (nline + 1 - 1) * (L2 / (2 * elem2));
+                    o_xsunol[6 * (npoint - 1) + 1 - 1] = ksi_1 - 0.5 * L1+ekk_xyz[0];
+                    o_xsunol[6 * (npoint - 1) + 2 - 1] = heta_1 - 0.5 * L2+ekk_xyz[1];
+                    o_xsunol[6 * (npoint - 1) + 3 - 1] = a1_shell * Math.Sin(k1 * ksi_1) * Math.Sin(l1 * heta_1)+ekk_xyz[2];
+
+                    e_ksi_1 = new double[] { 1, 0, a1_shell * k1 * Math.Cos(k1 * ksi_1) * Math.Sin(l1 * heta_1) };
+                    e_heta_1 = new double[] { 0, 1, a1_shell * l1 * Math.Sin(k1 * ksi_1) * Math.Cos(l1 * heta_1) };
+
+                    cross(e_ksi_1, e_heta_1, e_3);
+                    e_3norm = Math.Sqrt(Math.Pow(e_3[0], 2) + Math.Pow(e_3[1], 2) + Math.Pow(e_3[2], 2));
+
+                    o_xsunol[(6 * (npoint - 1) + 3)] = e_3[0] / e_3norm;
+                    o_xsunol[(6 * (npoint - 1) + 4)] = e_3[1] / e_3norm;
+                    o_xsunol[(6 * (npoint - 1) + 5)] = e_3[2] / e_3norm;
+                }
+            }
+
+            //grammes 71-72
+            double[,] V_epil = new double[6 * (2 * elem1 + 1) * (2 * elem2 + 1), 6 * (2 * elem1 + 1) * (2 * elem2 + 1)];
+            double[,] upomhtrwoV = new double[6 * (2 * elem2 + 1) + 6 * elem2 + 6, 6 * (2 * elem2 + 1) + 12 * elem2 + 6];
+            // morfwsi upomhtrwouV           
+            for (int j = 0; j < 6 * (2 * elem2 + 1); j++)
+            {
+                upomhtrwoV[j, j] = 1;
+            }
+            for (int i7 = 0; i7 < elem2; i7++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    upomhtrwoV[(6 * (2 * elem2 + 1) + 6 * i7 + j), (6 * (2 * elem2 + 1) + 12 * i7 + j)] = 1;
+                }
+            }
+            for (int j = 0; j < 6; j++)
+            {
+                upomhtrwoV[(6 * (2 * elem2 + 1) + 6 * elem2 + j), (6 * (2 * elem2 + 1) + 12 * elem2 + j)] = 1;
+            }
+
+            // morfwsi mhtrwou V_epil
+            for (int i7 = 0; i7 < elem1; i7++)
+            {
+                for (int j1 = 0; j1 < upomhtrwoV.GetLength(0); j1++)
+                {
+                    for (int j2 = 0; j2 < upomhtrwoV.GetLength(1); j2++)
+                    {
+                        V_epil[i7 * (6 * (2 * elem2 + 1) + 6 * elem2 + 6) + j1, i7 * (6 * (2 * elem2 + 1) + 12 * elem2 + 6) + j2] = upomhtrwoV[j1, j2];
+                    }
+                }
+            }
+            for (int j1 = 0; j1 < 6 * (2 * elem2 + 1); j1++)
+            {
+                V_epil[elem1 * (6 * (2 * elem2 + 1) + 6 * elem2 + 6) + j1, elem1 * (6 * (2 * elem2 + 1) + 12 * elem2 + 6) + j1] = 1;
+            }
+
+            // grammes 89-90
+            double[] o_x_endiam = new double[o_xsunol.GetLength(0)];
+            for (int j1 = 0; j1 < o_xsunol.GetLength(0); j1++)
+            {
+                o_x_endiam[j1] = o_xsunol[j1];
+            }
+            double[] o_x_endiam2;
+            Matrix2D<double> V_epil_mat = new Matrix2D<double>(V_epil);
+            o_x_endiam2 = (V_epil_mat * new Vector<double>(o_x_endiam)).Data;
+
+            // grammh 91
+            o_xsunol = new double[elem1 * (6 * (2 * elem2 + 1) + 6 * (elem2 + 1)) + 6 * (2 * elem2 + 1)];
+            for (int j1 = 0; j1 < elem1 * (6 * (2 * elem2 + 1) + 6 * (elem2 + 1)) + 6 * (2 * elem2 + 1); j1++)
+            {
+                o_xsunol[j1] = o_x_endiam2[j1];
+            }
+
+            return o_xsunol;
+
+        }
+
         public static void cross(double[] A, double[] B, double[] C)
         {
             C[0] = A[1] * B[2] - A[2] * B[1];
@@ -565,7 +789,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 L1 = 105,// nm
                 L2 = 110,// nm
                 L3 = 112.5096153846, // nm
-                a1_shell = 6, // nm
+                a1_shell = 0, //6, // nm
                 tk = 0.0125016478913782,  // 0.0125016478913782nm
 
                 //parametroi cohesive epifaneias
@@ -594,9 +818,9 @@ namespace ISAAR.MSolve.SamplesConsole
                 L01 = 150, // diastaseis
                 L02 = 150,
                 L03 = 40,
-                hexa1 = 1,// diakritopoihsh
-                hexa2 = 1,
-                hexa3 = 1
+                hexa1 = 2,// diakritopoihsh
+                hexa2 = 2,
+                hexa3 = 2
             };
 
             grapheneSheetParameters gp;
@@ -605,13 +829,13 @@ namespace ISAAR.MSolve.SamplesConsole
                 // parametroi shell
                 E_shell = 27196.4146610211, // GPa = 1000Mpa = 1000N / mm2
                 ni_shell = 0.0607, // stathera poisson
-                elem1 = 1,
-                elem2 = 1,
+                elem1 = 2,
+                elem2 = 2,
                 L1 = 105,// nm
                 L2 = 110,// nm
                 L3 = 112.5096153846, // nm
                 a1_shell = 0, // nm
-                tk = 0.0125016478913782,  // 0.0125016478913782nm
+                tk = 0.125*40, //0.0125016478913782,  // 0.0125016478913782nm
 
                 //parametroi cohesive epifaneias
                 T_o_3 = 0.05,// Gpa = 1000Mpa = 1000N / mm2
@@ -636,12 +860,41 @@ namespace ISAAR.MSolve.SamplesConsole
             mpgp =RVEExamplesBuilder.GetOriginalRveCholExampleParameters();
             mp = mpgp.Item1;
             gp = mpgp.Item2;
+            double[] ekk_xyz = new double[] { 0, 0, 0 };
             RVEExamplesBuilder.HexaElementsOnlyRVE(model, mp, Dq);
             int hexaElementsNumber = model.ElementsDictionary.Count();
-            RVEExamplesBuilder.AddGrapheneSheet(model, gp);
-            // model: add loads
+            RVEExamplesBuilder.AddGrapheneSheet(model, gp,ekk_xyz);
+            int shellElementsNumber = (model.ElementsDictionary.Count() - hexaElementsNumber) / 3;
+            // model: add loads NA ALLAXTHEI TO PATH
+            RVEExamplesBuilder.AddLoadsOnRveFromFile(model,mp.hexa1,mp.hexa2,mp.hexa3, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol\Fxk_p_komvoi_rve.txt");
             // model: add constraints
-            var embeddedGrouping = new EmbeddedCohesiveGrouping(model, model.ElementsDictionary.Where(x => x.Key < hexaElementsNumber).Select(kv => kv.Value), model.ElementsDictionary.Where(x => x.Key >= hexaElementsNumber).Select(kv => kv.Value));
+            RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix(model, mp.hexa1, mp.hexa2, mp.hexa2);
+
+            var embeddedGrouping = new EmbeddedCohesiveGrouping(model, model.ElementsDictionary.Where(x => (x.Key < hexaElementsNumber + 1)).Select(kv => kv.Value), model.ElementsDictionary.Where(x => (x.Key >= shellElementsNumber + hexaElementsNumber + 1)).Select(kv => kv.Value));
+
+        }
+
+        public static void OneElementRVECheckExampleConstrained(Model model)
+        {
+            double[,] Dq = new double[1, 1];
+            Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
+            rveMatrixParameters mp;
+            grapheneSheetParameters gp;
+            mpgp = RVEExamplesBuilder.GetOneElementRveCheckExampleParameters();
+            mp = mpgp.Item1;
+            gp = mpgp.Item2;
+            double[] ekk_xyz = new double[] { 0, 0, 0 };
+            RVEExamplesBuilder.HexaElementsOnlyRVE(model, mp,Dq);
+            int hexaElementsNumber = model.ElementsDictionary.Count();
+            RVEExamplesBuilder.AddGrapheneSheet(model, gp,ekk_xyz);
+            int shellElementsNumber = (model.ElementsDictionary.Count()-hexaElementsNumber)/3;
+            // model: add loads
+            //RVEExamplesBuilder.AddLoadsOnRveFromFile(model, mp.hexa1, mp.hexa2, mp.hexa3, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Fxk_p_komvoi_rve.txt");
+            RVEExamplesBuilder.AddXLoadsOnYZConstrainedOneElementRVE(model);
+            // model: add constraints
+            //RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix(model, mp.hexa1, mp.hexa2, mp.hexa2);
+            RVEExamplesBuilder.AddConstraintsForYZConstraindeOneElementRVE(model);
+            var embeddedGrouping = new EmbeddedCohesiveGrouping(model, model.ElementsDictionary.Where(x => (x.Key < hexaElementsNumber+1) ).Select(kv => kv.Value), model.ElementsDictionary.Where(x => (x.Key>=shellElementsNumber+hexaElementsNumber+1)).Select(kv => kv.Value));
 
         }
 
@@ -654,15 +907,18 @@ namespace ISAAR.MSolve.SamplesConsole
             mpgp = RVEExamplesBuilder.GetOneElementRveCheckExampleParameters();
             mp = mpgp.Item1;
             gp = mpgp.Item2;
-            RVEExamplesBuilder.HexaElementsOnlyRVE(model, mp,Dq);
+            double[] ekk_xyz = new double[] { 0, 0, 0.25*40 };
+            RVEExamplesBuilder.HexaElementsOnlyRVE(model, mp, Dq);
             int hexaElementsNumber = model.ElementsDictionary.Count();
-            RVEExamplesBuilder.AddGrapheneSheet(model, gp);
-            int shellElementsNumber = (model.ElementsDictionary.Count()-hexaElementsNumber)/3;
+            RVEExamplesBuilder.AddGrapheneSheet(model, gp,ekk_xyz);
+            int shellElementsNumber = (model.ElementsDictionary.Count() - hexaElementsNumber) / 3;
             // model: add loads
-            double[] Fxk_p_komvoi_rve;            
-            Fxk_p_komvoi_rve = PrintUtilities.ReadVector(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Fxk_p_komvoi_rve.txt");
+            RVEExamplesBuilder.AddLoadsOnRveFromFile(model, mp.hexa1, mp.hexa2, mp.hexa3, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Fxk_p_komvoi_rve.txt");
+            //RVEExamplesBuilder.AddXLoadsOnYZConstrainedOneElementRVE(model);
             // model: add constraints
-            var embeddedGrouping = new EmbeddedCohesiveGrouping(model, model.ElementsDictionary.Where(x => (x.Key < hexaElementsNumber+1) ).Select(kv => kv.Value), model.ElementsDictionary.Where(x => (x.Key>=shellElementsNumber+hexaElementsNumber+1)).Select(kv => kv.Value));
+            RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix(model, mp.hexa1, mp.hexa2, mp.hexa2);
+            //RVEExamplesBuilder.AddConstraintsForYZConstraindeOneElementRVE(model);
+            var embeddedGrouping = new EmbeddedCohesiveGrouping(model, model.ElementsDictionary.Where(x => (x.Key < hexaElementsNumber + 1)).Select(kv => kv.Value), model.ElementsDictionary.Where(x => (x.Key >= shellElementsNumber + hexaElementsNumber + 1)).Select(kv => kv.Value));
 
         }
 

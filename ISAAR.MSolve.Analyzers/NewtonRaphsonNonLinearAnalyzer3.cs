@@ -17,7 +17,7 @@ namespace ISAAR.MSolve.Analyzers
         private readonly int totalDOFs;
         private int maxSteps;
         private int stepsForMatrixRebuild;
-        private readonly double tolerance = 1e-5;
+        private readonly double tolerance =1e-5;
         private double rhsNorm;
         private INonLinearParentAnalyzer parentAnalyzer = null;
         private readonly ISolver solver;
@@ -174,9 +174,11 @@ namespace ISAAR.MSolve.Analyzers
                         BuildMatrices();
                         solver.Initialize();
                     }
+                    Console.WriteLine("iteration");
                 }
                 Debug.WriteLine("NR {0}, first error: {1}, exit error: {2}", step, firstError, errorNorm);
                 SaveMaterialStateAndUpdateSolution();
+                Console.WriteLine("increment");
             }
             CopySolutionToSubdomains();
 //            ClearMaterialStresses();

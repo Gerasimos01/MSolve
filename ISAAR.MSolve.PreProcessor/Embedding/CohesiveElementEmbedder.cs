@@ -6,63 +6,55 @@ using ISAAR.MSolve.PreProcessor.Interfaces;
 using ISAAR.MSolve.Matrices.Interfaces;
 using ISAAR.MSolve.Matrices;
 using System.IO;
+using ISAAR.MSolve.PreProcessor.Elements;
 
 namespace ISAAR.MSolve.PreProcessor.Embedding
 {
-    public class SuperElementDOF
-    {
-        public Element Element { get; set; }
-        public Node HostNode { get; set; }
-        public Node EmbeddedNode { get; set; }
-        public DOFType DOF { get; set; }
+    
 
-        public override bool Equals(object obj)
-        {
-            if (obj is SuperElementDOF == false) return false;
-            var e = obj as SuperElementDOF;
-            if (e == null) return false;
-
-            if ((e.Element == null && this.Element != null) || (e.Element != null && this.Element == null)) return false;
-            if ((e.HostNode == null && this.HostNode != null) || (e.HostNode != null && this.HostNode == null)) return false;
-            if ((e.EmbeddedNode == null && this.EmbeddedNode != null) || (e.EmbeddedNode != null && this.EmbeddedNode == null)) return false;
-
-            return (e.DOF == this.DOF && 
-                ((e.Element == null && this.Element == null) || (e.Element.ID == this.Element.ID)) && 
-                ((e.HostNode == null && this.HostNode == null) || (e.HostNode.ID == this.HostNode.ID)) &&
-                ((e.EmbeddedNode == null && this.EmbeddedNode == null) || (e.EmbeddedNode.ID == this.EmbeddedNode.ID)));
-        }
-
-        public override int GetHashCode()
-        {
-            int elementID = Element == null ? 0 : Element.ID;
-            int hostNodeID = HostNode == null ? 0 : HostNode.ID;
-            return String.Format("H{3}E{0}N{1}{2}", elementID, hostNodeID, DOF, EmbeddedNode.ID).GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            int elementID = Element == null ? 0 : Element.ID;
-            int hostNodeID = HostNode == null ? 0 : HostNode.ID;
-            return String.Format("N:{3} -> E:{0}, N:{1}, {2}", elementID, hostNodeID, DOF, EmbeddedNode.ID);
-        }
-    }
-
-    public class ElementEmbedder : IFiniteElementDOFEnumerator
+    public class CohesiveElementEmbedder : IFiniteElementDOFEnumerator
     {
         private readonly Model model;
         private readonly Element embeddedElement;
         private readonly IEmbeddedDOFInHostTransformationVector transformation;
         private readonly Dictionary<SuperElementDOF, int> superElementMap = new Dictionary<SuperElementDOF, int>();
         private readonly Dictionary<EmbeddedNode, Dictionary<DOFType, int>> dofToHostMapping = new Dictionary<EmbeddedNode, Dictionary<DOFType, int>>();
-        private Matrix2D<double> transformationMatrix;       
+        //PROSTHIKI EMBEDDED: comment out to private apo to transformation matrix
+        private Matrix2D<double> transformationMatrix;
+        ////EMBEDDED:
+        //public Matrix2D<double> transformationMatrix;
+
         //private bool isElementEmbedded = false;
 
-        public ElementEmbedder(Model model, Element embeddedElement, IEmbeddedDOFInHostTransformationVector transformation)
+        public CohesiveElementEmbedder(Model model, Element embeddedElement, IEmbeddedDOFInHostTransformationVector transformation)
         {
             this.model = model;
             this.embeddedElement = embeddedElement;
             this.transformation = transformation;
             Initialize();
+            // PROSTHIKI EMBEDDED:
+            ModifyTransformationMatrix();
+        }
+
+        // PROSTHIKI EMBEDDED:
+        public void ModifyTransformationMatrix()
+        {
+            double[,] updatedtransformationMatrixData = new double[64, 232];
+            for (int j = 0; j < 40; j++)
+            {
+                for (int k = 0; k < 232; k++)
+                {
+                    updatedtransformationMatrixData[j, k] = transformationMatrix[24 + j, k];
+                }
+            }
+            for (int j = 0; j < 24; j++)
+            {
+                for (int k = 0; k < 232; k++)
+                {
+                    updatedtransformationMatrixData[40+j, k] = transformationMatrix[j, k];
+                }
+            }
+            transformationMatrix = new Matrix2D<double>(updatedtransformationMatrixData);
         }
 
         private void InitializeMappings()
@@ -214,7 +206,7 @@ namespace ISAAR.MSolve.PreProcessor.Embedding
             //if (e == null || !isElementEmbedded) return matrix;
             if (e == null) return matrix;
             if (e.EmbeddedNodes.Count == 0) return matrix;
-
+            //PrintUtilities.WriteToFile(transformationMatrix.Data, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\transformationMatrix.txt");//transformationMatrix.Data();
             return transformationMatrix.Transpose() * ((Matrix2D<double>)matrix) * transformationMatrix;
         }
 
