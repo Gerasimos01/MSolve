@@ -911,6 +911,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
 
                 }
+                // edw thelei pithanws thelei allagh ths endeixhs gia to defgradT stous epomenous upologismous de tha thelei initialize
+
 
             }
             else
@@ -971,6 +973,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
 
                 }
+                // edw pithanws thelei allagh ths endeixhs Gl gia na mh ginetai xana initialized o GL
             }
             else
             {
@@ -1019,6 +1022,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     GLvec[j][4] = 2 * GL[j][1, 2];
                     GLvec[j][5] = 2 * GL[j][2, 0];
                 }
+                // kai edw mallon allagh ths endeixhs
             }
             else
             {
@@ -1206,6 +1210,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
 
                 }
+                // kai edw mallon thelei allagh ths endeixhs
             }
             else
             {
@@ -1266,6 +1271,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         }
                     }
                 }
+                // edw thelei allagh ths endeixhs
             }
             else
             {
@@ -1724,6 +1730,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     for (int j = 0; j < nGaussPoints; j++)
                     { Fxk[nGaussPoints][k] += a_123g[j] * GetDetJ_0(element)[j]*Fxk[j][k]; }
                 }
+                //PrintUtilities.ConvertAndWriteToFileVector(Fxk, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Fxk_element_1.txt");
             }
         }
 

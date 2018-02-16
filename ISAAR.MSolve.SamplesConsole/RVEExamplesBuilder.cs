@@ -233,7 +233,8 @@ namespace ISAAR.MSolve.SamplesConsole
                 e2 = new Element()
                 {
                     ID = ElementID,
-                    ElementType = new Shell8dispCopyPrint(material2, 3, 3, 3)
+                    //
+                    ElementType = new Shell8dispCopyPrint(material2, 3, 3, 3)//ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
                     {
                         oVn_i = VH,
                         tk = Tk_vec,
@@ -367,6 +368,263 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
+        public static void AddGrapheneSheet2(Model model, grapheneSheetParameters gp, double[] ekk_xyz)
+        {
+            // Perioxh parametroi Graphene sheet
+            // parametroi shell
+            double E_shell = gp.E_shell; // GPa = 1000Mpa = 1000N / mm2
+            double ni_shell = gp.ni_shell; // stathera poisson
+            int elem1 = gp.elem1;
+            int elem2 = gp.elem2;
+            double L1 = gp.L1;// nm
+            double L2 = gp.L2;// nm
+            double L3 = gp.L3; // nm
+            double a1_shell = gp.a1_shell; // nm
+            double tk = gp.tk;  // 0.0125016478913782nm
+
+            //parametroi cohesive epifaneias
+            //T_o_3, D_o_3,D_f_3,T_o_1,D_o_1,D_f_1,n_curve
+            double T_o_3 = gp.T_o_3;// Gpa = 1000Mpa = 1000N / mm2
+            double D_o_3 = gp.D_o_3; // nm
+            double D_f_3 = gp.D_f_3; // nm
+
+            double T_o_1 = gp.T_o_1;// Gpa
+            double D_o_1 = gp.D_o_1; // nm
+            double D_f_1 = gp.D_f_1; // nm
+
+            double n_curve = gp.n_curve;
+            // Perioxh parametroi Graphene sheet ews edw
+
+
+            int eswterikosNodeCounter = 0;
+            int eswterikosElementCounter = 0;
+            int PreviousElementsNumberValue = model.ElementsDictionary.Count();
+            int PreviousNodesNumberValue = model.NodesDictionary.Count();
+
+
+            // Perioxh gewmetrias (orismos nodes) meshs epifaneias
+            int new_rows = 2 * elem1 + 1;
+            int new_lines = 2 * elem2 + 1;
+            double[] o_xsunol;
+            int NodeID;
+            double nodeCoordX;
+            double nodeCoordY;
+            double nodeCoordZ;
+
+            o_xsunol = ox_sunol_Builder_ekk(new_rows, new_lines, L1, L2, elem1, elem2, a1_shell, ekk_xyz);
+
+            for (int nNode = 0; nNode < o_xsunol.GetLength(0) / 6; nNode++) //nNode einai zero based
+            {
+                NodeID = eswterikosNodeCounter + PreviousNodesNumberValue + 1;
+                nodeCoordX = o_xsunol[6 * nNode + 0];
+                nodeCoordY = o_xsunol[6 * nNode + 1];
+                nodeCoordZ = o_xsunol[6 * nNode + 2];
+
+                model.NodesDictionary.Add(NodeID, new Node() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                eswterikosNodeCounter++;
+            }
+            int arithmosShmeiwnShellMidsurface = eswterikosNodeCounter;
+            // perioxh gewmetrias meshs epifaneias ews edw
+
+
+            // perioxh orismou shell elements
+            ElasticMaterial3D material2 = new ElasticMaterial3D()
+            {
+                YoungModulus = E_shell,
+                PoissonRatio = ni_shell,
+            };
+
+            int elements = elem1 * elem2;
+            int fdof_8 = 5 * (elem1 * (3 * elem2 + 2) + 2 * elem2 + 1);
+            int komvoi_8 = fdof_8 / 5;
+            int[,] t_shell;
+            t_shell = topologia_shell_coh(elements, elem1, elem2, komvoi_8); // ta stoixeia tou einai 1 based to idio einai 0 based
+
+            double[] Tk_vec = new double[8];
+            double[][] VH = new double[8][];
+            int[] midsurfaceNodeIDforlocalShellNode_i = new int[8];
+            Element e2;
+            int ElementID;
+            int subdomainID = 1;
+
+            for (int j = 0; j < 8; j++) // paxos idio gia ola telements
+            {
+                Tk_vec[j] = tk;
+            }
+
+            for (int nElement = 0; nElement < elements; nElement++)
+            {
+                ElementID = eswterikosElementCounter + PreviousElementsNumberValue + 1;
+                // ta dianusmata katefthunshs allazoun analoga to element 
+                for (int j1 = 0; j1 < 8; j1++)
+                {
+                    midsurfaceNodeIDforlocalShellNode_i[j1] = t_shell[nElement, j1]; // periexei NOT zero based 
+                    VH[j1] = new double[3];
+                    VH[j1][0] = o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[j1] - 1) + 3];
+                    VH[j1][1] = o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[j1] - 1) + 4];
+                    VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[j1] - 1) + 5];
+                }
+
+                e2 = new Element()
+                {
+                    ID = ElementID,
+                    //
+                    ElementType = new Shell8dispCopyPrint(material2, 3, 3, 3)//ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
+                    {
+                        //oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
+                        oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[1] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[2] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[3] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[4] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[5] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[6] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[7] - 1) + 5] },},
+                        tk = Tk_vec,
+                    }
+                };
+                for (int j1 = 0; j1 < 8; j1++)
+                {
+                    e2.NodesDictionary.Add(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue, model.NodesDictionary[midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue]);
+                }
+                model.ElementsDictionary.Add(e2.ID, e2);
+                model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e2.ID, e2);
+                eswterikosElementCounter++;
+            }
+            int arithmosShellElements = eswterikosElementCounter;
+            // perioxh orismou shell elements ews edw
+
+            // orismos shmeiwn katw strwshs
+            for (int nNode = 0; nNode < o_xsunol.GetLength(0) / 6; nNode++) //nNode einai zero based
+            {
+                NodeID = eswterikosNodeCounter + PreviousNodesNumberValue + 1;
+                nodeCoordX = o_xsunol[6 * nNode + 0] - 0.5 * tk * o_xsunol[6 * nNode + 3];
+                nodeCoordY = o_xsunol[6 * nNode + 1] - 0.5 * tk * o_xsunol[6 * nNode + 4];
+                nodeCoordZ = o_xsunol[6 * nNode + 2] - 0.5 * tk * o_xsunol[6 * nNode + 5];
+
+                model.NodesDictionary.Add(NodeID, new Node() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                eswterikosNodeCounter++;
+            }
+            //
+
+            //orismos elements katw strwshs
+            BenzeggaghKenaneCohMat material3 = new PreProcessor.Materials.BenzeggaghKenaneCohMat()
+            {
+                T_o_3 = T_o_3,
+                D_o_3 = D_o_3,
+                D_f_3 = D_f_3,
+                T_o_1 = T_o_1,
+                D_o_1 = D_o_1,
+                D_f_1 = D_f_1,
+                n_curve = n_curve,
+            };
+
+            int[] midsurfaceNodeIDforlocalCohesiveNode_i = new int[8];
+            for (int nElement = 0; nElement < elements; nElement++)
+            {
+                ElementID = eswterikosElementCounter + PreviousElementsNumberValue + 1;
+                // ta dianusmata katefthunshs allazoun analoga to element 
+                for (int j1 = 0; j1 < 8; j1++)
+                {
+                    midsurfaceNodeIDforlocalCohesiveNode_i[j1] = t_shell[nElement, j1]; // periexei NOT zero based 
+                    VH[j1] = new double[3];
+                    VH[j1][0] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 3];
+                    VH[j1][1] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 4];
+                    VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 5];
+                }
+
+                e2 = new Element()
+                {
+                    ID = ElementID,
+                    ElementType = new cohesive_shell_to_hexaCopyGetEmbe(material3, 3, 3)
+                    {
+                        oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] },},
+                        tk = Tk_vec,
+                        endeixi_element_2 = 0,
+                    }
+                };
+                for (int j1 = 0; j1 < 8; j1++)
+                {
+                    e2.NodesDictionary.Add(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue, model.NodesDictionary[midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue]);
+                }
+                for (int j1 = 0; j1 < 8; j1++)
+                {
+                    e2.NodesDictionary.Add(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface,
+                        model.NodesDictionary[midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface]);
+                }
+                model.ElementsDictionary.Add(e2.ID, e2);
+                model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e2.ID, e2);
+                eswterikosElementCounter++;
+            }
+            // orismos elements katw strwshs ews edw
+
+            // orismos shmeiwn anw strwshs
+            for (int nNode = 0; nNode < o_xsunol.GetLength(0) / 6; nNode++) //nNode einai zero based
+            {
+                NodeID = eswterikosNodeCounter + PreviousNodesNumberValue + 1;
+                nodeCoordX = o_xsunol[6 * nNode + 0] + 0.5 * tk * o_xsunol[6 * nNode + 3];
+                nodeCoordY = o_xsunol[6 * nNode + 1] + 0.5 * tk * o_xsunol[6 * nNode + 4];
+                nodeCoordZ = o_xsunol[6 * nNode + 2] + 0.5 * tk * o_xsunol[6 * nNode + 5];
+
+                model.NodesDictionary.Add(NodeID, new Node() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                eswterikosNodeCounter++;
+            }
+            //
+            //orismos elements anw strwshs 
+            for (int nElement = 0; nElement < elements; nElement++)
+            {
+                ElementID = eswterikosElementCounter + PreviousElementsNumberValue + 1;
+                // ta dianusmata katefthunshs allazoun analoga to element 
+                for (int j1 = 0; j1 < 8; j1++)
+                {
+                    midsurfaceNodeIDforlocalCohesiveNode_i[j1] = t_shell[nElement, j1]; // periexei NOT zero based 
+                    VH[j1] = new double[3];
+                    VH[j1][0] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 3];
+                    VH[j1][1] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 4];
+                    VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 5];
+                }
+
+                e2 = new Element()
+                {
+                    ID = ElementID,
+                    ElementType = new cohesive_shell_to_hexaCopyGetEmbe(material3, 3, 3)
+                    {
+                        oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[2] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[3] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[4] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[5] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[6] - 1) + 5] },
+                                                 new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[7] - 1) + 5] },},
+                        tk = Tk_vec,
+                        endeixi_element_2 = 1,
+                    }
+                };
+                for (int j1 = 0; j1 < 8; j1++)
+                {
+                    e2.NodesDictionary.Add(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue, model.NodesDictionary[midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue]);
+                }
+                for (int j1 = 0; j1 < 8; j1++)
+                {
+                    e2.NodesDictionary.Add(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface,
+                        model.NodesDictionary[midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface]);
+                }
+                model.ElementsDictionary.Add(e2.ID, e2);
+                model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e2.ID, e2);
+                eswterikosElementCounter++;
+            }
+            // orismos elements anw strwshs ews edw
+
+        }
+
         public static void AddConstraintsForNonSingularStiffnessMatrix(Model model, int hexa1, int hexa2, int hexa3)
         {
             int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
@@ -390,6 +648,7 @@ namespace ISAAR.MSolve.SamplesConsole
             nodeID = Topol_rve(1, 1, hexa3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka);
             model.NodesDictionary[nodeID].Constraints.Add(DOFType.X);
             model.NodesDictionary[nodeID].Constraints.Add(DOFType.Y);
+
         }
 
         public static void AddLoadsOnRveFromFile(Model model, int hexa1, int hexa2, int hexa3,string vectorpath)
@@ -789,7 +1048,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 L1 = 105,// nm
                 L2 = 110,// nm
                 L3 = 112.5096153846, // nm
-                a1_shell = 0, //6, // nm
+                a1_shell = 3, //6, // nm
                 tk = 0.0125016478913782,  // 0.0125016478913782nm
 
                 //parametroi cohesive epifaneias
@@ -835,7 +1094,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 L2 = 110,// nm
                 L3 = 112.5096153846, // nm
                 a1_shell = 0, // nm
-                tk = 0.125*40, //0.0125016478913782,  // 0.0125016478913782nm
+                tk =  0.0125016478913782,  // 0.0125016478913782nm //0.125*40,
 
                 //parametroi cohesive epifaneias
                 T_o_3 = 0.05,// Gpa = 1000Mpa = 1000N / mm2
@@ -863,12 +1122,13 @@ namespace ISAAR.MSolve.SamplesConsole
             double[] ekk_xyz = new double[] { 0, 0, 0 };
             RVEExamplesBuilder.HexaElementsOnlyRVE(model, mp, Dq);
             int hexaElementsNumber = model.ElementsDictionary.Count();
-            RVEExamplesBuilder.AddGrapheneSheet(model, gp,ekk_xyz);
+            RVEExamplesBuilder.AddGrapheneSheet2(model, gp,ekk_xyz);
             int shellElementsNumber = (model.ElementsDictionary.Count() - hexaElementsNumber) / 3;
             // model: add loads NA ALLAXTHEI TO PATH
-            RVEExamplesBuilder.AddLoadsOnRveFromFile(model,mp.hexa1,mp.hexa2,mp.hexa3, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol\Fxk_p_komvoi_rve.txt");
+            //RVEExamplesBuilder.AddLoadsOnRveFromFile(model,mp.hexa1,mp.hexa2,mp.hexa3, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol\Fxk_p_komvoi_rve.txt");
+            RVEExamplesBuilder.AddLoadsOnRveFromFile(model, mp.hexa1, mp.hexa2, mp.hexa3, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Fxk_p_komvoi_rve.txt");
             // model: add constraints
-            RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix(model, mp.hexa1, mp.hexa2, mp.hexa2);
+            RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix(model, mp.hexa1, mp.hexa2, mp.hexa3);
 
             var embeddedGrouping = new EmbeddedCohesiveGrouping(model, model.ElementsDictionary.Where(x => (x.Key < hexaElementsNumber + 1)).Select(kv => kv.Value), model.ElementsDictionary.Where(x => (x.Key >= shellElementsNumber + hexaElementsNumber + 1)).Select(kv => kv.Value));
 
@@ -898,7 +1158,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        public static void OneElementRVECheckExample(Model model)
+        public static void FewElementsRVECheckExample(Model model)
         {
             double[,] Dq = new double[1, 1];
             Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
@@ -910,13 +1170,13 @@ namespace ISAAR.MSolve.SamplesConsole
             double[] ekk_xyz = new double[] { 0, 0, 0.25*40 };
             RVEExamplesBuilder.HexaElementsOnlyRVE(model, mp, Dq);
             int hexaElementsNumber = model.ElementsDictionary.Count();
-            RVEExamplesBuilder.AddGrapheneSheet(model, gp,ekk_xyz);
+            RVEExamplesBuilder.AddGrapheneSheet2(model, gp,ekk_xyz);
             int shellElementsNumber = (model.ElementsDictionary.Count() - hexaElementsNumber) / 3;
             // model: add loads
             RVEExamplesBuilder.AddLoadsOnRveFromFile(model, mp.hexa1, mp.hexa2, mp.hexa3, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Fxk_p_komvoi_rve.txt");
             //RVEExamplesBuilder.AddXLoadsOnYZConstrainedOneElementRVE(model);
             // model: add constraints
-            RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix(model, mp.hexa1, mp.hexa2, mp.hexa2);
+            RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix(model, mp.hexa1, mp.hexa2, mp.hexa3);
             //RVEExamplesBuilder.AddConstraintsForYZConstraindeOneElementRVE(model);
             var embeddedGrouping = new EmbeddedCohesiveGrouping(model, model.ElementsDictionary.Where(x => (x.Key < hexaElementsNumber + 1)).Select(kv => kv.Value), model.ElementsDictionary.Where(x => (x.Key >= shellElementsNumber + hexaElementsNumber + 1)).Select(kv => kv.Value));
 

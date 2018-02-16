@@ -9,11 +9,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+
 namespace ISAAR.MSolve.SamplesConsole
 {
-    class Program2copyElegxoiRVE
+    class Program2copyElegxoiBenc
     {
-        private static void SolveRVEExample()
+
+        private static void SolveBencExample()
         {
             VectorExtensions.AssignTotalAffinityCount();
             Model model = new Model();
@@ -21,14 +23,19 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 3;
+            model__builder_choice = 5;
 
             if (model__builder_choice == 1) // 
-            { RVEExamplesBuilder.OneElementRVECheckExampleConstrained(model); }
+            { ParadeigmataElegxwnBuilder.Example_cohesive_hexa_orthi_constr_anw_benc1(model); }
             if (model__builder_choice == 2) // 
+            { ParadeigmataElegxwnBuilder.ShellAndCohesiveShellPaktwsh(model); }
+            if (model__builder_choice == 3) // diatmhsh elastic
             { RVEExamplesBuilder.FewElementsRVECheckExample(model); }
-            if (model__builder_choice == 3) // Beam3d me NL analyzer
+            if (model__builder_choice == 4) // 
+            { ParadeigmataElegxwnBuilder.HexaCantileverBuilder(model,850); }
+            if (model__builder_choice == 5) // 
             { RVEExamplesBuilder.OriginalRVECholExample(model); }
+
 
             model.ConnectDataStructures();
 
@@ -44,20 +51,20 @@ namespace ISAAR.MSolve.SamplesConsole
             analyzer.SetMaxIterations = 100;
             analyzer.SetIterationsForMatrixRebuild = 1;
 
-            if (model__builder_choice==1)
+            if (model__builder_choice == 1)
             {
                 analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
-            model.NodalDOFsDictionary[12][DOFType.X],
-            model.NodalDOFsDictionary[12][DOFType.Y],
-            model.NodalDOFsDictionary[12][DOFType.Z]});
+            //model.NodalDOFsDictionary[6][DOFType.X],
+            //model.NodalDOFsDictionary[6][DOFType.Y],
+            model.NodalDOFsDictionary[6][DOFType.Z]});
             }
 
             if (model__builder_choice == 2)
             {
                 analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
-            model.NodalDOFsDictionary[12][DOFType.X],
-            model.NodalDOFsDictionary[12][DOFType.Y],
-            model.NodalDOFsDictionary[12][DOFType.Z]});
+            //model.NodalDOFsDictionary[12][DOFType.X],
+            //model.NodalDOFsDictionary[12][DOFType.Y],
+            model.NodalDOFsDictionary[1][DOFType.Z]});
             }
 
             if (model__builder_choice == 3)
@@ -68,21 +75,30 @@ namespace ISAAR.MSolve.SamplesConsole
             model.NodalDOFsDictionary[12][DOFType.Z]});
             }
 
+            if (model__builder_choice == 4)
+            {
+                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            //model.NodalDOFsDictionary[12][DOFType.X],
+            //model.NodalDOFsDictionary[12][DOFType.Y],
+            model.NodalDOFsDictionary[20][DOFType.X]});
+            }
+
             parentAnalyzer.BuildMatrices();
             parentAnalyzer.Initialize();
             parentAnalyzer.Solve();
 
             //Console.WriteLine("checkPoint1 reached");
-            Console.WriteLine("Writing results for node 5");
+            Console.WriteLine("Writing results for node 6");
             Console.WriteLine("Dof and Values for Displacement X, Y, Z");
             Console.WriteLine(analyzer.Logs[1][0]);
-
         }
 
-        //static void Main(string[] args)
-        //{
-        //    SolveRVEExample(); //|
-        //}
+        static void Main(string[] args)
+        {
+            SolveBencExample(); //|
+        }
+
+
 
     }
 }

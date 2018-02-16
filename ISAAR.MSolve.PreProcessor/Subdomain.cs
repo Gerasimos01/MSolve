@@ -251,9 +251,20 @@ namespace ISAAR.MSolve.PreProcessor
             }
         }
 
+        // prosthiki print
+        int ekteleseis_counter = 0;
+        string string1 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\U_sunol_{0}.txt";
+
         public IVector<double> GetRHSFromSolution(IVector<double> solution, IVector<double> dSolution)
         {
-            solution.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\U_sunol.txt");
+            ekteleseis_counter += 1;
+            ////if (ekteleseis_counter == 1)
+            ////{ solution.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\U_sunol.txt"); }
+            ////if (ekteleseis_counter == 2)
+            ////{ solution.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\U_sunol_2.txt"); }
+            string counter_data = ekteleseis_counter.ToString();
+            string path = string.Format(string1, counter_data);
+            solution.WriteToFile(path);
             Vector<double> forces = new Vector<double>(TotalDOFs);
             int current_element = 0;
             foreach (Element element in elementsDictionary.Values)
@@ -266,12 +277,17 @@ namespace ISAAR.MSolve.PreProcessor
                 double[] f = element.ElementType.CalculateForces(element, localSolution, localdSolution);
                 AddLocalVectorToGlobal(element, f, forces.Data);
                 current_element += 1;
-                if(current_element==12)
-                {
-                    forces.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Forces_sunol_mono_shell_hexa.txt");
-                }
+                //if(current_element==12)
+                //{
+                //    forces.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Forces_sunol_mono_shell_hexa.txt");
+                //}
             }
-            forces.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Forces_sunol.txt");
+            ////if (ekteleseis_counter == 1)
+            ////{ forces.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Forces_sunol.txt"); }
+            ////if (ekteleseis_counter == 2)
+            ////{ forces.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Forces_sunol_2.txt"); }
+            ////if (ekteleseis_counter == 3)
+            ////{ forces.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Forces_sunol_converged_Msolve.txt"); }
             return forces;
         }
 

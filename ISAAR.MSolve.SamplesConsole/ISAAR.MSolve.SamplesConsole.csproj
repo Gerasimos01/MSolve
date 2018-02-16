@@ -66,9 +66,12 @@
     <Compile Include="HexaBuilder3dok.cs" />
     <Compile Include="HexaBuilder2.cs" />
     <Compile Include="HexaBuilder.cs" />
+    <Compile Include="ParadeigmataElegxwnBuilder.cs" />
+    <Compile Include="ParadeigmataElegxwnBuilder2.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Program2copyCZM.cs" />
     <Compile Include="Program2copy.cs" />
+    <Compile Include="Program2copyElegxoiBenc.cs" />
     <Compile Include="Program2copyElegxoiRVE.cs" />
     <Compile Include="Program2copyElegxoiEmbedded.cs" />
     <Compile Include="Program2NL.cs" />

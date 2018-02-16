@@ -49,8 +49,10 @@ namespace ISAAR.MSolve.PreProcessor
         //    return CalculateRowIndex(subdomain, subdomain.NodalDOFsDictionary);
         //}
 
+        static int matrix_build_counter = 0;
         public static SkylineMatrix2D<double> CalculateGlobalMatrix(Subdomain subdomain, Dictionary<int, Dictionary<DOFType, int>> nodalDOFsDictionary, IElementMatrixProvider elementProvider)
         {
+            matrix_build_counter += 1;
             // TODO: should encapsulate DOF logic into a separate entity that will manage things if embedded or not (should return element matrix and globaldofs correspondence list
             var times = new Dictionary<string, TimeSpan>();
             var totalStart = DateTime.Now;
@@ -103,22 +105,29 @@ namespace ISAAR.MSolve.PreProcessor
                 seira_elements[thesi_elem]=
                 thesi_elem += 1; // PROSTHIKI EMBEDDED DEBUG
 
-                if (thesi_elem==12)
-                {
-                    K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Stiffness_mod_Matrix_shell_hexa.txt");
-                }
+                // endimesoi elegxoi 
+                //if (thesi_elem==12)
+                //{
+                //    K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Stiffness_mod_Matrix_shell_hexa.txt");
+                //}
 
-                if (thesi_elem == 16)
-                {
-                    K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Stiffness_mod_Matrix_shell_hexa_cohe_katw.txt");
-                }
+                //if (thesi_elem == 16)
+                //{
+                //    K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Stiffness_mod_Matrix_shell_hexa_cohe_katw.txt");
+                //}
 
             }
-            var totalTime = DateTime.Now - totalStart;  
-            K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Stiffness_mod_Matrix.txt")  ;
-            int columns = K.Columns;
-            double value1 = K[1, 5];
-            PrintUtilities.WriteToFile(K,0,0, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Stiffness_mod_Matrix.txt");
+            var totalTime = DateTime.Now - totalStart;
+            ////if (matrix_build_counter==1)
+            ////{ K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Stiffness_mod_Matrix.txt"); }
+            if (matrix_build_counter == 1)
+            { K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Stiffness_mod_Matrix.txt"); }
+            ////if (matrix_build_counter == 2)
+            ////{ K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Stiffness_mod_Matrix2.txt"); }
+            ////int columns = K.Columns;
+            //double value1 = K[1, 5];
+            //Me print utilities egine check o metatropeas apo skyline
+            //PrintUtilities.WriteToFile(K,0,0, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Stiffness_mod_Matrix.txt");
             return K;
         }
 
