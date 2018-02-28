@@ -121,7 +121,8 @@ namespace ISAAR.MSolve.PreProcessor
             ////if (matrix_build_counter==1)
             ////{ K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Stiffness_mod_Matrix.txt"); }
             if (matrix_build_counter == 1)
-            { K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Stiffness_mod_Matrix.txt"); }
+            {// K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Stiffness_mod_Matrix.txt");
+                K.WriteToFile(@"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\Stiffness_mod_Matrix.txt");}
             ////if (matrix_build_counter == 2)
             ////{ K.WriteToFile(@"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1\Stiffness_mod_Matrix2.txt"); }
             ////int columns = K.Columns;

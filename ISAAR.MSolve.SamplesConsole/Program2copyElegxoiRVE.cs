@@ -21,14 +21,20 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 3;
+            model__builder_choice = 5;
 
             if (model__builder_choice == 1) // 
             { RVEExamplesBuilder.OneElementRVECheckExampleConstrained(model); }
             if (model__builder_choice == 2) // 
             { RVEExamplesBuilder.FewElementsRVECheckExample(model); }
-            if (model__builder_choice == 3) // Beam3d me NL analyzer
+            if (model__builder_choice == 3) // Beam3d me NL analyzer //<- mallon lathos sxolio exei apomeinei
             { RVEExamplesBuilder.OriginalRVECholExample(model); }
+            if (model__builder_choice == 4) // 
+            { RVEExamplesBuilder.FewElementsRVECheckExample2GrapheneSheets(model); }
+            if (model__builder_choice == 5) // 
+            { RVEExamplesBuilder.Reference1RVEExample10000(model); }
+            if (model__builder_choice == 6) // 
+            { RVEExamplesBuilder.Reference2RVEExample50000(model); }
 
             model.ConnectDataStructures();
 
@@ -79,10 +85,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        //static void Main(string[] args)
-        //{
-        //    SolveRVEExample(); //|
-        //}
+        static void Main(string[] args)
+        {
+            SolveRVEExample(); //|
+        }
 
     }
 }
