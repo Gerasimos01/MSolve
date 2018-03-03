@@ -21,7 +21,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 1;
+            model__builder_choice = 4;
 
             if (model__builder_choice == 1) // Hexa8 kanoniko me NL analyzer
             { EmbeddedExamplesBuilder.HexaElementsOnly(model); }
@@ -29,6 +29,10 @@ namespace ISAAR.MSolve.SamplesConsole
             { EmbeddedExamplesBuilder.BeamElementOnly(model); }
             if (model__builder_choice == 3) // Beam3d me NL analyzer
             { EmbeddedExamplesBuilder.ExampleWithEmbedded(model); }
+
+            if (model__builder_choice == 4) // Hexa8 kanoniko me NL analyzer paradeigma me Vasili Von mises
+            { EmbeddedExamplesBuilder.HexaElementsOnlyVonMises(model); }
+
 
             model.ConnectDataStructures();
 
@@ -38,7 +42,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //gia 2CZM
             //Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, 17, model.TotalDOFs);//1. increments einai to 17 (arxika eixame thesei2 26 incr)
             //gia 3CZM
-            int increments = 1;
+            int increments = 2;
             Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, increments, model.TotalDOFs);//1. increments einai to 1 (arxika eixame thesei2 26 incr)
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, analyzer, solver.SubdomainsDictionary);
             analyzer.SetMaxIterations = 100;
@@ -68,6 +72,15 @@ namespace ISAAR.MSolve.SamplesConsole
             model.NodalDOFsDictionary[12][DOFType.Z]});
             }
 
+
+            if (model__builder_choice == 4)
+            {
+                analyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] {
+            model.NodalDOFsDictionary[12][DOFType.X],
+            model.NodalDOFsDictionary[12][DOFType.Y],
+            model.NodalDOFsDictionary[12][DOFType.Z]});
+            }
+
             parentAnalyzer.BuildMatrices();
             parentAnalyzer.Initialize();
             parentAnalyzer.Solve();
@@ -79,10 +92,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        //static void Main(string[] args)
-        //{
-        //    SolveExample();
-        //}
+        static void Main(string[] args)
+        {
+            SolveExample();
+        }
 
     }
 }
