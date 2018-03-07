@@ -54,6 +54,21 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             return data;
         }
 
+        public static int[] ReadIntVector(string path)
+        {
+
+            var reader = new StreamReader(path);
+            var lines = File.ReadLines(path).Count();
+            int[] data = new int [lines];
+            for (int i = 0; i < lines; ++i)
+            {
+                data[i] = Convert.ToInt32(reader.ReadLine());
+
+            }
+            reader.Close();
+            return data;
+        }
+
         public static void WriteToFileVector(double[] array, string path2)
         {
             var writer2 = new StreamWriter(path2);

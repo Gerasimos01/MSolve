@@ -473,457 +473,458 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double[][] tU;   //8 arrays twn 6 stoixeiwn 
         private double[][] tUvec;//8 arrays twn 6 stoixeiwn
 
-        private double[,] ll2;
-        private void Calculatell2() //meta apo enhmerwsh h initialize <--tha lifthei upopsin ekei pou kalountai sunolika
-        {
-            ll2 = new double[24, 3];
-            for (int j = 0; j < 8; j++)
-            {
-                for (int k = 0; k < 3; k++)
-                {
-                    ll2[3 * j + 0, k] = tU[j][k];
-                    ll2[3 * j + 1, k] = tU[j][3 + k];
-                    ll2[3 * j + 2, k] = oVn_i[j][k];
-                }
-            }
-        }
+        //private double[,] ll2;
+        //private void Calculatell2() //meta apo enhmerwsh h initialize <--tha lifthei upopsin ekei pou kalountai sunolika
+        //{
+        //    ll2 = new double[24, 3];
+        //    for (int j = 0; j < 8; j++)
+        //    {
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            ll2[3 * j + 0, k] = tU[j][k];
+        //            ll2[3 * j + 1, k] = tU[j][3 + k];
+        //            ll2[3 * j + 2, k] = oVn_i[j][k];
+        //        }
+        //    }
+        //}
 
-        private double[][,] l_circumflex;
-        private void Calculatel_circumflex()
-        {
-            l_circumflex = new double[nGaussPoints][,];
-            for (int j = 0; j < nGaussPoints; j++)
-            { l_circumflex[j] = new double[3, 3]; }
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        l_circumflex[j][k, l] = 0;
-                        for (int m = 0; m < 24; m++)
-                        {
-                            l_circumflex[j][k, l] += ll1[j][k, m] * ll2[m, l];
-                        }
+        //private double[][,] l_circumflex;
+        //private void Calculatel_circumflex()
+        //{
+        //    l_circumflex = new double[nGaussPoints][,];
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    { l_circumflex[j] = new double[3, 3]; }
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            {
+        //                l_circumflex[j][k, l] = 0;
+        //                for (int m = 0; m < 24; m++)
+        //                {
+        //                    l_circumflex[j][k, l] += ll1[j][k, m] * ll2[m, l];
+        //                }
 
-                    }
+        //            }
 
-                }
+        //        }
 
-            }
-        }
+        //    }
+        //}
 
-        private double[][,] BL11b;
-        private void CalculateBL11b() //afou periexei Getl_circumflex:getll2: meta apo enhmerwsh h initialize 
-        {
-            BL11b = new double[nGaussPoints][,];
-            for (int j = 0; j < nGaussPoints; j++)
-            { BL11b[j] = new double[9, 9]; }
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 9; k++)
-                {
-                    for (int l = 0; l < 9; l++)
-                    { BL11b[j][k, l] = 0; }
-                }
+        //private double[][,] BL11b;
+        //private void CalculateBL11b() //afou periexei Getl_circumflex:getll2: meta apo enhmerwsh h initialize 
+        //{
+        //    BL11b = new double[nGaussPoints][,];
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    { BL11b[j] = new double[9, 9]; }
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 9; k++)
+        //        {
+        //            for (int l = 0; l < 9; l++)
+        //            { BL11b[j][k, l] = 0; }
+        //        }
 
 
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 3; m++)
-                        { BL11b[j][3 * k + l, 3 * k + m] = l_circumflex[j][l, m]; }
-                    }
-                }
-            }
-        }
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            {
+        //                for (int m = 0; m < 3; m++)
+        //                { BL11b[j][3 * k + l, 3 * k + m] = l_circumflex[j][l, m]; }
+        //            }
+        //        }
+        //    }
+        //}
 
-        private double[][,] BL11;
-        private void CalculateBL11()
-        {
-            BL11 = new double[nGaussPoints][,];
-            for (int j = 0; j < nGaussPoints; j++)
-            { BL11[j] = new double[6, 9]; }
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 6; k++)
-                {
-                    for (int l = 0; l < 9; l++)
-                    {
-                        BL11[j][k, l] = 0;
-                        for (int m = 0; m < 9; m++)
-                        {
-                            BL11[j][k, l] += BL11a[j][k, m] * BL11b[j][m, l];
-                        }
-                    }
-                }
-            }
-        }
+        //private double[][,] BL11;
+        //private void CalculateBL11()
+        //{
+        //    BL11 = new double[nGaussPoints][,];
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    { BL11[j] = new double[6, 9]; }
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 6; k++)
+        //        {
+        //            for (int l = 0; l < 9; l++)
+        //            {
+        //                BL11[j][k, l] = 0;
+        //                for (int m = 0; m < 9; m++)
+        //                {
+        //                    BL11[j][k, l] += BL11a[j][k, m] * BL11b[j][m, l];
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
-        private double[][,] BL13;
-        private void CalculateBL13() //afou periexei tVn_i kai Getll2: Xrhsimopoieitai meta apo 2)ENHMERWSH h 1)INITIALIZE 
-        {
-            BL13 = new double[nGaussPoints][,];
-            for (int j = 0; j < nGaussPoints; j++)
-            { BL13[j] = new double[9, 40]; }
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 9; k++)
-                {
-                    for (int l = 0; l < 40; l++)
-                    {
-                        BL13[j][k, l] = 0;
-                    }
-                }
+        private double[][,] BL13; 
+        //private void CalculateBL13() //afou periexei tVn_i kai Getll2: Xrhsimopoieitai meta apo 2)ENHMERWSH h 1)INITIALIZE 
+        //{
+        //    BL13 = new double[nGaussPoints][,];
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    { BL13[j] = new double[9, 40]; }
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 9; k++)
+        //        {
+        //            for (int l = 0; l < 40; l++)
+        //            {
+        //                BL13[j][k, l] = 0;
+        //            }
+        //        }
 
-                //sthles 1:3
-                for (int m = 0; m < 8; m++)
-                {
-                    for (int k = 0; k < 3; k++)
-                    {
-                        for (int l = 0; l < 2; l++)
-                        {
-                            BL13[j][3 * k + l, 5 * m + k] = shapeFunctionDerivatives[m + 8 * l][j];
-                        }
-                    }
-                }
+        //        //sthles 1:3
+        //        for (int m = 0; m < 8; m++)
+        //        {
+        //            for (int k = 0; k < 3; k++)
+        //            {
+        //                for (int l = 0; l < 2; l++)
+        //                {
+        //                    BL13[j][3 * k + l, 5 * m + k] = shapeFunctionDerivatives[m + 8 * l][j];
+        //                }
+        //            }
+        //        }
 
-                //sthles 4:5
-                for (int m = 0; m < 8; m++)
-                {
-                    for (int k = 0; k < 3; k++)
-                    {
-                        for (int l = 0; l < 3; l++)
-                        {
-                            BL13[j][3 * k + l, 5 * m + 3] = -J_0a[j][l, m * 2 + 1] * tUvec[m][3 + k];
-                            BL13[j][3 * k + l, 5 * m + 4] = +J_0a[j][l, m * 2 + 1] * tUvec[m][k];
-                        }
-                    }
-                }
-            }
-        }
+        //        //sthles 4:5
+        //        for (int m = 0; m < 8; m++)
+        //        {
+        //            for (int k = 0; k < 3; k++)
+        //            {
+        //                for (int l = 0; l < 3; l++)
+        //                {
+        //                    BL13[j][3 * k + l, 5 * m + 3] = -J_0a[j][l, m * 2 + 1] * tUvec[m][3 + k];
+        //                    BL13[j][3 * k + l, 5 * m + 4] = +J_0a[j][l, m * 2 + 1] * tUvec[m][k];
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
-        private double[,] J_1b;    //einai idio gia ola ta gauss points
-        private void CalculateJ_1b() // meta apo enhmerwsi i initialize twn tx_i,tVn_i
-        {
-            J_1b = new double[16, 3];
-            for (int j = 0; j < 8; j++)
-            {
-                J_1b[2 * j, 0] = tx_i[j][0];
-                J_1b[2 * j + 1, 0] = tU[j][3];
-                J_1b[2 * j, 1] = tx_i[j][1];
-                J_1b[2 * j + 1, 1] = tU[j][4];
-                J_1b[2 * j, 2] = tx_i[j][2];
-                J_1b[2 * j + 1, 2] = tU[j][5];
-            }
-        }
+        //private double[,] J_1b;    //einai idio gia ola ta gauss points
+        //private void CalculateJ_1b() // meta apo enhmerwsi i initialize twn tx_i,tVn_i
+        //{
+        //    J_1b = new double[16, 3];
+        //    for (int j = 0; j < 8; j++)
+        //    {
+        //        J_1b[2 * j, 0] = tx_i[j][0];
+        //        J_1b[2 * j + 1, 0] = tU[j][3];
+        //        J_1b[2 * j, 1] = tx_i[j][1];
+        //        J_1b[2 * j + 1, 1] = tU[j][4];
+        //        J_1b[2 * j, 2] = tx_i[j][2];
+        //        J_1b[2 * j + 1, 2] = tU[j][5];
+        //    }
+        //}
 
-        private double[][,] J_1;       //den einai to idio gia ola ta gausspoint
-        private void CalculateJ_1()   // meta apo enhmerwsi i initialize twn tx_i,tVn_i
-        {
-            J_1 = new double[nGaussPoints][,];
-            for (int j = 0; j < nGaussPoints; j++)
-            { J_1[j] = new double[3, 3]; }
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        J_1[j][k, l] = 0;
-                        for (int m = 0; m < 16; m++)
-                        {
-                            J_1[j][k, l] += J_0a[j][k, m] * J_1b[m, l];
-                        }
+        //private double[][,] J_1;       //den einai to idio gia ola ta gausspoint
+        //private void CalculateJ_1()   // meta apo enhmerwsi i initialize twn tx_i,tVn_i
+        //{
+        //    J_1 = new double[nGaussPoints][,];
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    { J_1[j] = new double[3, 3]; }
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            {
+        //                J_1[j][k, l] = 0;
+        //                for (int m = 0; m < 16; m++)
+        //                {
+        //                    J_1[j][k, l] += J_0a[j][k, m] * J_1b[m, l];
+        //                }
 
-                    }
+        //            }
 
-                }
-            }
-        }
+        //        }
+        //    }
+        //}
 
-        private double[][,] DefGradTr;       //den einai to idio gia ola ta gausspoint
-        private void CalculateDefGradTr() // Meta apo CalculateJ_1 profanws
-        {
-            DefGradTr = new double[nGaussPoints][,];
-            for (int j = 0; j < nGaussPoints; j++)
-            { DefGradTr[j] = new double[3, 3]; }
-            //gemisma pol/smos
-            for (int j = 0; j < nGaussPoints; j++)
-            {
+        //private double[][,] DefGradTr;       //den einai to idio gia ola ta gausspoint
+        //private void CalculateDefGradTr() // Meta apo CalculateJ_1 profanws
+        //{
+        //    DefGradTr = new double[nGaussPoints][,];
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    { DefGradTr[j] = new double[3, 3]; }
+        //    //gemisma pol/smos
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
 
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        DefGradTr[j][k, l] = 0;
-                        for (int m = 0; m < 3; m++)
-                        {
-                            DefGradTr[j][k, l] += J_0inv[j][k, m] * J_1[j][m, l];
-                        }
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            {
+        //                DefGradTr[j][k, l] = 0;
+        //                for (int m = 0; m < 3; m++)
+        //                {
+        //                    DefGradTr[j][k, l] += J_0inv[j][k, m] * J_1[j][m, l];
+        //                }
 
-                    }
+        //            }
 
-                }
+        //        }
 
-            }
-        }
+        //    }
+        //}
 
-        private double[][,] GL;       //den einai to idio gia ola ta gausspoint
-        private void CalculateGL() // Meta apo CalculateDefGradTr profanws
-        {
-            GL = new double[nGaussPoints][,];
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                GL[j] = new double[3, 3];
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        GL[j][k, l] = 0;
-                        for (int m = 0; m < 3; m++)
-                        {
-                            GL[j][k, l] += DefGradTr[j][k, m] * DefGradTr[j][l, m];
-                        }
+        //private double[][,] GL;       //den einai to idio gia ola ta gausspoint
+        //private void CalculateGL() // Meta apo CalculateDefGradTr profanws
+        //{
+        //    GL = new double[nGaussPoints][,];
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        GL[j] = new double[3, 3];
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            {
+        //                GL[j][k, l] = 0;
+        //                for (int m = 0; m < 3; m++)
+        //                {
+        //                    GL[j][k, l] += DefGradTr[j][k, m] * DefGradTr[j][l, m];
+        //                }
 
-                    }
+        //            }
 
-                }
-                for (int k = 0; k < 3; k++)
-                {
-                    GL[j][k, k] = GL[j][k, k] - 1;
-                }
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    { GL[j][k, l] = 0.5 * GL[j][k, l]; }
-                }
+        //        }
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            GL[j][k, k] = GL[j][k, k] - 1;
+        //        }
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            { GL[j][k, l] = 0.5 * GL[j][k, l]; }
+        //        }
 
-            }
-        }
+        //    }
+        //}
 
         private double[][] GLvec;
-        private void CalculateGLvec()//meta apo calculate Gl
-        {
-            GLvec = new double[nGaussPoints][];
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                GLvec[j] = new double[6];
-                for (int k = 0; k < 3; k++)
-                { GLvec[j][k] = GL[j][k, k]; }
-                GLvec[j][3] = 2 * GL[j][0, 1];
-                GLvec[j][4] = 2 * GL[j][1, 2];
-                GLvec[j][5] = 2 * GL[j][2, 0];
-            }
-        }
+        //private void CalculateGLvec()//meta apo calculate Gl
+        //{
+        //    GLvec = new double[nGaussPoints][];
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        GLvec[j] = new double[6];
+        //        for (int k = 0; k < 3; k++)
+        //        { GLvec[j][k] = GL[j][k, k]; }
+        //        GLvec[j][3] = 2 * GL[j][0, 1];
+        //        GLvec[j][4] = 2 * GL[j][1, 2];
+        //        GLvec[j][5] = 2 * GL[j][2, 0];
+        //    }
+        //}
 
-        private void InitializeAndCalculateOriginalValuesForPartiallyPrecalculatedVariables()
-        {
-            this.Calculatell2();
-            this.Calculatel_circumflex();
-            this.CalculateBL11b();
-            this.CalculateBL11();
-            this.CalculateBL13();
-            this.CalculateJ_1b();
-            this.CalculateJ_1();
-            this.CalculateDefGradTr();
-            this.CalculateGL();
-            this.CalculateGLvec();
+        //private void InitializeAndCalculateOriginalValuesForPartiallyPrecalculatedVariables()
+        //{
+        //    this.Calculatell2();
+        //    this.Calculatel_circumflex();
+        //    this.CalculateBL11b();
+        //    this.CalculateBL11();
+        //    this.CalculateBL13();
 
-            //
-            this.CalculateCk();
-            this.CalculateSPK();
-        }
+        //    this.CalculateStrains();
+        //    //this.CalculateJ_1b();
+        //    //this.CalculateJ_1();
+        //    //this.CalculateDefGradTr();
+        //    //this.CalculateGL();
+        //    //this.CalculateGLvec();
+
+        //    this.CalculateCk();
+        //    this.CalculateSPK();
+        //}
 
 
         // update metavlhtwn 
-        private void Updatell2()
-        {
-            for (int j = 0; j < 8; j++)
-            {
-                for (int k = 0; k < 3; k++)
-                {
-                    ll2[3 * j + 0, k] = tU[j][k];
-                    ll2[3 * j + 1, k] = tU[j][3 + k];
-                }
-            }
-        }
+        //private void Updatell2()
+        //{
+        //    for (int j = 0; j < 8; j++)
+        //    {
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            ll2[3 * j + 0, k] = tU[j][k];
+        //            ll2[3 * j + 1, k] = tU[j][3 + k];
+        //        }
+        //    }
+        //}
 
-        private void Updatel_circumflex()
-        {
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        l_circumflex[j][k, l] = 0;
-                        for (int m = 0; m < 24; m++)
-                        {
-                            l_circumflex[j][k, l] += ll1[j][k, m] * ll2[m, l];
-                        }
+        //private void Updatel_circumflex()
+        //{
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            {
+        //                l_circumflex[j][k, l] = 0;
+        //                for (int m = 0; m < 24; m++)
+        //                {
+        //                    l_circumflex[j][k, l] += ll1[j][k, m] * ll2[m, l];
+        //                }
 
-                    }
+        //            }
 
-                }
+        //        }
 
-            }
-        }
+        //    }
+        //}
 
-        private void UpdateBL11b()
-        {
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 9; k++)
-                {
-                    for (int l = 0; l < 9; l++)
-                    { BL11b[j][k, l] = 0; }
-                }
+        //private void UpdateBL11b()
+        //{
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 9; k++)
+        //        {
+        //            for (int l = 0; l < 9; l++)
+        //            { BL11b[j][k, l] = 0; }
+        //        }
 
 
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 3; m++)
-                        { BL11b[j][3 * k + l, 3 * k + m] = l_circumflex[j][l, m]; }
-                    }
-                }
-            }
-        }
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            {
+        //                for (int m = 0; m < 3; m++)
+        //                { BL11b[j][3 * k + l, 3 * k + m] = l_circumflex[j][l, m]; }
+        //            }
+        //        }
+        //    }
+        //}
 
-        private void UpdateBL11()
-        {
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 6; k++)
-                {
-                    for (int l = 0; l < 9; l++)
-                    {
-                        BL11[j][k, l] = 0;
-                        for (int m = 0; m < 9; m++)
-                        {
-                            BL11[j][k, l] += BL11a[j][k, m] * BL11b[j][m, l];
-                        }
-                    }
-                }
-            }
-        }
+        //private void UpdateBL11()
+        //{
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 6; k++)
+        //        {
+        //            for (int l = 0; l < 9; l++)
+        //            {
+        //                BL11[j][k, l] = 0;
+        //                for (int m = 0; m < 9; m++)
+        //                {
+        //                    BL11[j][k, l] += BL11a[j][k, m] * BL11b[j][m, l];
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
-        private void UpdateBL13()
-        {
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                //sthles 4:5
-                for (int m = 0; m < 8; m++)
-                {
-                    for (int k = 0; k < 3; k++)
-                    {
-                        for (int l = 0; l < 3; l++)
-                        {
-                            BL13[j][3 * k + l, 5 * m + 3] = -J_0a[j][l, m * 2 + 1] * tUvec[m][3 + k];
-                            BL13[j][3 * k + l, 5 * m + 4] = +J_0a[j][l, m * 2 + 1] * tUvec[m][k];
-                        }
-                    }
-                }
-            }
-        }
+        //private void UpdateBL13()
+        //{
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        //sthles 4:5
+        //        for (int m = 0; m < 8; m++)
+        //        {
+        //            for (int k = 0; k < 3; k++)
+        //            {
+        //                for (int l = 0; l < 3; l++)
+        //                {
+        //                    BL13[j][3 * k + l, 5 * m + 3] = -J_0a[j][l, m * 2 + 1] * tUvec[m][3 + k];
+        //                    BL13[j][3 * k + l, 5 * m + 4] = +J_0a[j][l, m * 2 + 1] * tUvec[m][k];
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
-        private void UpdateJ_1b() // meta apo enhmerwsi i initialize twn tx_i,tVn_i
-        {
-            for (int j = 0; j < 8; j++)
-            {
-                J_1b[2 * j, 0] = tx_i[j][0];
-                J_1b[2 * j + 1, 0] = tU[j][3];
-                J_1b[2 * j, 1] = tx_i[j][1];
-                J_1b[2 * j + 1, 1] = tU[j][4];
-                J_1b[2 * j, 2] = tx_i[j][2];
-                J_1b[2 * j + 1, 2] = tU[j][5];
-            }
-        }
+        //private void UpdateJ_1b() // meta apo enhmerwsi i initialize twn tx_i,tVn_i
+        //{
+        //    for (int j = 0; j < 8; j++)
+        //    {
+        //        J_1b[2 * j, 0] = tx_i[j][0];
+        //        J_1b[2 * j + 1, 0] = tU[j][3];
+        //        J_1b[2 * j, 1] = tx_i[j][1];
+        //        J_1b[2 * j + 1, 1] = tU[j][4];
+        //        J_1b[2 * j, 2] = tx_i[j][2];
+        //        J_1b[2 * j + 1, 2] = tU[j][5];
+        //    }
+        //}
 
-        private void UpdateJ_1()   // meta apo enhmerwsi i initialize twn tx_i,tVn_i
-        {
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        J_1[j][k, l] = 0;
-                        for (int m = 0; m < 16; m++)
-                        {
-                            J_1[j][k, l] += J_0a[j][k, m] * J_1b[m, l];
-                        }
+        //private void UpdateJ_1()   // meta apo enhmerwsi i initialize twn tx_i,tVn_i
+        //{
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            {
+        //                J_1[j][k, l] = 0;
+        //                for (int m = 0; m < 16; m++)
+        //                {
+        //                    J_1[j][k, l] += J_0a[j][k, m] * J_1b[m, l];
+        //                }
 
-                    }
+        //            }
 
-                }
-            }
-        }
+        //        }
+        //    }
+        //}
 
-        private void UpdateDefGradTr() // Meta apo CalculateJ_1 profanws
-        {
-            for (int j = 0; j < nGaussPoints; j++)
-            {
+        //private void UpdateDefGradTr() // Meta apo CalculateJ_1 profanws
+        //{
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
 
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        DefGradTr[j][k, l] = 0;
-                        for (int m = 0; m < 3; m++)
-                        {
-                            DefGradTr[j][k, l] += J_0inv[j][k, m] * J_1[j][m, l];
-                        }
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            {
+        //                DefGradTr[j][k, l] = 0;
+        //                for (int m = 0; m < 3; m++)
+        //                {
+        //                    DefGradTr[j][k, l] += J_0inv[j][k, m] * J_1[j][m, l];
+        //                }
 
-                    }
+        //            }
 
-                }
-            }
-        }
+        //        }
+        //    }
+        //}
 
-        private void UpdateGL() // Meta apo CalculateDefGradTr profanws
-        {
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        GL[j][k, l] = 0;
-                        for (int m = 0; m < 3; m++)
-                        {
-                            GL[j][k, l] += DefGradTr[j][k, m] * DefGradTr[j][l, m];
-                        }
+        //private void UpdateGL() // Meta apo CalculateDefGradTr profanws
+        //{
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            {
+        //                GL[j][k, l] = 0;
+        //                for (int m = 0; m < 3; m++)
+        //                {
+        //                    GL[j][k, l] += DefGradTr[j][k, m] * DefGradTr[j][l, m];
+        //                }
 
-                    }
+        //            }
 
-                }
-                for (int k = 0; k < 3; k++)
-                {
-                    GL[j][k, k] = GL[j][k, k] - 1;
-                }
-                for (int k = 0; k < 3; k++)
-                {
-                    for (int l = 0; l < 3; l++)
-                    { GL[j][k, l] = 0.5 * GL[j][k, l]; }
-                }
-            }
-        }
+        //        }
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            GL[j][k, k] = GL[j][k, k] - 1;
+        //        }
+        //        for (int k = 0; k < 3; k++)
+        //        {
+        //            for (int l = 0; l < 3; l++)
+        //            { GL[j][k, l] = 0.5 * GL[j][k, l]; }
+        //        }
+        //    }
+        //}
 
-        private void UpdateGLvec()//meta apo calculate Gl
-        {
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                for (int k = 0; k < 3; k++)
-                { GLvec[j][k] = GL[j][k, k]; }
-                GLvec[j][3] = 2 * GL[j][0, 1];
-                GLvec[j][4] = 2 * GL[j][1, 2];
-                GLvec[j][5] = 2 * GL[j][2, 0];
-            }
-        }
+        //private void UpdateGLvec()//meta apo calculate Gl
+        //{
+        //    for (int j = 0; j < nGaussPoints; j++)
+        //    {
+        //        for (int k = 0; k < 3; k++)
+        //        { GLvec[j][k] = GL[j][k, k]; }
+        //        GLvec[j][3] = 2 * GL[j][0, 1];
+        //        GLvec[j][4] = 2 * GL[j][1, 2];
+        //        GLvec[j][5] = 2 * GL[j][2, 0];
+        //    }
+        //}
 
 
         // Apo tis arxikes methodous mono to Calculate Cons paremvaletai edw mporei na grafei panw
@@ -1054,11 +1055,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         private double[][] SPKvec;
-        private double[,] SPK_circumflex;  //private double[][,] SPK_circumflex;
+        //private double[,] SPK_circumflex;  //private double[][,] SPK_circumflex;
         private void CalculateSPK()
         {
             SPKvec = new double[nGaussPoints][];
-            SPK_circumflex = new double[9,9]; //SPK_circumflex = new double[nGaussPoints][,];
+            //SPK_circumflex = new double[9,9]; //SPK_circumflex = new double[nGaussPoints][,];
             for (int j = 0; j < nGaussPoints; j++)
             {
                 SPKvec[j] = new double[6];
@@ -1092,11 +1093,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 //    SPK_circumflex[j][3 * k + 2, 3 * k + 1] = SPKvec[j][4];
                 //}
             }
-            for (int k = 0; k < 9; k++)
-            {
-                for (int l = 0; l < 9; l++)
-                { SPK_circumflex[k, l] = 0; }  // PROSTHIKI RAM ektos loop nGausspoint
-            }
+            //for (int k = 0; k < 9; k++)
+            //{
+            //    for (int l = 0; l < 9; l++)
+            //    { SPK_circumflex[k, l] = 0; }  // PROSTHIKI RAM ektos loop nGausspoint
+            //}
         }
 
         private void UpdateSPK()
@@ -1177,22 +1178,117 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private void UpdatePartiallyPrecalculatedVariables__forStrains()
         {
-            this.UpdateJ_1b();
-            this.UpdateJ_1();
-            this.UpdateDefGradTr();
-            this.UpdateGL();
-            this.UpdateGLvec();
+            //this.UpdateJ_1b();
+            //this.UpdateJ_1();
+            //this.UpdateDefGradTr();
+            //this.UpdateGL();
+            //this.UpdateGLvec();
+            this.CalculateStrains();
         }
 
-        private void UpdatePartiallyPrecalculatedVariables_andforForces()
+        private void CalculateStrains()
         {
-            this.Updatell2();
-            this.Updatel_circumflex();
-            this.UpdateBL11b();
-            this.UpdateBL11();
-            this.UpdateBL13();
+            double[,] J_1b;
+            double[][,] J_1;
+            double[][,] DefGradTr;
+            double[][,] GL;
 
+            J_1b = new double[16, 3];
+            J_1 = new double[nGaussPoints][,];
+            DefGradTr = new double[nGaussPoints][,];
+            GL = new double[nGaussPoints][,];
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                J_1[j] = new double[3, 3];
+                DefGradTr[j] = new double[3, 3];
+                GL[j] = new double[3, 3];
+            }
+
+            GLvec = new double[nGaussPoints][]; // xehwristh perioxh 
+
+            for (int j = 0; j < 8; j++)
+            {
+                J_1b[2 * j, 0] = tx_i[j][0];
+                J_1b[2 * j + 1, 0] = tU[j][3];
+                J_1b[2 * j, 1] = tx_i[j][1];
+                J_1b[2 * j + 1, 1] = tU[j][4];
+                J_1b[2 * j, 2] = tx_i[j][2];
+                J_1b[2 * j + 1, 2] = tU[j][5];
+            }
+
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    for (int l = 0; l < 3; l++)
+                    {
+                        J_1[j][k, l] = 0;
+                        for (int m = 0; m < 16; m++)
+                        {
+                            J_1[j][k, l] += J_0a[j][k, m] * J_1b[m, l];
+                        }
+
+                    }
+
+                }
+
+                for (int k = 0; k < 3; k++)
+                {
+                    for (int l = 0; l < 3; l++)
+                    {
+                        DefGradTr[j][k, l] = 0;
+                        for (int m = 0; m < 3; m++)
+                        {
+                            DefGradTr[j][k, l] += J_0inv[j][k, m] * J_1[j][m, l];
+                        }
+
+                    }
+
+                }
+
+                for (int k = 0; k < 3; k++)
+                {
+                    for (int l = 0; l < 3; l++)
+                    {
+                        GL[j][k, l] = 0;
+                        for (int m = 0; m < 3; m++)
+                        {
+                            GL[j][k, l] += DefGradTr[j][k, m] * DefGradTr[j][l, m];
+                        }
+
+                    }
+
+                }
+                for (int k = 0; k < 3; k++)
+                {
+                    GL[j][k, k] = GL[j][k, k] - 1;
+                }
+                for (int k = 0; k < 3; k++)
+                {
+                    for (int l = 0; l < 3; l++)
+                    { GL[j][k, l] = 0.5 * GL[j][k, l]; }
+                }
+
+
+                GLvec[j] = new double[6];
+                for (int k = 0; k < 3; k++)
+                { GLvec[j][k] = GL[j][k, k]; }
+                GLvec[j][3] = 2 * GL[j][0, 1];
+                GLvec[j][4] = 2 * GL[j][1, 2];
+                GLvec[j][5] = 2 * GL[j][2, 0];
+
+            }
         }
+
+        //private void UpdatePartiallyPrecalculatedVariables_andforForces()
+        //{
+        //    this.Updatell2();
+        //    this.Updatel_circumflex();
+        //    this.UpdateBL11b();
+        //    this.UpdateBL11();
+        //    this.UpdateBL13();
+
+        //}
 
         private void UpdatePartiallyPrecalculatedVariables_andforStiffnessMatrix()
         {
@@ -1202,23 +1298,23 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
 
 
-        private double[][] kck;// 1 ana komvo kai (ana Gauss point+1 gia to athroiskma) [GP][8 vathmoi komvoi]
+        //private double[][] kck;// 1 ana komvo kai (ana Gauss point+1 gia to athroiskma) [GP][8 vathmoi komvoi]
                                // to initialize tou einai comment out parapanw
 
-        private double[,] BNL;  //private double[][,] BNL; //PROSTHIKI RAM
-        private double[][,] KNL;
+        //private double[,] BNL;  //private double[][,] BNL; //PROSTHIKI RAM
+        //private double[][,] KNL;
 
-        private double[][,] KL;
-        private double[][,] BL1_2;
+        //private double[][,] KL;
+        //private double[][,] BL1_2;
         //private double[][,] BL1;
         //private double[][,] BL0;
         private double[][,] BL;
 
-        private double[][,] ConsBL;
-        private double[][,] S_BNL;
+        //private double[][,] ConsBL;
+        //private double[][,] S_BNL;
 
         private double[][,] BL01plus1_2;
-        private double[][] BL01plus1_2tSPKvec;
+        //private double[][] BL01plus1_2tSPKvec;
 
         private double[,] Kt = new double[40, 40];
 
@@ -1226,23 +1322,23 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private void InitializeFandKmatrixes()
         {
-            BNL = new double[9, 40];  //BNL = new double[nGaussPoints][,];
-            BL1_2 = new double[nGaussPoints][,];
+            //BNL = new double[9, 40];  //BNL = new double[nGaussPoints][,];
+            //BL1_2 = new double[nGaussPoints][,];
             //BL1 = new double[nGaussPoints][,];
             //BL0 = new double[nGaussPoints][,];
             BL = new double[nGaussPoints][,];
 
-            kck = new double[nGaussPoints + 1][];
-            KL = new double[nGaussPoints + 1][,];
-            KNL = new double[nGaussPoints + 1][,];
+            //kck = new double[nGaussPoints + 1][];
+            //KL = new double[nGaussPoints + 1][,];
+            //KNL = new double[nGaussPoints + 1][,];
 
-            ConsBL = new double[nGaussPoints][,];
-            S_BNL = new double[nGaussPoints][,];
+            //ConsBL = new double[nGaussPoints][,];
+            //S_BNL = new double[nGaussPoints][,];
 
-            kck = new double[nGaussPoints + 1][];
+            //kck = new double[nGaussPoints + 1][];
 
             BL01plus1_2 = new double[nGaussPoints][,];
-            BL01plus1_2tSPKvec = new double[nGaussPoints][];
+            //BL01plus1_2tSPKvec = new double[nGaussPoints][];
 
             //Kt = new double[40, 40];
 
@@ -1251,25 +1347,25 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             for (int j = 0; j < nGaussPoints; j++)
             {
                 //BNL[j] = new double[9, 40]; // PROSTHIKI RAM 
-                BL1_2[j] = new double[6, 9];
+                //BL1_2[j] = new double[6, 9];
                 //BL1[j] = new double[6, 40];
                 //BL0[j] =new double[6, 40];
                 BL[j] = new double[6, 40];
 
-                ConsBL[j] = new double[6, 40];
-                S_BNL[j] = new double[9, 40];
+                //ConsBL[j] = new double[6, 40];
+                //S_BNL[j] = new double[9, 40];
 
-                kck[j] = new double[8];
+                //kck[j] = new double[8];
 
                 BL01plus1_2[j] = new double[6, 9];
-                BL01plus1_2tSPKvec[j] = new double[9];
+                //BL01plus1_2tSPKvec[j] = new double[9];
             }
 
             for (int j = 0; j < nGaussPoints + 1; j++)
             {
-                kck[j] = new double[8];
-                KL[j] = new double[40, 40];
-                KNL[j] = new double[40, 40];
+                //kck[j] = new double[8];
+                //KL[j] = new double[40, 40];
+                //KNL[j] = new double[40, 40];
 
                 Fxk[j] = new double[40];
             }
@@ -1277,6 +1373,131 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private void UpdateForces()
         {
+            // PROSTHIKI apo declare ektos klashs
+            double[,] ll2;
+            ll2 = new double[24, 3];                 
+            for (int j = 0; j < 8; j++)
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    ll2[3 * j + 0, k] = tU[j][k];
+                    ll2[3 * j + 1, k] = tU[j][3 + k];
+                    ll2[3 * j + 2, k] = oVn_i[j][k];
+                }
+            }
+
+            double[][,] l_circumflex;
+            l_circumflex = new double[nGaussPoints][,];
+            for (int j = 0; j < nGaussPoints; j++)
+            { l_circumflex[j] = new double[3, 3]; }
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    for (int l = 0; l < 3; l++)
+                    {
+                        l_circumflex[j][k, l] = 0;
+                        for (int m = 0; m < 24; m++)
+                        {
+                            l_circumflex[j][k, l] += ll1[j][k, m] * ll2[m, l];
+                        }
+
+                    }
+
+                }
+
+            }
+
+            double[][,] BL11b;
+            BL11b = new double[nGaussPoints][,];
+            for (int j = 0; j < nGaussPoints; j++)
+            { BL11b[j] = new double[9, 9]; }
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                for (int k = 0; k < 9; k++)
+                {
+                    for (int l = 0; l < 9; l++)
+                    { BL11b[j][k, l] = 0; }
+                }
+
+
+                for (int k = 0; k < 3; k++)
+                {
+                    for (int l = 0; l < 3; l++)
+                    {
+                        for (int m = 0; m < 3; m++)
+                        { BL11b[j][3 * k + l, 3 * k + m] = l_circumflex[j][l, m]; }
+                    }
+                }
+            }
+
+            double[][,] BL11;
+            BL11 = new double[nGaussPoints][,];
+            for (int j = 0; j < nGaussPoints; j++)
+            { BL11[j] = new double[6, 9]; }
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                for (int k = 0; k < 6; k++)
+                {
+                    for (int l = 0; l < 9; l++)
+                    {
+                        BL11[j][k, l] = 0;
+                        for (int m = 0; m < 9; m++)
+                        {
+                            BL11[j][k, l] += BL11a[j][k, m] * BL11b[j][m, l];
+                        }
+                    }
+                }
+            }
+
+            //double[][,] BL13;
+            BL13 = new double[nGaussPoints][,];
+            for (int j = 0; j < nGaussPoints; j++)
+            { BL13[j] = new double[9, 40]; }
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                for (int k = 0; k < 9; k++)
+                {
+                    for (int l = 0; l < 40; l++)
+                    {
+                        BL13[j][k, l] = 0;
+                    }
+                }
+
+                //sthles 1:3
+                for (int m = 0; m < 8; m++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 2; l++)
+                        {
+                            BL13[j][3 * k + l, 5 * m + k] = shapeFunctionDerivatives[m + 8 * l][j];
+                        }
+                    }
+                }
+
+                //sthles 4:5
+                for (int m = 0; m < 8; m++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            BL13[j][3 * k + l, 5 * m + 3] = -J_0a[j][l, m * 2 + 1] * tUvec[m][3 + k];
+                            BL13[j][3 * k + l, 5 * m + 4] = +J_0a[j][l, m * 2 + 1] * tUvec[m][k];
+                        }
+                    }
+                }
+            }
+
+
+
+            double[][,] BL1_2;
+            BL1_2 = new double[nGaussPoints][,];
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                BL1_2[j] = new double[6, 9];
+            }
             for (int j = 0; j < nGaussPoints; j++)
             {
                 for (int k = 0; k < 6; k++)
@@ -1292,7 +1513,6 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
 
                 }
-
                 //for (int k = 0; k < 6; k++)
                 //{
                 //    for (int l = 0; l < 40; l++)
@@ -1349,6 +1569,42 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private void UpdateKmatrices()
         {
+            // PROSTHIKI RAM apo osa declared ektos methodou
+            double[,] SPK_circumflex;  //private double[][,] SPK_circumflex;
+            double[,] BNL;
+            double[,] S_BNL;
+            double[,] ConsBL;
+            double[][] kck;// 1 ana komvo kai (ana Gauss point+1 gia to athroiskma) [GP][8 vathmoi komvoi]
+            double[][,] KNL;
+            double[][,] KL;
+            double[][] BL01plus1_2tSPKvec;
+
+            // PROSTHIKI RAM 2 apo osa ginontai initialized entos methodou
+            SPK_circumflex = new double[9, 9];
+            BNL = new double[9, 40];
+            S_BNL = new double[9, 40];
+            ConsBL = new double[6, 40];
+            KL = new double[nGaussPoints + 1][,];
+            KNL = new double[nGaussPoints + 1][,];
+            kck = new double[nGaussPoints + 1][];
+            BL01plus1_2tSPKvec = new double[nGaussPoints][];
+            for (int j = 0; j < nGaussPoints + 1; j++)
+            {
+                kck[j] = new double[8];
+                KL[j] = new double[40, 40];
+                KNL[j] = new double[40, 40];
+            }
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                BL01plus1_2tSPKvec[j] = new double[9];
+            }
+
+
+            for (int k = 0; k < 9; k++)
+            {
+                for (int l = 0; l < 9; l++)
+                { SPK_circumflex[k, l] = 0; }  // PROSTHIKI RAM ektos loop nGausspoint
+            }
             for (int j = 0; j < nGaussPoints; j++)
             {
                 for (int k = 0; k < 3; k++) // PROSTHIKI RAM den kratietai to 
@@ -1403,10 +1659,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 {
                     for (int l = 0; l < 40; l++)
                     {
-                        ConsBL[j][k, l] = 0;
+                        ConsBL[k, l] = 0;
                         for (int m = 0; m < 6; m++)
                         {
-                            ConsBL[j][k, l] += ConsCartes[j][k, m] * BL[j][m, l];
+                            ConsBL[k, l] += ConsCartes[j][k, m] * BL[j][m, l];
                         }
                     }
                 }
@@ -1415,10 +1671,10 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 {
                     for (int l = 0; l < 40; l++)
                     {
-                        S_BNL[j][k, l] = 0;
+                        S_BNL[k, l] = 0;
                         for (int m = 0; m < 9; m++)
                         {
-                            S_BNL[j][k, l] += SPK_circumflex[k, m] * BNL[m, l];
+                            S_BNL[k, l] += SPK_circumflex[k, m] * BNL[m, l];
                         }
                     }
                 }
@@ -1430,7 +1686,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         KNL[j][k, l] = 0;
                         for (int m = 0; m < 9; m++)
                         {
-                            KNL[j][k, l] += BNL[m, k] * S_BNL[j][m, l];
+                            KNL[j][k, l] += BNL[m, k] * S_BNL[m, l];
                         }
                     }
                 }
@@ -1442,7 +1698,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                         KL[j][k, l] = 0;
                         for (int m = 0; m < 6; m++)
                         {
-                            KL[j][k, l] += BL[j][m, k] * ConsBL[j][m, l];
+                            KL[j][k, l] += BL[j][m, k] * ConsBL[m, l];
                         }
                     }
                 }
@@ -1694,8 +1950,11 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             this.UpdateCoordinateData(localTotalDisplacements);
             this.UpdatePartiallyPrecalculatedVariables__forStrains();
             this.UpdateSPK(); //mporei na lamvanetai apo uliko nme materialsAtGPs.Stresses // mporei na xwristhei afto se spkvec kai ta upoloiopa pou einai gia KMatrices (SPK_circumflex)
-            this.UpdatePartiallyPrecalculatedVariables_andforForces();
+
+
+            //this.UpdatePartiallyPrecalculatedVariables_andforForces();
             this.UpdateForces();
+
             return Fxk[nGaussPoints];
         }
 
@@ -1708,9 +1967,22 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 GetInitialGeometricData(element);
                 this.CalculateCompletelyPrecalculatedVariables();
                 this.CalculateCons();
-                this.InitializeAndCalculateOriginalValuesForPartiallyPrecalculatedVariables();
+
+                //this.InitializeAndCalculateOriginalValuesForPartiallyPrecalculatedVariables(); //<-- periexei to calculate strains                
+                this.CalculateStrains();
+
+                this.CalculateCk();
+                this.CalculateSPK(); // ousiastika kanei th douleia tou ulikou
                 this.InitializeFandKmatrixes();
+
+                //this.Calculatell2();
+                //this.Calculatel_circumflex();
+                //this.CalculateBL11b();
+                //this.CalculateBL11();
+                //this.CalculateBL13();
                 this.UpdateForces(); // dioti periexei kai mhtrwa BL pou einai aparaithta gia to stifness matrix
+
+
                 this.UpdateKmatrices();
                 endeixiStiffness = 2;
                 //PrintUtilities.WriteToFile(Kt, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\Kt_1.txt");
