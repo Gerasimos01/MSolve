@@ -30,15 +30,15 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         public double[] tk { get; set; } //public static int[] tk { get; set; }
         private int nGaussPoints;
 
-        private double ksi;
-        private double heta;
-        private double zeta;
+        //private double ksi;
+        //private double heta;
+        //private double zeta;
         private int npoint;
 
         private double[] a_123g;
-        private double a_1g;
-        private double a_2g;
-        private double a_3g;
+        //private double a_1g;
+        //private double a_2g;
+        //private double a_3g;
 
         protected Shell8dispCopyGetRAM()//consztructor apo to hexa8
         {
@@ -64,9 +64,27 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         // ews edw
 
 
-        private double[][] gausscoordinates;
-        private void CalculateGaussCoordinates()  //3 dianysmata me tis timew tvn ksi heta zeta se ola ta gauss points
+        private double[][] gausscoordinates;//3 dianysmata me tis timew tvn ksi heta zeta se ola ta gauss points
+        private double[][] shapeFunctions;// 8 dianusmata me tis times twn N1....N8 se kathe gauss point
+        private double[][] shapeFunctionDerivatives;// 16 dianusmata me tis times twn N1ksi....N8ksi,N1heta,....N8heta se kathe gauss point
+        private double[][,] ll1;//einai teliko kai oxi prok
+        private double[][,] J_0a;//einai teliko kai oxi prok
+        // metavlhtes pou einai ex oloklhrou proupologismenes// PRWTA APO AFTO THA EKTELESTEI GETINTIALGEOMETRICDATA(ELEMENT)
+        private double[,] J_0b;    //einai idio gia ola ta gauss points 
+        private double[][,] J_0;       //den einai to idio gia ola ta gausspoint // einai teliko kai oxi prok
+        private double[] detJ_0; //[] osa kai ta gauss points
+        private double[][,] J_0inv;
+
+
+        private void CalculateGaussCoordinates()  
         {
+            double ksi=0;
+            double heta=0;
+            double zeta=0;
+            double a_1g=0;
+            double a_2g=0;
+            double a_3g=0;
+
             nGaussPoints = gp_d1 * gp_d2 * gp_d3;
             a_123g = new double[nGaussPoints];
             gausscoordinates = new double[3][];
@@ -119,8 +137,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
         }
 
-        private double[][] shapeFunctions;
-        private void CalculateShapeFunctions() // 8 dianusmata me tis times twn N1....N8 se kathe gauss point
+        
+        private void CalculateShapeFunctions() 
         {
             shapeFunctions = new double[8][];
             for (int j = 0; j < 8; j++)
@@ -138,8 +156,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
         }
 
-        private double[][] shapeFunctionDerivatives;
-        private void CalculateShapeFunctionDerivatives() // 16 dianusmata me tis times twn N1ksi....N8ksi,N1heta,....N8heta se kathe gauss point
+        
+        private void CalculateShapeFunctionDerivatives() 
         {
             shapeFunctionDerivatives = new double[16][];
             for (int j = 0; j < 16; j++)
@@ -167,8 +185,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
         }
 
-        private double[][,] ll1;
-        private void Calculatell1() //einai teliko kai oxi prok
+        
+        private void Calculatell1() 
         {
             ll1 = new double[nGaussPoints][,];
             for (int j = 0; j < nGaussPoints; j++)
@@ -191,8 +209,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
         }
 
-        private double[][,] J_0a;
-        private void CalculateJ_0a() //einai teliko kai oxi prok
+       
+        private void CalculateJ_0a() 
         {
             J_0a = new double[nGaussPoints][,];
             for (int j = 0; j < nGaussPoints; j++)
@@ -222,6 +240,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         private void GetInitialGeometricData(Element element) //TODO mhpws me endeixiInitialGeometricD...
         {
+            double tV1norm;
             ox_i = new double[8][];
             tx_i = new double[8][];
             tU = new double[8][];
@@ -257,10 +276,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         }
 
-        // metavlhtes pou einai ex oloklhrou proupologismenes
 
-        private double[,] J_0b;    //einai idio gia ola ta gauss points 
-        private void CalculateJ_0b() // PRWTA APO AFTO THA EKTELESTEI GETINTIALGEOMETRICDATA(ELEMENT)
+        private void CalculateJ_0b() 
         {
             J_0b = new double[16, 3];
             for (int j = 0; j < 8; j++)
@@ -274,8 +291,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
         }
 
-        private double[][,] J_0;       //den einai to idio gia ola ta gausspoint
-        private void CalculateJ_0()   // einai teliko kai oxi prok
+        private void CalculateJ_0()   
         {
             J_0 = new double[nGaussPoints][,];
             for (int j = 0; j < nGaussPoints; j++)
@@ -299,7 +315,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
 
-        private double[] detJ_0; //[] osa kai ta gauss points
+
         private void CalculateDetJ_0()
         {
             detJ_0 = new double[nGaussPoints];
@@ -323,7 +339,6 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             }
         }
 
-        private double[][,] J_0inv;
         private void CalculateJ_0inv()
         {
             J_0inv = new double[nGaussPoints][,];
@@ -930,26 +945,47 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         // Apo tis arxikes methodous mono to Calculate Cons paremvaletai edw mporei na grafei panw
         private double[] E;
         private double[] ni;
-        private double[,] Cons;
-        private double[] V3;
-        private double V3_norm;
-        private double[] V1;
-        private double V1_norm;
-        private double[] V2;
-        private double[,] T_e;
-        private double l1;
-        private double m1;
-        private double n1;
-        private double l2;
-        private double m2;
-        private double n2;
-        private double l3;
-        private double m3;
-        private double n3;
-        private double[,] Cons_T_e;
+        ///private double[,] Cons;
+        //private double[] V3;
+        //private double V3_norm;
+        //private double[] V1;
+        //private double V1_norm;
+        //private double[] V2;
+        //private double[,] T_e;
+        //private double l1;
+        //private double m1;
+        //private double n1;
+        //private double l2;
+        //private double m2;
+        //private double n2;
+        //private double l3;
+        //private double m3;
+        //private double n3;
+        //private double[,] Cons_T_e;
         private double[][,] ConsCartes;
         private void CalculateCons()
         {
+            //PROSTHIKI gia ram 
+            double[,] Cons;
+            double[,] Cons_T_e;
+            double[] V3;
+            double V3_norm;
+            double[] V1;
+            double V1_norm;
+            double[] V2;
+            double[,] T_e;
+            double l1;
+            double m1;
+            double n1;
+            double l2;
+            double m2;
+            double n2;
+            double l3;
+            double m3;
+            double n3;
+
+
+
             V3 = new double[3];
             V1 = new double[3];
             V2 = new double[3];
@@ -1733,16 +1769,19 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double[] bk_total = new double[8];
 
         // metavlhtes gia anafora stis strofes kai voithitikoi pinakes
-        private double ak;
-        private double bk;
-        private double gk1;
-        private double[,] Q = new double[3, 3];
-        private double[,] Q2 = new double[3, 3];
+        //private double ak;
+        //private double bk;
+        //private double gk1;
+        //private double[,] Q = new double[3, 3];
+        //private double[,] Q2 = new double[3, 3];
         //private double[] tdtVn = new double[3];
-        private double tV1norm;
+        //private double tV1norm;
 
         private void UpdateCoordinateData(double[] localdisplacements)
         {
+            //PROSHIKI ram
+            double ak;
+            double bk;
             for (int k = 0; k < 8; k++)
             {
                 for (int l = 0; l < 3; l++)
@@ -1766,14 +1805,26 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
         // voithitikes metavlhtes gia thn peristrofh
-        private double[] tdtVn = new double[3];
-        private double[] tdtV1 = new double[3];
-        private double[] tdtV2 = new double[3];
-        private double theta;
-        private double[] theta_vec = new double[3];
-        private double[,] s_k = new double[3, 3];
+        //private double[] tdtVn = new double[3];
+        //private double[] tdtV1 = new double[3];
+        //private double[] tdtV2 = new double[3];
+        //private double theta;
+        //private double[] theta_vec = new double[3];
+        //private double[,] s_k = new double[3, 3];
         private void RotateNodalDirectionVectors(double ak, double bk, int n_vector)
         {
+            //PROSTHIKI gia ram
+            double gk1;
+            double[,] Q = new double[3, 3];
+            double[,] Q2 = new double[3, 3];
+            double[] tdtVn = new double[3];
+            double[] tdtV1 = new double[3];
+            double[] tdtV2 = new double[3];
+            double theta;
+            double[] theta_vec = new double[3];
+            double[,] s_k = new double[3, 3];
+
+
             for (int j = 0; j < 3; j++)
             {
                 theta_vec[j] = ak * tUvec[n_vector][j] + bk * tUvec[n_vector][3 + j];
