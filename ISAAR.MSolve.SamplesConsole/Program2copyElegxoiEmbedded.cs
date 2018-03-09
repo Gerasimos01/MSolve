@@ -21,7 +21,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 4;
+            model__builder_choice = 1;
 
             if (model__builder_choice == 1) // Hexa8 kanoniko me NL analyzer
             { EmbeddedExamplesBuilder.HexaElementsOnly(model); }
@@ -92,10 +92,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        //static void Main(string[] args)
-        //{
-        //    SolveExample();
-        //}
+        static void Main(string[] args)
+        {
+            SolveExample();
+        }
 
     }
 }

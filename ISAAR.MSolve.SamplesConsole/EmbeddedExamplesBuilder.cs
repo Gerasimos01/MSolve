@@ -41,7 +41,12 @@ namespace ISAAR.MSolve.SamplesConsole
                     nodeID++;
                 }
             }
-            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            //ElasticMaterial3D material1 = new ElasticMaterial3D()
+            //{
+            //    YoungModulus = 2.1e5,
+            //    PoissonRatio = 0.35,
+            //};
+            NEWElasticMaterial3D material1 = new NEWElasticMaterial3D()
             {
                 YoungModulus = 2.1e5,
                 PoissonRatio = 0.35,

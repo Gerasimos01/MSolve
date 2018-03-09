@@ -97,10 +97,10 @@ namespace ISAAR.MSolve.SamplesConsole
             Console.WriteLine(analyzer.Logs[1][0]);
         }
 
-        static void Main(string[] args)
-        {
-            SolveBencExample(); //|
-        }
+        //static void Main(string[] args)
+        //{
+        //    SolveBencExample(); //|
+        //}
 
 
 

@@ -1109,7 +1109,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 {
                     ID = ElementID,
                     //
-                    ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)//ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
+                    ElementType = new Shell8dispCopyGetRAM(material2, 3, 3, 3)//ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
                     {
                         //oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
