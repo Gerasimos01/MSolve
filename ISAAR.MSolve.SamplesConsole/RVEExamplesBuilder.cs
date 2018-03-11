@@ -211,7 +211,7 @@ namespace ISAAR.MSolve.SamplesConsole
                         e1 = new Element()
                         {
                             ID = ElementID,
-                            ElementType = new Hexa8NL(material1, 3, 3, 3) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+                            ElementType = new Hexa8NLRAM2(material1, 3, 3, 3) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
                         };
 
                         for (int j = 0; j < 8; j++)
