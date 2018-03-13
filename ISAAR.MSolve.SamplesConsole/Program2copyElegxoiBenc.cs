@@ -23,7 +23,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 8;
+            model__builder_choice = 9;
 
             if (model__builder_choice == 1) // 
             { ParadeigmataElegxwnBuilder.Example_cohesive_hexa_orthi_constr_anw_benc1(model); }
@@ -42,6 +42,8 @@ namespace ISAAR.MSolve.SamplesConsole
             { ParadeigmataElegxwnBuilder.HexaCantileverBuilderRAM(model, 850); }
             if (model__builder_choice == 8) // 
             { ParadeigmataElegxwnBuilder.HexaCantileverBuilderRAM2(model, 850); }
+            if (model__builder_choice == 9) // 
+            { ParadeigmataElegxwnBuilder.ShellAndCohesiveShellPaktwshRAM2(model); }
 
             model.ConnectDataStructures();
 
@@ -51,7 +53,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //gia 2CZM
             //Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, 17, model.TotalDOFs);//1. increments einai to 17 (arxika eixame thesei2 26 incr)
             //gia 3CZM
-            int increments = 2;
+            int increments = 1;
             Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, increments, model.TotalDOFs);//1. increments einai to 1 (arxika eixame thesei2 26 incr)
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, analyzer, solver.SubdomainsDictionary);
             analyzer.SetMaxIterations = 100;

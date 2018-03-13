@@ -21,7 +21,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 7;
+            model__builder_choice = 9;
 
             if (model__builder_choice == 1) // 
             { RVEExamplesBuilder.OneElementRVECheckExampleConstrained(model); }
@@ -39,7 +39,8 @@ namespace ISAAR.MSolve.SamplesConsole
             { RVEExamplesBuilder.Reference2RVEExample50000withRenumbering(model); }
             if (model__builder_choice == 8) // 
             { RVEExamplesBuilder.Reference2RVEExample10000withRenumbering(model); }
-
+            if (model__builder_choice == 9) // 
+            { RVEExamplesBuilder.Reference2RVEExample100_000withRenumbering(model); }
 
             model.ConnectDataStructures();
 

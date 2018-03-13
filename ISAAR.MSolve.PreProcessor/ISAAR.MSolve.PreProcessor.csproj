@@ -91,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cluster.cs" />
+    <Compile Include="Elements\cohesive_shell_to_hexaCopyGetEmbeRAM.cs" />
     <Compile Include="Elements\cohesive_shell_to_hexaCopyGetEmbe.cs" />
     <Compile Include="Elements\cohesive_shell_to_hexaCopyGet.cs" />
     <Compile Include="Elements\Hexa8Copy.cs" />
@@ -103,6 +104,7 @@
     <Compile Include="Elements\cohesive_shell_to_hexa.cs" />
     <Compile Include="Elements\Hexa8NL.cs" />
     <Compile Include="Elements\Hexa8u8pWithStochasticMaterial.cs" />
+    <Compile Include="Elements\Shell8dispCopyGetRAM2.cs" />
     <Compile Include="Elements\Shell8dispCopyGetRAM.cs" />
     <Compile Include="Elements\Shell8dispCopyGet.cs" />
     <Compile Include="Elements\Shell8dispCopyPrint.cs" />

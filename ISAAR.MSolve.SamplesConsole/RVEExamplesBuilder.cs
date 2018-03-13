@@ -1109,7 +1109,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 {
                     ID = ElementID,
                     //
-                    ElementType = new Shell8dispCopyGetRAM(material2, 3, 3, 3)//ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
+                    ElementType = new Shell8dispCopyGetRAM2(material2, 3, 3, 3)//ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
                     {
                         //oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
@@ -2313,6 +2313,63 @@ namespace ISAAR.MSolve.SamplesConsole
             for (int j = 0; j < graphene_sheets_number; j++)
             {
                 RVEExamplesBuilder.AddGrapheneSheet_with_o_x_parameters_withRenumbering(model, gp, ekk_xyz[j], model_o_x_parameteroi[j],renumbering_vector_path);
+                shellElementsNumber = (model.ElementsDictionary.Count() - element_counter_after_Adding_sheet) / 3; //tha xrhsimefsei
+                //embdeddedGroup_adittion= model.ElementsDictionary.Where(x => (x.Key >= shellElementsNumber + element_counter_after_Adding_sheet + 1)).Select(kv => kv.Value);
+                //embdeddedGroup.Concat(embdeddedGroup_adittion);
+                for (int k = shellElementsNumber + element_counter_after_Adding_sheet + 1; k < model.ElementsDictionary.Count() + 1; k++)
+                {
+                    EmbeddedElementsIDs.Add(model.ElementsDictionary[k].ID);
+                }
+                element_counter_after_Adding_sheet = model.ElementsDictionary.Count();
+
+            }
+
+            // model: add loads
+            RVEExamplesBuilder.AddLoadsOnRveFromFile_withRenumbering(model, mp.hexa1, mp.hexa2, mp.hexa3, Fxk_p_komvoi_rve_path, renumbering_vector_path);
+            //RVEExamplesBuilder.AddXLoadsOnYZConstrainedOneElementRVE(model);
+            // model: add constraints
+            RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix_withRenumbering(model, mp.hexa1, mp.hexa2, mp.hexa3, renumbering_vector_path);
+            //RVEExamplesBuilder.AddConstraintsForYZConstraindeOneElementRVE(model);
+
+            int[] EmbElementsIds = EmbeddedElementsIDs.ToArray();
+            IEnumerable<Element> embdeddedGroup = model.ElementsDictionary.Where(x => (Array.IndexOf(EmbElementsIds, x.Key) > -1)).Select(kv => kv.Value); // dld einai null afth th stigmh
+            var embeddedGrouping = new EmbeddedCohesiveGrouping(model, hostGroup, embdeddedGroup);
+        }
+
+        public static void Reference2RVEExample100_000withRenumbering(Model model)
+        {
+            double[,] Dq = new double[1, 1];
+            Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
+            rveMatrixParameters mp;
+            grapheneSheetParameters gp;
+            string renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_Examples_Dokimi\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1_REF2_100_000_renu_new\REF_new_total_numbering.txt";
+            string Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_Examples_Dokimi\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1_REF2_100_000_renu_new\Fxk_p_komvoi_rve.txt";
+            int subdiscr1 = 8;
+            int discr1 = 4;
+            // int discr2 dn xrhsimopoieitai
+            int discr3 = 28;
+            int subdiscr1_shell = 18;
+            int discr1_shell = 1;
+            mpgp = RVEExamplesBuilder.GetReferenceRveExampleParameters(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
+            mp = mpgp.Item1;
+            gp = mpgp.Item2;
+            double[][] ekk_xyz = new double[2][] { new double[] { 0, 0, 0 }, new double[] { 0.25 * 105, 0, 0.25 * 40 } };
+
+            int graphene_sheets_number = 1;
+            o_x_parameters[] model_o_x_parameteroi = new o_x_parameters[graphene_sheets_number];
+
+            RVEExamplesBuilder.HexaElementsOnlyRVEwithRenumbering(model, mp, Dq, renumbering_vector_path);
+            int hexaElementsNumber = model.ElementsDictionary.Count();
+
+            IEnumerable<Element> hostGroup = model.ElementsDictionary.Where(x => (x.Key < hexaElementsNumber + 1)).Select(kv => kv.Value);
+            List<int> EmbeddedElementsIDs = new List<int>();
+            int element_counter_after_Adding_sheet;
+            element_counter_after_Adding_sheet = hexaElementsNumber; // initial value before adding first graphene sheet
+            int shellElementsNumber;
+
+            for (int j = 0; j < graphene_sheets_number; j++)
+            {
+                RVEExamplesBuilder.AddGrapheneSheet_with_o_x_parameters_withRenumbering(model, gp, ekk_xyz[j], model_o_x_parameteroi[j], renumbering_vector_path);
                 shellElementsNumber = (model.ElementsDictionary.Count() - element_counter_after_Adding_sheet) / 3; //tha xrhsimefsei
                 //embdeddedGroup_adittion= model.ElementsDictionary.Where(x => (x.Key >= shellElementsNumber + element_counter_after_Adding_sheet + 1)).Select(kv => kv.Value);
                 //embdeddedGroup.Concat(embdeddedGroup_adittion);
