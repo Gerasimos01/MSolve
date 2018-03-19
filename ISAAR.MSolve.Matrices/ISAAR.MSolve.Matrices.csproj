@@ -95,6 +95,7 @@
     <Compile Include="Interfaces\IVector.cs" />
     <Compile Include="SkylineMatrix2D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sparse2D_v2.cs" />
     <Compile Include="Sparse2D.cs" />
     <Compile Include="SymmetricMatrix2D.cs" />
     <Compile Include="Vector.cs" />

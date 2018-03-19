@@ -427,8 +427,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         //private double[] x_local; // to dianusma x ths matlab sunarthshs pou einai apo t_x_global_pr
         //private double[,] u_prok;
         //private double[,] x_pavla;
-        private double[,] k_stoixeiou_coh;
-        private double[] fxk1_coh;
+        //private double[,] k_stoixeiou_coh;
+        //private double[] fxk1_coh;
         //private double[] d_trial;
         //private double[] e_ksi;
         //private double e_ksi_norm;
@@ -481,8 +481,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //x_local = new double[48];
             //u_prok = new double[3, 8];
             //x_pavla = new double[3, 8];
-            k_stoixeiou_coh = new double[48, 48]; //allazei sto cohesive 8 node
-            fxk1_coh = new double[48];
+            //k_stoixeiou_coh = new double[48, 48]; //allazei sto cohesive 8 node
+            //fxk1_coh = new double[48];
             //d_trial = new double[nGaussPoints];
             //e_ksi = new double[3];
             //e_heta = new double[3];
@@ -732,15 +732,15 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         private double[,] T;
         //private double[,] eye3;
 
-        private double[,] Kii_A;
-        private double[,] k_stoixeiou_coh2;
-        private double[] fxk2_coh;
+        //private double[,] Kii_A;
+        //private double[,] k_stoixeiou_coh2;
+        //private double[] fxk2_coh;
 
         private void InitializeTMatrix_and_necessary_lists_for_TKT_multiplications(Element element)
         {
-            Kii_A = new double[24, 40];
-            k_stoixeiou_coh2 = new double[64, 64];
-            fxk2_coh = new double[64];
+            //Kii_A = new double[24, 40];
+            //k_stoixeiou_coh2 = new double[64, 64];
+            //fxk2_coh = new double[64];
 
             T = new double[24, 40];
             double[,] eye3 = new double[3, 3];
@@ -829,13 +829,14 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         // telikh morfh pinakwn gia embeding kai endiameses metavlhtes
 
 
-        private void multiply_forces_for_embeding()
+        private double [] multiply_forces_for_embeding(double [] fxk1_coh)
         {
+            double [] fxk2_coh = new double[64];
             if (endeixi_element_2==0)
             {
                 for (int n = 0; n < 40; n++)
                 {
-                    fxk2_coh[n] = 0;
+                    //fxk2_coh[n] = 0; //sp1
                     for (int p = 0; p < 24; p++)
                     {
                         fxk2_coh[n] += T[p, n] * fxk1_coh[p];
@@ -857,7 +858,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 for (int n = 0; n < 40; n++)
                 {
                     //fxk2_coh[n+24] = 0;
-                    fxk2_coh[n] = 0;
+                    //fxk2_coh[n] = 0;  //sp1 afto einai sp1 , to apo panw einai lathos
                     for (int p = 0; p < 24; p++)
                     {
                         //fxk2_coh[n+24] += T[p, n] * fxk1_coh[p+24];
@@ -868,20 +869,23 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
             //PrintUtilities.WriteToFile(T,
             //       @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\T_updated_A_1__mh_an.txt");
+            return fxk2_coh;
         }
 
-        private void multiply_stifnessMatrix_for_embeding()
+        private double [,] multiply_stifnessMatrix_for_embeding(double [,] k_stoixeiou_coh)
         {
+            double [,] k_stoixeiou_coh2 = new double[64, 64];
+            double [,] Kii_A = new double[24, 40];
             if (endeixi_element_2 == 0)
             {
                 //upologismos Kii_A (mhdenismos kai upologismoi)
-                for (int n = 0; n < 24; n++)
-                {
-                    for (int p = 0; p < 40; p++)
-                    {
-                        Kii_A[n, p] = 0;
-                    }
-                }
+                //for (int n = 0; n < 24; n++)
+                //{
+                //    for (int p = 0; p < 40; p++)
+                //    {
+                //        Kii_A[n, p] = 0;
+                //    }
+                //} //sp1
                 for (int n = 0; n < 24; n++)
                 {
                     for (int p = 0; p < 40; p++)
@@ -893,13 +897,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
                 // upologismos perioxhs 11 tou Tt_K_T (mhdenismos kai upologismoi)
-                for (int n = 0; n < 40; n++)
-                {
-                    for (int p = 0; p < 40; p++)
-                    {
-                        k_stoixeiou_coh2[n, p] = 0;
-                    }
-                }
+                //for (int n = 0; n < 40; n++)
+                //{
+                //    for (int p = 0; p < 40; p++)
+                //    {
+                //        k_stoixeiou_coh2[n, p] = 0;
+                //    }
+                //} //sp1
                 for (int n = 0; n < 40; n++)
                 {
                     for (int p = 0; p < 40; p++)
@@ -911,13 +915,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
                 // upologismos perioxhs 12 tou Tt_K_T (mhdenismos kai upologismoi)
-                for (int n = 0; n < 40; n++)
-                {
-                    for (int p = 0; p < 24; p++)
-                    {
-                        k_stoixeiou_coh2[n, 40 + p] = 0;
-                    }
-                }
+                //for (int n = 0; n < 40; n++)
+                //{
+                //    for (int p = 0; p < 24; p++)
+                //    {
+                //        k_stoixeiou_coh2[n, 40 + p] = 0;
+                //    }
+                //}//sp1
                 for (int n = 0; n < 40; n++)
                 {
                     for (int p = 0; p < 24; p++)
@@ -929,13 +933,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
                 // upologismos perioxhs 21 tou Tt_K_T (mhdenismos kai upologismoi)
-                for (int n = 0; n < 24; n++)
-                {
-                    for (int p = 0; p < 40; p++)
-                    {
-                        k_stoixeiou_coh2[40+n, p] = 0;
-                    }
-                }
+                //for (int n = 0; n < 24; n++)
+                //{
+                //    for (int p = 0; p < 40; p++)
+                //    {
+                //        k_stoixeiou_coh2[40+n, p] = 0;
+                //    }
+                //} //sp1
                 for (int n = 0; n < 24; n++)
                 {
                     for (int p = 0; p < 40; p++)
@@ -965,13 +969,13 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             else
             {
                 //upologismos Kii_A pou en prokeimenw einai K22_A (mhdenismos kai upologismoi)
-                for (int n = 0; n < 24; n++)
-                {
-                    for (int p = 0; p < 40; p++)
-                    {
-                        Kii_A[n, p] = 0;
-                    }
-                }
+                //for (int n = 0; n < 24; n++)
+                //{
+                //    for (int p = 0; p < 40; p++)
+                //    {
+                //        Kii_A[n, p] = 0;
+                //    }
+                //}
                 for (int n = 0; n < 24; n++)
                 {
                     for (int p = 0; p < 40; p++)
@@ -992,14 +996,14 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
                 // upologismos perioxhs 12 tou Tt_K_T (mhdenismos kai upologismoi) --> 21
-                for (int n = 0; n < 24; n++)
-                {
-                    for (int p = 0; p < 40; p++)
-                    {
-                        //k_stoixeiou_coh2[ n, 24+p] = 0;
-                        k_stoixeiou_coh2[40+n, p] = 0;
-                    }
-                }
+                //for (int n = 0; n < 24; n++)
+                //{
+                //    for (int p = 0; p < 40; p++)
+                //    {
+                //        //k_stoixeiou_coh2[ n, 24+p] = 0;
+                //        k_stoixeiou_coh2[40+n, p] = 0;
+                //    }
+                //} //sp1
                 for (int n = 0; n < 24; n++)
                 {
                     for (int p = 0; p < 40; p++)
@@ -1012,14 +1016,14 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
                 // upologismos perioxhs 21 tou Tt_K_T (mhdenismos kai upologismoi) -->12
-                for (int n = 0; n < 40; n++)
-                {
-                    for (int p = 0; p < 24; p++)
-                    {
-                        //k_stoixeiou_coh2[24+n, p] = 0;
-                        k_stoixeiou_coh2[n,40+ p] = 0;
-                    }
-                }
+                //for (int n = 0; n < 40; n++)
+                //{
+                //    for (int p = 0; p < 24; p++)
+                //    {
+                //        //k_stoixeiou_coh2[24+n, p] = 0;
+                //        k_stoixeiou_coh2[n,40+ p] = 0;
+                //    }
+                //}
                 for (int n = 0; n < 40; n++)
                 {
                     for (int p = 0; p < 24; p++)
@@ -1032,14 +1036,14 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                     }
                 }
                 // upologismos perioxhs 22 tou Tt_K_T (mhdenismos kai upologismoi) -->11
-                for (int n = 0; n < 40; n++)
-                {
-                    for (int p = 0; p < 40; p++)
-                    {
-                        //k_stoixeiou_coh2[24+n, 24+p] = 0;
-                        k_stoixeiou_coh2[n, p] = 0;
-                    }
-                }
+                //for (int n = 0; n < 40; n++)
+                //{
+                //    for (int p = 0; p < 40; p++)
+                //    {
+                //        //k_stoixeiou_coh2[24+n, 24+p] = 0;
+                //        k_stoixeiou_coh2[n, p] = 0;
+                //    }
+                //}
                 for (int n = 0; n < 40; n++)
                 {
                     for (int p = 0; p < 40; p++)
@@ -1074,6 +1078,8 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //       @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\T_updated_swsto_mh_an.txt");
             //    PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk1_updated_swsto_mh_an.txt");
             //}
+
+            return k_stoixeiou_coh2;
         }
 
         // methodoi apo to cohesive16node me prosthetes mono tis entoles pou kaloun pollaplasiasmous me TKT
@@ -1108,12 +1114,15 @@ namespace ISAAR.MSolve.PreProcessor.Elements
         }
 
 
-        private void UpdateForces()
+        private double[] UpdateForces()
         {
-            for (int j = 0; j < 48; j++) // allagh sto cohesive 8 node
-            {
-                fxk1_coh[j] = 0;
-            }
+            double [] fxk2_coh = new double[64];
+
+            //for (int j = 0; j < 48; j++) // allagh sto cohesive 8 node
+            //{
+            //    fxk1_coh[j] = 0;
+            //}
+            double [] fxk1_coh = new double[48];
 
             for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
             {
@@ -1163,7 +1172,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //    PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk1_coh_output_2.txt");
             //}
             //
-            this.multiply_forces_for_embeding();
+            fxk2_coh=this.multiply_forces_for_embeding(fxk1_coh);
             //PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk1_mh_an.txt");
             ////
             //if (print_counter == 1)
@@ -1179,17 +1188,21 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //    PrintUtilities.WriteToFileVector(fxk2_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk2_coh_output_2_mh_an.txt");
             //}
             //
+            return fxk2_coh;
         }
 
-        private void UpdateKmatrices()
+        private double [,] UpdateKmatrices()
         {
-            for (int k = 0; k < 48; k++) // allagh sto cohesive 8 node
-            {
-                for (int j = 0; j < 48; j++)
-                {
-                    k_stoixeiou_coh[k, j] = 0;
-                }
-            }
+            double [,] k_stoixeiou_coh2 = new double[64, 64];
+            //for (int k = 0; k < 48; k++) // allagh sto cohesive 8 node
+            //{
+            //    for (int j = 0; j < 48; j++)
+            //    {
+            //        k_stoixeiou_coh[k, j] = 0;
+            //    }
+            //}
+            double [,] k_stoixeiou_coh = new double[48, 48];
+
 
             for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
             {
@@ -1248,7 +1261,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 }
             }
 
-            this.multiply_stifnessMatrix_for_embeding();
+            k_stoixeiou_coh2 =this.multiply_stifnessMatrix_for_embeding(k_stoixeiou_coh);
             //if (print_counter == 1)
             //{
             //    PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh2,
@@ -1261,7 +1274,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //            @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh2_updated_swsto_A_mh_an.txt",
             //            @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh2_updated_swsto_B_mh_an.txt");
             //}
-
+            return k_stoixeiou_coh2;
         }
 
         int print_counter = 0;
@@ -1286,6 +1299,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         public double[] CalculateForces(Element element, double[] localTotalDisplacementsSuperElement, double[] localdDisplacementsSuperelement)
         {
+            double[] fxk2_coh = new double[64];
             //double[] localTotalDisplacements = dofEnumerator.GetTransformedVector(localTotalDisplacementsSuperElement); // PROSTHIKI EMBEDDED: metonomasthkan ta localTotalDisplacements se "SuperElement" apo ta opoia tha upologizontai pleon ta localTotalDisplacemeents
             //double[] localDisplacements = dofEnumerator.GetTransformedVector(localdDisplacementsSuperElement); // PROSTHIKI EMBEDDED: omoiws apla einai commented out epeidh den ta Xrhsimopoioume pouthena
             //for (int i = 0; i < materialsAtGaussPoints.Length; i++)
@@ -1293,7 +1307,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //    for (int j = 0; j < 3; j++)
             //    { T_int[i][j] = materialsAtGaussPoints[i].Stresses[j]; }
             //}
-            this.UpdateForces(); //<-- sto Update afto exei enswmatwthei to Tt*fxk1_coh
+            fxk2_coh= this.UpdateForces(); //<-- sto Update afto exei enswmatwthei to Tt*fxk1_coh
             //return fxk1_coh;
 
             //return fxk2_coh; // PROSTHIKI EMBEDDED: Line commented out 
@@ -1307,6 +1321,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
         public virtual IMatrix2D<double> StiffnessMatrix(Element element)
         {
+            double [,] k_stoixeiou_coh2 = new double[64, 64];
             if (N1 == null)
             {
                 this.CalculateShapeFunctionAndGaussPointData();
@@ -1322,7 +1337,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //        { D_tan[i][j, k] = materialsAtGaussPoints[i].ConstitutiveMatrix[j, k]; }
             //    }
             //}
-            this.UpdateKmatrices(); //<-- sto Update afto exei mpei to Tt*K*T 
+            k_stoixeiou_coh2=this.UpdateKmatrices(); //<-- sto Update afto exei mpei to Tt*K*T 
             //IMatrix2D<double> element_stiffnessMatrix = new Matrix2D<double>(k_stoixeiou_coh); // TODO giati de ginetai return dof.Enumerator.GetTransformedMatrix, xrhsh symmetric
             IMatrix2D<double> element_stiffnessMatrix = new Matrix2D<double>(k_stoixeiou_coh2); // TODO giati de ginetai return dof.Enumerator.GetTransformedMatrix, xrhsh symmetric
             //return element_stiffnessMatrix; //PROSTHIKI EMBEDDED: Line Commented Out

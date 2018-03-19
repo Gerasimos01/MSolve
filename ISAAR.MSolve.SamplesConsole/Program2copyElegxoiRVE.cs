@@ -41,6 +41,9 @@ namespace ISAAR.MSolve.SamplesConsole
             { RVEExamplesBuilder.Reference2RVEExample10000withRenumbering(model); }
             if (model__builder_choice == 9) // 
             { RVEExamplesBuilder.Reference2RVEExample100_000withRenumbering(model); }
+            if (model__builder_choice == 10) // 
+            { RVEExamplesBuilder.Reference1RVEExample100_000(model); }
+
 
             model.ConnectDataStructures();
 
@@ -91,10 +94,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        static void Main(string[] args)
-        {
-            SolveRVEExample(); //|
-        }
+        //static void Main(string[] args)
+        //{
+        //    SolveRVEExample(); //|
+        //}
 
     }
 }
