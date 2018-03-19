@@ -91,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cluster.cs" />
+    <Compile Include="Elements\cohesive_shell_to_hexaCopyGetEmbeRAM_1.cs" />
     <Compile Include="Elements\cohesive_shell_to_hexaCopyGetEmbeRAM.cs" />
     <Compile Include="Elements\cohesive_shell_to_hexaCopyGetEmbe.cs" />
     <Compile Include="Elements\cohesive_shell_to_hexaCopyGet.cs" />
