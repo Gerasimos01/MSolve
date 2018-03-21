@@ -21,7 +21,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 9;
+            model__builder_choice = 7;
 
             if (model__builder_choice == 1) // 
             { RVEExamplesBuilder.OneElementRVECheckExampleConstrained(model); }

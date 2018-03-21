@@ -211,7 +211,7 @@ namespace ISAAR.MSolve.SamplesConsole
                         e1 = new Element()
                         {
                             ID = ElementID,
-                            ElementType = new Hexa8NLRAM2(material1, 3, 3, 3) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+                            ElementType = new Hexa8NLRAM_1(material1, 3, 3, 3) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
                         };
 
                         for (int j = 0; j < 8; j++)
@@ -1109,7 +1109,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 {
                     ID = ElementID,
                     //
-                    ElementType = new Shell8dispCopyGetRAM2(material2, 3, 3, 3)//ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
+                    ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)//ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
                     {
                         //oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
@@ -1176,7 +1176,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 e2 = new Element()
                 {
                     ID = ElementID,
-                    ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM(material3, 3, 3)
+                    ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
                     {
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
                                                  new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
@@ -1234,7 +1234,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 e2 = new Element()
                 {
                     ID = ElementID,
-                    ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM(material3, 3, 3)
+                    ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
                     {
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
                                                  new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
@@ -2118,6 +2118,29 @@ namespace ISAAR.MSolve.SamplesConsole
             RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix(model, mp.hexa1, mp.hexa2, mp.hexa3);
             //RVEExamplesBuilder.AddConstraintsForYZConstraindeOneElementRVE(model);
             var embeddedGrouping = new EmbeddedCohesiveGrouping(model, model.ElementsDictionary.Where(x => (x.Key < hexaElementsNumber + 1)).Select(kv => kv.Value), model.ElementsDictionary.Where(x => (x.Key >= shellElementsNumber + hexaElementsNumber + 1)).Select(kv => kv.Value));
+        }
+
+        public static void FewElementsRVECheckExample_embedder_2(Model model)
+        {
+            double[,] Dq = new double[1, 1];
+            Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
+            rveMatrixParameters mp;
+            grapheneSheetParameters gp;
+            mpgp = RVEExamplesBuilder.GetOneElementRveCheckExampleParameters();
+            mp = mpgp.Item1;
+            gp = mpgp.Item2;
+            double[] ekk_xyz = new double[] { 0, 0, 0.25 * 40 };
+            RVEExamplesBuilder.HexaElementsOnlyRVE(model, mp, Dq);
+            int hexaElementsNumber = model.ElementsDictionary.Count();
+            RVEExamplesBuilder.AddGrapheneSheet2(model, gp, ekk_xyz);
+            int shellElementsNumber = (model.ElementsDictionary.Count() - hexaElementsNumber) / 3;
+            // model: add loads
+            RVEExamplesBuilder.AddLoadsOnRveFromFile(model, mp.hexa1, mp.hexa2, mp.hexa3, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_embeded_shell_gia_check_tou_rve_embedding_sto_MSolve\elegxos_alalgwn_fe2_tax_me1_arxiko_chol_dixws_me1_OneElementRVECheckExample\Fxk_p_komvoi_rve.txt");
+            //RVEExamplesBuilder.AddXLoadsOnYZConstrainedOneElementRVE(model);
+            // model: add constraints
+            RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix(model, mp.hexa1, mp.hexa2, mp.hexa3);
+            //RVEExamplesBuilder.AddConstraintsForYZConstraindeOneElementRVE(model);
+            var embeddedGrouping = new EmbeddedCohesiveGrouping_v2(model, model.ElementsDictionary.Where(x => (x.Key < hexaElementsNumber + 1)).Select(kv => kv.Value), model.ElementsDictionary.Where(x => (x.Key >= shellElementsNumber + hexaElementsNumber + 1)).Select(kv => kv.Value));
         }
 
         public static void FewElementsRVECheckExample2GrapheneSheets(Model model)

@@ -98,7 +98,7 @@ namespace ISAAR.MSolve.Matrices
             for (int i = 0; i < matrix.Rows; i++)
                 for (int k = 0; k < this.Columns; k++)
                     for (int j = 0; j < matrix.Columns; j++)
-                        c[i, k] += matrix[i, j] * AA[j, k];
+                        c[i, k] += matrix[i, j] * this[j, k];
 
             return new Matrix2D<double>(c);
         }

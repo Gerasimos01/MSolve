@@ -91,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cluster.cs" />
+    <Compile Include="Elements\cohesive_shell_to_hexaCopyGetEmbeRAM_11.cs" />
     <Compile Include="Elements\cohesive_shell_to_hexaCopyGetEmbeRAM_1.cs" />
     <Compile Include="Elements\cohesive_shell_to_hexaCopyGetEmbeRAM.cs" />
     <Compile Include="Elements\cohesive_shell_to_hexaCopyGetEmbe.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="Elements\Shell8disp.cs" />
     <Compile Include="Embedding\CohesiveElementEmbedder_v2.cs" />
     <Compile Include="Embedding\CohesiveElementEmbedder.cs" />
+    <Compile Include="Embedding\EmbeddedCohesiveGrouping_v2.cs" />
     <Compile Include="Embedding\EmbeddedCohesiveGrouping.cs" />
     <Compile Include="Embedding\Hexa8NLTranslationTransformationVector.cs" />
     <Compile Include="Interfaces\IMassAccelerationHistoryLoad.cs" />

@@ -20,7 +20,7 @@ namespace ISAAR.MSolve.PreProcessor.Embedding
 
         public double[][] GetTransformationVector(EmbeddedNode node)
         {
-            if (node.EmbeddedInElement.ElementType is Hexa8NLRAM2 == false)
+            if (node.EmbeddedInElement.ElementType is Hexa8NL == false)
                 throw new ArgumentException("Host element is not Hexa8NL.");
 
             const int commonDofsPerNode = 3;

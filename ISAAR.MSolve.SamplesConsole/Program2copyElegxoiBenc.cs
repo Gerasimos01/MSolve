@@ -23,7 +23,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 13;
+            model__builder_choice = 15;
 
             if (model__builder_choice == 1) // 
             { ParadeigmataElegxwnBuilder.Example_cohesive_hexa_orthi_constr_anw_benc1(model); }
@@ -52,6 +52,11 @@ namespace ISAAR.MSolve.SamplesConsole
             { ParadeigmataElegxwnBuilder.HexaCantileverBuilderRAM_1(model, 850); }
             if (model__builder_choice == 13) // 
             { ParadeigmataElegxwnBuilder.ShellAndCohesiveRAM_1ShellPaktwsh(model); }
+            if (model__builder_choice == 14) // 
+            { ParadeigmataElegxwnBuilder.ShellAndCohesiveRAM_11ShellPaktwsh(model); }
+            if (model__builder_choice == 15) // diatmhsh elastic
+            { RVEExamplesBuilder.FewElementsRVECheckExample_embedder_2(model); }
+
 
             model.ConnectDataStructures();
 
