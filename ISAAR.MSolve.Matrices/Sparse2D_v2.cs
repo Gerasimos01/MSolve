@@ -24,6 +24,7 @@ namespace ISAAR.MSolve.Matrices
         {
             this.rows = rows;
             this.columns = columns;
+            this.data = data;
             this.rowColDataPositions = rowColDataPositions;
         }
 
@@ -58,9 +59,9 @@ namespace ISAAR.MSolve.Matrices
 
         public double[] MultiplyRight(double[] vector)
         {
-            if (Rows != vector.Length) throw new InvalidOperationException("Matrix and vector size mismatch.");
+            if (Columns != vector.Length) throw new InvalidOperationException("Matrix and vector size mismatch.");
             List<double> d = data as List<double>;
-            double[] result = new double[vector.Length];
+            double[] result = new double[this.Rows];
             foreach (int row in rowColDataPositions.Keys)
             {
                 double sum = 0.0;
@@ -93,19 +94,20 @@ namespace ISAAR.MSolve.Matrices
             if (this.Rows != matrix.Columns) throw new InvalidOperationException("Matrix sizes mismatch.");
 
             double[,] c = new double[matrix.Rows, this.Columns];
-            var AA = new Sparse2D_v2<double>(rows, columns, this.data as List<double>, rowColDataPositions);
+            List<double> d = data as List<double>;
+            var AA = new Sparse2D_v2<double>(rows, columns, d, rowColDataPositions);
 
             for (int i = 0; i < matrix.Rows; i++)
                 for (int k = 0; k < this.Columns; k++)
                     for (int j = 0; j < matrix.Columns; j++)
-                        c[i, k] += matrix[i, j] * this[j, k];
+                        c[i, k] += matrix[i, j] * AA[j, k];
 
             return new Matrix2D<double>(c);
         }
 
         public Sparse2D_v2<T> Transpose()
         {
-            Sparse2D_v2<T> transpose = new Sparse2D_v2<T>(rows, columns);
+            Sparse2D_v2<T> transpose = new Sparse2D_v2<T>(this.columns, this.rows);
             foreach (int row in rowColDataPositions.Keys)
                 foreach (int col in rowColDataPositions[row].Keys)
                     transpose[col, row] = data[rowColDataPositions[row][col]];
