@@ -37,19 +37,23 @@ namespace ISAAR.MSolve.PreProcessor.Embedding
         // PROSTHIKI EMBEDDED:
         public void ModifyTransformationMatrix(double[,] wrongOrderMatrix)
         {
+            //double tol = 1e-9;
             transformationMatrix = new Sparse2D_v2<double>(64, 232);
             for (int j = 0; j < 40; j++)
             {
                 for (int k = 0; k < 232; k++)
                 {
-                    transformationMatrix[j, k] = wrongOrderMatrix[24 + j, k];
+                    double entry = wrongOrderMatrix[24 + j, k];
+                    //if (Math.Abs(entry) > tol) transformationMatrix[j, k] = entry;
+                    if (entry != 0) transformationMatrix[j, k] = entry;
                 }
             }
             for (int j = 0; j < 24; j++)
             {
                 for (int k = 0; k < 232; k++)
                 {
-                    transformationMatrix[40+j, k] = wrongOrderMatrix[j, k];
+                    double entry = wrongOrderMatrix[j, k];
+                    if (entry != 0) transformationMatrix[40 + j, k] = entry;
                 }
             }
         }

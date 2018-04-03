@@ -21,7 +21,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 7;
+            model__builder_choice =16;   // 9 einai to megalo me to renumbering pou tsekaretai
 
             if (model__builder_choice == 1) // 
             { RVEExamplesBuilder.OneElementRVECheckExampleConstrained(model); }
@@ -42,7 +42,24 @@ namespace ISAAR.MSolve.SamplesConsole
             if (model__builder_choice == 9) // 
             { RVEExamplesBuilder.Reference2RVEExample100_000withRenumbering(model); }
             if (model__builder_choice == 10) // 
-            { RVEExamplesBuilder.Reference1RVEExample100_000(model); }
+            { RVEExamplesBuilder.Reference1RVEExample100_000(model); } // PROSOXH afto einai mallon palia version.
+            if (model__builder_choice == 11) // 
+            { RVEExamplesBuilder.Reference2RVEExample10000withRenumbering_2GrSh(model); }
+            if (model__builder_choice == 12) // 
+            { RVEExamplesBuilder.Reference2RVEExample10000withRenumbering_1GrSh(model); }
+            if (model__builder_choice == 13) // 
+            { RVEExamplesBuilder.Reference2RVEExample100_000withRenumbering_mono_hexa(model); }
+            if (model__builder_choice == 14) // 
+            { RVEExamplesBuilder.Reference2RVEExample10000withRenumberingwithInput(model); }
+            if (model__builder_choice == 15) // 
+            { RVEExamplesBuilder.Reference2RVEExample10000withRenumberingwithInput_develop2(model); }
+            if (model__builder_choice == 16) // 
+            { RVEExamplesBuilder.Reference2RVEExample100_000withRenumbering_me_dev(model); }
+            if (model__builder_choice == 17) // 
+            { RVEExamplesBuilder.Reference2RVEExample500_000withRenumbering_me_dev(model); }
+            if (model__builder_choice == 18) // 
+            { RVEExamplesBuilder.Reference2RVEExample_1_000_000withRenumbering_me_dev(model); }
+
 
 
             model.ConnectDataStructures();
@@ -94,10 +111,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        //static void Main(string[] args)
-        //{
-        //    SolveRVEExample(); //|
-        //}
+        static void Main(string[] args)
+        {
+            SolveRVEExample(); //|
+        }
 
     }
 }

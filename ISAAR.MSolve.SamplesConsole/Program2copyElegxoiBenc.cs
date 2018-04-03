@@ -23,7 +23,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 15;
+            model__builder_choice = 3;
 
             if (model__builder_choice == 1) // 
             { ParadeigmataElegxwnBuilder.Example_cohesive_hexa_orthi_constr_anw_benc1(model); }
@@ -114,10 +114,10 @@ namespace ISAAR.MSolve.SamplesConsole
             Console.WriteLine(analyzer.Logs[1][0]);
         }
 
-        static void Main(string[] args)
-        {
-            SolveBencExample(); //|
-        }
+        //static void Main(string[] args)
+        //{
+        //    SolveBencExample(); //|
+        //}
 
 
 

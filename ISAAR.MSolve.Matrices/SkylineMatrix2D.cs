@@ -18,6 +18,10 @@ namespace ISAAR.MSolve.Matrices
         public SkylineMatrix2D(int[] rowIndex)
         {
             this.rowIndex = rowIndex;
+            var s = new StringBuilder();
+            for (int i = 0; i < rowIndex.Length; i++)
+                s.AppendLine(rowIndex[i].ToString());
+            File.WriteAllText(@"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\rowIndex.txt", s.ToString());
             data = rowIndex.Length > 0 ? new T[rowIndex[rowIndex.Length - 1]] : new T[0];
         }
 
