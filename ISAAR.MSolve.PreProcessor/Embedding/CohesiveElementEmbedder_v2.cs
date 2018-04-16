@@ -44,7 +44,7 @@ namespace ISAAR.MSolve.PreProcessor.Embedding
                 for (int k = 0; k < 232; k++)
                 {
                     double entry = wrongOrderMatrix[24 + j, k];
-                    //if (Math.Abs(entry) > tol) transformationMatrix[j, k] = entry;
+                    //if (Math.Abs(entry) > tol) transformationMatrix[j, k] = entry; // prohgoumenh prospatheia
                     if (entry != 0) transformationMatrix[j, k] = entry;
                 }
             }
