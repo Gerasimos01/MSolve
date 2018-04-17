@@ -81,10 +81,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        static void Main(string[] args)
-        {
-            SolveRVEExample(); //|
-        }
+        //static void Main(string[] args)
+        //{
+        //    SolveRVEExample(); //|
+        //}
 
     }
 }
