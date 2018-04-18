@@ -795,6 +795,9 @@ namespace ISAAR.MSolve.PreProcessor.Elements
 
             //PrintUtilities.WriteToFile(T,
             //       @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\T_updated_A_1__mh_an.txt");
+            PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\fxk1_coh.txt");
+            PrintUtilities.WriteToFileVector(fxk2_coh, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\fxk2_coh.txt");
+
         }
 
         private void multiply_stifnessMatrix_for_embeding()
@@ -980,27 +983,35 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 }
                 
             }
-            if (print_counter == 0)
-            {
-                PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
-                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_arxiko_A_1_mh_an.txt",
-                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_arxiko_B_1_mh_an.txt");
-            }
-            if (print_counter == 1)
-            {
-                PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
-                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_updated_A_1_mh_an.txt",
-                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_updated_B_1_mh_an.txt");
-            }
-            if (print_counter == 2)
-            {
-                PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
-                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_local_updated_swsto_A_mh_an.txt",
-                    @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_local_updated_swsto_B_mh_an.txt");
-                PrintUtilities.WriteToFile(T,
-                   @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\T_updated_swsto_mh_an.txt");
-                PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk1_updated_swsto_mh_an.txt");
-            }
+            //if (print_counter == 0)
+            //{
+            //    PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
+            //       @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_arxiko_A_1_mh_an.txt",
+            //       @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_arxiko_B_1_mh_an.txt");
+            //}
+            //if (print_counter == 1)
+            //{
+            //    PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
+            //        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_updated_A_1_mh_an.txt",
+            //        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_updated_B_1_mh_an.txt");
+            //}
+            //if (print_counter == 2)
+            //{
+            //    PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
+            //        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_local_updated_swsto_A_mh_an.txt",
+            //        @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\K_stoixeiou_coh_local_updated_swsto_B_mh_an.txt");
+            //    PrintUtilities.WriteToFile(T,
+            //       @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\T_updated_swsto_mh_an.txt");
+            //    PrintUtilities.WriteToFileVector(fxk1_coh, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\unused_anest_kai_t\fxk1_updated_swsto_mh_an.txt");
+            //}
+
+            PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh,
+                   @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\K_stoixeiou_coh_arxiko_A_1_mh_an.txt",
+                   @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\K_stoixeiou_coh_arxiko_B_1_mh_an.txt");
+            PrintUtilities.SeparateAndWriteToFile(k_stoixeiou_coh2,
+                   @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\K_stoixeiou_coh2_arxiko_A_1_mh_an.txt",
+                   @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\K_stoixeiou_coh2_arxiko_B_1_mh_an.txt");
+
         }
 
         // methodoi apo to cohesive16node me prosthetes mono tis entoles pou kaloun pollaplasiasmous me TKT

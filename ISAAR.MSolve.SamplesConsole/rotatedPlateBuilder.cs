@@ -182,7 +182,7 @@ namespace ISAAR.MSolve.SamplesConsole
             e1 = new Element()
             {
                 ID = 1,
-                ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
+                ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
                 {
                     oVn_i = VH, // mono epeidh einai ena element einai ok o orismos etsi kai de tha allaxei meta to VH
                     tk = Tk_vec,

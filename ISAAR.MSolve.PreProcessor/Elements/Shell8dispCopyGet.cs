@@ -1677,6 +1677,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             this.UpdateSPK(); //mporei na lamvanetai apo uliko nme materialsAtGPs.Stresses // mporei na xwristhei afto se spkvec kai ta upoloiopa pou einai gia KMatrices (SPK_circumflex)
             this.UpdatePartiallyPrecalculatedVariables_andforForces();
             this.UpdateForces();
+            PrintUtilities.WriteToFileVector(Fxk[nGaussPoints], @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\Fxk_shell.txt");
             return Fxk[nGaussPoints];
         }
 
@@ -1696,6 +1697,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 endeixiStiffness = 2;
                 //PrintUtilities.WriteToFile(Kt, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\Kt_1.txt");
                 IMatrix2D<double> iGlobalStiffnessMatrix = new Matrix2D<double>(Kt);
+                PrintUtilities.WriteToFile(Kt, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\K_shell_arxiko.txt");
                 return dofEnumerator.GetTransformedMatrix(iGlobalStiffnessMatrix);
             }
             else
