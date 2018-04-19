@@ -1176,7 +1176,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 e2 = new Element()
                 {
                     ID = ElementID,
-                    ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+                    ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_11_tlk(material3, 3, 3)
                     {
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
                                                  new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
@@ -1234,7 +1234,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 e2 = new Element()
                 {
                     ID = ElementID,
-                    ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+                    ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_11_tlk(material3, 3, 3)
                     {
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
                                                  new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
@@ -1371,7 +1371,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 {
                     ID = ElementID,
                     //
-                    ElementType = new Shell8dispCopyGet(material2, 3, 3, 3) //ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
+                    ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3) //ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
                     {
                         //oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
@@ -1438,7 +1438,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 e2 = new Element()
                 {
                     ID = ElementID,
-                    ElementType = new cohesive_shell_to_hexaCopyGetEmbe(material3, 3, 3) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+                    ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_11_tlk(material3, 3, 3) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
                     {
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
                                                  new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
@@ -1496,7 +1496,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 e2 = new Element()
                 {
                     ID = ElementID,
-                    ElementType = new cohesive_shell_to_hexaCopyGetEmbe(material3, 3, 3) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+                    ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_11_tlk(material3, 3, 3) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
                     {
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
                                                  new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
