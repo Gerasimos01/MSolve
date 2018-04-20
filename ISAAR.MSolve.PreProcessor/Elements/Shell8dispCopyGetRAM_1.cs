@@ -1826,7 +1826,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
             //this.UpdatePartiallyPrecalculatedVariables_andforForces();
             Fxk=this.UpdateForces(element);
 
-            PrintUtilities.WriteToFileVector(Fxk, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\Fxk_shell.txt");
+            //PrintUtilities.WriteToFileVector(Fxk, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\Fxk_shell.txt");
             return Fxk;
         }
 
@@ -1862,7 +1862,7 @@ namespace ISAAR.MSolve.PreProcessor.Elements
                 endeixiStiffness = 2;
                 //PrintUtilities.WriteToFile(Kt, @"C:\Users\turbo-x\Desktop\cohesive_check_MSOLVE_2\paradeigma_apo_arxika_swsta_shell_orthi_gia_check_tou_neou_class\orthi\CopyApoTaShellNewLoadCaseArgurhs\Kt_1.txt");
                 IMatrix2D<double> iGlobalStiffnessMatrix = new Matrix2D<double>(Kt);
-                PrintUtilities.WriteToFile(Kt,@"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\K_shell_arxiko.txt");
+                //PrintUtilities.WriteToFile(Kt,@"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output\K_shell_arxiko.txt");
                 return dofEnumerator.GetTransformedMatrix(iGlobalStiffnessMatrix);
             }
             else
