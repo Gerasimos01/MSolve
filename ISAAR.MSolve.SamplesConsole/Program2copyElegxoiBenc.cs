@@ -58,7 +58,11 @@ namespace ISAAR.MSolve.SamplesConsole
             { RVEExamplesBuilder.FewElementsRVECheckExample_embedder_2(model); }
 
             if (model__builder_choice == 16) // 
-            { rotatedPlateBuilder.ShellAndCohesiveShellPaktwsh(model); }
+            {
+                double rot_phi_2 = 0.7853981634; // (45 / 360) * 2 * Math.PI;
+                double rot_phi_1 = 0;
+                rotatedPlateBuilder.ShellAndCohesiveShellPaktwsh(model,rot_phi_1,rot_phi_2);
+            }
 
 
             model.ConnectDataStructures();

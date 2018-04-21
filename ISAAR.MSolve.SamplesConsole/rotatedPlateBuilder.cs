@@ -28,11 +28,11 @@ namespace ISAAR.MSolve.SamplesConsole
         }
 
 
-        public static void ShellAndCohesiveShellPaktwsh(Model model) // proelefsi
+        public static void ShellAndCohesiveShellPaktwsh(Model model, double rot_phi_1, double rot_phi_2) // proelefsi
         {
             //mhtrwo peristrofhs
-            double rot_phi_2 = 0.7853981634; // (45 / 360) * 2 * Math.PI;
-            double rot_phi_1 = 0;
+            //double rot_phi_2 = 0.7853981634; // (45 / 360) * 2 * Math.PI;
+            //double rot_phi_1 = 0;
             double e1_new_z = Math.Sin(rot_phi_2);
             double e1_new_y = Math.Sin(rot_phi_1) * Math.Cos(rot_phi_2);  //e1_new_xy = Math.Cos(rot_phi_2);
             double e1_new_x = Math.Cos(rot_phi_1) * Math.Cos(rot_phi_2);
@@ -210,7 +210,7 @@ namespace ISAAR.MSolve.SamplesConsole
             e2 = new Element()
             {
                 ID = 2,
-                ElementType = new cohesive_shell_to_hexaCopyGet(material1, 3, 3)
+                ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_11_tlk(material1, 3, 3)
                 {
                     oVn_i = VH,
                     tk = Tk_vec,
