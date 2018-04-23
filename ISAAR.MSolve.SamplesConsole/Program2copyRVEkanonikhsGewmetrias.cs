@@ -21,7 +21,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice =1;   // 9 einai to megalo me to renumbering pou tsekaretai
+            model__builder_choice =4;   // 9 einai to megalo me to renumbering pou tsekaretai
 
             
             if (model__builder_choice == 1) // 
@@ -30,6 +30,9 @@ namespace ISAAR.MSolve.SamplesConsole
             { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample10000withRenumberingwithInput_2GrSh(model); }
             if (model__builder_choice == 3) // 
             { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample10000withRenumberingwithInput_1GrSh(model); }
+
+            if (model__builder_choice == 4) // 
+            { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInput(model); }
 
 
             model.ConnectDataStructures();
