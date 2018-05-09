@@ -33,7 +33,8 @@ namespace ISAAR.MSolve.SamplesConsole
 
             if (model__builder_choice == 4) // 
             { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInput(model); }
-
+            if (model__builder_choice == 5) // 
+            { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample100_000withRenumberingwithInput(model); }
 
             model.ConnectDataStructures();
 
@@ -84,10 +85,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        static void Main(string[] args)
-        {
-            SolveRVEExample(); //|
-        }
+        //static void Main(string[] args)
+        //{
+        //    SolveRVEExample(); //|
+        //}
 
     }
 }
