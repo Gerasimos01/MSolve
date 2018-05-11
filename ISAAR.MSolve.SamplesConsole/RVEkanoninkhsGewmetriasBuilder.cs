@@ -440,9 +440,159 @@ namespace ISAAR.MSolve.SamplesConsole
             var embeddedGrouping = new EmbeddedCohesiveGrouping_v2(model, hostGroup, embdeddedGroup);
         }
 
-        public static void CreateRandomDataForGeom()
+        public static void CreateRandomDataForGeom(int n_graphene_sheets, grapheneSheetParameters gp, rveMatrixParameters mp,double sigma_f)
         {
+            //PROELEFSI REFERENCE_kanonikh_gewmetria\REF2_50_000_renu_new_multiple_algorithms_check_develop
+            // 'ekk_xyz','phi1_ij','phi2_ij','rot_phi_1','rot_phi_2'
 
+            // grapheneParameters
+            int elem1 = gp.elem1;
+            int elem2 = gp.elem2;
+            double[] L1 = new double[n_graphene_sheets]; // = gp.L1;// nm
+            double[] L2 = new double[n_graphene_sheets]; //gp.L2;// nm
+            double[] L3 = new double[n_graphene_sheets]; //gp.L3; // nm
+            for (int j = 0; j < n_graphene_sheets; j++)
+            {
+                L1[j] = gp.L1;//nm
+                L2[j] = gp.L2; //nm
+                L3[j] = gp.L3;
+            }
+
+                //matrixParameters
+            double L01 = mp.L01; // diastaseis
+            double L02 = mp.L02;
+            double L03 = mp.L03;
+            int hexa1 = mp.hexa1;// diakritopoihsh
+            int hexa2 = mp.hexa2;
+            int hexa3 = mp.hexa3;
+            
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+            // Perioxh parametroi Rve Matrix ews edw
+
+
+            double[][] ekk_xyz = new double [ n_graphene_sheets][];
+            for (int j = 0; j < n_graphene_sheets; j++)
+            {
+                ekk_xyz[j] = new double[3];
+                ekk_xyz[j][0] = -0.5 * L01 + 0.03 * L01 + ((L01 - 0.06 * L01) * rand());
+                ekk_xyz[j][1] = -0.5 * L02 + 0.03 * L02 + ((L02 - 0.06 * L02) * rand());
+                ekk_xyz[j][2] = -0.5 * L03 + 0.03 * L03 + ((L03 - 0.06 * L03) * rand());
+            }
+
+            double[] rot_phi_1 = new double[n_graphene_sheets];
+            double[] rot_phi_2 = new double[n_graphene_sheets];
+            for (int j = 0; j < n_graphene_sheets; j++)
+            {
+                rot_phi_1[j] = Math.PI * rand();
+                rot_phi_2[j] = 0.5 * Math.PI * rand();
+            }
+
+            // create boxes
+            double[][,] line_points = new double[n_graphene_sheets + 1][,]; //n_graphene_sheets +1 pou einai to RVE
+            double[][,] line_segments = new double[n_graphene_sheets + 1][,];
+            double[][,] pl_points = new double[n_graphene_sheets + 1][,];
+            double[][,] vec1s = new double[n_graphene_sheets + 1][,];
+            double[][,] vec2s = new double[n_graphene_sheets + 1][,];
+            double[][,] perp_vec3s = new double[n_graphene_sheets + 1][,];
+            for (int j = 0; j < n_graphene_sheets+1; j++)
+            {
+                line_points[j] = new double[3, 12];
+                line_segments[j] = new double[3, 12];
+                pl_points[j] = new double[3, 6];
+                vec1s[j] = new double[3, 6];
+                vec2s[j] = new double[3, 6];
+                perp_vec3s[j] = new double[3, 6];
+            }
+
+            //prwta ta n_graphene_sheets
+            for (int j = 0; j < n_graphene_sheets ; j++)
+            {
+                createGrShBoxSurroundingPlanes(L1[j], L2[j], sigma_f, rot_phi_1[j], rot_phi_2[j], line_points[j], line_segments[j], pl_points[j], vec1s[j], vec2s[j], perp_vec3s[j]);
+            }
+        }
+
+        public static void createGrShBoxSurroundingPlanes(double L1,double L2,double sigma_f,double rot_phi_1,double rot_phi_2,double[,] line_points, double[,] line_segments, double[,] pl_points, double[,] vec1s, double[,] vec2s, double[,]perp_vec3s)
+        {
+            double[,] line_points_data = new double[3, 12] { { 0.5 * L1, -0.5 * L1, -0.5 * L1, 0.5 * L1, -0.5 * L1, -0.5 * L1, -0.5 * L1, -0.5 * L1, 0.5 * L1, -0.5 * L1, -0.5 * L1, 0.5 * L1 },
+                {0.5*L2,0.5*L2,-0.5*L2,-0.5*L2,0.5*L2,-0.5*L2,-0.5*L2,+0.5*L2, -0.5*L2,-0.5*L2,-0.5*L2,-0.5*L2 },
+                { -3.5*sigma_f,-3.5*sigma_f,-3.5*sigma_f,-3.5*sigma_f,+3.5*sigma_f,+3.5*sigma_f,-3.5*sigma_f,-3.5*sigma_f,+3.5*sigma_f,+3.5*sigma_f,-3.5*sigma_f,-3.5*sigma_f} };
+            double[,] line_segments_data = new double[3, 12] { {0,0,0,0,L1,L1,L1,L1,0,0,0,0 },
+                {0,0,0,0,0,0,0,0,L2,L2,L2,L2 },
+                {2*3.5*sigma_f,2*3.5*sigma_f,2*3.5*sigma_f,2*3.5*sigma_f,0,0,0,0,0,0,0,0 } };
+            double[,] pl_points_data = new double[3, 6] { { -0.5*L1,-0.5*L1,-0.5*L1,+0.5*L1,+0.5*L1,+0.5*L1},
+            { -0.5*L2,-0.5*L2,-0.5*L2,0.5*L2,0.5*L2,0.5*L2},
+            { -3.5*sigma_f,-3.5*sigma_f,-3.5*sigma_f,3.5*sigma_f,3.5*sigma_f,3.5*sigma_f,} };
+            double[,] vec1s_data = new double[3, 6] { { L1,0,0,-L1,0,0},
+            {0,L2,0,0,-L2,0 },
+            {0,0,2*3.5*sigma_f,0,0,-2*3.5*sigma_f }};
+            double[,] vec2s_data = new double[3, 6] { {0,0,L1,0,0,-L1},
+            {L2,0,0,-L2,0,0 },
+            { 0,2*3.5*sigma_f,0,0,-2*3.5*sigma_f,0}};
+            double[,] perp_vec3s_data = new double[3, 6] { {0,L1,0,0,-L1,0 },
+            { 0,0,L2,0,0,-L2},
+            { 2*3.5*sigma_f,0,0,-2*3.5*sigma_f,0,0}};
+            for ( int i1=0;i1<3; i1++)
+            {
+                for (int j = 0; j <12; j++)
+                {
+                    line_points[i1, j] = line_points_data[i1, j];
+                    line_segments[i1, j] = line_segments_data[i1, j];
+                }
+            }
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    pl_points[i1, j] = pl_points_data[i1, j];
+                    vec1s[i1, j] = vec1s_data[i1, j];
+                    vec2s[i1, j] = vec2s_data[i1, j];
+                    perp_vec3s[i1, j] = perp_vec3s_data[i1, j];
+                }
+            }
+
+            // ROTATION copy apo to gewmetria_shell_coh...._ekk_random th dhmiourgia tou
+            // Qij kai meta efarmogh sta dianusmata(theshs kai katefthunshs)
+            double e1_new_z = Math.Sin(rot_phi_2);
+            double e1_new_y = Math.Sin(rot_phi_1) * Math.Cos(rot_phi_2); // e1_new_xy = cos(rot_phi_2);
+            double e1_new_x = Math.Cos(rot_phi_1) * Math.Cos(rot_phi_2);
+
+            double e2_new_y = Math.Cos(rot_phi_1);
+            double e2_new_x = -Math.Sin(rot_phi_1);
+            double e2_new_z = 0;
+
+            double[,] e_new = new double[3, 3] { {e1_new_x,e2_new_x,0 }, {e1_new_y,e2_new_y,0 }, {e1_new_z,e2_new_z,0 } };
+            double[] e_new_cross = new double[3];
+            RVEExamplesBuilder.cross(new double[3] { e1_new_x, e1_new_y, e1_new_z }, new double[3] { e2_new_x, e2_new_y, e2_new_z }, e_new_cross);
+            for (int i1 = 0; i1 < 3; i1++)
+            { e_new[i1, 2] = e_new_cross[i1]; }
+
+            double[,] e_old = new double[3, 3] { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+
+            double[,] Qij = new double[3, 3];
+            for (int q1 = 0; q1 < 3; q1++)
+            {
+                for (int q2 = 0; q2 < 3; q2++)
+                {
+                    Qij[q1, q2] = RVEExamplesBuilder.dot_product(new double[3] { e_old[0, q1], e_old[1, q1], e_old[2, q1] }, new double[3] { e_new[0, q2], e_new[1, q2], e_new[2, q2] });
+                }
+            }
+
+            for (int q1 = 0; q1 < 12; q1++)
+            {
+                double[] product;
+                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { line_points[0, q1], line_points[1, q1], line_points[2, q1] });
+                for (int q2 = 0; q2 < 3; q2++) { line_points[q2, q1] = product[q2]; }
+                // na grafei to line segments
+            }
+
+        }
+
+        public static double rand()
+        {
+            double random1=0.5;
+            return random1;
         }
 
         //copy edw dhmiourgia tous 25_000 kai tous 50_000
