@@ -509,11 +509,95 @@ namespace ISAAR.MSolve.SamplesConsole
             //prwta ta n_graphene_sheets
             for (int j = 0; j < n_graphene_sheets ; j++)
             {
-                createGrShBoxSurroundingPlanes(L1[j], L2[j], sigma_f, rot_phi_1[j], rot_phi_2[j], line_points[j], line_segments[j], pl_points[j], vec1s[j], vec2s[j], perp_vec3s[j]);
+                createGrShBoxSurroundingPlanes(L1[j], L2[j], sigma_f, rot_phi_1[j], rot_phi_2[j],ekk_xyz[j], line_points[j], line_segments[j], pl_points[j], vec1s[j], vec2s[j], perp_vec3s[j]);
             }
+            //kai meta to RVE box 
+            createGrShBoxSurroundingPlanes(L01, L02, L03 / 7, 0,0,new double [3] { 0,0,0}, line_points[n_graphene_sheets], line_segments[n_graphene_sheets], pl_points[n_graphene_sheets], vec1s[n_graphene_sheets], vec2s[n_graphene_sheets], perp_vec3s[n_graphene_sheets]);
+
+
+
+            bool[,] GrSh_intersections = new bool [n_graphene_sheets + 1, n_graphene_sheets + 1];
+            for (int i1 = 0; i1 < n_graphene_sheets+1; i1++)
+            { for (int j1 = 0; j1 < n_graphene_sheets+1; j1++) { GrSh_intersections[i1, j1] = false; } }  // arxiko ola einai false
+
+            for (int i1 = 0; i1 < n_graphene_sheets + 1; i1++)
+            {
+                for (int i2 = i1+1; i2 < n_graphene_sheets + 1; i2++)
+                {
+                    //check for intersection between i1 and i2 graphene sheets
+                    GrSh_intersections[i1, i2] = check_for_intersection_between_i1_and_i2_graphene_sheets(i1, i2, line_points, line_segments, pl_points, vec1s, vec2s, perp_vec3s);
+                }
+            }
+            //Gemisma summetrikou
+            for (int i1 = 0; i1 < n_graphene_sheets + 1; i1++)
+            {
+                for (int i2 = i1 + 1; i2 < n_graphene_sheets + 1; i2++)
+                {
+                    GrSh_intersections[i2,i1] = GrSh_intersections[i1, i2];
+                }
+            }
+
+            // TODO display rve geometry
+            //
+
+            while (combine_bool_any(GrSh_intersections))
+            {
+
+                //epilogh GrSh
+                double inter_counter_min = sum_of_bool_array_elements(GrSh_intersections);
+
+                int chosen_GrSh=-1;
+                for (int i1 = 0; i1 < n_graphene_sheets ; i1++)
+                {
+                    bool[,] new_intersections = Clone_array(GrSh_intersections);
+
+                    for (int j = 0; j < new_intersections.GetLength(1); j++)
+                    { new_intersections[i1, j] = false; }
+                    for (int j = 0; j < new_intersections.GetLength(0); j++)
+                    { new_intersections[j,i1] = false; }
+
+                    double inter_counter = sum_of_bool_array_elements(new_intersections);
+
+                    if (inter_counter<inter_counter_min)
+                    {
+                        chosen_GrSh = i1;
+                        inter_counter_min = inter_counter;
+                    }
+                }
+
+
+                // "afairesh" tou epilegmenou kai topothetisi neou
+                rot_phi_1[chosen_GrSh] = Math.PI * rand();
+                rot_phi_2[chosen_GrSh] =0.5* Math.PI * rand();
+                ekk_xyz[chosen_GrSh][0] = -0.5 * L01 + 0.03 * L01 + ((L01 - 0.06 * L01) * rand());
+                ekk_xyz[chosen_GrSh][1] = -0.5 * L02 + 0.03 * L02 + ((L02 - 0.06 * L02) * rand());
+                ekk_xyz[chosen_GrSh][2] = -0.5 * L03 + 0.03 * L03 + ((L03 - 0.06 * L03) * rand());
+                createGrShBoxSurroundingPlanes(L1[chosen_GrSh], L2[chosen_GrSh], sigma_f, rot_phi_1[chosen_GrSh], rot_phi_2[chosen_GrSh], ekk_xyz[chosen_GrSh], line_points[chosen_GrSh], line_segments[chosen_GrSh], pl_points[chosen_GrSh], vec1s[chosen_GrSh], vec2s[chosen_GrSh], perp_vec3s[chosen_GrSh]);
+
+
+                for (int i1 = 0; i1 < n_graphene_sheets+1; i1++)
+                {
+                    //check for intersection between i1 and chosen_GrSh graphene sheets
+                    if (i1==chosen_GrSh)
+                    { }
+                    else
+                    {
+                        GrSh_intersections[i1, chosen_GrSh] = check_for_intersection_between_i1_and_i2_graphene_sheets(i1, chosen_GrSh, line_points, line_segments, pl_points, vec1s, vec2s, perp_vec3s);
+                    }
+                }
+
+                //Gemisma summetrikou
+                for (int i1 = 0; i1 < n_graphene_sheets + 1; i1++)
+                {
+                    GrSh_intersections[ chosen_GrSh,i1] = GrSh_intersections[i1, chosen_GrSh];
+                }
+            }
+
+            // return 
+
         }
 
-        public static void createGrShBoxSurroundingPlanes(double L1,double L2,double sigma_f,double rot_phi_1,double rot_phi_2,double[,] line_points, double[,] line_segments, double[,] pl_points, double[,] vec1s, double[,] vec2s, double[,]perp_vec3s)
+        public static void createGrShBoxSurroundingPlanes(double L1,double L2,double sigma_f,double rot_phi_1,double rot_phi_2,double [] ekk_xyz,double[,] line_points, double[,] line_segments, double[,] pl_points, double[,] vec1s, double[,] vec2s, double[,]perp_vec3s)
         {
             double[,] line_points_data = new double[3, 12] { { 0.5 * L1, -0.5 * L1, -0.5 * L1, 0.5 * L1, -0.5 * L1, -0.5 * L1, -0.5 * L1, -0.5 * L1, 0.5 * L1, -0.5 * L1, -0.5 * L1, 0.5 * L1 },
                 {0.5*L2,0.5*L2,-0.5*L2,-0.5*L2,0.5*L2,-0.5*L2,-0.5*L2,+0.5*L2, -0.5*L2,-0.5*L2,-0.5*L2,-0.5*L2 },
@@ -552,6 +636,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 }
             }
 
+
             // ROTATION copy apo to gewmetria_shell_coh...._ekk_random th dhmiourgia tou
             // Qij kai meta efarmogh sta dianusmata(theshs kai katefthunshs)
             double e1_new_z = Math.Sin(rot_phi_2);
@@ -584,10 +669,329 @@ namespace ISAAR.MSolve.SamplesConsole
                 double[] product;
                 product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { line_points[0, q1], line_points[1, q1], line_points[2, q1] });
                 for (int q2 = 0; q2 < 3; q2++) { line_points[q2, q1] = product[q2]; }
-                // na grafei to line segments
+                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { line_segments[0, q1], line_segments[1, q1], line_segments[2, q1] });
+                for (int q2 = 0; q2 < 3; q2++) { line_segments[q2, q1] = product[q2]; }
             }
 
+            for (int q1 = 0; q1 < 6; q1++)
+            {
+                double[] product;
+                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { pl_points[0, q1], pl_points[1, q1], pl_points[2, q1] });
+                for (int q2 = 0; q2 < 3; q2++) { pl_points[q2, q1] = product[q2]; }
+                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { vec1s[0, q1], vec1s[1, q1], vec1s[2, q1] });
+                for (int q2 = 0; q2 < 3; q2++) { vec1s[q2, q1] = product[q2]; }
+                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { vec2s[0, q1], vec2s[1, q1], vec2s[2, q1] });
+                for (int q2 = 0; q2 < 3; q2++) { vec2s[q2, q1] = product[q2]; }
+                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { perp_vec3s[0, q1], perp_vec3s[1, q1], perp_vec3s[2, q1] });
+                for (int q2 = 0; q2 < 3; q2++) { perp_vec3s[q2, q1] = product[q2]; }
+            }
+
+
+            // TRANSLATION copy apo to gewmetria_shell_coh...._ekk_random kai to
+            //efarmozoume mono sta points kai oxi kai sta dianusmata katefthunshs
+            for (int q1 = 0; q1 < 12; q1++)
+            {
+                line_points[0, q1] += ekk_xyz[0];
+                line_points[1, q1] += ekk_xyz[1];
+                line_points[2, q1] += ekk_xyz[2];
+            }
+            for (int q1 = 0; q1 < 6; q1++)
+            {
+                pl_points[0, q1] += ekk_xyz[0];
+                pl_points[1, q1] += ekk_xyz[1];
+                pl_points[2, q1] += ekk_xyz[2];
+            }
         }
+
+        public static bool check_for_intersection_between_i1_and_i2_graphene_sheets(int i1, int i2, double[][,] line_points, double[][,] line_segments, double[][,] pl_points, double[][,] vec1s, double[][,] vec2s, double[][,] perp_vec3s)
+        {
+            bool they_intersect = false;
+
+            bool stop_q1 = false;
+            for (int q1 = 0; q1 < line_points[0].GetLength(1); q1++)
+            {
+                for (int q2 = 0; q2 < pl_points[0].GetLength(1); q2++)
+                {
+                    if (check_if_plane_and_vec_intersect(new double[3] { pl_points[i1][0, q2], pl_points[i1][1, q2], pl_points[i1][2, q2] },
+                        new double[3] { vec1s[i1][0, q2], vec1s[i1][1, q2], vec1s[i1][2, q2] },
+                        new double[3] { vec2s[i1][0, q2], vec2s[i1][1, q2], vec2s[i1][2, q2] },
+                        new double[3] { perp_vec3s[i1][0, q2], perp_vec3s[i1][1, q2], perp_vec3s[i1][2, q2] },
+                        new double[3] { line_points[i2][0, q1], line_points[i2][1, q1], line_points[i2][2, q1] },
+                        new double[3] { line_segments[i2][0, q1], line_segments[i2][1, q1], line_segments[i2][2, q1] }))
+                    {
+                        they_intersect = true;
+                        stop_q1 = true;
+                        break;
+                    }
+                }
+                if (stop_q1)
+                {
+                    break;
+                }
+            }
+
+            if (stop_q1)
+            {
+            }
+            else
+            {
+                for (int q1 = 0; q1 < line_points[0].GetLength(1); q1++)
+                {
+                    for (int q2 = 0; q2 < pl_points[0].GetLength(1); q2++)
+                    {
+                        if (check_if_plane_and_vec_intersect(new double[3] { pl_points[i2][0, q2], pl_points[i2][1, q2], pl_points[i2][2, q2] },
+                            new double[3] { vec1s[i2][0, q2], vec1s[i2][1, q2], vec1s[i2][2, q2] },
+                            new double[3] { vec2s[i2][0, q2], vec2s[i2][1, q2], vec2s[i2][2, q2] },
+                            new double[3] { perp_vec3s[i2][0, q2], perp_vec3s[i2][1, q2], perp_vec3s[i2][2, q2] },
+                            //
+                            new double[3] { line_points[i1][0, q1], line_points[i1][1, q1], line_points[i1][2, q1] },
+                            new double[3] { line_segments[i1][0, q1], line_segments[i1][1, q1], line_segments[i1][2, q1] }))
+                        {
+                            they_intersect = true;
+                            stop_q1 = true;
+                            break;
+                        }
+                    }
+                    if (stop_q1)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            return they_intersect;
+        }
+
+        public static bool check_if_plane_and_vec_intersect(double[] pl_point, double[] vec1, double[] vec2, double[] perp_vec3, double[] line_point, double[] line_segment )
+        {
+            bool intersection = false;
+
+            bool plane_and_line_parallel = false;
+
+            if ( RVEExamplesBuilder.dot_product(perp_vec3,line_segment)==0)
+            {
+                plane_and_line_parallel = true;
+            }
+            else
+            {
+                // diadikasia evreshs shmeiou tomhs
+                double t = (perp_vec3[1] * (pl_point[1] - line_point[1]) + perp_vec3[2] * (pl_point[2] - line_point[2]) + perp_vec3[3] * (pl_point[3] - line_point[3])) /(perp_vec3[1] * line_segment[1] + perp_vec3[2] * line_segment[2] + perp_vec3[3] * line_segment[3]);
+                double[] intersection_point = new double[3];
+                for (int q2 = 0; q2 < 3; q2++)
+                { intersection_point[q2] = line_point[q2] +t*line_segment[q2]; }
+                double[] pl_point_TO_int_point_VECTOR = new double[3];
+                for (int q2 = 0; q2 < 3; q2++)
+                { pl_point_TO_int_point_VECTOR[q2] = intersection_point[q2] -pl_point[q2]; }
+
+                double[,] A = new double[3, 3] { {vec1[0],vec2[0],perp_vec3[0] }, { vec1[1], vec2[1], perp_vec3[1] }, { vec1[2], vec2[2], perp_vec3[2] } };
+                double[] lamda = invert3by3(A, pl_point_TO_int_point_VECTOR);
+
+                if (t<=1)
+                {
+                    if (t>=0)
+                    {
+                        if (lamda[0] <=1)
+                        {
+                            if (lamda[0] >=0)
+                            {
+                                if (lamda[1] <= 1)
+                                {
+                                    if (lamda[1] >= 0)
+                                    {
+                                        intersection = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //PART B
+            if(plane_and_line_parallel)
+            {
+                double distance = point_plane_distance(pl_point, perp_vec3, line_point);
+
+                if (distance==0)
+                {
+                    bool[] plane_section = new bool[4];
+                    plane_section[0] = check_if_vec_and_vec_intersect(pl_point, vec1, line_point, line_segment);
+                    plane_section[1] = check_if_vec_and_vec_intersect(pl_point, vec2, line_point, line_segment);
+                    plane_section[2] = check_if_vec_and_vec_intersect(new double[3] { pl_point[0] + vec2[0], pl_point[1] + vec2[1], pl_point[2] + vec2[2] }, vec1, line_point, line_segment);
+                    plane_section[3] = check_if_vec_and_vec_intersect(new double[3] { pl_point[0] + vec1[0],pl_point[1] + vec1[1], pl_point[2] + vec1[2] }, vec2, line_point, line_segment);
+
+                    if(plane_section[0]|| plane_section[0]|| plane_section[0]|| plane_section[0])
+                    {
+                        intersection = true;
+                    }
+
+                }                
+            }
+            return intersection;
+        }
+
+        public static double point_plane_distance(double [] pl_point, double[] perp_vec3, double[] line_point)
+        {
+            double[] QP = new double[3];
+            for (int q2 = 0; q2 < 3; q2++)
+            { QP[q2] = line_point[q2] - pl_point[q2]; }
+
+            double[] n = new double[3];
+            double norm_perp_vec3 = Math.Sqrt(perp_vec3[0] * perp_vec3[0] + perp_vec3[1] * perp_vec3[1] + perp_vec3[2] * perp_vec3[2]);
+            for (int q2 = 0; q2 < 3; q2++)
+            { n[q2] = perp_vec3[q2] / norm_perp_vec3; }
+
+            double distance = RVEExamplesBuilder.dot_product(QP, n);
+
+            return distance;
+        }
+
+        public static bool check_if_vec_and_vec_intersect(double[] pl_point,double[] pl_vec, double[] point, double[] vec )
+        {
+            bool intersection = false;
+
+            double[] b = new double[2];
+            for (int q2 = 0; q2 < 2; q2++)
+            { b[q2] = point[q2] - pl_point[q2]; }
+
+            double[,] A = new double[2, 2] { { -vec[0],pl_vec[0] }, { -vec[1], pl_vec[1] } };
+
+            double[] lamda = invert2by2(A, b);
+
+            if (lamda[0] <= 1)
+            {
+                if (lamda[0] >= 0)
+                {
+                    if (lamda[1] <= 1)
+                    {
+                        if (lamda[1] >= 0)
+                        { intersection = true; }
+                    }
+                }
+            }
+
+            return intersection;
+
+        }
+
+        public static double [] invert2by2 (double [,] A, double [] b )
+        {
+            double[,] A_inverse = new double[2, 2] { {A[1,1],-A[0,1] }, {-A[1,0], A[0,0] } };
+            for (int q2 = 0; q2 < 2; q2++)
+            {
+                for (int q1 = 0; q1 < 2; q1++)
+                { A_inverse[q1, q2] = A_inverse[q1, q2] / (A[0,0]*A[1,1]-A[0,1]*A[1,0]); }
+            }
+
+            double[] x = RVEExamplesBuilder.MatVecMult(A_inverse, b);
+            return x;
+
+        }
+
+        public static double[] invert3by3(double[,] A, double[] b)
+        {
+            double[,] A_inverse = new double[3, 3] { { A[2, 2]*A[1,1]- A[2, 1] * A[1, 2],-(A[2, 2] * A[0, 1] - A[2, 1] * A[0, 2]), A[1,2] * A[0, 1] - A[1, 1] * A[0, 2] },
+                { -(A[2,2]*A[1,0]-A[2,0]*A[1,2]),A[2,2]*A[0,0]-A[2,0]*A[0,2], -(A[1,2]*A[0,0]-A[1,0]*A[0,2]) },
+                {A[2,1]*A[1,0]-A[2,0]*A[1,1],-(A[2,1]*A[0,0]-A[2,0]*A[0,1]),A[1,1]*A[0,0]-A[1,0]*A[0,1] } };
+
+
+
+            double det_A;
+
+            det_A = A[0, 0] * (A[2, 2] * A[1, 1] - A[2, 1] * A[1, 2]) - A[1, 0] * (A[2, 2] * A[0, 1] - A[2, 1] * A[0, 2]) + A[2, 0] * (A[1, 2] * A[0, 1] - A[1, 1] * A[0, 2]);
+            for (int q2 = 0; q2 < 3; q2++)
+            {
+                for (int q1 = 0; q1 < 3; q1++)
+                { A_inverse[q1, q2] = A_inverse[q1, q2] / det_A; }
+            }
+
+            double[] x = RVEExamplesBuilder.MatVecMult(A_inverse, b);
+            return x;
+
+        }
+
+        public static bool combine_bool_any(bool [,] matrix)
+        {
+            bool output_value = false;
+            bool stop_outer_loop = false;
+            for (int i1 = 0; i1 < matrix.GetLength(0); i1++)
+            {
+                for (int i2 = 0; i2 < matrix.GetLength(1); i2++)
+                {
+                    output_value = (output_value || matrix[i1, i2]);
+                    if (output_value)
+                    {
+                        stop_outer_loop = true;
+                        break;
+                    }
+                }
+                if (stop_outer_loop)
+                {
+                    break;
+                }
+            }
+
+            return output_value;
+        }
+
+        public static bool combine_bool_any(bool[] array)
+        {
+            bool output_value = false;           
+            for (int i1 = 0; i1 < array.GetLength(0); i1++)
+            {
+                output_value = (output_value || array[i1]);
+                if (output_value)
+                {
+                    break;
+                }
+            }
+
+            return output_value;
+        }
+
+        public static double sum_of_bool_array_elements(bool [,] array)
+        {
+            double output_value = 0;
+            
+            for (int i1 = 0; i1 < array.GetLength(0); i1++)
+            {
+                for (int i2 =0; i2 < array.GetLength(1); i2++)
+                {
+                    if (array[i1, i2])
+                    { output_value += 1; }
+                    
+                }
+            }
+
+            return output_value;
+        }
+
+        public static double[,] Clone_array(double [,] matrix)
+        {
+            double[,] array_copy = new double[matrix.GetLength(0), matrix.GetLength(1)];
+            for (int i1 = 0; i1 < matrix.GetLength(0); i1++)
+            {
+                for (int i2 = 0; i2 < matrix.GetLength(1); i2++)
+                {
+                    array_copy[i1, i2] = matrix[i1, i2];
+                }
+            }
+            return array_copy;
+        }
+
+        public static bool[,] Clone_array(bool[,] matrix)
+        {
+            bool[,] array_copy = new bool[matrix.GetLength(0), matrix.GetLength(1)];
+            for (int i1 = 0; i1 < matrix.GetLength(0); i1++)
+            {
+                for (int i2 = 0; i2 < matrix.GetLength(1); i2++)
+                {
+                    array_copy[i1, i2] = matrix[i1, i2];
+                }
+            }
+            return array_copy;
+        }
+        //public static 
 
         public static double rand()
         {
