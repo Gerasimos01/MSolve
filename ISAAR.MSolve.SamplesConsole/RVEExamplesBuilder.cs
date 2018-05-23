@@ -67,7 +67,7 @@ namespace ISAAR.MSolve.SamplesConsole
             int elementCounter = 0;
             int subdomainID = 1;
 
-            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_disp,
                 PoissonRatio = ni_disp,
@@ -190,7 +190,7 @@ namespace ISAAR.MSolve.SamplesConsole
             int elementCounter = 0;
             int subdomainID = 1;
 
-            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_disp,
                 PoissonRatio = ni_disp,
@@ -322,7 +322,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
 
             // perioxh orismou shell elements
-            ElasticMaterial3D material2 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material2 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_shell,
                 PoissonRatio = ni_shell,
@@ -557,7 +557,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
 
             // perioxh orismou shell elements
-            ElasticMaterial3D material2 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material2 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_shell,
                 PoissonRatio = ni_shell,
@@ -814,7 +814,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
 
             // perioxh orismou shell elements
-            ElasticMaterial3D material2 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material2 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_shell,
                 PoissonRatio = ni_shell,
@@ -1075,7 +1075,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
 
             // perioxh orismou shell elements
-            ElasticMaterial3D material2 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material2 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_shell,
                 PoissonRatio = ni_shell,
@@ -1337,7 +1337,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
 
             // perioxh orismou shell elements
-            ElasticMaterial3D material2 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material2 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_shell,
                 PoissonRatio = ni_shell,
@@ -3314,9 +3314,9 @@ namespace ISAAR.MSolve.SamplesConsole
             Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
             rveMatrixParameters mp;
             grapheneSheetParameters gp;
-            string renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_Examples_Dokimi\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1_REF2_100_000_renu_new_multiple_algorithms_check_develop\REF_new_total_numbering.txt";
-            string Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_Examples_Dokimi\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1_REF2_100_000_renu_new_multiple_algorithms_check_develop\Fxk_p_komvoi_rve.txt";
-            string o_xsunol_input_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_Examples_Dokimi\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1_REF2_100_000_renu_new_multiple_algorithms_check_develop\o_xsunol_gs_{0}.txt";
+            string renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_Examples_Dokimi\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1_REF2_100_000_renu_new_multiple_algorithms_check_twn_10_000\REF_new_total_numbering.txt";
+            string Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_Examples_Dokimi\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1_REF2_100_000_renu_new_multiple_algorithms_check_twn_10_000\Fxk_p_komvoi_rve.txt";
+            string o_xsunol_input_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_Examples_Dokimi\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1_REF2_100_000_renu_new_multiple_algorithms_check_twn_10_000\o_xsunol_gs_{0}.txt";
             int subdiscr1 = 4;
             int discr1 = 4;
             // int discr2 dn xrhsimopoieitai

@@ -165,7 +165,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 n_curve = 1.4,
             };
 
-            ElasticMaterial3D material2 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material2 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = 1353000,
                 PoissonRatio = 0.3,

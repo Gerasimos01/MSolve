@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using ISAAR.MSolve.Numerical.LinearAlgebra;
 using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
+using System.IO;
 
 namespace ISAAR.MSolve.FEM.Entities
 {
@@ -216,7 +217,11 @@ namespace ISAAR.MSolve.FEM.Entities
             int pos = 0;
             for (int i = 0; i < element.ElementType.DOFEnumerator.GetDOFTypes(element).Count; i++)
             {
-                Node node = element.Nodes[i];
+                //Arxikh diatupwsi MSOLVE
+                //Node node = element.Nodes[i];
+                //Diorthosi diatupwsis MSOLVE
+                Node node = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element)[i];
+                //ews edw
                 foreach (DOFType dofType in element.ElementType.DOFEnumerator.GetDOFTypes(element)[i])
                 {
                     int dof = NodalDOFsDictionary[node.ID][dofType];
@@ -232,7 +237,11 @@ namespace ISAAR.MSolve.FEM.Entities
             int pos = 0;
             for (int i = 0; i < element.ElementType.DOFEnumerator.GetDOFTypes(element).Count; i++)
             {
-                Node node = element.Nodes[i];
+                //Arxikh diatupwsi MSOLVE
+                //Node node = element.Nodes[i];
+                //Diorthosi diatupwsis MSOLVE
+                Node node = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element)[i];
+                //ews edw
                 foreach (DOFType dofType in element.ElementType.DOFEnumerator.GetDOFTypes(element)[i])
                 {
                     int dof = NodalDOFsDictionary[node.ID][dofType];
@@ -242,8 +251,21 @@ namespace ISAAR.MSolve.FEM.Entities
             }
         }
 
+        // prosthiki print
+        int ekteleseis_counter = 0;
+        string string1 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_{0}.txt";
+
         public IVector GetRHSFromSolution(IVector solution, IVector dSolution)
         {
+            // prosthiki print
+            ekteleseis_counter += 1;
+            string counter_data = ekteleseis_counter.ToString();
+            string path = string.Format(string1, counter_data);
+            //solution.WriteToFile(path);
+            double[] solution_data = new double[solution.Length];
+            solution.CopyTo(solution_data, 0);
+            WriteToFileVector(solution_data, path);
+
             var forces = new Vector(TotalDOFs);
             foreach (Element element in elementsDictionary.Values)
             {
@@ -257,6 +279,21 @@ namespace ISAAR.MSolve.FEM.Entities
             }
             return forces;
         }
+
+        // prosthiki print
+        public static void WriteToFileVector(double[] array, string path2)
+        {
+            var writer2 = new StreamWriter(path2);
+            for (int i = 0; i < array.GetLength(0); ++i)
+            {
+                writer2.Write(array[i]);
+                writer2.Write(' ');
+                writer2.WriteLine(); // allagh seiras (dld grafei oti exei mesa h parenths=esh edw keno kai allazei seira)
+            }
+            writer2.Flush();
+
+        }
+
 
         public void SaveMaterialState()
         {

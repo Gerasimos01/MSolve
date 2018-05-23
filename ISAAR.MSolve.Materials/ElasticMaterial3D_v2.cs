@@ -8,7 +8,7 @@ using ISAAR.MSolve.Numerical.LinearAlgebra; //using ISAAR.MSolve.Matrices;
 
 namespace ISAAR.MSolve.Materials
 {
-    public class ElasticMaterial3D_v2 : IFiniteElementMaterial3D
+    public class ElasticMaterial3D_v2 : IFiniteElementMaterial3D, IIsotropicFiniteElementMaterial3D
     {
         private readonly double[] strains = new double[6];
         private readonly double[] stresses = new double[6];

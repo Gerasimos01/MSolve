@@ -112,7 +112,7 @@ namespace ISAAR.MSolve.SamplesConsole
             int elementCounter = 0;
             int subdomainID = 1;
 
-            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_disp,
                 PoissonRatio = ni_disp,

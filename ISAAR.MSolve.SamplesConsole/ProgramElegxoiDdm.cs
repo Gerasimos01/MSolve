@@ -29,7 +29,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice =8;   // 9 einai to megalo me to renumbering pou tsekaretai
+            model__builder_choice =22;   // 9 einai to megalo me to renumbering pou tsekaretai
 
             
             if (model__builder_choice == 1) // 
@@ -44,16 +44,31 @@ namespace ISAAR.MSolve.SamplesConsole
             { RVEExamplesBuilder.Reference2RVEExample100_000withRenumbering_mono_hexa(model); }
             if (model__builder_choice == 6) // 
             { RVEExamplesBuilder.Reference2RVEExample500_000withRenumbering_mono_hexa(model); }
+            if (model__builder_choice == 15) // 
+            { RVEExamplesBuilder.Reference2RVEExample10000withRenumberingwithInput_develop2(model); }
 
-            // i)
-            //DddmExamplesBuilder.MakeModelDictionariesZeroBasedForDecomposer(model);
+            if (model__builder_choice == 21) // 
+            { RVEExamplesBuilder.FewElementsRVECheckExample2GrapheneSheets(model); }
+            if (model__builder_choice == 22) // 
+            { RVEExamplesBuilder.FewElementsRVECheckExample(model); }
 
+            bool use_domain_decomposer = true;
+            if (use_domain_decomposer)
+            {
+                //i)
+                DddmExamplesBuilder.MakeModelDictionariesZeroBasedForDecomposer(model);
 
-            model.ConnectDataStructures();
+                model.ConnectDataStructures();
+                // ii)
+                AutomaticDomainDecomposer domainDecomposer = new AutomaticDomainDecomposer(model, 2); //2o orisma arithmoos subdomains
+                domainDecomposer.UpdateModel();
+            }
+            else
+            {
+                model.ConnectDataStructures();
+            }
 
-            // ii)
-            //AutomaticDomainDecomposer domainDecomposer = new AutomaticDomainDecomposer(model, 2); //2o orisma arithmoos subdomains
-            //domainDecomposer.UpdateModel();
+            
 
 
             //comment section 1 palaia version
