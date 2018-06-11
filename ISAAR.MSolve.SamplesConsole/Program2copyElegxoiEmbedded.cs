@@ -21,7 +21,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 1;
+            model__builder_choice = 5;
 
             if (model__builder_choice == 1) // Hexa8 kanoniko me NL analyzer
             { EmbeddedExamplesBuilder.HexaElementsOnly(model); }
@@ -32,7 +32,8 @@ namespace ISAAR.MSolve.SamplesConsole
 
             if (model__builder_choice == 4) // Hexa8 kanoniko me NL analyzer paradeigma me Vasili Von mises
             { EmbeddedExamplesBuilder.HexaElementsOnlyVonMises(model); }
-
+            if (model__builder_choice == 5) // Hexa8 kanoniko me NL analyzer paradeigma me Vasili Von mises
+            { ParadeigmataElegxwnBuilder2.ShellPlateBuilder(model, -1); }
 
             model.ConnectDataStructures();
 
@@ -92,10 +93,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        //static void Main(string[] args)
-        //{
-        //    SolveExample();
-        //}
+        static void Main(string[] args)
+        {
+            SolveExample();
+        }
 
     }
 }
