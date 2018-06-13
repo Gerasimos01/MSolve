@@ -108,6 +108,7 @@
     <Compile Include="Elements\cohesive_shell_to_hexa.cs" />
     <Compile Include="Elements\Hexa8NL.cs" />
     <Compile Include="Elements\Hexa8u8pWithStochasticMaterial.cs" />
+    <Compile Include="Elements\Shell8dispCopyGetRAM_1_material.cs" />
     <Compile Include="Elements\Shell8dispCopyGetRAM_1.cs" />
     <Compile Include="Elements\Shell8dispCopyGetRAM2.cs" />
     <Compile Include="Elements\Shell8dispCopyGetRAM.cs" />

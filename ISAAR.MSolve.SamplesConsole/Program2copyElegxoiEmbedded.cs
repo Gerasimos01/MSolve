@@ -33,7 +33,7 @@ namespace ISAAR.MSolve.SamplesConsole
             if (model__builder_choice == 4) // Hexa8 kanoniko me NL analyzer paradeigma me Vasili Von mises
             { EmbeddedExamplesBuilder.HexaElementsOnlyVonMises(model); }
             if (model__builder_choice == 5) // Hexa8 kanoniko me NL analyzer paradeigma me Vasili Von mises
-            { ParadeigmataElegxwnBuilder2.ShellPlateBuilder(model, -1); }
+            { ParadeigmataElegxwnBuilder2.ShellPlateBuilder(model, -1000); }
 
             model.ConnectDataStructures();
 
@@ -43,7 +43,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //gia 2CZM
             //Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, 17, model.TotalDOFs);//1. increments einai to 17 (arxika eixame thesei2 26 incr)
             //gia 3CZM
-            int increments = 2;
+            int increments = 100;
             Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, increments, model.TotalDOFs);//1. increments einai to 1 (arxika eixame thesei2 26 incr)
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, analyzer, solver.SubdomainsDictionary);
             analyzer.SetMaxIterations = 100;

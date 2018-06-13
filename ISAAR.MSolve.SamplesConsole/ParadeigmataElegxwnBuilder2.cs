@@ -119,7 +119,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 e1 = new Element()
                 {
                     ID = nElement + 1,
-                    ElementType = new Shell8dispCopyGetRAM_1(material1, 2, 2, 2)//ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
+                    ElementType = new Shell8dispCopyGetRAM_1_material(material1, 3, 3, 2)//ElementType = new Shell8dispCopyGet(material2, 3, 3, 3)
                     {
                         //oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
                         oVn_i = new double[][] { new double[] { 0,0,1 },
