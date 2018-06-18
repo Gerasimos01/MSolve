@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ISAAR.MSolve.Analyzers.Interfaces;
 
 using ISAAR.MSolve.FEM; 
 using ISAAR.MSolve.FEM.Elements; 
@@ -29,7 +30,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice =22;   // 9 einai to megalo me to renumbering pou tsekaretai
+            model__builder_choice =24;   // 9 einai to megalo me to renumbering pou tsekaretai
 
             
             if (model__builder_choice == 1) // 
@@ -52,7 +53,12 @@ namespace ISAAR.MSolve.SamplesConsole
             if (model__builder_choice == 22) // 
             { RVEExamplesBuilder.FewElementsRVECheckExample(model); }
 
-            bool use_domain_decomposer = true;
+            if (model__builder_choice == 23) // einai to benchmark 4 
+            { ParadeigmataElegxwnBuilder.HexaCantileverBuilder(model, 850); }
+            if (model__builder_choice == 24) // 
+            { ParadeigmataElegxwnBuilder.HexaCantileverBuilder_copyMS(model, 850); }
+
+            bool use_domain_decomposer = false;
             if (use_domain_decomposer)
             {
                 //i)
@@ -96,6 +102,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
             var increments = 1;
             var childAnalyzer = new NewtonRaphsonNonLinearAnalyzer(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs);
+            //h epomenhgrammh einai gia paradeigma ws pros to access
+            //IAnalyzer childAnalyzer2 = new NewtonRaphsonNonLinearAnalyzer(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs);
+            
+
             childAnalyzer.SetMaxIterations = 100;
             childAnalyzer.SetIterationsForMatrixRebuild = 1;
             //---------------------------------------------------------------------------------------------------------------------------------

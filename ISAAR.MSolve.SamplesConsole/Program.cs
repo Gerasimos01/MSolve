@@ -150,6 +150,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //SolveBuildingInNoSoilSmall();
             //TrussExample.Run();
             ProgramElegxoiDdm.SolveRVEExample();
+            //Program2copyElegxoiBenc.SolveBencExample();
             // commit example
         }
     }

@@ -18,10 +18,10 @@ using ISAAR.MSolve.FEM.Entities;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    class Program2copyElegxoiBenc
+    public class Program2copyElegxoiBenc
     {
 
-        private static void SolveBencExample()
+        public static void SolveBencExample()
         {
             VectorExtensions.AssignTotalAffinityCount();
             Model model = new Model();
@@ -29,7 +29,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice = 16;
+            model__builder_choice = 4;
 
             if (model__builder_choice == 1) // 
             { //ParadeigmataElegxwnBuilder.Example_cohesive_hexa_orthi_constr_anw_benc1(model); 
