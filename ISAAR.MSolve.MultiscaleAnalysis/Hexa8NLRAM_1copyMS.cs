@@ -80,7 +80,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
 
         //private double[,] ll2; //einai anexarthto twn GP // initialize gia to update coordinate
-        private double[][] GLvec;
+        //private double[][] GLvec; // MS multiscale 
+        private double[][] DefGradVec;
         private double[][] Spkvec;
         //private double[][] sunt_ol_Spkvec;
         //private double[][,] BL;
@@ -535,11 +536,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             tu_i = new double[8][];
             tx_i = new double[8][];
             //ll2 = new double[8, 3];
-            GLvec = new double[nGaussPoints][];
+            //GLvec = new double[nGaussPoints][]; //MS
+            DefGradVec = new double[nGaussPoints][];
             Spkvec = new double[nGaussPoints][];
             for (int gpoint = 0; gpoint < nGaussPoints; gpoint++)
             {
-                GLvec[gpoint] = new double[6];
+                //GLvec[gpoint] = new double[6]; // MS
+                DefGradVec[gpoint] = new double[9];
                 Spkvec[gpoint] = new double[6];
             }
             for (int k = 0; k < 8; k++)
@@ -578,7 +581,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             //BL11b= new double[nGaussPoints][,];
             //DGtr = new double[nGaussPoints][,];
             //GL = new double[nGaussPoints][,];
-            GLvec = new double[nGaussPoints][];
+            //GLvec = new double[nGaussPoints][]; //MS
+            DefGradVec = new double[nGaussPoints][];
             Spkvec = new double[nGaussPoints][];
             for (int npoint = 0; npoint < nGaussPoints; npoint++)
             {
@@ -586,7 +590,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 //J_1[npoint] = new double[3, 3];
                 //DGtr[npoint] = new double[3, 3];
                 //GL[npoint] = new double[3, 3];
-                GLvec[npoint] = new double[6];
+                //GLvec[npoint] = new double[6]; //MS
+                DefGradVec[npoint] = new double[9];
                 Spkvec[npoint] = new double[6];
                 // epiprosthtws mhdenizoueme gia efkolia edw osa apo ta parapanw the tha gemisoun plhrws 
                 //for (int j = 0; j < 9; j++)
@@ -672,12 +677,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             double[,] J_1b = new double[8, 3];
             double [][,] J_1 = new double[nGaussPoints][,];
             double[][,] DGtr = new double[nGaussPoints][,];
-            double[][,] GL = new double[nGaussPoints][,];
+            //double[][,] GL = new double[nGaussPoints][,]; //MS
             for (int npoint = 0; npoint < nGaussPoints; npoint++)
             {
                 J_1[npoint] = new double[3, 3];               
                 DGtr[npoint] = new double[3, 3];
-                GL[npoint] = new double[3, 3];
+                //GL[npoint] = new double[3, 3]; //MS
             }
 
             for (int j = 0; j < 8; j++)
@@ -742,38 +747,41 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                     }
                 }
 
-                //
-                for (int m = 0; m < 3; m++)
-                {
-                    for (int n = 0; n < 3; n++)
-                    {
-                        GL[npoint][m, n] = 0;
-                        for (int p = 0; p < 3; p++)
-                        {
-                            GL[npoint][m, n] += DGtr[npoint][m,p] * DGtr[npoint][n,p];
-                        }
-                    }
-                }
-                for (int m = 0; m < 3; m++)
-                {
-                    GL[npoint][m, m] += -1;
-                }
-                for (int m = 0; m < 3; m++)
-                {
-                    for (int n = 0; n < 3; n++)
-                    {
-                        GL[npoint][m, n] = 0.5 * GL[npoint][m, n];
-                    }
-                }
+                DefGradVec[npoint] = new double[9] { DGtr[npoint][0, 0], DGtr[npoint][1, 1], DGtr[npoint][2, 2], DGtr[npoint][1, 0], DGtr[npoint][2, 1], DGtr[npoint][0, 2], DGtr[npoint][2, 0], DGtr[npoint][0, 1], DGtr[npoint][1, 2], };
+                
 
                 //
-                for (int m = 0; m < 3; m++)
-                {
-                    GLvec[npoint][m] = GL[npoint][m, m];
-                }
-                GLvec[npoint][3] = 2 * GL[npoint][0, 1];
-                GLvec[npoint][4] = 2 * GL[npoint][1, 2];
-                GLvec[npoint][5] = 2 * GL[npoint][2, 0];
+                //for (int m = 0; m < 3; m++) //MS
+                //{
+                //    for (int n = 0; n < 3; n++)
+                //    {
+                //        GL[npoint][m, n] = 0;
+                //        for (int p = 0; p < 3; p++)
+                //        {
+                //            GL[npoint][m, n] += DGtr[npoint][m,p] * DGtr[npoint][n,p];
+                //        }
+                //    }
+                //}
+                //for (int m = 0; m < 3; m++) //MS
+                //{
+                //    GL[npoint][m, m] += -1;
+                //}
+                //for (int m = 0; m < 3; m++) //MS
+                //{
+                //    for (int n = 0; n < 3; n++)
+                //    {
+                //        GL[npoint][m, n] = 0.5 * GL[npoint][m, n];
+                //    }
+                //}
+
+                //
+                //for (int m = 0; m < 3; m++) //MS
+                //{
+                //    GLvec[npoint][m] = GL[npoint][m, m];
+                //}
+                //GLvec[npoint][3] = 2 * GL[npoint][0, 1]; //MS
+                //GLvec[npoint][4] = 2 * GL[npoint][1, 2];
+                //GLvec[npoint][5] = 2 * GL[npoint][2, 0];
             }
 
             }
@@ -1352,9 +1360,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             this.UpdateCoordinateData(localTotalDisplacements, element);
             for (int npoint = 0; npoint < materialsAtGaussPoints.Length; npoint++)
             {
-                materialsAtGaussPoints[npoint].UpdateMaterial(GLvec[npoint]);
+                materialsAtGaussPoints[npoint].UpdateMaterial(DefGradVec[npoint]); //MS htan GLvec[npoint] entos ths parentheshs MS omoiws GLvec[materialsAtGaussPoints.Length - 1] sto tuple pou epistrefetai parakatw 
             }
-            return new Tuple<double[], double[]>(GLvec[materialsAtGaussPoints.Length - 1], materialsAtGaussPoints[materialsAtGaussPoints.Length - 1].Stresses);
+            return new Tuple<double[], double[]>(DefGradVec[materialsAtGaussPoints.Length - 1], materialsAtGaussPoints[materialsAtGaussPoints.Length - 1].Stresses);
             //TODO mono to teleftaio dianusma tha epistrefei?
         }
 
