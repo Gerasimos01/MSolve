@@ -57,6 +57,8 @@ namespace ISAAR.MSolve.SamplesConsole
             { ParadeigmataElegxwnBuilder.HexaCantileverBuilder(model, 850); }
             if (model__builder_choice == 24) // 
             { ParadeigmataElegxwnBuilder.HexaCantileverBuilder_copyMS(model, 850); }
+            if (model__builder_choice == 25) // 
+            { RVEExamplesBuilder.Reference2RVEExample10_000withRenumbering_mono_hexa(model); }
 
             bool use_domain_decomposer = false;
             if (use_domain_decomposer)
