@@ -149,9 +149,11 @@ namespace ISAAR.MSolve.SamplesConsole
         {
             //SolveBuildingInNoSoilSmall();
             //TrussExample.Run();
-            ProgramElegxoiDdm.SolveRVEExample();
+            ////ProgramElegxoiDdm.SolveRVEExample();
             //Program2copyElegxoiBenc.SolveBencExample();
             // commit example
+
+            SeperateCodeCheckingClass.Check02();
         }
     }
 }
