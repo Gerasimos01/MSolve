@@ -29,20 +29,26 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         private Dictionary<int, Node> boundaryNodes { get; set; }
         private IRVEbuilder rveBuilder;
         private NewtonRaphsonNonLinearAnalyzer microAnalyzer;
+        private double volume;
+
+        double[] Stresses { get; }
+        IMatrix2D ConstitutiveMatrix { get; }
 
         public Microstructure2(IRVEbuilder rveBuilder)
         {
             this.rveBuilder = rveBuilder;
-            Tuple<Model, Dictionary<int, Node>> modelAndBoundaryNodes = this.rveBuilder.GetModelAndBoundaryNodes();
+            Tuple<Model, Dictionary<int, Node>,double> modelAndBoundaryNodes = this.rveBuilder.GetModelAndBoundaryNodes();
             this.model = modelAndBoundaryNodes.Item1;
             this.boundaryNodes = modelAndBoundaryNodes.Item2;
+            this.volume = modelAndBoundaryNodes.Item3;
             this.model.ConnectDataStructures();
         }
 
         public object Clone()
         {
-            return new Microstructure(rveBuilder);
+            return new Microstructure2(rveBuilder);
         }
+
         public Dictionary<int, Node> BoundaryNodesDictionary
         {
             get { return boundaryNodes; }
@@ -114,6 +120,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             double[,] DefGradMat = new double[3, 3] { { DefGradVec[0], DefGradVec[3], DefGradVec[6] }, { DefGradVec[7], DefGradVec[1], DefGradVec[4] }, { DefGradVec[5], DefGradVec[8], DefGradVec[2] } };
             double[,] FPK_mat = new double[3, 3] { { FPK_vec[0], FPK_vec[3], FPK_vec[6] }, { FPK_vec[7], FPK_vec[1], FPK_vec[4] }, { FPK_vec[5], FPK_vec[8], FPK_vec[2] } };
             double[,] SPK_mat = transformFPKtoSPK(DefGradMat, FPK_mat);
+            double[] SPK_vec = new double[6] { SPK_mat[0,0], SPK_mat[1,1], SPK_mat[2,2], SPK_mat[0,1], SPK_mat[1,2], SPK_mat[0,2] };
 
             //na elegxthei h parapanw anadiataxh kai o pollaplasiasmos
             double[,] d2W_dfdf = new double[9, 9];
@@ -126,6 +133,21 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        #region transformation methods
         private double[,] transformFPKtoSPK(double[,] DefGradMat, double[,] FPK_mat)
         {
             IMatrix2D DefGradMat2D = new Matrix2D(DefGradMat);
@@ -252,7 +274,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             return Cinpk;
         }
-
+        #endregion 
 
 
     }

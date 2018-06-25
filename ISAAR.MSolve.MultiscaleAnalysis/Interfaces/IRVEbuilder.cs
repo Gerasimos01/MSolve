@@ -8,6 +8,6 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.Interfaces
 {
     public interface IRVEbuilder
     {
-        Tuple<Model, Dictionary<int, Node>> GetModelAndBoundaryNodes();
+        Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes();
     }
 }

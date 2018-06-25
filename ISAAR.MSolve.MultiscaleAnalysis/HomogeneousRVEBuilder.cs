@@ -38,17 +38,15 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             // this.subdiscr1=subdiscr1
         }
 
-        public Tuple<Model, Dictionary<int, Node>> GetModelAndBoundaryNodes()
+        public Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
         {
-            Model model = new Model();
-            Dictionary<int, Node> boundaryNodes = new Dictionary<int, Node>();
-            Reference2RVEExample10_000withRenumbering_mono_hexa(model, boundaryNodes);
-            return new Tuple<Model, Dictionary<int, Node>>(model, boundaryNodes);
-
+           return Reference2RVEExample10_000withRenumbering_mono_hexa();
         }
 
-        public static void Reference2RVEExample10_000withRenumbering_mono_hexa(Model model, Dictionary<int, Node> boundaryNodes)
+        public static Tuple<Model, Dictionary<int, Node>,double> Reference2RVEExample10_000withRenumbering_mono_hexa()
         {
+            Model model= new Model();
+            Dictionary<int, Node> boundaryNodes= new Dictionary<int, Node>();
             // COPY APO: Reference2RVEExample100_000withRenumbering_mono_hexa
             double[,] Dq = new double[1, 1];
             Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
@@ -73,6 +71,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             o_x_parameters[] model_o_x_parameteroi = new o_x_parameters[graphene_sheets_number];
 
             FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering_vector_path, boundaryNodes);
+            double volume = mp.L01 * mp.L02 * mp.L03;
 
             // MS: oi epomenes 6 grammes aforoun embedding commented out 
             //int hexaElementsNumber = model.ElementsDictionary.Count();
@@ -109,6 +108,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             //int[] EmbElementsIds = EmbeddedElementsIDs.ToArray();
             //IEnumerable<Element> embdeddedGroup = model.ElementsDictionary.Where(x => (Array.IndexOf(EmbElementsIds, x.Key) > -1)).Select(kv => kv.Value); // dld einai null afth th stigmh
             //var embeddedGrouping = new EmbeddedCohesiveGrouping(model, hostGroup, embdeddedGroup);
+
+            return new Tuple<Model, Dictionary<int, Node>,double>(model, boundaryNodes,volume);
         }
     }
 }

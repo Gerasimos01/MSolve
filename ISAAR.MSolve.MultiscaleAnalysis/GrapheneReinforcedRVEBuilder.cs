@@ -28,17 +28,16 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public GrapheneReinforcedRVEBuilder()
         { }
 
-        public Tuple<Model, Dictionary<int, Node>> GetModelAndBoundaryNodes()
+        public Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
+        {
+            return Reference2RVEExample10000withRenumberingwithInput_forMS();
+        }
+
+        private static Tuple<Model, Dictionary<int, Node>,double> Reference2RVEExample10000withRenumberingwithInput_forMS()
         {
             Model model = new Model();
             Dictionary<int, Node> boundaryNodes = new Dictionary<int, Node>();
-            Reference2RVEExample10000withRenumberingwithInput_forMS(model, boundaryNodes);
-            return new Tuple<Model, Dictionary<int, Node>>(model, boundaryNodes);
 
-        }
-
-        private static void Reference2RVEExample10000withRenumberingwithInput_forMS(Model model, Dictionary<int, Node> boundaryNodes)
-        {
             //PROELEFSI public static void Reference2RVEExample10000withRenumberingwithInput(Model model)
             double[,] Dq;
             Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
@@ -66,6 +65,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             Dq = new double[9, 3 * (((mp.hexa1 + 1) * (mp.hexa2 + 1) * (mp.hexa3 + 1)) - ((mp.hexa1 - 1) * (mp.hexa2 - 1) * (mp.hexa3 - 1)))];
             FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering_vector_path, boundaryNodes);
+            double volume = mp.L01 * mp.L02 * mp.L03;
 
             int hexaElementsNumber = model.ElementsDictionary.Count();
 
@@ -102,6 +102,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             int[] EmbElementsIds = EmbeddedElementsIDs.ToArray();
             IEnumerable<Element> embdeddedGroup = model.ElementsDictionary.Where(x => (Array.IndexOf(EmbElementsIds, x.Key) > -1)).Select(kv => kv.Value); // dld einai null afth th stigmh
             var embeddedGrouping = new EmbeddedCohesiveGrouping(model, hostGroup, embdeddedGroup);
+
+            return new Tuple<Model, Dictionary<int, Node>,double>(model, boundaryNodes,volume);
 
         }
 
