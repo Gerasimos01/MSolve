@@ -22,7 +22,7 @@ using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
-    public class Microstructure2 //: IFiniteElementMaterial3D
+    public class Microstructure2 : IFiniteElementMaterial3D
     {
         private Model model { get; set; }
         //private readonly Dictionary<int, Node> nodesDictionary = new Dictionary<int, Node>();
@@ -31,8 +31,24 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         private NewtonRaphsonNonLinearAnalyzer microAnalyzer;
         private double volume;
 
-        double[] Stresses { get; }
-        IMatrix2D ConstitutiveMatrix { get; }
+        // aparaithta gia to implementation tou IFiniteElementMaterial3D
+        IMatrix2D constitutiveMatrix;
+        private double[] SPK_vec;
+        private bool modified; // opws sto MohrCoulomb gia to modified
+
+        private double[,] Cijrs_prev;
+        private bool matrices_not_initialized = true;
+        private double tol;
+        public void InitializeMatrices()
+        {
+            Cijrs_prev = new double[6, 6];
+            matrices_not_initialized = false;
+            tol = Math.Pow(10, -19);
+        }
+
+
+        //double[] Stresses { get; }
+        //IMatrix2D ConstitutiveMatrix { get; } TODOGerasimos
 
         public Microstructure2(IRVEbuilder rveBuilder)
         {
@@ -61,9 +77,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public void UpdateMaterial(double[] DefGradVec)
         {
 
-            //if (matrices_not_initialized) TODOGerasimos
-            //{ this.InitializeMatrices(); }            
-            //D_tan_prev[k, j] = D_tan[k, j];
+            if (matrices_not_initialized) 
+            { this.InitializeMatrices(); }
+
+            for (int i1 = 0; i1 < 6; i1++)
+            {
+                for (int j1 = 0; j1 < 6; j1++)
+                {Cijrs_prev[i1, j1] = constitutiveMatrix[i1, j1];}
+            }
 
             var linearSystems = new Dictionary<int, ILinearSystem>(); //I think this should be done automatically 
             linearSystems[1] = new SkylineLinearSystem(1, model.Subdomains[0].Forces);
@@ -89,16 +110,19 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 Dq_nodal[7, +1] = model.NodesDictionary[boundaryNode.ID].X;
                 Dq_nodal[8, +2] = model.NodesDictionary[boundaryNode.ID].Y;
 
-                double[] u_prescr_xyz = new double[3];
+                double[] thesi_prescr_xyz = new double[3];
+                double[] u_prescr_xyz_sunol = new double[3];
 
                 for (int i1 = 0; i1 < 3; i1++)
                 {
                     for (int j1 = 0; j1 < 9; j1++)
                     {
-                        u_prescr_xyz[i1] += Dq_nodal[j1, i1] * DefGradVec[j1]; //einai sunolikh //TODO
+                        thesi_prescr_xyz[i1] += Dq_nodal[j1, i1] * DefGradVec[j1]; //einai sunolikh 
                     }
                 }
-
+                u_prescr_xyz_sunol = new double[3] { thesi_prescr_xyz[0] - model.NodesDictionary[boundaryNode.ID].X,
+                                                     thesi_prescr_xyz[1] - model.NodesDictionary[boundaryNode.ID].Y,
+                                                     thesi_prescr_xyz[2] - model.NodesDictionary[boundaryNode.ID].Z };
 
             }
             // epivolh metakinhsewn ews edw
@@ -120,26 +144,102 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             double[,] DefGradMat = new double[3, 3] { { DefGradVec[0], DefGradVec[3], DefGradVec[6] }, { DefGradVec[7], DefGradVec[1], DefGradVec[4] }, { DefGradVec[5], DefGradVec[8], DefGradVec[2] } };
             double[,] FPK_mat = new double[3, 3] { { FPK_vec[0], FPK_vec[3], FPK_vec[6] }, { FPK_vec[7], FPK_vec[1], FPK_vec[4] }, { FPK_vec[5], FPK_vec[8], FPK_vec[2] } };
             double[,] SPK_mat = transformFPKtoSPK(DefGradMat, FPK_mat);
-            double[] SPK_vec = new double[6] { SPK_mat[0,0], SPK_mat[1,1], SPK_mat[2,2], SPK_mat[0,1], SPK_mat[1,2], SPK_mat[0,2] };
+            SPK_vec = new double[6] { SPK_mat[0,0], SPK_mat[1,1], SPK_mat[2,2], SPK_mat[0,1], SPK_mat[1,2], SPK_mat[0,2] };
 
             //na elegxthei h parapanw anadiataxh kai o pollaplasiasmos
             double[,] d2W_dfdf = new double[9, 9];
             //TODO: upologismos d2W_dfdf apo oloklhrwma 
+            double[,] Cinpk = Transform_d2Wdfdf_to_Cijrs(d2W_dfdf, SPK_mat, DefGradMat); // to onomazoume Cinpk epeidh einai to 9x9 kai to diakrinoume etsi apo to Cijrs 6x6
+            // transformation se 6x6 se 2 vhmata
+            double[,] Cijrs_columns = new double[9, 6];
+            for (int i1 = 0; i1 < 9; i1++)
+            {
+                Cijrs_columns[i1, 0] = Cinpk[i1, 0];
+                Cijrs_columns[i1, 1] = Cinpk[i1, 1];
+                Cijrs_columns[i1, 2] = Cinpk[i1, 2];
+                Cijrs_columns[i1, 3] = 0.5 * (Cinpk[i1, 3] + Cinpk[i1, 7]);
+                Cijrs_columns[i1, 4] = 0.5 * (Cinpk[i1, 4] + Cinpk[i1, 8]);
+                Cijrs_columns[i1, 5] = 0.5 * (Cinpk[i1, 5] + Cinpk[i1, 6]);
+            }
+
+            double[,] Cijrs = new double[6, 6];
+
+            for (int j1 = 0; j1 < 6; j1++)
+            {
+                Cijrs[0, j1] = Cijrs_columns[0, j1];
+                Cijrs[1, j1] = Cijrs_columns[1, j1];
+                Cijrs[2, j1] = Cijrs_columns[2, j1];
+                Cijrs[3, j1] = 0.5 * (Cijrs_columns[3, j1] + Cijrs_columns[7, j1]);
+                Cijrs[4, j1] = 0.5 * (Cijrs_columns[4, j1] + Cijrs_columns[8, j1]);
+                Cijrs[5, j1] = 0.5 * (Cijrs_columns[5, j1] + Cijrs_columns[6, j1]);
+            }
+
+            constitutiveMatrix= new Matrix2D(Cijrs);
+
+            this.modified = CheckIfConstitutiveMatrixChanged(); 
+        }
 
 
+        private bool CheckIfConstitutiveMatrixChanged()
+        {
+            for (int i = 0; i < 6; i++)
+                for (int j = 0; j < 6; j++)
+                    if (Math.Abs(Cijrs_prev[i, j] - constitutiveMatrix[i, j]) > 1e-10)
+                        return true;
 
-            //this.modified = CheckIfConstitutiveMatrixChanged();
-
-
+            return false;
         }
 
 
 
+        #region IFiniteElementMaterial3D methodoi mia mia 
+
+        public IMatrix2D ConstitutiveMatrix
+        {
+            get
+            {
+                if (constitutiveMatrix == null) UpdateMaterial(new double[9] { 1,1,1,0,0,0,0,0,0 }); // TODOGerasimos arxiko constitutive mporei na upologizetai pio efkola
+                return constitutiveMatrix;
+            }
+        }
+
+        public double[] Stresses // opws xrhsimopoeitai sto mohrcoulomb kai hexa8
+        {
+            get { return SPK_vec; }
+        }
+
+        public void SaveState()
+        {
+            //microAnalyzer.SaveMaterialState() //TODOGerasimos
+        }
+
+        public bool Modified
+        {
+            get { return modified; }
+        }
+
+        public void ResetModified()
+        {
+            modified = false;
+        }
+
+        public int ID
+        {
+            get { return 1000; }
+        }
 
 
-
-
-
+        #endregion
+        // methodoi ews edw xrhsimopoiountai
+        public void ClearState() 
+        {
+            // pithanws TODO 
+        }
+        public void ClearStresses()
+        {
+            // pithanws TODO 
+        }
+        public double[] Coordinates { get; set; }
 
 
 
