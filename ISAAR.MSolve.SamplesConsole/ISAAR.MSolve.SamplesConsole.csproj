@@ -82,6 +82,8 @@
     <Compile Include="rotatedPlateBuilder.cs" />
     <Compile Include="RVEExamplesBuilder.cs" />
     <Compile Include="RVEkanoninkhsGewmetriasBuilder.cs" />
+    <Compile Include="SupportiveClasses\RandomOrientations.cs" />
+    <Compile Include="SupportiveClasses\SeparateCodeCheckingClass.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ISAAR.MSolve.Logging\ISAAR.MSolve.Logging.csproj">
