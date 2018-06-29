@@ -180,7 +180,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 
             double[,] e_new = new double[3, 3] { { e1_new_x, e2_new_x, 0 }, { e1_new_y, e2_new_y, 0 }, { e1_new_z, e2_new_z, 0 } };
             double[] e_new_cross = new double[3];
-            RVEExamplesBuilder.cross(new double[3] { e1_new_x, e1_new_y, e1_new_z }, new double[3] { e2_new_x, e2_new_y, e2_new_z }, e_new_cross);
+            commonCalculations.cross(new double[3] { e1_new_x, e1_new_y, e1_new_z }, new double[3] { e2_new_x, e2_new_y, e2_new_z }, e_new_cross);
             for (int i1 = 0; i1 < 3; i1++)
             { e_new[i1, 2] = e_new_cross[i1]; }
 
@@ -191,7 +191,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             {
                 for (int q2 = 0; q2 < 3; q2++)
                 {
-                    Qij[q1, q2] = RVEExamplesBuilder.dot_product(new double[3] { e_old[0, q1], e_old[1, q1], e_old[2, q1] }, new double[3] { e_new[0, q2], e_new[1, q2], e_new[2, q2] });
+                    Qij[q1, q2] = commonCalculations.dot_product(new double[3] { e_old[0, q1], e_old[1, q1], e_old[2, q1] }, new double[3] { e_new[0, q2], e_new[1, q2], e_new[2, q2] });
                 }
             }
 
@@ -201,9 +201,9 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             for (int komvos = 0; komvos < o_xsunol.GetLength(0) / 6; komvos++)
             {
                 double[] product;
-                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { o_xsunol[6 * (komvos) + 0], o_xsunol[6 * (komvos) + 1], o_xsunol[6 * (komvos) + 2] });
+                product = commonCalculations.MatVecMult(Qij, new double[3] { o_xsunol[6 * (komvos) + 0], o_xsunol[6 * (komvos) + 1], o_xsunol[6 * (komvos) + 2] });
                 for (int q2 = 0; q2 < 3; q2++) { o_xsunol_new[6 * (komvos) + q2] = product[q2]; }
-                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { o_xsunol[6 * (komvos) + 3], o_xsunol[6 * (komvos) + 4], o_xsunol[6 * (komvos) + 5] });
+                product = commonCalculations.MatVecMult(Qij, new double[3] { o_xsunol[6 * (komvos) + 3], o_xsunol[6 * (komvos) + 4], o_xsunol[6 * (komvos) + 5] });
                 for (int q2 = 0; q2 < 3; q2++) { o_xsunol_new[6 * (komvos) + 3 + q2] = product[q2]; }
             }
 
@@ -268,7 +268,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 
             double[,] e_new = new double[3, 3] { { e1_new_x, e2_new_x, 0 }, { e1_new_y, e2_new_y, 0 }, { e1_new_z, e2_new_z, 0 } };
             double[] e_new_cross = new double[3];
-            RVEExamplesBuilder.cross(new double[3] { e1_new_x, e1_new_y, e1_new_z }, new double[3] { e2_new_x, e2_new_y, e2_new_z }, e_new_cross);
+            commonCalculations.cross(new double[3] { e1_new_x, e1_new_y, e1_new_z }, new double[3] { e2_new_x, e2_new_y, e2_new_z }, e_new_cross);
             for (int i1 = 0; i1 < 3; i1++)
             { e_new[i1, 2] = e_new_cross[i1]; }
 
@@ -279,29 +279,29 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             {
                 for (int q2 = 0; q2 < 3; q2++)
                 {
-                    Qij[q1, q2] = RVEExamplesBuilder.dot_product(new double[3] { e_old[0, q1], e_old[1, q1], e_old[2, q1] }, new double[3] { e_new[0, q2], e_new[1, q2], e_new[2, q2] });
+                    Qij[q1, q2] = commonCalculations.dot_product(new double[3] { e_old[0, q1], e_old[1, q1], e_old[2, q1] }, new double[3] { e_new[0, q2], e_new[1, q2], e_new[2, q2] });
                 }
             }
 
             for (int q1 = 0; q1 < 12; q1++)
             {
                 double[] product;
-                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { line_points[0, q1], line_points[1, q1], line_points[2, q1] });
+                product = commonCalculations.MatVecMult(Qij, new double[3] { line_points[0, q1], line_points[1, q1], line_points[2, q1] });
                 for (int q2 = 0; q2 < 3; q2++) { line_points[q2, q1] = product[q2]; }
-                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { line_segments[0, q1], line_segments[1, q1], line_segments[2, q1] });
+                product = commonCalculations.MatVecMult(Qij, new double[3] { line_segments[0, q1], line_segments[1, q1], line_segments[2, q1] });
                 for (int q2 = 0; q2 < 3; q2++) { line_segments[q2, q1] = product[q2]; }
             }
 
             for (int q1 = 0; q1 < 6; q1++)
             {
                 double[] product;
-                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { pl_points[0, q1], pl_points[1, q1], pl_points[2, q1] });
+                product = commonCalculations.MatVecMult(Qij, new double[3] { pl_points[0, q1], pl_points[1, q1], pl_points[2, q1] });
                 for (int q2 = 0; q2 < 3; q2++) { pl_points[q2, q1] = product[q2]; }
-                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { vec1s[0, q1], vec1s[1, q1], vec1s[2, q1] });
+                product = commonCalculations.MatVecMult(Qij, new double[3] { vec1s[0, q1], vec1s[1, q1], vec1s[2, q1] });
                 for (int q2 = 0; q2 < 3; q2++) { vec1s[q2, q1] = product[q2]; }
-                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { vec2s[0, q1], vec2s[1, q1], vec2s[2, q1] });
+                product = commonCalculations.MatVecMult(Qij, new double[3] { vec2s[0, q1], vec2s[1, q1], vec2s[2, q1] });
                 for (int q2 = 0; q2 < 3; q2++) { vec2s[q2, q1] = product[q2]; }
-                product = RVEExamplesBuilder.MatVecMult(Qij, new double[3] { perp_vec3s[0, q1], perp_vec3s[1, q1], perp_vec3s[2, q1] });
+                product = commonCalculations.MatVecMult(Qij, new double[3] { perp_vec3s[0, q1], perp_vec3s[1, q1], perp_vec3s[2, q1] });
                 for (int q2 = 0; q2 < 3; q2++) { perp_vec3s[q2, q1] = product[q2]; }
             }
 
@@ -387,7 +387,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 
             bool plane_and_line_parallel = false;
 
-            if (RVEExamplesBuilder.dot_product(perp_vec3, line_segment) == 0)
+            if (commonCalculations.dot_product(perp_vec3, line_segment) == 0)
             {
                 plane_and_line_parallel = true;
             }
@@ -460,7 +460,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             for (int q2 = 0; q2 < 3; q2++)
             { n[q2] = perp_vec3[q2] / norm_perp_vec3; }
 
-            double distance = RVEExamplesBuilder.dot_product(QP, n);
+            double distance = commonCalculations.dot_product(QP, n);
 
             return distance;
         }
@@ -502,7 +502,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
                 { A_inverse[q1, q2] = A_inverse[q1, q2] / (A[0, 0] * A[1, 1] - A[0, 1] * A[1, 0]); }
             }
 
-            double[] x = RVEExamplesBuilder.MatVecMult(A_inverse, b);
+            double[] x = commonCalculations.MatVecMult(A_inverse, b);
             return x;
 
         }
@@ -524,7 +524,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
                 { A_inverse[q1, q2] = A_inverse[q1, q2] / det_A; }
             }
 
-            double[] x = RVEExamplesBuilder.MatVecMult(A_inverse, b);
+            double[] x = commonCalculations.MatVecMult(A_inverse, b);
             return x;
 
         }
