@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ISAAR.MSolve.PreProcessor.Elements;
-
-namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
+using ISAAR.MSolve.SamplesConsole.SupportiveClasses;
+namespace ISAAR.MSolve.SamplesConsole
 {
-    class SeparateCodeCheckingClass
+    class SeparateCodeCheckingClass2
     {
-        private static void check01()
+        public static void check01()
         {
             Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
             rveMatrixParameters mp;
@@ -19,7 +19,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             int discr3 = 10;
             int subdiscr1_shell = 7;
             int discr1_shell = 1;
-            mpgp = RVEExamplesBuilder.GetReferenceRveExampleParameters(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
+            mpgp = RVEkanoninkhsGewmetriasBuilder.GetReferenceKanonikhGewmetriaRveExampleParameters(subdiscr1,discr1,discr3,subdiscr1_shell,discr1_shell);
             mp = mpgp.Item1;
             gp = mpgp.Item2;
             double sigma_f= 0.2; // apo to arxeio create_random_data_for_geom_programing_in_C tou fakelou tou parapanw rand data vec path

@@ -28,13 +28,15 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         //private readonly Dictionary<int, Node> nodesDictionary = new Dictionary<int, Node>();
         private Dictionary<int, Node> boundaryNodes { get; set; }
         private IRVEbuilder rveBuilder;
+        private double volume;
 
         public Microstructure(IRVEbuilder rveBuilder )
         {
             this.rveBuilder = rveBuilder;
-            Tuple < Model, Dictionary<int, Node> > modelAndBoundaryNodes=this.rveBuilder.GetModelAndBoundaryNodes();
+            Tuple < Model, Dictionary<int, Node>,double > modelAndBoundaryNodes=this.rveBuilder.GetModelAndBoundaryNodes();
             this.model = modelAndBoundaryNodes.Item1;
             this.boundaryNodes = modelAndBoundaryNodes.Item2;
+            this.volume = modelAndBoundaryNodes.Item3;
         }
 
         public object Clone()

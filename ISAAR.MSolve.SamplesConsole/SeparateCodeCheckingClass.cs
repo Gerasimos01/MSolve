@@ -15,7 +15,7 @@ using ISAAR.MSolve.Solvers.Skyline;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    class SeperateCodeCheckingClass
+    class SeparateCodeCheckingClass
     {
         public static void Check01()
         {

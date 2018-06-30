@@ -153,7 +153,8 @@ namespace ISAAR.MSolve.SamplesConsole
             //Program2copyElegxoiBenc.SolveBencExample();
             // commit example
 
-            SeperateCodeCheckingClass.Check02();
+            //SeperateCodeCheckingClass.Check02();
+            SeparateCodeCheckingClass2.check01();
         }
     }
 }
