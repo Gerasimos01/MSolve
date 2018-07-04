@@ -8,16 +8,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ISAAR.MSolve.Analyzers.Interfaces;
 
-// compa
+using ISAAR.MSolve.FEM;
+using ISAAR.MSolve.FEM.Elements;
 using ISAAR.MSolve.FEM.Entities;
+using ISAAR.MSolve.FEM.Materials;
+using ISAAR.MSolve.Materials;
+using ISAAR.MSolve.SamplesConsole;
+using ISAAR.MSolve.Solvers.Interfaces;
 
 
 namespace ISAAR.MSolve.SamplesConsole
 {
     class Program2copyRVEkanonikhsGewmetrias
     {
-        private static void SolveRVEExample()
+        public static void SolveRVEExample()
         {
             VectorExtensions.AssignTotalAffinityCount();
             Model model = new Model();
@@ -25,7 +31,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice =1;   // 9 einai to megalo me to renumbering pou tsekaretai
+            model__builder_choice =206;   // 9 einai to megalo me to renumbering pou tsekaretai
 
             
             if (model__builder_choice == 1) // 
@@ -34,6 +40,77 @@ namespace ISAAR.MSolve.SamplesConsole
             { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample10000withRenumberingwithInput_2GrSh(model); }
             if (model__builder_choice == 3) // 
             { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample10000withRenumberingwithInput_1GrSh(model); }
+
+            if (model__builder_choice == 4) // 
+            { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInput(model); }
+
+            if (model__builder_choice == 206) // 
+            { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInputFromMSOLVE(model); }
+
+
+            bool use_domain_decomposer = false;
+            if (use_domain_decomposer)
+            {
+                //i)
+                DddmExamplesBuilder.MakeModelDictionariesZeroBasedForDecomposer(model);
+
+                model.ConnectDataStructures();
+                // ii)
+                AutomaticDomainDecomposer domainDecomposer = new AutomaticDomainDecomposer(model, 2); //2o orisma arithmoos subdomains
+                domainDecomposer.UpdateModel();
+            }
+            else
+            {
+                model.ConnectDataStructures();
+            }
+
+            var linearSystems = new Dictionary<int, ILinearSystem>(); //I think this should be done automatically 
+            linearSystems[1] = new SkylineLinearSystem(1, model.Subdomains[0].Forces);
+
+            ProblemStructural provider = new ProblemStructural(model, linearSystems);
+
+
+            // PARADEIGMA A: LinearAnalyzer analyzer = new LinearAnalyzer(solver, solver.SubdomainsDictionary);
+            //SolverSkyline2 solver = new SolverSkyline2(linearSystems[1]); //H MARIA XRHSIMOPOIEI TON sklinesolver 
+            //LinearAnalyzer childAnalyzer = new LinearAnalyzer(solver, linearSystems);
+            //---------------------------------------------------------------------------------------------------------------------------------
+
+            // PARADEIGMA B: Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, 17, model.TotalDOFs);//1. increments einai to 17 (arxika eixame thesei2 26 incr)
+            //PALIA DIATUPWSH: NewtonRaphsonNonLinearAnalyzer analyzer = new NewtonRaphsonNonLinearAnalyzer(solver, linearSystems, provider, 10, 48); 
+            // NEA DIATUPWSH:
+            var solver = new SolverSkyline(linearSystems[1]);
+            var linearSystemsArray = new[] { linearSystems[1] };
+            var subdomainUpdaters = new[] { new NonLinearSubdomainUpdater(model.Subdomains[0]) };
+            var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
+
+            var increments = 1;
+            var childAnalyzer = new NewtonRaphsonNonLinearAnalyzer(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs);
+            //h epomenhgrammh einai gia paradeigma ws pros to access
+            //IAnalyzer childAnalyzer2 = new NewtonRaphsonNonLinearAnalyzer(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs);
+
+
+            childAnalyzer.SetMaxIterations = 100;
+            childAnalyzer.SetIterationsForMatrixRebuild = 1;
+            //---------------------------------------------------------------------------------------------------------------------------------
+
+
+            StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, childAnalyzer, linearSystems);
+
+            childAnalyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] { 47 });
+
+            //comment section 2 palaia version
+            //int increments = 1;
+            //Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, increments, model.TotalDOFs);//1. increments einai to 1 (arxika eixame thesei2 26 incr)
+            //StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, analyzer, solver.SubdomainsDictionary);
+            //analyzer.SetMaxIterations = 100;
+            //analyzer.SetIterationsForMatrixRebuild = 1;
+
+
+
+            parentAnalyzer.BuildMatrices();
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
+
 
             #region
 

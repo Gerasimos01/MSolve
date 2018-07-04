@@ -154,7 +154,9 @@ namespace ISAAR.MSolve.SamplesConsole
             // commit example
 
             //SeperateCodeCheckingClass.Check02();
-            SeparateCodeCheckingClass2.check01();
+            //SeparateCodeCheckingClass2.check01();
+
+            Program2copyRVEkanonikhsGewmetrias.SolveRVEExample();
         }
     }
 }
