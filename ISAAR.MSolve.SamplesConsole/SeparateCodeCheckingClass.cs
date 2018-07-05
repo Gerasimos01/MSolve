@@ -66,6 +66,15 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
+        public static void Check03()
+        {
+            Dictionary<int, double> dictionary1 = new Dictionary<int, double>();
+            dictionary1.Add(4, 0.111112);
+            dictionary1.Add(8, 0.222223);
+            var dok1 = dictionary1.Keys;
+            var dok2 = dictionary1.GetEnumerator();
+        }
+
         private  static double[,] Transform_d2Wdfdf_to_Cijrs(double[,] Aijkl, double[,] SPK, double[,] F)
         {
             int[,] i_seira = { { 1, 2, 3 }, { 3, 1, 2 }, { 2, 3, 1 } };
@@ -159,6 +168,8 @@ namespace ISAAR.MSolve.SamplesConsole
 
             return Cinpk;
         }
+
+
 
     }
 }

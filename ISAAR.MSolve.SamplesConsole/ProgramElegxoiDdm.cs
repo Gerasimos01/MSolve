@@ -30,7 +30,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice =24;   // 9 einai to megalo me to renumbering pou tsekaretai
+            model__builder_choice =23;   // 9 einai to megalo me to renumbering pou tsekaretai
 
             
             if (model__builder_choice == 1) // 
@@ -115,7 +115,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, childAnalyzer, linearSystems);
 
-            childAnalyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] { 47 });
+            //childAnalyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] { 47 });
 
 
 
