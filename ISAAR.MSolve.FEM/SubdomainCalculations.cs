@@ -73,8 +73,8 @@ namespace ISAAR.MSolve.FEM
                                 int nodalDofsNumber = elementDOFTypes[j].Count; //TODOGerasimos elegxos oti edw oi ginetai prosvash apo 0:1:megethos 
                                 if (boundaryNodes.ContainsKey(nodeColumn.ID)) 
                                 {
-                                    double[] element_Kfp_triplette = new double[nodalDofsNumber];
-                                    for (int j1 = 0; j1 < nodalDofsNumber; j1++)
+                                    double[] element_Kfp_triplette = new double[nodalDofsNumber]; //nodalDofsNumber: giati oxi scaleTransitions.PrescribedDofsPerNode()? Dioti tou ta pairname ola(triplette) kai dialegei to 
+                                    for (int j1 = 0; j1 < nodalDofsNumber; j1++)                  //scaleTransitions.MicroToMacroTransition ti tha xrhsimopoihsei apo afta analoga pws einai implemented
                                     {
                                        element_Kfp_triplette[j1]= ElementK[iElementMatrixRow, iElementMatrixColumn+j1];
                                     }
@@ -167,10 +167,101 @@ namespace ISAAR.MSolve.FEM
 
         }
 
+        public static double[][] CalculateKppDqMultiplications(Subdomain subdomain, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes)
+        {
+            Dictionary<int, Dictionary<DOFType, int>> nodalDOFsDictionary = subdomain.NodalDOFsDictionary;
+
+            var keys1 = boundaryNodes.Keys;
+            int[] keys2 = new int[2];
+            keys1.CopyTo(keys2, 0);
+            double[] macroVariable = scaleTransitions.MicroToMacroTransition(boundaryNodes[keys2[0]], new double[3]);
+
+            double[][] KppDqVectors = new double[macroVariable.GetLength(0)][];
+            Dictionary<int, int> boundaryNodesOrder = GetNodesOrderInDictionary(boundaryNodes);
+            for (int j1 = 0; j1 < macroVariable.GetLength(0); j1++)
+            {
+                KppDqVectors[j1] = new double[boundaryNodesOrder.Count*scaleTransitions.PrescribedDofsPerNode()]; // h allliws subdomain.Forces.GetLength(0)
+            }
+
+
+            var times = new Dictionary<string, TimeSpan>();
+            var totalStart = DateTime.Now;
+            times.Add("rowIndexCalculation", DateTime.Now - totalStart);
+            times.Add("element", TimeSpan.Zero);
+            times.Add("addition", TimeSpan.Zero);
+            foreach (Element element in subdomain.ElementsDictionary.Values)
+            {
+                var isEmbeddedElement = element.ElementType is IEmbeddedElement;
+                var elStart = DateTime.Now;
+                IMatrix2D ElementK = elementProvider.Matrix(element);
+                times["element"] += DateTime.Now - elStart;
+
+                elStart = DateTime.Now;
+                var elementDOFTypes = element.ElementType.DOFEnumerator.GetDOFTypes(element);
+                var matrixAssemblyNodes = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element);
+                int iElementMatrixRow = 0;
+                for (int i = 0; i < elementDOFTypes.Count; i++)
+                {
+                    Node nodeRow = matrixAssemblyNodes[i];
+                    if (boundaryNodes.ContainsKey(nodeRow.ID))
+                    {
+                        for (int i1 = 0; i1 < scaleTransitions.PrescribedDofsPerNode(); i1++)
+                        {
+                            int dofrow_p = scaleTransitions.PrescribedDofsPerNode() * (boundaryNodesOrder[nodeRow.ID] - 1) + i1;
+                            int iElementMatrixColumn = 0;
+                            for (int j = 0; j < elementDOFTypes.Count; j++)
+                            {
+                                Node nodeColumn = matrixAssemblyNodes[j];
+                                //
+                                //foreach (DOFType dofTypeColumn in elementDOFTypes[j])
+                                //{
+                                //    int dofColumn = nodalDOFsDictionary.ContainsKey(nodeColumn.ID) == false && isEmbeddedElement ? -1 : nodalDOFsDictionary[nodeColumn.ID][dofTypeColumn];
+                                //    if (dofColumn != -1)// TODOGerasimos edw pithanws thelei kai elegxo alliws an den ta exoume afhsei constrained ta p kai einai elefthera px me to an anhkoun sto baoundary nodes
+                                //    {                   // alla etsi einai oti akrivws thewritai kai sto assembly tou Kff opote ok
+
+                                //        for (int i2 = 0; i2 < f2_vectors.GetLength(0); i2++)
+                                //        {
+                                //            f3_vectors[i2][dofrow_p] += ElementK[iElementMatrixRow + i1, iElementMatrixColumn] * f2_vectors[i2][dofColumn]; /////
+                                //        }
+
+                                //    }
+                                //    iElementMatrixColumn++;
+                                //}
+                                //
+                                int nodalDofsNumber= elementDOFTypes[j].Count;
+                                if (boundaryNodes.ContainsKey(nodeColumn.ID))
+                                {
+                                    double[] element_Kpp_triplette = new double[scaleTransitions.PrescribedDofsPerNode()];
+                                    for (int j2 = 0; j2 < scaleTransitions.PrescribedDofsPerNode(); j2++)
+                                    {
+                                        element_Kpp_triplette[j2] = ElementK[iElementMatrixRow, iElementMatrixColumn + j2];
+                                    }
+                                    double[] contribution = scaleTransitions.MicroToMacroTransition(nodeColumn, element_Kpp_triplette);
+                                    for (int j1 = 0; j1 < contribution.GetLength(0); j1++)
+                                    {
+                                        KppDqVectors[j1][dofrow_p] += contribution[j1];
+                                    }
+                                }
+                                iElementMatrixColumn += nodalDofsNumber;
+
+
+
+                            }
+
+                        }
+                    }
+                    iElementMatrixRow += elementDOFTypes[i].Count;
+                }
+                times["addition"] += DateTime.Now - elStart;
+            }
+            var totalTime = DateTime.Now - totalStart;
+
+            return KppDqVectors;
+        }
 
         public static Dictionary<int,int> GetNodesOrderInDictionary(Dictionary<int, Node> boundaryNodes)
         {
-            Dictionary<int, int> boundaryNodesOrder = new Dictionary<int, int>;
+            Dictionary<int, int> boundaryNodesOrder = new Dictionary<int, int>();
             int order = 1;
             foreach (Node boundaryNode in boundaryNodes.Values)
             {
