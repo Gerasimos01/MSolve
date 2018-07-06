@@ -10,5 +10,6 @@ namespace ISAAR.MSolve.FEM.Interfaces
         double[] MacroToMicroTransition(Node boundaryNode, double[] MacroScaleVariable);
         double[] MicroToMacroTransition(Node boundaryNode, double[] MicroScaleVariable);
         int PrescribedDofsPerNode();
+        int MacroscaleVariableDimension();
     }
 }

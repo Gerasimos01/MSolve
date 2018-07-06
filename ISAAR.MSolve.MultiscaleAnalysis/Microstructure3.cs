@@ -150,7 +150,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             SPK_vec = new double[6] { SPK_mat[0,0], SPK_mat[1,1], SPK_mat[2,2], SPK_mat[0,1], SPK_mat[1,2], SPK_mat[0,2] };
 
             //na elegxthei h parapanw anadiataxh kai o pollaplasiasmos
-            double[,] d2W_dfdf = new double[9, 9];
+            //double[,] d2W_dfdf = new double[9, 9];
             //TODO: upologismos d2W_dfdf apo oloklhrwma 
 
             #region INTEGRATION
@@ -178,6 +178,19 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 SkylineMatrix2D k_temp = ((SkylineMatrix2D)Kff_linearSystem.Matrix); // opws sto solverskyline.cs sthn Solve()
                 k_temp.Solve(K_ffRHS, Kff_solution);
                 f2_vectors[i1] = Kff_solution.Data;
+            }
+            double[][] f3_vectors = SubdomainCalculations.CalculateKpfKffinverseKfpDq(f2_vectors, model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
+            double[][] KppDqVectors = SubdomainCalculations.CalculateKppDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
+            double[][] f4_vectors = SubdomainCalculations.SubtractConsecutiveVectors(KppDqVectors, f3_vectors);
+            double[,] DqCondDq = SubdomainCalculations.CalculateDqCondDq(f4_vectors, scaleTransitions, boundaryNodes);
+
+            double[,] d2W_dfdf = new double[DqCondDq.GetLength(0), DqCondDq.GetLength(1)];
+            for (int i1 = 0; i1 < DqCondDq.GetLength(0); i1++)
+            {
+                for (int i2 = 0; i2 < DqCondDq.GetLength(1); i2++)
+                {
+                    d2W_dfdf[i1, i2] = (1 / volume) * DqCondDq[i1, i2];
+                }
             }
             #endregion
 

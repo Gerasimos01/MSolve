@@ -74,5 +74,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         {
             return 3;
         }
+
+        public int MacroscaleVariableDimension()
+        {
+            return 9;
+        }
     }
 }

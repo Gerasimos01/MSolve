@@ -259,6 +259,47 @@ namespace ISAAR.MSolve.FEM
             return KppDqVectors;
         }
 
+        public static double[][] SubtractConsecutiveVectors(double[][] KppDqVectors,double[][] f3_vectors)
+        {
+            double[][] f4_vectors = new double[KppDqVectors.GetLength(0)][];
+            for (int j1 = 0; j1 < f4_vectors.GetLength(0); j1++)
+            {
+                for (int j2 = 0; j2 < f4_vectors[0].GetLength(0); j2++)
+                {
+                    f4_vectors[j1][j2] = KppDqVectors[j1][j2] - f3_vectors[j1][j2];
+                }
+            }
+
+            return f4_vectors;
+
+        }
+
+        public static double[,] CalculateDqCondDq(double[][] f4_vectors, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes)
+        {
+            double[,] DqCondDq = new double[scaleTransitions.MacroscaleVariableDimension(), scaleTransitions.MacroscaleVariableDimension()];
+
+            Dictionary<int, int> boundaryNodesOrder = GetNodesOrderInDictionary(boundaryNodes);
+
+            foreach (Node boundaryNode in boundaryNodes.Values)
+            {
+                for (int i1 = 0; i1 < f4_vectors.GetLength(0); i1++)
+                {
+                    double[] f4DataTriplette = new double[scaleTransitions.PrescribedDofsPerNode()];
+                    for (int i2 = 0; i2 < scaleTransitions.PrescribedDofsPerNode(); i2++)
+                    {
+                        f4DataTriplette[i2] = f4_vectors[i1][scaleTransitions.PrescribedDofsPerNode() * (boundaryNodesOrder[boundaryNode.ID] - 1) + i2];
+                    }
+                    double[] contribution = scaleTransitions.MicroToMacroTransition(boundaryNode, f4DataTriplette);
+                    for (int i3 = 0; i3 < scaleTransitions.MacroscaleVariableDimension(); i3++)
+                    {
+                       DqCondDq[i3, i1] += contribution[i3];
+                    }
+                }
+
+            }
+            return DqCondDq;
+        }
+
         public static Dictionary<int,int> GetNodesOrderInDictionary(Dictionary<int, Node> boundaryNodes)
         {
             Dictionary<int, int> boundaryNodesOrder = new Dictionary<int, int>();
