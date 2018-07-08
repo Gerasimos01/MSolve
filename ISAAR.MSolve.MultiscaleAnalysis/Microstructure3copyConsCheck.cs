@@ -20,12 +20,13 @@ using ISAAR.MSolve.Solvers.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.FEM.Providers;
+using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 
 
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
-    public class Microstructure3 : IFiniteElementMaterial3D
+    public class Microstructure3copyConsCheck : IFiniteElementMaterial3D
     {
         private Model model { get; set; }
         //private readonly Dictionary<int, Node> nodesDictionary = new Dictionary<int, Node>();
@@ -45,6 +46,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public void InitializeMatrices()
         {
             Cijrs_prev = new double[6, 6];
+            constitutiveMatrix = new Matrix2D(new double [6,6]);
             matrices_not_initialized = false;
             tol = Math.Pow(10, -19);
         }
@@ -53,13 +55,16 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         //double[] Stresses { get; }
         //IMatrix2D ConstitutiveMatrix { get; } TODOGerasimos
 
-        public Microstructure3(IRVEbuilder rveBuilder)
+        public Microstructure3copyConsCheck(IRVEbuilder rveBuilder)
         {
             this.rveBuilder = rveBuilder;
             Tuple<Model, Dictionary<int, Node>,double> modelAndBoundaryNodes = this.rveBuilder.GetModelAndBoundaryNodes();
             this.model = modelAndBoundaryNodes.Item1;
             this.boundaryNodes = modelAndBoundaryNodes.Item2;
             this.volume = modelAndBoundaryNodes.Item3;
+            //TODOGerasimos to parakatw einai mono gia to check
+            AddConstraintsForFe2RveBounds(model, boundaryNodes);
+            // ews edw
             this.model.ConnectDataStructures();
         }
 
@@ -75,6 +80,17 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public IList<Node> BoundaryNodes
         {
             get { return boundaryNodes.Values.ToList<Node>(); }
+        }
+
+        public static void AddConstraintsForFe2RveBounds(Model model, Dictionary<int, Node> boundaryNodes)
+        {
+            foreach (Node boundaryNode in boundaryNodes.Values)
+            {
+                int nodeID = boundaryNode.ID;
+                model.NodesDictionary[nodeID].Constraints.Add(DOFType.X);
+                model.NodesDictionary[nodeID].Constraints.Add(DOFType.Y);
+                model.NodesDictionary[nodeID].Constraints.Add(DOFType.Z);
+            }
         }
 
         public void UpdateMaterial(double[] DefGradVec)
@@ -160,8 +176,28 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             IScaleTransitions scaleTransitions = new DefGradVec3DScaleTransition();
             double[][] KfpDq = SubdomainCalculations.CalculateKfreeprescribedDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
 
+            string string1 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\KfpDq_{0}.txt";
+
+            for (int i2 = 0; i2 < KfpDq.GetLength(0); i2++)
+            {
+                string path = string.Format(string1, (i2+1).ToString());
+                Vector data = new Vector(KfpDq[i2]);
+                data.WriteToFile(path);
+            }
+
             // to BUildmatirces to exoume krathsei panw exw apo th sunarthsh tou f2
             double[][] f2_vectors = SubdomainCalculations.CalculateKffinverseKfpDq(KfpDq, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);
+
+            string string2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\KffInvKfpDq_{0}.txt";
+
+            for (int i2 = 0; i2 < f2_vectors.GetLength(0); i2++)
+            {
+                string path = string.Format(string2, (i2 + 1).ToString());
+                Vector data = new Vector(f2_vectors[i2]);
+                data.WriteToFile(path);
+            }
+
+
             //double[][] f2_vectors = new double[KfpDq.GetLength(0)][];
             //for (int i1 = 0; i1 < KfpDq.GetLength(0); i1++)
             //{
@@ -184,7 +220,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             //}
 
 
-            
+
             double[][] f3_vectors = SubdomainCalculations.CalculateKpfKffinverseKfpDq(f2_vectors, model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
             double[][] KppDqVectors = SubdomainCalculations.CalculateKppDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
             double[][] f4_vectors = SubdomainCalculations.SubtractConsecutiveVectors(KppDqVectors, f3_vectors);
@@ -302,29 +338,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         #region transformation methods
         private double[,] transformFPKtoSPK(double[,] DefGradMat, double[,] FPK_mat)
         {
-            IMatrix2D DefGradMat2D = new Matrix2D(DefGradMat);
-            int linearsystemID = 1;
-            SkylineLinearSystem linearSystem = new SkylineLinearSystem(linearsystemID, new double[3] { FPK_mat[0, 0], FPK_mat[1, 0], FPK_mat[2, 0] });
-            //ILinearSystem linearSystem = new SkylineLinearSystem(linearsystemID, new double[3] { FPK_mat[0, 0], FPK_mat[1, 0], FPK_mat[2, 0] });
-            var solver = new SolverSkyline(linearSystem);
-
-            // BuildMatrices();
-            linearSystem.Matrix = DefGradMat2D;
-
-            //solver.Initialize();
-            solver.Initialize(); // dld factorize
-
-            // me thn parakatw commented out entolh anathetoume to linearSystem.RHS se ena vector sto opoio mporoumen na anaferthoume na kanoume copyTo klp.
-            //Vector linearSystemRHS = ((Vector)linearSystem.RHS); // opws fainetai sth diadikasia pou kanei o NRNLAnalyzer sthn clculateInternalRHS sto telos tou loop
-
             double[,] SPK_Mat = new double[3, 3];
-            Vector solution = new Vector(new double[3]);
+            
 
             for (int j1 = 0; j1 < 3; j1++)
             {
-                Vector RHS = new Vector(new double[3] { FPK_mat[0, j1], FPK_mat[1, j1], FPK_mat[2, j1] });
-                SkylineMatrix2D k = ((SkylineMatrix2D)linearSystem.Matrix); // opws sto solverskyline.cs sthn Solve()
-                k.Solve(RHS, solution);
+                double[] RHS = new double[3] { FPK_mat[0, j1], FPK_mat[1, j1], FPK_mat[2, j1] };
+                double[] solution = commonCalculations.invert3by3(DefGradMat, RHS);              
                 for (int i1 = 0; i1 < 3; i1++)
                 {
                     SPK_Mat[i1, j1] = solution[i1];

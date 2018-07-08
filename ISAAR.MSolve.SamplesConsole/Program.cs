@@ -158,7 +158,8 @@ namespace ISAAR.MSolve.SamplesConsole
 
             //Program2copyRVEkanonikhsGewmetrias.SolveRVEExample();
 
-            SeparateCodeCheckingClass.Check03();
+            //SeparateCodeCheckingClass.Check03();
+            SeparateCodeCheckingClass.Check04integration();
         }
     }
 }

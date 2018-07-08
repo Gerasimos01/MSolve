@@ -276,7 +276,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             int f_komvoi_rve = kuvos;
             int p_komvoi_rve = komvoi_rve - f_komvoi_rve;
             int komvos;
-            //Dq = new double[9, 3 * p_komvoi_rve];
+            Dq = new double[9, 3 * p_komvoi_rve];
             for (int j = 0; j < p_komvoi_rve; j++)
             {
                 komvos = renumbering.GetNewNodeNumbering(f_komvoi_rve + j + 1);

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 {
-    class commonCalculations
+    public class commonCalculations
     {
         public static void cross(double[] A, double[] B, double[] C)
         {

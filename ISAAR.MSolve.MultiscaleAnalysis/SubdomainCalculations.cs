@@ -5,6 +5,8 @@ using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.Numerical.LinearAlgebra;
 using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
 using ISAAR.MSolve.FEM.Providers;
+using ISAAR.MSolve.Solvers.Skyline;
+using ISAAR.MSolve.Solvers.Interfaces;
 
 namespace ISAAR.MSolve.FEM
 {
@@ -15,15 +17,10 @@ namespace ISAAR.MSolve.FEM
             //ElementStructuralStiffnessProvider s = new ElementStructuralStiffnessProvider();
             Dictionary<int, Dictionary<DOFType, int>> nodalDOFsDictionary = subdomain.NodalDOFsDictionary;
 
-            var keys1 = boundaryNodes.Keys;
-            int[] keys2=new int [2];
-            keys1.CopyTo(keys2, 0);
+            
 
-
-            double[] macroVariable = scaleTransitions.MicroToMacroTransition(boundaryNodes[keys2[0]],new double [3]);
-
-            double[][] KfpDqVectors = new double[macroVariable.GetLength(0)][];
-            for (int j1 = 0; j1 < macroVariable.GetLength(0); j1++)
+            double[][] KfpDqVectors = new double[scaleTransitions.MacroscaleVariableDimension()][];
+            for (int j1 = 0; j1 < scaleTransitions.MacroscaleVariableDimension(); j1++)
             {
                 KfpDqVectors[j1] = new double[subdomain.TotalDOFs]; // h allliws subdomain.Forces.GetLength(0)
             }
@@ -82,7 +79,7 @@ namespace ISAAR.MSolve.FEM
                                     double[] contribution = scaleTransitions.MicroToMacroTransition(nodeColumn, element_Kfp_triplette);
                                     for (int j2 = 0; j2 < contribution.GetLength(0); j2++)
                                     {
-                                        KfpDqVectors[j2][iElementMatrixRow] += contribution[j2];
+                                        KfpDqVectors[j2][dofRow] += contribution[j2]; // TODO diorthothike
                                     }
 
                                 }
@@ -98,6 +95,32 @@ namespace ISAAR.MSolve.FEM
             var totalTime = DateTime.Now - totalStart;
 
             return KfpDqVectors;
+        }
+
+        public static double[][] CalculateKffinverseKfpDq(double[][] KfpDq, Model model, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, SolverSkyline solver, Dictionary<int, ILinearSystem> linearSystems)
+        {
+            double[][] f2_vectors = new double[KfpDq.GetLength(0)][];
+            for (int i1 = 0; i1 < KfpDq.GetLength(0); i1++)
+            {
+                //double[] FirstRHS = KfpDq[0];
+                //int FirstRHSdimension = FirstRHS.GetLength;
+
+
+                SkylineLinearSystem Kff_linearSystem = new SkylineLinearSystem(1, new double[model.Subdomains[0].TotalDOFs]);
+                var K_ffsolver = new SolverSkyline(Kff_linearSystem);
+                // BuildMatrices(); exei proigithei prin thn CalculateKfreeprescribedDqMultiplications klp
+                Kff_linearSystem.Matrix = linearSystems[1].Matrix; // pairnoume dld to matrix apo ekei pou to topothetei o StaticAnalyzer otan kanei InitializeMatrices();
+                //solver.Initialize();
+                solver.Initialize(); // prin to factorize periexei if opote den tha kanei thn idia douleia duo fores
+
+                Vector Kff_solution = new Vector(new double[model.Subdomains[0].TotalDOFs]);
+                Vector K_ffRHS = new Vector(KfpDq[i1]);
+                SkylineMatrix2D k_temp = ((SkylineMatrix2D)Kff_linearSystem.Matrix); // opws sto solverskyline.cs sthn Solve()
+                k_temp.Solve(K_ffRHS, Kff_solution);
+                f2_vectors[i1] = Kff_solution.Data;
+            }
+
+            return f2_vectors;
         }
 
         public static double[][] CalculateKpfKffinverseKfpDq(double[][] f2_vectors, Subdomain subdomain, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes)
@@ -171,14 +194,9 @@ namespace ISAAR.MSolve.FEM
         {
             Dictionary<int, Dictionary<DOFType, int>> nodalDOFsDictionary = subdomain.NodalDOFsDictionary;
 
-            var keys1 = boundaryNodes.Keys;
-            int[] keys2 = new int[2];
-            keys1.CopyTo(keys2, 0);
-            double[] macroVariable = scaleTransitions.MicroToMacroTransition(boundaryNodes[keys2[0]], new double[3]);
-
-            double[][] KppDqVectors = new double[macroVariable.GetLength(0)][];
+            double[][] KppDqVectors = new double[scaleTransitions.MacroscaleVariableDimension()][];
             Dictionary<int, int> boundaryNodesOrder = GetNodesOrderInDictionary(boundaryNodes);
-            for (int j1 = 0; j1 < macroVariable.GetLength(0); j1++)
+            for (int j1 = 0; j1 < scaleTransitions.MacroscaleVariableDimension(); j1++)
             {
                 KppDqVectors[j1] = new double[boundaryNodesOrder.Count*scaleTransitions.PrescribedDofsPerNode()]; // h allliws subdomain.Forces.GetLength(0)
             }
@@ -264,6 +282,7 @@ namespace ISAAR.MSolve.FEM
             double[][] f4_vectors = new double[KppDqVectors.GetLength(0)][];
             for (int j1 = 0; j1 < f4_vectors.GetLength(0); j1++)
             {
+                f4_vectors[j1] = new double[KppDqVectors[0].GetLength(0)];
                 for (int j2 = 0; j2 < f4_vectors[0].GetLength(0); j2++)
                 {
                     f4_vectors[j1][j2] = KppDqVectors[j1][j2] - f3_vectors[j1][j2];

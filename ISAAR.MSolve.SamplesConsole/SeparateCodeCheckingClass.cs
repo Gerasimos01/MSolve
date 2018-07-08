@@ -10,7 +10,8 @@ using ISAAR.MSolve.Logging;
 using ISAAR.MSolve.PreProcessor;
 using ISAAR.MSolve.Problems;
 using ISAAR.MSolve.Solvers.Skyline;
-
+using ISAAR.MSolve.MultiscaleAnalysis;
+using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 
 
 namespace ISAAR.MSolve.SamplesConsole
@@ -74,6 +75,24 @@ namespace ISAAR.MSolve.SamplesConsole
             var dok1 = dictionary1.Keys;
             var dok2 = dictionary1.GetEnumerator();
         }
+
+        public static void Check04integration()
+        {
+            VectorExtensions.AssignTotalAffinityCount();
+            IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilder();
+            IFiniteElementMaterial3D microstructure3copyConsCheck= new Microstructure3copyConsCheck(homogeneousRveBuilder1);
+
+            microstructure3copyConsCheck.UpdateMaterial(new double[9] { 1, 1, 1, 0, 0, 0, 0, 0, 0 });
+
+        }
+
+
+
+
+
+
+
+
 
         private  static double[,] Transform_d2Wdfdf_to_Cijrs(double[,] Aijkl, double[,] SPK, double[,] F)
         {

@@ -36,6 +36,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         private static Tuple<Model, Dictionary<int, Node>,double> Reference2RVEExample10000withRenumberingwithInput_forMS()
         {
             Model model = new Model();
+            model.SubdomainsDictionary.Add(1, new Subdomain() { ID = 1 });
+
             Dictionary<int, Node> boundaryNodes = new Dictionary<int, Node>();
 
             //PROELEFSI public static void Reference2RVEExample10000withRenumberingwithInput(Model model)

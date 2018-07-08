@@ -46,6 +46,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public static Tuple<Model, Dictionary<int, Node>,double> Reference2RVEExample10_000withRenumbering_mono_hexa()
         {
             Model model= new Model();
+            model.SubdomainsDictionary.Add(1, new Subdomain() { ID = 1 });
+
             Dictionary<int, Node> boundaryNodes= new Dictionary<int, Node>();
             // COPY APO: Reference2RVEExample100_000withRenumbering_mono_hexa
             double[,] Dq = new double[1, 1];
@@ -69,6 +71,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             int graphene_sheets_number = 0; // 0 gra sheets afou exoume mono hexa
             o_x_parameters[] model_o_x_parameteroi = new o_x_parameters[graphene_sheets_number];
+
 
             FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering_vector_path, boundaryNodes);
             double volume = mp.L01 * mp.L02 * mp.L03;

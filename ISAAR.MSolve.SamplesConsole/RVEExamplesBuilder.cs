@@ -1854,6 +1854,18 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
+        public static void AddConstraintsForFe2RveBounds(Model model, Dictionary<int, Node> boundaryNodes)
+        {
+            foreach (Node boundaryNode in boundaryNodes.Values)
+            {
+                int nodeID = boundaryNode.ID;
+                model.NodesDictionary[nodeID].Constraints.Add(DOFType.X);
+                model.NodesDictionary[nodeID].Constraints.Add(DOFType.Y);
+                model.NodesDictionary[nodeID].Constraints.Add(DOFType.Z);
+            }
+        }
+
+
         public static void AddLoadsOnRveFromFile(Model model, int hexa1, int hexa2, int hexa3,string vectorpath)
         {
             int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
