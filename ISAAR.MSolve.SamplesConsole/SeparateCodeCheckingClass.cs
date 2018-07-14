@@ -80,7 +80,10 @@ namespace ISAAR.MSolve.SamplesConsole
         {
             VectorExtensions.AssignTotalAffinityCount();
             IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilder();
+            //IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
+
             IFiniteElementMaterial3D microstructure3copyConsCheck= new Microstructure3copyConsCheck(homogeneousRveBuilder1);
+            //IFiniteElementMaterial3D microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
 
             microstructure3copyConsCheck.UpdateMaterial(new double[9] { 1, 1, 1, 0, 0, 0, 0, 0, 0 });
 

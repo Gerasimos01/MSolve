@@ -252,7 +252,7 @@ namespace ISAAR.MSolve.FEM
                                     double[] element_Kpp_triplette = new double[scaleTransitions.PrescribedDofsPerNode()];
                                     for (int j2 = 0; j2 < scaleTransitions.PrescribedDofsPerNode(); j2++)
                                     {
-                                        element_Kpp_triplette[j2] = ElementK[iElementMatrixRow, iElementMatrixColumn + j2];
+                                        element_Kpp_triplette[j2] = ElementK[iElementMatrixRow+i1, iElementMatrixColumn + j2]; // mallon iElementMatrixRow + i1
                                     }
                                     double[] contribution = scaleTransitions.MicroToMacroTransition(nodeColumn, element_Kpp_triplette);
                                     for (int j1 = 0; j1 < contribution.GetLength(0); j1++)

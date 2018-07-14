@@ -26,7 +26,7 @@ using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
-    public class Microstructure3copyConsCheck : IFiniteElementMaterial3D
+    public class Microstructure3copyConsCheckEna : IFiniteElementMaterial3D
     {
         private Model model { get; set; }
         //private readonly Dictionary<int, Node> nodesDictionary = new Dictionary<int, Node>();
@@ -55,7 +55,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         //double[] Stresses { get; }
         //IMatrix2D ConstitutiveMatrix { get; } TODOGerasimos
 
-        public Microstructure3copyConsCheck(IRVEbuilder rveBuilder)
+        public Microstructure3copyConsCheckEna(IRVEbuilder rveBuilder)
         {
             this.rveBuilder = rveBuilder;
             Tuple<Model, Dictionary<int, Node>,double> modelAndBoundaryNodes = this.rveBuilder.GetModelAndBoundaryNodes();
@@ -151,6 +151,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, microAnalyzer, linearSystems);
             //childAnalyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] { 47 }); // MS na xthsimopoihsoume LOGFactories gia th dunamh isws?
 
+            // check me ena mono hexa 
+            ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
+            IScaleTransitions scaleTransitions = new DefGradVec3DScaleTransition();
+            double[][] KppDqVectors = SubdomainCalculations.CalculateKppDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
+            // check me ena mono hexa ews edw 
+
             parentAnalyzer.BuildMatrices();
             parentAnalyzer.Initialize();
             parentAnalyzer.Solve();
@@ -172,8 +178,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             #region INTEGRATION
             //TODOGERASIMOS edw thelei NEWtonRaphson.BuildMatrices kai sigoura to solver. Initialize kapou edw
             microAnalyzer.BuildMatrices();
-            ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
-            IScaleTransitions scaleTransitions = new DefGradVec3DScaleTransition();
+            // check ena mono hexa
+            //ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
+            //IScaleTransitions scaleTransitions = new DefGradVec3DScaleTransition();
             double[][] KfpDq = SubdomainCalculations.CalculateKfreeprescribedDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
 
             string string1 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\KfpDq_{0}.txt";
@@ -222,7 +229,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
 
             double[][] f3_vectors = SubdomainCalculations.CalculateKpfKffinverseKfpDq(f2_vectors, model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
-            double[][] KppDqVectors = SubdomainCalculations.CalculateKppDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
+            // check ena mono hexa
+            //double[][] KppDqVectors = SubdomainCalculations.CalculateKppDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
             double[][] f4_vectors = SubdomainCalculations.SubtractConsecutiveVectors(KppDqVectors, f3_vectors);
             double[,] DqCondDq = SubdomainCalculations.CalculateDqCondDq(f4_vectors, scaleTransitions, boundaryNodes);
 
