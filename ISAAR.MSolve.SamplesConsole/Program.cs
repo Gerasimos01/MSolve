@@ -156,10 +156,10 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeperateCodeCheckingClass.Check02();
             //SeparateCodeCheckingClass2.check01();
 
-            //Program2copyRVEkanonikhsGewmetrias.SolveRVEExample();
+            Program2copyRVEkanonikhsGewmetrias.SolveRVEExample();
 
             //SeparateCodeCheckingClass.Check03();
-            SeparateCodeCheckingClass.Check04integration();
+            //SeparateCodeCheckingClass.Check04integration();
         }
     }
 }

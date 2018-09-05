@@ -63,6 +63,10 @@ namespace ISAAR.MSolve.Problems
 
         private void BuildKs()
         {
+            //prosthiki print
+            string print_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}Stiffness.txt";
+
+
             ks = new Dictionary<int, IMatrix2D>(model.SubdomainsDictionary.Count);
             //ks.Add(1, new SkylineMatrix2D<double>(new double[,] { { 6, -2 }, { -2, 4 } }));
             ElementStructuralStiffnessProvider s = new ElementStructuralStiffnessProvider();
@@ -79,7 +83,13 @@ namespace ISAAR.MSolve.Problems
                 {
                     internalKs[limit.Item1] = new Dictionary<int, IMatrix2D>(limit.Item3 - limit.Item2);
                     for (int i = limit.Item2; i < limit.Item3; i++)
-                        internalKs[limit.Item1].Add(k[i], GlobalMatrixAssemblerSkyline.CalculateGlobalMatrix(model.SubdomainsDictionary[k[i]], s));
+                    {
+                        SkylineMatrix2D mat = GlobalMatrixAssemblerSkyline.CalculateGlobalMatrix(model.SubdomainsDictionary[k[i]], s);
+                        string file_no = (k[i]).ToString();
+                        string print_path = string.Format(print_path_gen, file_no);
+                        mat.WriteToFile(print_path);
+                        internalKs[limit.Item1].Add(k[i], mat );
+                    }
                 }
                 else
                     internalKs[limit.Item1] = new Dictionary<int, IMatrix2D>();

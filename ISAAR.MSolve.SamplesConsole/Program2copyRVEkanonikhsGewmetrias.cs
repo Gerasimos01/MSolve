@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ISAAR.MSolve.Analyzers.Interfaces;
-
+using ISAAR.MSolve.SamplesConsole.SupportiveClasses;
 using ISAAR.MSolve.FEM;
 using ISAAR.MSolve.FEM.Elements;
 using ISAAR.MSolve.FEM.Entities;
@@ -31,7 +31,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice =206;   // 9 einai to megalo me to renumbering pou tsekaretai
+            model__builder_choice =207;   // 9 einai to megalo me to renumbering pou tsekaretai
 
             
             if (model__builder_choice == 1) // 
@@ -43,9 +43,21 @@ namespace ISAAR.MSolve.SamplesConsole
 
             if (model__builder_choice == 4) // 
             { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInput(model); }
+            if (model__builder_choice == 207) // 
+            { //RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInput(model);
+                RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample1000ddm(model);
+                int[][] subdElementIds = DdmCalculations.CalculateSubdElementIds(6, 6, 6, 3, 3, model);
+                DdmCalculations.SeparateSubdomains(model, subdElementIds);
+                foreach (int subdomainID in model.SubdomainsDictionary.Keys)
+                {
+                    Subdomain subd = model.SubdomainsDictionary[subdomainID];
+                    DdmCalculations.PrintDictionary(subd.GlobalNodalDOFsDictionary, subd.TotalDOFs, subd.ID);
+                }
+            }
 
             if (model__builder_choice == 206) // 
-            { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInputFromMSOLVE(model); }
+            { RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInputFromMSOLVE(model);                
+            }
 
 
             bool use_domain_decomposer = false;
@@ -56,12 +68,17 @@ namespace ISAAR.MSolve.SamplesConsole
 
                 model.ConnectDataStructures();
                 // ii)
-                AutomaticDomainDecomposer domainDecomposer = new AutomaticDomainDecomposer(model, 2); //2o orisma arithmoos subdomains
+                AutomaticDomainDecomposer domainDecomposer = new AutomaticDomainDecomposer(model, 8); //2o orisma arithmoos subdomains
                 domainDecomposer.UpdateModel();
             }
             else
             {
                 model.ConnectDataStructures();
+                foreach (int subdomainID in model.SubdomainsDictionary.Keys)
+                {
+                    Subdomain subd = model.SubdomainsDictionary[subdomainID];
+                    DdmCalculations.PrintDictionary(subd.GlobalNodalDOFsDictionary, subd.TotalDOFs, subd.ID);
+                }
             }
 
             var linearSystems = new Dictionary<int, ILinearSystem>(); //I think this should be done automatically 
