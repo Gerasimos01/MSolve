@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ISAAR.MSolve.Materials;
 using ISAAR.MSolve.Materials.Interfaces; //using ISAAR.MSolve.PreProcessor.Interfaces;
 using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces; //using ISAAR.MSolve.Matrices.Interfaces;
 using ISAAR.MSolve.Numerical.LinearAlgebra; //using ISAAR.MSolve.Matrices;
@@ -86,6 +87,43 @@ namespace ISAAR.MSolve.SamplesConsole
             //IFiniteElementMaterial3D microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
 
             microstructure3copyConsCheck.UpdateMaterial(new double[9] { 1, 1, 1, 0, 0, 0, 0, 0, 0 });
+
+        }
+
+        public static void Check05CohMatBKstraining()
+        {
+            //thumizetai 
+            //for (int j = 0; j < 3; j++)
+            //{
+            //    D_tan[j, j] = (1 - d_prev_step) * E;
+            //}
+            //if (Delta[2] < 0)
+            //{
+            //    D_tan[2, 2] += d_prev_step * E;
+            //}
+            //dld sth tlipsi den ephreazei to damage
+            //paramaetroi apo 
+            //mpgp = RVEkanoninkhsGewmetriasBuilder.GetReferenceKanonikhGewmetriaRveExampleParameters(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
+            //parametroi cohesive epifaneias
+            double T_o_3 = 0.05;// Gpa = 1000Mpa = 1000N / mm2
+            double D_o_3 = 0.5; // nm
+            double D_f_3 = 4; // nm
+            double T_o_1 = 0.05;// Gpa
+            double D_o_1 = 0.5; // nm
+            double D_f_1 = 4; // nm
+            double n_curve = 1.4;
+
+            BenzeggaghKenaneCohMat material3 = new Materials.BenzeggaghKenaneCohMat()
+            {
+                T_o_3 = T_o_3,
+                D_o_3 = D_o_3,
+                D_f_3 = D_f_3,
+                T_o_1 = T_o_1,
+                D_o_1 = D_o_1,
+                D_f_1 = D_f_1,
+                n_curve = n_curve,
+            };
+
 
         }
 
@@ -191,6 +229,27 @@ namespace ISAAR.MSolve.SamplesConsole
             return Cinpk;
         }
 
+        private static Tuple< double [][], double[] [,]> StressStrainHistory(double [][] strainHistory, IFiniteElementMaterial3D testedMaterial)
+        {
+            double[][] stressHistory = new double[strainHistory.GetLength(0)][];
+            double[][,] constitutiveMatrixHistory = new double[strainHistory.GetLength(0)][,];
+
+            for (int l = 0; l < strainHistory.GetLength(0); l++)
+            {
+                testedMaterial.UpdateMaterial(strainHistory[l]);
+                testedMaterial.SaveState();
+                testedMaterial.Stresses.CopyTo(stressHistory[l],0);
+                constitutiveMatrixHistory[l] = new double[testedMaterial.ConstitutiveMatrix.Columns, testedMaterial.ConstitutiveMatrix.Rows];
+
+                for (int m = 0; m < testedMaterial.ConstitutiveMatrix.Columns; m++)
+                {
+                    for (int n = 0; n < testedMaterial.ConstitutiveMatrix.Rows; n++)
+                    { constitutiveMatrixHistory[l][m,n] = testedMaterial.ConstitutiveMatrix[m, n]; }
+                }
+            }
+
+            return new Tuple<double[][], double[][,]>(stressHistory, constitutiveMatrixHistory);
+        }
 
 
     }
