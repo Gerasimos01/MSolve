@@ -5,7 +5,7 @@ using System;
 
 namespace ISAAR.MSolve.FEM.Materials
 {
-    public class ElasticMaterial3D : IIsotropicFiniteElementMaterial3D
+    public class ElasticMaterial3D : IIsotropicContinuumMaterial3D
     {
         private readonly double[] strains = new double[6];
         private readonly double[] incrementalStrains = new double[6];
@@ -75,27 +75,27 @@ namespace ISAAR.MSolve.FEM.Materials
 
         #region IFiniteElementMaterial3D Members
 
-        public double[] Stresses { get { return stresses; } }
+        public StressStrainVectorContinuum3D Stresses { get { return new StressStrainVectorContinuum3D(stresses); } }
 
-        public IMatrix2D ConstitutiveMatrix
+        public ElasticityTensorContinuum3D ConstitutiveMatrix
         {
             get
             {
-                if (constitutiveMatrix == null) UpdateMaterial(new double[6]);
-                return new Matrix2D(constitutiveMatrix);
+                if (constitutiveMatrix == null) UpdateMaterial(new StressStrainVectorContinuum3D(new double[6]));
+                return new ElasticityTensorContinuum3D(constitutiveMatrix);
             }
         }
 
-        public void UpdateMaterial(double[] strainsIncrement)
+        public void UpdateMaterial(StressStrainVectorContinuum3D strainsIncrement)
         {
-            Array.Copy(strainsIncrement, this.incrementalStrains, 6);
+            Array.Copy(strainsIncrement.Data, this.incrementalStrains, 6);
             constitutiveMatrix = GetConstitutiveMatrix();
             this.CalculateNextStressStrainPoint();
         }
 
         public void ClearState()
         {
-            Array.Clear(constitutiveMatrix, 0, constitutiveMatrix.Length);
+            if (constitutiveMatrix != null) Array.Clear(constitutiveMatrix, 0, constitutiveMatrix.Length);
             Array.Clear(incrementalStrains, 0, incrementalStrains.Length);
             Array.Clear(stresses, 0, stresses.Length);
             Array.Clear(stressesNew, 0, stressesNew.Length);
@@ -116,10 +116,11 @@ namespace ISAAR.MSolve.FEM.Materials
 
         #region ICloneable Members
 
-        public object Clone()
+        public ElasticMaterial3D Clone()
         {
             return new ElasticMaterial3D() { YoungModulus = this.YoungModulus, PoissonRatio = this.PoissonRatio };
         }
+        object ICloneable.Clone() => Clone();
 
         #endregion
 

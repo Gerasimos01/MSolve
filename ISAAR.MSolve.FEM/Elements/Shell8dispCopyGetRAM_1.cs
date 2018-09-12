@@ -12,6 +12,8 @@ using ISAAR.MSolve.FEM.Elements.SupportiveClasses;//using ISAAR.MSolve.PreProces
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.Materials.Interfaces;
 using ISAAR.MSolve.FEM;
+using ISAAR.MSolve.Discretization.Interfaces;
+using ISAAR.MSolve.Discretization;
 
 namespace ISAAR.MSolve.FEM.Elements
 {
@@ -21,8 +23,8 @@ namespace ISAAR.MSolve.FEM.Elements
         protected readonly static DOFType[] nodalDOFTypes = new DOFType[] { DOFType.X, DOFType.Y, DOFType.Z, DOFType.RotX, DOFType.RotY };
         protected readonly static DOFType[][] dofTypes = new DOFType[][] { nodalDOFTypes, nodalDOFTypes, nodalDOFTypes,
             nodalDOFTypes, nodalDOFTypes, nodalDOFTypes, nodalDOFTypes, nodalDOFTypes };
-        protected readonly IIsotropicFiniteElementMaterial3D[] materialsAtGaussPoints; //compa : isotropic  //protected readonly IFiniteElementMaterial3D[] materialsAtGaussPoints;
-        protected IFiniteElementDOFEnumerator dofEnumerator = new GenericDOFEnumerator();
+        protected readonly IIsotropicContinuumMaterial3D[] materialsAtGaussPoints; //compa : isotropic  //protected readonly IFiniteElementMaterial3D[] materialsAtGaussPoints;
+        protected IElementDOFEnumerator dofEnumerator = new GenericDOFEnumerator();
         // ews edw 
 
         public double[][] oVn_i { get; set; }
@@ -50,15 +52,15 @@ namespace ISAAR.MSolve.FEM.Elements
         {
         }
 
-        public Shell8dispCopyGetRAM_1(IIsotropicFiniteElementMaterial3D material, int gp_d1c, int gp_d2c, int gp_d3c) // compa isotropic
+        public Shell8dispCopyGetRAM_1(IIsotropicContinuumMaterial3D material, int gp_d1c, int gp_d2c, int gp_d3c) // compa isotropic
         {
             this.gp_d1 = gp_d1c;
             this.gp_d2 = gp_d2c;
             this.gp_d3 = gp_d3c;
             this.nGaussPoints = this.gp_d1 * this.gp_d2 * this.gp_d3;
-            materialsAtGaussPoints = new IIsotropicFiniteElementMaterial3D[nGaussPoints];
+            materialsAtGaussPoints = new IIsotropicContinuumMaterial3D[nGaussPoints];
             for (int i = 0; i < nGaussPoints; i++)
-                materialsAtGaussPoints[i] = (IIsotropicFiniteElementMaterial3D)material.Clone();
+                materialsAtGaussPoints[i] = (IIsotropicContinuumMaterial3D)material.Clone();
 
         }
 
@@ -252,12 +254,12 @@ namespace ISAAR.MSolve.FEM.Elements
             return ll1AndJ0_a;
         }
         
-        private Tuple<double [][,],double[]> GetJ_0invAndDetJ_0(double[][,] J_0a, Element element)
+        private Tuple<double [][,],double[]> GetJ_0invAndDetJ_0(double[][,] J_0a, IElement element)
         {
             ox_i = new double[8][];
             for (int j = 0; j < 8; j++)
             {
-                 ox_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
+                 ox_i[j] = new double[] { element.INodes[j].X, element.INodes[j].Y, element.INodes[j].Z, };
             }
 
             double[,] J_0b;    //einai idio gia ola ta gauss points 
@@ -498,7 +500,7 @@ namespace ISAAR.MSolve.FEM.Elements
 
 
 
-        private void CalculateInitialConfigurationData(Element element)
+        private void CalculateInitialConfigurationData(IElement element)
         {
             // prosthiki ram 
             double[][] gausscoordinates;//3 dianysmata me tis timew tvn ksi heta zeta se ola ta gauss points
@@ -532,8 +534,8 @@ namespace ISAAR.MSolve.FEM.Elements
             oV1_i = new double[8][];
             for (int j = 0; j < 8; j++)
             {
-                ox_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
-                tx_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
+                ox_i[j] = new double[] { element.INodes[j].X, element.INodes[j].Y, element.INodes[j].Z, };
+                tx_i[j] = new double[] { element.INodes[j].X, element.INodes[j].Y, element.INodes[j].Z, };
                 tU[j] = new double[6];
                 tUvec[j] = new double[6];
                 oV1_i[j] = new double[3];
@@ -838,7 +840,7 @@ namespace ISAAR.MSolve.FEM.Elements
             this.CalculateStrains(element);
         }
 
-        private void CalculateStrains(Element element)
+        private void CalculateStrains(IElement element)
         {
             // prosthiki logw J_0inv oxi global
             // kai anagkastika kai J_0a
@@ -1050,7 +1052,7 @@ namespace ISAAR.MSolve.FEM.Elements
             }
         }
 
-        private double [] UpdateForces(Element element)
+        private double [] UpdateForces(IElement element)
         {
 
             //prosthikes gia ll1 entos methodwn mono
@@ -1256,7 +1258,7 @@ namespace ISAAR.MSolve.FEM.Elements
             return Fxk[nGaussPoints];
         }
 
-        private double [,] UpdateKmatrices(Element element)
+        private double [,] UpdateKmatrices(IElement element)
         {
             double[,] Kt = new double[40, 40];
             // PROSTHIKI RAM apo osa declared ektos methodou
@@ -1749,12 +1751,12 @@ namespace ISAAR.MSolve.FEM.Elements
             get { return ElementDimensions.ThreeD; }
         }
 
-        public virtual IList<IList<DOFType>> GetElementDOFTypes(Element element)
+        public virtual IList<IList<DOFType>> GetElementDOFTypes(IElement element)
         {
             return dofTypes;
         }
 
-        public IFiniteElementDOFEnumerator DOFEnumerator
+        public IElementDOFEnumerator DOFEnumerator
         {
             get { return dofEnumerator; }
             set { dofEnumerator = value; }
@@ -1763,24 +1765,24 @@ namespace ISAAR.MSolve.FEM.Elements
         //aparaithta tou IstructuralElement gia to material
         public void ClearMaterialState()
         {
-            foreach (IFiniteElementMaterial3D m in materialsAtGaussPoints) m.ClearState();
+            foreach (IIsotropicContinuumMaterial3D m in materialsAtGaussPoints) m.ClearState();
         }
 
         public void SaveMaterialState()
         {
-            foreach (IFiniteElementMaterial3D m in materialsAtGaussPoints) m.SaveState();
+            foreach (IIsotropicContinuumMaterial3D m in materialsAtGaussPoints) m.SaveState();
         }
 
         public void ClearMaterialStresses()
         {
-            foreach (IFiniteElementMaterial3D m in materialsAtGaussPoints) m.ClearStresses();
+            foreach (IIsotropicContinuumMaterial3D m in materialsAtGaussPoints) m.ClearStresses();
         }
 
         public bool MaterialModified
         {
             get
             {
-                foreach (IFiniteElementMaterial3D material in materialsAtGaussPoints)
+                foreach (IIsotropicContinuumMaterial3D material in materialsAtGaussPoints)
                     if (material.Modified) return true;
                 return false;
             }
@@ -1788,12 +1790,12 @@ namespace ISAAR.MSolve.FEM.Elements
 
         public void ResetMaterialModified()
         {
-            foreach (IFiniteElementMaterial3D material in materialsAtGaussPoints) material.ResetModified();
+            foreach (IIsotropicContinuumMaterial3D material in materialsAtGaussPoints) material.ResetModified();
         }
 
         public Tuple<double[], double[]> CalculateStresses(Element element, double[] localDisplacements, double[] localdDisplacements)
         {
-            return new Tuple<double[], double[]>(new double[123], materialsAtGaussPoints[materialsAtGaussPoints.Length - 1].Stresses);
+            return new Tuple<double[], double[]>(new double[123], materialsAtGaussPoints[materialsAtGaussPoints.Length - 1].Stresses.Data);
         }
 
         //aparaithta tou Istructural gia th dunamiki analusi
@@ -1802,15 +1804,14 @@ namespace ISAAR.MSolve.FEM.Elements
             return new double[123];
         }
 
-        public virtual IMatrix2D MassMatrix(Element element)
+        public virtual IMatrix2D MassMatrix(IElement element)
         {
-            return new Matrix2D(1, 1);
+            throw new NotImplementedException();
         }
 
-        public virtual IMatrix2D DampingMatrix(Element element)
+        public virtual IMatrix2D DampingMatrix(IElement element)
         {
-
-            return new Matrix2D(1, 1);
+            throw new NotImplementedException();
         }
 
         // forces tha exei ena if me initial geometric data
@@ -1836,7 +1837,7 @@ namespace ISAAR.MSolve.FEM.Elements
         }
 
         private int endeixiStiffness = 1;
-        public virtual IMatrix2D StiffnessMatrix(Element element)
+        public virtual IMatrix2D StiffnessMatrix(IElement element)
         {
             double[,] Kt = new double[40, 40];
             if (endeixiStiffness == 1)

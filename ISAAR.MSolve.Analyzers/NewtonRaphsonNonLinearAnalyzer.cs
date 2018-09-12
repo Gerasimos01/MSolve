@@ -46,7 +46,10 @@ namespace ISAAR.MSolve.Analyzers
             this.totalDOFs = totalDOFs;
             this.globalRHS = new Vector(totalDOFs);
 
-            InitializeInternalVectors();
+	        maxSteps = maximumIteration;
+	        stepsForMatrixRebuild=iterationStepsForMatrixRebuild;
+	        
+			InitializeInternalVectors();
         }
 
         public int SetMaxIterations
@@ -260,11 +263,11 @@ namespace ISAAR.MSolve.Analyzers
                 u[subdomain.ID].CopyTo(((Vector)subdomain.Solution).Data, 0);
         }
 
-        private void ClearMaterialStresses()
-        {
-            foreach (ILinearSystem subdomain in linearSystems)
-                subdomainUpdaters[linearSystems.Select((v, i) => new { System = v, Index = i }).First(x => x.System.ID == subdomain.ID).Index].ResetState();
-        }
+        //private void ClearMaterialStresses()
+        //{
+        //    foreach (ILinearSystem subdomain in linearSystems)
+        //        subdomainUpdaters[linearSystems.Select((v, i) => new { System = v, Index = i }).First(x => x.System.ID == subdomain.ID).Index].ResetState();
+        //}
 
         public void BuildMatrices()
         {
