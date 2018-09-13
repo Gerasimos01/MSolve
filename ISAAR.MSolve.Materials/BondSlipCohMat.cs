@@ -9,7 +9,7 @@ using ISAAR.MSolve.Numerical.LinearAlgebra; //using ISAAR.MSolve.Matrices;
 
 namespace ISAAR.MSolve.Materials
 {
-    public class BondSlipCohMat : IFiniteElementMaterial3D
+    public class BondSlipCohMat //: IFiniteElementMaterial3D // TODOGerasimos
     {
         private bool modified; // opws sto MohrCoulomb gia to modified
 
@@ -39,9 +39,9 @@ namespace ISAAR.MSolve.Materials
         public void InitializeMatrices()
         {
             sigma = new double[3];
-            tan_stif = new double[3, 3];
-            tan_stif_prev = new double[3, 3];
-            alpha = new double[3];
+            //tan_stif = new double[3, 3]; // TODOGerasimos commented out einai temporarily
+            //tan_stif_prev = new double[3, 3];
+            //alpha = new double[3];
             c1 = (k_elastic * k_elastic2) / (k_elastic - k_elastic2);
             matrices_not_initialized = false;
             tol = Math.Pow(10, -19);

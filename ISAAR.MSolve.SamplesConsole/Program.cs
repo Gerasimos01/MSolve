@@ -149,14 +149,14 @@ namespace ISAAR.MSolve.SamplesConsole
         {
             //SolveBuildingInNoSoilSmall();
             //TrussExample.Run();
-            //ProgramElegxoiDdm.SolveRVEExample(); //TODOGerasimos gia to multiscale epilegoume to 24 edw
+            ProgramElegxoiDdm.SolveRVEExample(); //TODOGerasimos gia to multiscale epilegoume to 24 edw
             //Program2copyElegxoiBenc.SolveBencExample();
             // commit example
 
             //SeperateCodeCheckingClass.Check02();
             //SeparateCodeCheckingClass2.check01();
 
-            Program2copyRVEkanonikhsGewmetrias.SolveRVEExample();
+            //Program2copyRVEkanonikhsGewmetrias.SolveRVEExample();
 
             //SeparateCodeCheckingClass.Check03();
             //SeparateCodeCheckingClass.Check04integration();
