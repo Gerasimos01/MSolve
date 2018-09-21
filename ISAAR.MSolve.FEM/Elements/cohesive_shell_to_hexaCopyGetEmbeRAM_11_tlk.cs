@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text;
 using ISAAR.MSolve.Discretization;
 using ISAAR.MSolve.Discretization.Interfaces;
+using ISAAR.MSolve.Discretization.Embedding;
 
 namespace ISAAR.MSolve.FEM.Elements
 {

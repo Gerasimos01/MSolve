@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using ISAAR.MSolve.FEM.Embedding;
-using ISAAR.MSolve.Discretization;
+﻿using ISAAR.MSolve.Discretization;
+using ISAAR.MSolve.Discretization.Embedding;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.FEM.Elements.SupportiveClasses;
-using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
-using ISAAR.MSolve.Numerical.LinearAlgebra;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.Materials.Interfaces;
+using ISAAR.MSolve.Numerical.LinearAlgebra;
 using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
+using System;
 using System.Collections.Generic;
-using System.Text;
-using ISAAR.MSolve.Discretization.Interfaces;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace ISAAR.MSolve.FEM.Elements
 {
@@ -107,14 +103,14 @@ namespace ISAAR.MSolve.FEM.Elements
             return faXYZ;
         }
 
-        protected double[,] GetCoordinatesTranspose(Element element)
+        protected double[,] GetCoordinatesTranspose(IElement element)
         {
             double[,] faXYZ = new double[3, dofTypes.Length];
             for (int i = 0; i < dofTypes.Length; i++)
             {
-                faXYZ[0, i] = element.Nodes[i].X;
-                faXYZ[1, i] = element.Nodes[i].Y;
-                faXYZ[2, i] = element.Nodes[i].Z;
+                faXYZ[0, i] = element.INodes[i].X;
+                faXYZ[1, i] = element.INodes[i].Y;
+                faXYZ[2, i] = element.INodes[i].Z;
             }
             return faXYZ;
         }
@@ -694,18 +690,18 @@ namespace ISAAR.MSolve.FEM.Elements
             //    fXiM * fEtaP * fZetaP };
         }
 
-        private double[] GetNaturalCoordinates(Element element, Node node)
+        private double[] GetNaturalCoordinates(IElement element, INode node)
         {
-            double[] mins = new double[] { element.Nodes[0].X, element.Nodes[0].Y, element.Nodes[0].Z };
-            double[] maxes = new double[] { element.Nodes[0].X, element.Nodes[0].Y, element.Nodes[0].Z };
-            for (int i = 0; i < element.Nodes.Count; i++)
+            double[] mins = new double[] { element.INodes[0].X, element.INodes[0].Y, element.INodes[0].Z };
+            double[] maxes = new double[] { element.INodes[0].X, element.INodes[0].Y, element.INodes[0].Z };
+            for (int i = 0; i < element.INodes.Count; i++)
             {
-                mins[0] = mins[0] > element.Nodes[i].X ? element.Nodes[i].X : mins[0];
-                mins[1] = mins[1] > element.Nodes[i].Y ? element.Nodes[i].Y : mins[1];
-                mins[2] = mins[2] > element.Nodes[i].Z ? element.Nodes[i].Z : mins[2];
-                maxes[0] = maxes[0] < element.Nodes[i].X ? element.Nodes[i].X : maxes[0];
-                maxes[1] = maxes[1] < element.Nodes[i].Y ? element.Nodes[i].Y : maxes[1];
-                maxes[2] = maxes[2] < element.Nodes[i].Z ? element.Nodes[i].Z : maxes[2];
+                mins[0] = mins[0] > element.INodes[i].X ? element.INodes[i].X : mins[0];
+                mins[1] = mins[1] > element.INodes[i].Y ? element.INodes[i].Y : mins[1];
+                mins[2] = mins[2] > element.INodes[i].Z ? element.INodes[i].Z : mins[2];
+                maxes[0] = maxes[0] < element.INodes[i].X ? element.INodes[i].X : maxes[0];
+                maxes[1] = maxes[1] < element.INodes[i].Y ? element.INodes[i].Y : maxes[1];
+                maxes[2] = maxes[2] < element.INodes[i].Z ? element.INodes[i].Z : maxes[2];
             }
             //return new double[] { (node.X - mins[0]) / ((maxes[0] - mins[0]) / 2) - 1,
             //    (node.Y - mins[1]) / ((maxes[1] - mins[1]) / 2) - 1,
@@ -731,9 +727,9 @@ namespace ISAAR.MSolve.FEM.Elements
                 double[] coordinateDifferences = new double[] { 0, 0, 0 };
                 for (int i = 0; i < shapeFunctions.Length; i++)
                 {
-                    coordinateDifferences[0] += shapeFunctions[i] * element.Nodes[i].X;
-                    coordinateDifferences[1] += shapeFunctions[i] * element.Nodes[i].Y;
-                    coordinateDifferences[2] += shapeFunctions[i] * element.Nodes[i].Z;
+                    coordinateDifferences[0] += shapeFunctions[i] * element.INodes[i].X;
+                    coordinateDifferences[1] += shapeFunctions[i] * element.INodes[i].Y;
+                    coordinateDifferences[2] += shapeFunctions[i] * element.INodes[i].Z;
                 }
                 coordinateDifferences[0] = node.X - coordinateDifferences[0];
                 coordinateDifferences[1] = node.Y - coordinateDifferences[1];
