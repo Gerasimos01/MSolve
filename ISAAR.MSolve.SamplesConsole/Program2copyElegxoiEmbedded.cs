@@ -93,10 +93,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        static void Main(string[] args)
-        {
-            SolveExample();
-        }
+        //static void Main(string[] args)
+        //{
+        //    SolveExample();
+        //}
 
     }
 }
