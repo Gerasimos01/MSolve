@@ -16,6 +16,7 @@ using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.Discretization;
 using ISAAR.MSolve.Materials;
 using ISAAR.MSolve.FEM.Interpolation;
+using ISAAR.MSolve.Discretization.Embedding;
 
 namespace ISAAR.MSolve.FEM.Elements
 {
@@ -1492,7 +1493,7 @@ namespace ISAAR.MSolve.FEM.Elements
             return embeddedNode;
         }
 
-        private double[] GetNaturalCoordinates(IElement element, Node node)
+        private double[] GetNaturalCoordinates(IElement element, INode node)
         {
             double[] mins = new double[] { element.INodes[0].X, element.INodes[0].Y, element.INodes[0].Z };
             double[] maxes = new double[] { element.INodes[0].X, element.INodes[0].Y, element.INodes[0].Z };

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.Discretization.Embedding;
+using ISAAR.MSolve.Discretization.Interfaces;
 
 namespace ISAAR.MSolve.FEM.Interfaces
 {

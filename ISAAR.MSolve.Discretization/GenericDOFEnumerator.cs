@@ -6,31 +6,37 @@ using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
 
 namespace ISAAR.MSolve.Discretization
 {
-	public class GenericDOFEnumerator : IElementDOFEnumerator
-	{
-		public IList<IList<DOFType>> GetDOFTypes(IElement element)
-		{
-			return element.IElementType.GetElementDOFTypes(element);
-		}
+    public class GenericDOFEnumerator : IElementDOFEnumerator
+    {
+        public IList<IList<DOFType>> GetDOFTypes(IElement element)
+        {
+            return element.IElementType.GetElementDOFTypes(element);
+        }
 
-		public IList<IList<DOFType>> GetDOFTypesForDOFEnumeration(IElement element)
-		{
-			return element.IElementType.GetElementDOFTypes(element);
-		}
+        public IList<IList<DOFType>> GetDOFTypesForDOFEnumeration(IElement element)
+        {
+            return element.IElementType.GetElementDOFTypes(element);
+        }
 
-		public IList<INode> GetNodesForMatrixAssembly(IElement element)
-		{
-			return element.INodes;
-		}
+        public IList<INode> GetNodesForMatrixAssembly(IElement element)
+        {
+            return element.INodes;
+        }
 
-		public IMatrix2D GetTransformedMatrix(IMatrix2D matrix)
-		{
-			return matrix;
-		}
+        public IMatrix2D GetTransformedMatrix(IMatrix2D matrix)
+        {
+            return matrix;
+        }
 
-		public double[] GetTransformedVector(double[] vector)
-		{
-			return vector;
-		}
-	}
+        public double[] GetTransformedVector(double[] vector)
+        {
+            return vector;
+        }
+
+        public double[] GetTransformedForcesVector(double[] vector)
+        {
+            return vector;
+        }
+
+    }
 }

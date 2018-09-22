@@ -1935,10 +1935,10 @@ namespace ISAAR.MSolve.FEM.Elements
         private readonly List<EmbeddedNode> embeddedNodes = new List<EmbeddedNode>(); //
         public IList<EmbeddedNode> EmbeddedNodes { get { return embeddedNodes; } } // opws Beam3D
 
-        public Dictionary<DOFType, int> GetInternalNodalDOFs(Element element, Node node)//
+        public Dictionary<DOFType, int> GetInternalNodalDOFs(IElement element, INode node)//
         {
             int index = 0;
-            foreach (var elementNode in element.Nodes)
+            foreach (var elementNode in element.INodes)
             {
                 if (node.ID == elementNode.ID)
                     break;
@@ -1959,7 +1959,7 @@ namespace ISAAR.MSolve.FEM.Elements
             }          
         }
 
-        public double[] GetLocalDOFValues(Element hostElement, double[] hostDOFValues) // omoiws Beam3D
+        public double[] GetLocalDOFValues(IElement hostElement, double[] hostDOFValues) // omoiws Beam3D
         {
             //if (transformation == null)
             //    throw new InvalidOperationException("Requested embedded node values for element that has no embedded nodes.");

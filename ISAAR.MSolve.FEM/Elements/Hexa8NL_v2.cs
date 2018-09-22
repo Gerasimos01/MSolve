@@ -13,6 +13,7 @@ using ISAAR.MSolve.Materials.Interfaces;
 using ISAAR.MSolve.FEM;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.Discretization;
+using ISAAR.MSolve.Discretization.Embedding;
 
 namespace ISAAR.MSolve.FEM.Elements
 {
