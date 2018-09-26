@@ -159,7 +159,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             //TODOGerasimos
             double[] FPK_vec = new double[9];
-            //TODO: upologismos FPK_vec apo oloklhrwma 
+            //TODO: upologismos FPK_vec apo oloklhrwma //apla klhsh twn sunarthsewn
             double[,] DefGradMat = new double[3, 3] { { DefGradVec[0], DefGradVec[3], DefGradVec[6] }, { DefGradVec[7], DefGradVec[1], DefGradVec[4] }, { DefGradVec[5], DefGradVec[8], DefGradVec[2] } };
             double[,] FPK_mat = new double[3, 3] { { FPK_vec[0], FPK_vec[3], FPK_vec[6] }, { FPK_vec[7], FPK_vec[1], FPK_vec[4] }, { FPK_vec[5], FPK_vec[8], FPK_vec[2] } };
             double[,] SPK_mat = transformFPKtoSPK(DefGradMat, FPK_mat);
