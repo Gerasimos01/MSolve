@@ -162,14 +162,14 @@ namespace ISAAR.MSolve.Analyzers
             {
                 double errorNorm = 0;
                 ClearIncrementalSolutionVector();//TODOMaria this sets du to 0
-                UpdateRHS(increment);//TODOMaria this copies the residuals stored in the class dictionary to the subdomains
+                UpdateRHS(increment);//comment MS2: apo to rhs[subdomain.ID] pernaei sto subdomain.RHS h fixed timh (externalLoads/increments) (ginetai copy kai oxi add)  AFTO thewreitai RHS sthn prwth iteration
 
                 double firstError = 0;
                 int step = 0;
                 for (step = 0; step < maxSteps; step++)
                 {
                     solver.Solve();
-                    errorNorm = rhsNorm != 0 ? CalculateInternalRHS(increment, step) / rhsNorm : 0;// (rhsNorm*increment/increments) : 0;//TODOMaria this calculates the internal force vector and subtracts it from the external one (calculates the residual)
+                    errorNorm = rhsNorm != 0 ? CalculateInternalRHS(increment, step) / rhsNorm : 0;//comment MS2: to subdomain.RHS lamvanei thn timh nIncrement*(externalLoads/increments)-interanalRHS me xrhsh ths fixed timhs apo to rhs[subdomain.ID]
                     if (step == 0) firstError = errorNorm;
                     if (errorNorm < tolerance) break;
 
