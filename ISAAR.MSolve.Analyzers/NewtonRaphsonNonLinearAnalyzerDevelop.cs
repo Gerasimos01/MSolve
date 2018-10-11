@@ -163,7 +163,7 @@ namespace ISAAR.MSolve.Analyzers
                 double errorNorm = 0;
                 ClearIncrementalSolutionVector();//TODOMaria this sets du to 0
                 UpdateRHS(increment);//comment MS2: apo to rhs[subdomain.ID] pernaei sto subdomain.RHS h fixed timh (externalLoads/increments) (ginetai copy kai oxi add)  AFTO thewreitai RHS sthn prwth iteration
-
+                // opote edw pouu uparxei to neo rhs tou kuklou epanalhpsewn prepei na afairountai oi draseis
                 double firstError = 0;
                 int step = 0;
                 for (step = 0; step < maxSteps; step++)
