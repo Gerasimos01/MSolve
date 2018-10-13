@@ -329,7 +329,7 @@ namespace ISAAR.MSolve.FEM.Entities
                     {
                         if (nodalConvergedDisplacements.ContainsKey(doftype1))
                         {
-                            localSolution[iElementMatrixColumn+positionOfDofInNode] = nodalConvergedDisplacements[doftype1]+(nodalTotalDisplacements[doftype1] - nodalConvergedDisplacements[doftype1]) * (nIncrement / totalIncrements);
+                            localSolution[iElementMatrixColumn+positionOfDofInNode] = nodalConvergedDisplacements[doftype1]+(nodalTotalDisplacements[doftype1] - nodalConvergedDisplacements[doftype1]) * ((double)nIncrement / (double)totalIncrements);
                             // TODO: this can be done faster: create a dictionary<...,dictionary> with the difference of the two values and use that and precalculate coefficient for scaling
                         }
                         positionOfDofInNode += 1;

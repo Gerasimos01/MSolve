@@ -90,7 +90,7 @@ namespace ISAAR.MSolve.Analyzers.SupportiveClasses
                                     {
                                         if (nodalConvergedDisplacements.ContainsKey(doftype1))
                                         {
-                                            uStep_values_orZero_for_free[positionOfDof] = (nodalTotalDisplacements[doftype1] - nodalConvergedDisplacements[doftype1]) * (nIncrement / totalIncrements);
+                                            uStep_values_orZero_for_free[positionOfDof] = (nodalTotalDisplacements[doftype1] - nodalConvergedDisplacements[doftype1]) * ((double)nIncrement / (double)totalIncrements);
                                             // TODO: this can be done faster: create a dictionary<...,dictionary> with the difference of the two values and use that and precalculate coefficient for scaling
                                         }
                                         positionOfDof += 1;
