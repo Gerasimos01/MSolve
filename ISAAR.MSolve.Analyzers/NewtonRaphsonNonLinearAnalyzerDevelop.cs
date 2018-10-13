@@ -8,14 +8,16 @@ using ISAAR.MSolve.Solvers.Interfaces;
 using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
 using ISAAR.MSolve.Numerical.LinearAlgebra;
 using System.Collections;
-using System.Linq;
+using System.Linq; using ISAAR.MSolve.Analyzers.SupportiveClasses;
+using ISAAR.MSolve.FEM.Entities;
+using ISAAR.MSolve.FEM;
 
 namespace ISAAR.MSolve.Analyzers
 {
     public class NewtonRaphsonNonLinearAnalyzerDevelop : IAnalyzer
     {
         private readonly ILinearSystem[] linearSystems;
-        private readonly INonLinearSubdomainUpdater[] subdomainUpdaters;
+        private readonly NonLinearSubdomainUpdaterWithInitialConditions[] subdomainUpdaters;
         private readonly ISubdomainGlobalMapping[] mappings;
         private readonly int increments;
         private readonly int totalDOFs;
@@ -30,12 +32,18 @@ namespace ISAAR.MSolve.Analyzers
         private readonly Dictionary<int, Vector> u = new Dictionary<int, Vector>(); 
         private readonly Dictionary<int, Vector> du = new Dictionary<int, Vector>();
         private readonly Dictionary<int, Vector> uPlusdu = new Dictionary<int, Vector>();
+        Dictionary<int, Node> boundaryNodes;
+        Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements;
+        Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements;
+        private readonly Dictionary<int,EquivalentContributionsAssebler> equivalentContributionsAssemblers;
         private readonly Vector globalRHS;
         private readonly Dictionary<int, LinearAnalyzerLogFactory> logFactories = new Dictionary<int, LinearAnalyzerLogFactory>();
         private readonly Dictionary<int, IAnalyzerLog[]> logs = new Dictionary<int, IAnalyzerLog[]>();
 
-        public NewtonRaphsonNonLinearAnalyzerDevelop(ISolver solver, ILinearSystem[] linearSystems, INonLinearSubdomainUpdater[] subdomainUpdaters, ISubdomainGlobalMapping[] mappings,
-            INonLinearProvider provider, int increments, int totalDOFs, Dictionary<int, Vector> uInitialFreeDOFDisplacementsPerSubdomain)
+        public NewtonRaphsonNonLinearAnalyzerDevelop(ISolver solver, ILinearSystem[] linearSystems, NonLinearSubdomainUpdaterWithInitialConditions[] subdomainUpdaters, ISubdomainGlobalMapping[] mappings,
+            INonLinearProvider provider, int increments, int totalDOFs, Dictionary<int, Vector> uInitialFreeDOFDisplacementsPerSubdomain,
+            Dictionary<int, Node> boundaryNodes, Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
+            Dictionary<int, EquivalentContributionsAssebler>  equivalentContributionsAssemblers)
         {
             this.solver = solver;
             this.subdomainUpdaters = subdomainUpdaters;
@@ -47,6 +55,10 @@ namespace ISAAR.MSolve.Analyzers
             this.globalRHS = new Vector(totalDOFs);
             this.u = uInitialFreeDOFDisplacementsPerSubdomain; //prosthiki MS, TODO:possibly check for compatibility elements format: u.Add(subdomain.ID, new Vector(subdomain.RHS.Length));
             this.uPlusdu = uInitialFreeDOFDisplacementsPerSubdomain; //prosthiki MS
+            this.boundaryNodes = boundaryNodes;
+            this.initialConvergedBoundaryDisplacements = initialConvergedBoundaryDisplacements;
+            this.totalBoundaryDisplacements = totalBoundaryDisplacements;
+            this.equivalentContributionsAssemblers = equivalentContributionsAssemblers;
 
             InitializeInternalVectors();
         }
@@ -163,13 +175,13 @@ namespace ISAAR.MSolve.Analyzers
                 double errorNorm = 0;
                 ClearIncrementalSolutionVector();//TODOMaria this sets du to 0
                 UpdateRHS(increment);//comment MS2: apo to rhs[subdomain.ID] pernaei sto subdomain.RHS h fixed timh (externalLoads/increments) (ginetai copy kai oxi add)  AFTO thewreitai RHS sthn prwth iteration
-                // opote edw pouu uparxei to neo rhs tou kuklou epanalhpsewn prepei na afairountai oi draseis
+                UpdateRHSForLinearizationContributions(increment + 1, increments);// opote edw pouu uparxei to neo rhs tou kuklou epanalhpsewn prepei na afairountai oi draseis
                 double firstError = 0;
                 int step = 0;
                 for (step = 0; step < maxSteps; step++)
                 {
                     solver.Solve();
-                    errorNorm = rhsNorm != 0 ? CalculateInternalRHS(increment, step) / rhsNorm : 0;//comment MS2: to subdomain.RHS lamvanei thn timh nIncrement*(externalLoads/increments)-interanalRHS me xrhsh ths fixed timhs apo to rhs[subdomain.ID]
+                    errorNorm = rhsNorm != 0 ? CalculateInternalRHS(increment, step,increments) / rhsNorm : 0;//comment MS2: to subdomain.RHS lamvanei thn timh nIncrement*(externalLoads/increments)-interanalRHS me xrhsh ths fixed timhs apo to rhs[subdomain.ID]
                     if (step == 0) firstError = errorNorm;
                     if (errorNorm < tolerance) break;
 
@@ -191,7 +203,7 @@ namespace ISAAR.MSolve.Analyzers
             StoreLogResults(start, end);
         }
 
-        private double CalculateInternalRHS(int currentIncrement, int step) 
+        private double CalculateInternalRHS(int currentIncrement, int step, int totalIncrements) 
         {
             globalRHS.Clear();
             foreach (ILinearSystem subdomain in linearSystems)
@@ -212,7 +224,8 @@ namespace ISAAR.MSolve.Analyzers
                     uPlusdu[subdomain.ID].Add(du[subdomain.ID]);
                 }
                 //Vector<double> internalRHS = (Vector<double>)subdomain.GetRHSFromSolution(u[subdomain.ID], du[subdomain.ID]);
-                Vector internalRHS = (Vector)subdomainUpdaters[linearSystems.Select((v, i) => new { System = v, Index = i }).First(x => x.System.ID == subdomain.ID).Index].GetRHSFromSolution(uPlusdu[subdomain.ID], du[subdomain.ID]);//TODOMaria this calculates the internal forces
+                Vector internalRHS = (Vector)subdomainUpdaters[linearSystems.Select((v, i) => new { System = v, Index = i }).First(x => x.System.ID == subdomain.ID).Index].GetRHSFromSolutionWithInitialDisplacemntsEffect(uPlusdu[subdomain.ID], du[subdomain.ID],  boundaryNodes,
+                initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, currentIncrement+1, totalIncrements);//TODOMaria this calculates the internal forces
                 provider.ProcessInternalRHS(subdomain, internalRHS.Data, uPlusdu[subdomain.ID].Data);//TODOMaria this does nothing
                 //(new Vector<double>(u[subdomain.ID] + du[subdomain.ID])).Data);
 
@@ -275,6 +288,24 @@ namespace ISAAR.MSolve.Analyzers
 
             parentAnalyzer.BuildMatrices();
             //solver.Initialize();
+        }
+
+        private void UpdateRHSForLinearizationContributions(int nIncrement, int increments)
+        {
+            globalRHS.Clear();
+            foreach (ILinearSystem subdomain in linearSystems)
+            {
+                //var equivalentContributionsAssembler = equivalentContributionsAssemblers[linearSystems.Select((v, i) => new { System = v, Index = i }).First(x => x.System.ID == subdomain.ID).Index];
+                var equivalentContributionsAssembler = equivalentContributionsAssemblers[subdomain.ID];
+                Vector Contribution = equivalentContributionsAssembler.CalculateKfreeprescribedUpMultiplicationForSubdRHSContribution(
+                    boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, nIncrement, increments);
+                Vector subdomainRHS = ((Vector)subdomain.RHS);
+                subdomainRHS.Subtract(Contribution);
+                mappings[linearSystems.Select((v, i) => new { System = v, Index = i }).First(x => x.System.ID == subdomain.ID).Index].SubdomainToGlobalVector(subdomainRHS.Data, globalRHS.Data);
+            }
+            rhsNorm = provider.RHSNorm(globalRHS.Data);
+            //TODOMS: possibly it is not nessesary to update globalRHS (and of course not clear it before the loop) as it is not updated in 177-UpdateRHS(increment) either.
+            // and it is used when it is recalculated in CalculateInternalRHS......
         }
 
         #endregion

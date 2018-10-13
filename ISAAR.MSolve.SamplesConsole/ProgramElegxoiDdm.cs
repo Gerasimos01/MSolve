@@ -18,6 +18,7 @@ using ISAAR.MSolve.Materials;
 using ISAAR.MSolve.SamplesConsole; 
 using ISAAR.MSolve.Solvers.Interfaces;
 using ISAAR.MSolve.SamplesConsoles;
+using ISAAR.MSolve.FEM.Providers;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
@@ -146,6 +147,122 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
+        public static void SolveDisplLoadsExample()
+        {
+            VectorExtensions.AssignTotalAffinityCount();
+            Model model = new Model();
+            model.SubdomainsDictionary.Add(1, new Subdomain() { ID = 1 });
+
+            // EPILOGH MONTELOU
+            int model__builder_choice;
+            model__builder_choice = 33;   
+            
+
+            if (model__builder_choice == 33) // 
+            { ParadeigmataElegxwnBuilder.HexaCantileverBuilderDispControl(model, 850); }
+           
+
+            bool use_domain_decomposer = false;
+            if (use_domain_decomposer)
+            {
+                //i)
+                DddmExamplesBuilder.MakeModelDictionariesZeroBasedForDecomposer(model);
+
+                model.ConnectDataStructures();
+                // ii)
+                AutomaticDomainDecomposer domainDecomposer = new AutomaticDomainDecomposer(model, 2); //2o orisma arithmoos subdomains
+                domainDecomposer.UpdateModel();
+            }
+            else
+            {
+                model.ConnectDataStructures();
+            }
+
+            Dictionary<int, Vector> uInitialFreeDOFDisplacementsPerSubdomain = new Dictionary<int, Vector>();
+            uInitialFreeDOFDisplacementsPerSubdomain.Add(model.SubdomainsDictionary[1].ID, new Vector(model.SubdomainsDictionary[1].TotalDOFs));// prosoxh sto Id twn subdomain
+            Dictionary<int, Node> boundaryNodes = new Dictionary<int, Node>();
+            for (int k = 17; k < 21; k++)
+            {
+                boundaryNodes.Add(model.NodesDictionary[k].ID, model.NodesDictionary[k]);
+            }
+            Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements=new Dictionary<int, Dictionary<DOFType, double>>();
+            Dictionary<DOFType, double> initialConvergedBoundaryNodalDisplacements = new Dictionary<DOFType, double>();
+            initialConvergedBoundaryNodalDisplacements.Add(DOFType.X, 0);
+            for (int k = 17; k < 21; k++)
+            {
+                initialConvergedBoundaryDisplacements.Add(model.NodesDictionary[k].ID, initialConvergedBoundaryNodalDisplacements);
+            }
+            Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements = new Dictionary<int, Dictionary<DOFType, double>>();
+            double[] prescribedDisplacmentXValues = new double[4] { 7.81614E-01, 7.07355E-01, 7.81614E-01, 7.07355E-01 };
+            for (int k = 17; k < 21; k++)
+            {
+                Dictionary<DOFType, double> totalBoundaryNodalDisplacements = new Dictionary<DOFType, double>();
+                totalBoundaryNodalDisplacements.Add(DOFType.X, prescribedDisplacmentXValues[k-17]);
+                totalBoundaryDisplacements.Add(model.NodesDictionary[k].ID, totalBoundaryNodalDisplacements);
+            }
+
+            ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
+            Dictionary<int, EquivalentContributionsAssebler> equivalentContributionsAssemblers = new Dictionary<int, EquivalentContributionsAssebler>();//SUNOLIKA STOIXEIA model.SubdomainsDictionary.Count oi oles tis model.subdomains ekei mallon deginontai access me ID.
+            equivalentContributionsAssemblers.Add(model.SubdomainsDictionary[1].ID, new  EquivalentContributionsAssebler(model.SubdomainsDictionary[1], elementProvider));
+
+            //comment section 1 palaia version
+            //SolverSkyline solver = new SolverSkyline(model);
+            //ProblemStructural provider = new ProblemStructural(model, solver.SubdomainsDictionary);
+
+            var linearSystems = new Dictionary<int, ILinearSystem>(); //I think this should be done automatically 
+            linearSystems[1] = new SkylineLinearSystem(1, model.Subdomains[0].Forces); // elegxos me model.subdomainsDictionary[1]
+
+            ProblemStructural provider = new ProblemStructural(model, linearSystems);
+
+
+            // PARADEIGMA A: LinearAnalyzer analyzer = new LinearAnalyzer(solver, solver.SubdomainsDictionary);
+            //SolverSkyline2 solver = new SolverSkyline2(linearSystems[1]); //H MARIA XRHSIMOPOIEI TON sklinesolver 
+            //LinearAnalyzer childAnalyzer = new LinearAnalyzer(solver, linearSystems);
+            //---------------------------------------------------------------------------------------------------------------------------------
+
+            // PARADEIGMA B: Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, 17, model.TotalDOFs);//1. increments einai to 17 (arxika eixame thesei2 26 incr)
+            //PALIA DIATUPWSH: NewtonRaphsonNonLinearAnalyzer analyzer = new NewtonRaphsonNonLinearAnalyzer(solver, linearSystems, provider, 10, 48); 
+            // NEA DIATUPWSH:
+            var solver = new SolverSkyline(linearSystems[1]);
+            var linearSystemsArray = new[] { linearSystems[1] };
+            var subdomainUpdaters = new[] { new NonLinearSubdomainUpdaterWithInitialConditions(model.Subdomains[0]) };
+            var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
+
+            var increments = 2;
+            var childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelop(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
+                boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, equivalentContributionsAssemblers);
+            //h epomenhgrammh einai gia paradeigma ws pros to access
+            //IAnalyzer childAnalyzer2 = new NewtonRaphsonNonLinearAnalyzer(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs);
+
+
+            childAnalyzer.SetMaxIterations = 100;
+            childAnalyzer.SetIterationsForMatrixRebuild = 1;
+            //---------------------------------------------------------------------------------------------------------------------------------
+
+
+            StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, childAnalyzer, linearSystems);
+
+            //childAnalyzer.LogFactories[1] = new LinearAnalyzerLogFactory(new int[] { 47 });
+
+
+
+
+
+            //comment section 2 palaia version
+            //int increments = 1;
+            //Analyzers.NewtonRaphsonNonLinearAnalyzer3 analyzer = new NewtonRaphsonNonLinearAnalyzer3(solver, solver.SubdomainsDictionary, provider, increments, model.TotalDOFs);//1. increments einai to 1 (arxika eixame thesei2 26 incr)
+            //StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, analyzer, solver.SubdomainsDictionary);
+            //analyzer.SetMaxIterations = 100;
+            //analyzer.SetIterationsForMatrixRebuild = 1;
+
+
+
+            parentAnalyzer.BuildMatrices();
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
+
+
+        }
         //static void Main(string[] args)
         //{
         //    SolveRVEExample(); //|

@@ -1,31 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using ISAAR.MSolve.Logging;
-using ISAAR.MSolve.Logging.Interfaces;
-using ISAAR.MSolve.Analyzers.Interfaces;
-using ISAAR.MSolve.Solvers.Interfaces;
-using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
-using ISAAR.MSolve.Numerical.LinearAlgebra;
-using System.Collections;
-using System.Linq;
-using ISAAR.MSolve.FEM.Entities;
+﻿using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
-using ISAAR.MSolve.FEM.Providers;
+using ISAAR.MSolve.Numerical.LinearAlgebra;
+using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace ISAAR.MSolve.Analyzers.SupportiveClasses
+
+namespace ISAAR.MSolve.FEM
 {
-    public static class SubdomainEqForcesCalculations
+    public class EquivalentContributionsAssebler
     {
-        public static Vector CalculateKfreeprescribedUpMultiplicationForSubdRHSContribution(Subdomain subdomain,
-            Dictionary<int, Node> boundaryNodes,Dictionary<int,Dictionary<DOFType,double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
-            int nIncrement,int totalIncrements)
+        private Subdomain subdomain;
+        private FEM.Interfaces.IElementMatrixProvider elementProvider;
+        /// <summary>
+        /// ELEMENT provider tha perastei profanws o ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
+        /// kai subdomain prosoxh sta ID idia me ta linearsystems
+        /// </summary>
+        /// <param name="subdomain"></param>
+        /// <param name="elementProvider"></param>
+        public EquivalentContributionsAssebler(Subdomain subdomain, FEM.Interfaces.IElementMatrixProvider elementProvider)
         {
-            ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider(); //TODOMS: where the provider should be defined
+            this.subdomain = subdomain;
+            this.elementProvider = elementProvider;
+        }
+
+        public Vector CalculateKfreeprescribedUpMultiplicationForSubdRHSContribution(Dictionary<int, Node> boundaryNodes,
+            Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
+            int nIncrement, int totalIncrements)
+        {
+            //ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider(); //TODOMS: where the provider should be defined
             Dictionary<int, Dictionary<DOFType, int>> nodalDOFsDictionary = subdomain.NodalDOFsDictionary;
 
-            double[] Kfp_Ustep  = new double[subdomain.TotalDOFs]; // h allliws subdomain.Forces.GetLength(0)
-            
+            double[] Kfp_Ustep = new double[subdomain.TotalDOFs]; // h allliws subdomain.Forces.GetLength(0)
+
             var times = new Dictionary<string, TimeSpan>();
             var totalStart = DateTime.Now;
             times.Add("rowIndexCalculation", DateTime.Now - totalStart);
@@ -85,8 +93,8 @@ namespace ISAAR.MSolve.Analyzers.SupportiveClasses
                                     Dictionary<DOFType, double> nodalTotalDisplacements = totalBoundaryDisplacements[nodeColumn.ID];
                                     double[] uStep_values_orZero_for_free = new double[nodalDofsNumber];
 
-                                    int positionOfDof =0;
-                                    foreach( DOFType doftype1 in elementDOFTypes[j] )
+                                    int positionOfDof = 0;
+                                    foreach (DOFType doftype1 in elementDOFTypes[j])
                                     {
                                         if (nodalConvergedDisplacements.ContainsKey(doftype1))
                                         {
@@ -97,14 +105,14 @@ namespace ISAAR.MSolve.Analyzers.SupportiveClasses
                                     }
 
                                     double contribution = 0;
-                                    for (int j2=0; j2<nodalDofsNumber;j2++)
+                                    for (int j2 = 0; j2 < nodalDofsNumber; j2++)
                                     {
                                         contribution += element_Kfp_triplette[j2] * uStep_values_orZero_for_free[j2];
                                     }
 
                                     Kfp_Ustep[dofRow] += contribution;
 
-                                    
+
 
                                 }
                                 iElementMatrixColumn += nodalDofsNumber;

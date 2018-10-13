@@ -280,6 +280,66 @@ namespace ISAAR.MSolve.FEM.Entities
             return forces;
         }
 
+        public IVector GetRHSFromSolutionWithInitialDisplacemntsEffect(IVector solution, IVector dSolution, Dictionary<int, Node> boundaryNodes,
+            Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
+            int nIncrement, int totalIncrements)
+        {
+            // prosthiki print
+            ekteleseis_counter += 1;
+            string counter_data = ekteleseis_counter.ToString();
+            string path = string.Format(string1, counter_data);
+            //solution.WriteToFile(path);
+            double[] solution_data = new double[solution.Length];
+            solution.CopyTo(solution_data, 0);
+            WriteToFileVector(solution_data, path);
+
+            var forces = new Vector(TotalDOFs);
+            foreach (Element element in elementsDictionary.Values)
+            {
+                var localSolution = GetLocalVectorFromGlobal(element, solution);
+                ImposePrescribedDisplacementsWithInitialConditionSEffect(element, localSolution,  boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, nIncrement, totalIncrements);
+                var localdSolution = GetLocalVectorFromGlobal(element, dSolution);
+                element.ElementType.CalculateStresses(element, localSolution, localdSolution);
+                if (element.ElementType.MaterialModified)
+                    element.Subdomain.MaterialsModified = true;
+                double[] f = element.ElementType.CalculateForces(element, localSolution, localdSolution);
+                AddLocalVectorToGlobal(element, f, forces.Data);
+            }
+            return forces;
+        }
+
+        private void ImposePrescribedDisplacementsWithInitialConditionSEffect(Element element, double[] localSolution, Dictionary<int, Node> boundaryNodes,
+            Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
+            int nIncrement, int totalIncrements)
+        {
+
+            var elementDOFTypes = element.ElementType.DOFEnumerator.GetDOFTypes(element);
+            var matrixAssemblyNodes = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element);
+            int iElementMatrixColumn = 0;
+            for (int j = 0; j < elementDOFTypes.Count; j++)
+            {
+                Node nodeColumn = matrixAssemblyNodes[j];
+                int nodalDofsNumber = elementDOFTypes[j].Count;
+                if (boundaryNodes.ContainsKey(nodeColumn.ID))
+                {
+                    Dictionary<DOFType, double> nodalConvergedDisplacements = initialConvergedBoundaryDisplacements[nodeColumn.ID];
+                    Dictionary<DOFType, double> nodalTotalDisplacements = totalBoundaryDisplacements[nodeColumn.ID];
+                    int positionOfDofInNode = 0;
+                    foreach (DOFType doftype1 in elementDOFTypes[j])
+                    {
+                        if (nodalConvergedDisplacements.ContainsKey(doftype1))
+                        {
+                            localSolution[iElementMatrixColumn+positionOfDofInNode] = nodalConvergedDisplacements[doftype1]+(nodalTotalDisplacements[doftype1] - nodalConvergedDisplacements[doftype1]) * (nIncrement / totalIncrements);
+                            // TODO: this can be done faster: create a dictionary<...,dictionary> with the difference of the two values and use that and precalculate coefficient for scaling
+                        }
+                        positionOfDofInNode += 1;
+                    }
+                }
+                iElementMatrixColumn += nodalDofsNumber;
+            }
+
+        }
+
         // prosthiki print
         public static void WriteToFileVector(double[] array, string path2)
         {
