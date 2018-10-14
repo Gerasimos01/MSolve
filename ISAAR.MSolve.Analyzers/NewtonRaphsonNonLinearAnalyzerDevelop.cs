@@ -54,7 +54,7 @@ namespace ISAAR.MSolve.Analyzers
             this.totalDOFs = totalDOFs;
             this.globalRHS = new Vector(totalDOFs);
             this.u = uInitialFreeDOFDisplacementsPerSubdomain; //prosthiki MS, TODO:possibly check for compatibility elements format: u.Add(subdomain.ID, new Vector(subdomain.RHS.Length));
-            this.uPlusdu = uInitialFreeDOFDisplacementsPerSubdomain; //prosthiki MS
+            //this.uPlusdu = uInitialFreeDOFDisplacementsPerSubdomain; //prosthiki MS: commented out possible pass by reference
             this.boundaryNodes = boundaryNodes;
             this.initialConvergedBoundaryDisplacements = initialConvergedBoundaryDisplacements;
             this.totalBoundaryDisplacements = totalBoundaryDisplacements;
@@ -119,17 +119,19 @@ namespace ISAAR.MSolve.Analyzers
             rhs.Clear();
             //u.Clear(); prosthiki MS
             du.Clear();
-            //uPlusdu.Clear(); //prosthiki MS
+            uPlusdu.Clear(); //prosthiki MS
 
             foreach (ILinearSystem subdomain in linearSystems)
             {
                 Vector r = new Vector(subdomain.RHS.Length);
                 ((Vector)subdomain.RHS).CopyTo(r.Data, 0);
                 r.Multiply(1 / (double)increments); 
-                rhs.Add(subdomain.ID, r); //comment MS: xtizei to rhs, field tou NRNLAnalyzer ok
+                rhs.Add(subdomain.ID, r); //comment MS: xtizei to rhs, field tou NRNLAnalyzer ok, swsta giati rhs sth dhmiourgia twn linear systems exoume perasei to model.Subdomains[0].Forces
                 //u.Add(subdomain.ID, new Vector(subdomain.RHS.Length)); //prosthiki MS
                 du.Add(subdomain.ID, new Vector(subdomain.RHS.Length));
-                //uPlusdu.Add(subdomain.ID, new Vector(subdomain.RHS.Length)); //prosthiki MS
+                Vector tempCopy = new Vector(u[subdomain.ID].Length);
+                u[subdomain.ID].Data.CopyTo(tempCopy.Data, 0);
+                uPlusdu.Add(subdomain.ID, tempCopy); //prosthiki MS
                 mappings[linearSystems.Select((v, i) => new { System = v, Index = i }).First(x => x.System.ID == subdomain.ID).Index].SubdomainToGlobalVector(((Vector)subdomain.RHS).Data, globalRHS.Data);
             }
             rhsNorm = provider.RHSNorm(globalRHS.Data);
@@ -271,6 +273,12 @@ namespace ISAAR.MSolve.Analyzers
                 subdomainUpdaters[linearSystems.Select((v, i) => new { System = v, Index = i }).First(x => x.System.ID == subdomain.ID).Index].UpdateState();
                 u[subdomain.ID].Add(du[subdomain.ID]);
             }
+        }
+
+        public Dictionary<int, Vector> GetConvergedSolutionVectorOfFreeDofs()
+        {
+            return u;
+            // return uplusdu einai to idio afou exei ginei molis SaveMaterialStateAnUpdateSolution
         }
 
         private void CopySolutionToSubdomains()

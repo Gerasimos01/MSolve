@@ -263,6 +263,129 @@ namespace ISAAR.MSolve.SamplesConsole
 
 
         }
+
+        public static void SolveDisplLoadsExampleRestartAnalysis()
+        {
+            VectorExtensions.AssignTotalAffinityCount();
+            Model model = new Model();
+            model.SubdomainsDictionary.Add(1, new Subdomain() { ID = 1 });
+
+            // EPILOGH MONTELOU
+            int model__builder_choice;
+            model__builder_choice = 33;
+            var increments = 1;
+            double displFactor = 0.5;
+            double displFactor2 = 1;
+
+            if (model__builder_choice == 33) // 
+            { ParadeigmataElegxwnBuilder.HexaCantileverBuilderDispControl(model, 850); }
+
+
+            bool use_domain_decomposer = false;
+            if (use_domain_decomposer)
+            {
+                //i)
+                DddmExamplesBuilder.MakeModelDictionariesZeroBasedForDecomposer(model);
+
+                model.ConnectDataStructures();
+                // ii)
+                AutomaticDomainDecomposer domainDecomposer = new AutomaticDomainDecomposer(model, 2); //2o orisma arithmoos subdomains
+                domainDecomposer.UpdateModel();
+            }
+            else
+            {
+                model.ConnectDataStructures();
+            }
+
+            #region Rve Free Dofs DIsplacement Dictionary Creation 1st Displacement Load
+            // u (or uplusDu) initial 
+            Dictionary<int, Vector> uInitialFreeDOFDisplacementsPerSubdomain = new Dictionary<int, Vector>();
+            uInitialFreeDOFDisplacementsPerSubdomain.Add(model.SubdomainsDictionary[1].ID, new Vector(model.SubdomainsDictionary[1].TotalDOFs));// prosoxh sto Id twn subdomain
+            Dictionary<int, Node> boundaryNodes = new Dictionary<int, Node>();
+            for (int k = 17; k < 21; k++)
+            {
+                boundaryNodes.Add(model.NodesDictionary[k].ID, model.NodesDictionary[k]);
+            }
+            Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements = new Dictionary<int, Dictionary<DOFType, double>>();
+            Dictionary<DOFType, double> initialConvergedBoundaryNodalDisplacements = new Dictionary<DOFType, double>();
+            initialConvergedBoundaryNodalDisplacements.Add(DOFType.X, 0);
+            for (int k = 17; k < 21; k++)
+            {
+                initialConvergedBoundaryDisplacements.Add(model.NodesDictionary[k].ID, initialConvergedBoundaryNodalDisplacements);
+            }
+            Dictionary<int, Dictionary<DOFType, double>> totalPrescribedBoundaryDisplacements = new Dictionary<int, Dictionary<DOFType, double>>();
+            double[] prescribedDisplacmentXValues = new double[4] { 7.81614E-01, 7.07355E-01, 7.81614E-01, 7.07355E-01 };
+            for (int k = 17; k < 21; k++)
+            {
+                Dictionary<DOFType, double> totalBoundaryNodalDisplacements = new Dictionary<DOFType, double>();
+                totalBoundaryNodalDisplacements.Add(DOFType.X, displFactor*prescribedDisplacmentXValues[k - 17]);
+                totalPrescribedBoundaryDisplacements.Add(model.NodesDictionary[k].ID, totalBoundaryNodalDisplacements);
+            }
+            #endregion
+
+            #region Creation of nessesary analyzers and solution 
+            ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
+            Dictionary<int, EquivalentContributionsAssebler> equivalentContributionsAssemblers = new Dictionary<int, EquivalentContributionsAssebler>();//SUNOLIKA STOIXEIA model.SubdomainsDictionary.Count oi oles tis model.subdomains ekei mallon deginontai access me ID.
+            equivalentContributionsAssemblers.Add(model.SubdomainsDictionary[1].ID, new EquivalentContributionsAssebler(model.SubdomainsDictionary[1], elementProvider));
+           
+            var linearSystems = new Dictionary<int, ILinearSystem>(); //I think this should be done automatically 
+            linearSystems[1] = new SkylineLinearSystem(1, model.Subdomains[0].Forces); // Comment MS: Gia to multiscale mporoume apla na tou perasoume ena keno dianusma me diastash force afou sto MS  den uparxei epivolh
+            // fortiou mesw loads, to forces to ftiaxnei to model.connectDataStructures elegxos me model.subdomainsDictionary[1]
+
+            ProblemStructural provider = new ProblemStructural(model, linearSystems);
+            var solver = new SolverSkyline(linearSystems[1]);
+            var linearSystemsArray = new[] { linearSystems[1] };
+            var subdomainUpdaters = new[] { new NonLinearSubdomainUpdaterWithInitialConditions(model.Subdomains[0]) };
+            var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
+
+            var childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelop(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
+                boundaryNodes, initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, equivalentContributionsAssemblers);            
+            childAnalyzer.SetMaxIterations = 100;
+            childAnalyzer.SetIterationsForMatrixRebuild = 1;
+            
+
+            StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, childAnalyzer, linearSystems);            
+            parentAnalyzer.BuildMatrices();
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
+            #endregion
+
+            #region Rve Free Dofs DIsplacement Dictionary Creation 2nd Displacement Load
+            // u (or uplusDu) initial 
+            uInitialFreeDOFDisplacementsPerSubdomain = childAnalyzer.GetConvergedSolutionVectorOfFreeDofs();
+
+            initialConvergedBoundaryDisplacements = totalPrescribedBoundaryDisplacements;
+
+
+            totalPrescribedBoundaryDisplacements = new Dictionary<int, Dictionary<DOFType, double>>();
+            for (int k = 17; k < 21; k++)
+            {
+                Dictionary<DOFType, double> totalBoundaryNodalDisplacements = new Dictionary<DOFType, double>();
+                totalBoundaryNodalDisplacements.Add(DOFType.X, displFactor2 * prescribedDisplacmentXValues[k - 17]);
+                totalPrescribedBoundaryDisplacements.Add(model.NodesDictionary[k].ID, totalBoundaryNodalDisplacements);
+            }
+            #endregion
+
+            #region Creation of nessesary analyzers and solution 
+            linearSystems[1].RHS.Clear();
+            //linearSystems[1] = new SkylineLinearSystem(1, model.Subdomains[0].Forces); // Comment MS: Gia to multiscale mporoume apla na tou perasoume ena keno dianusma me diastash force afou sto MS  den uparxei epivolh
+            // fortiou mesw loads, to forces to ftiaxnei to model.connectDataStructures elegxos me model.subdomainsDictionary[1]
+
+            childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelop(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
+                boundaryNodes, initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, equivalentContributionsAssemblers);
+            childAnalyzer.SetMaxIterations = 100;
+            childAnalyzer.SetIterationsForMatrixRebuild = 1;
+
+
+            parentAnalyzer = new StaticAnalyzer(provider, childAnalyzer, linearSystems);
+            parentAnalyzer.BuildMatrices();
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
+            #endregion
+
+
+
+        }
         //static void Main(string[] args)
         //{
         //    SolveRVEExample(); //|

@@ -150,7 +150,8 @@ namespace ISAAR.MSolve.SamplesConsole
             //SolveBuildingInNoSoilSmall();
             //TrussExample.Run();
             //ProgramElegxoiDdm.SolveRVEExample(); //TODOGerasimos gia to multiscale epilegoume to 24 edw
-            ProgramElegxoiDdm.SolveDisplLoadsExample();
+            //ProgramElegxoiDdm.SolveDisplLoadsExample();
+            ProgramElegxoiDdm.SolveDisplLoadsExampleRestartAnalysis();
             //Program2copyElegxoiBenc.SolveBencExample();
             // commit example
 
