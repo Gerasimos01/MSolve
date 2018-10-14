@@ -210,11 +210,15 @@ namespace ISAAR.MSolve.Analyzers
             {
                 if (currentIncrement == 0 && step == 0)
                 {
-                    Array.Clear(du[subdomain.ID].Data, 0, du[subdomain.ID].Length);
-                    Array.Clear(uPlusdu[subdomain.ID].Data, 0, uPlusdu[subdomain.ID].Length);
+                    //Array.Clear(du[subdomain.ID].Data, 0, du[subdomain.ID].Length);
+                    //Array.Clear(uPlusdu[subdomain.ID].Data, 0, uPlusdu[subdomain.ID].Length);
+                    //du[subdomain.ID].Add(((Vector)subdomain.Solution));
+                    //uPlusdu[subdomain.ID].Add(((Vector)subdomain.Solution));
+                    //du[subdomain.ID].Subtract(u[subdomain.ID]);
                     du[subdomain.ID].Add(((Vector)subdomain.Solution));
-                    uPlusdu[subdomain.ID].Add(((Vector)subdomain.Solution));
-                    du[subdomain.ID].Subtract(u[subdomain.ID]);
+                    Array.Clear(uPlusdu[subdomain.ID].Data, 0, uPlusdu[subdomain.ID].Length);
+                    uPlusdu[subdomain.ID].Add(u[subdomain.ID]);
+                    uPlusdu[subdomain.ID].Add(du[subdomain.ID]);
                 }
                 else
                 {
