@@ -14,7 +14,7 @@ using ISAAR.MSolve.FEM;
 
 namespace ISAAR.MSolve.Analyzers
 {
-    public class NewtonRaphsonNonLinearAnalyzerDevelop : IAnalyzer
+    public class NewtonRaphsonNonLinearAnalyzerDevelopCopy : IAnalyzer
     {
         private readonly ILinearSystem[] linearSystems;
         private readonly NonLinearSubdomainUpdaterWithInitialConditions[] subdomainUpdaters;
@@ -40,7 +40,7 @@ namespace ISAAR.MSolve.Analyzers
         private readonly Dictionary<int, LinearAnalyzerLogFactory> logFactories = new Dictionary<int, LinearAnalyzerLogFactory>();
         private readonly Dictionary<int, IAnalyzerLog[]> logs = new Dictionary<int, IAnalyzerLog[]>();
 
-        public NewtonRaphsonNonLinearAnalyzerDevelop(ISolver solver, ILinearSystem[] linearSystems, NonLinearSubdomainUpdaterWithInitialConditions[] subdomainUpdaters, ISubdomainGlobalMapping[] mappings,
+        public NewtonRaphsonNonLinearAnalyzerDevelopCopy(ISolver solver, ILinearSystem[] linearSystems, NonLinearSubdomainUpdaterWithInitialConditions[] subdomainUpdaters, ISubdomainGlobalMapping[] mappings,
             INonLinearProvider provider, int increments, int totalDOFs, Dictionary<int, Vector> uInitialFreeDOFDisplacementsPerSubdomain,
             Dictionary<int, Node> boundaryNodes, Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
             Dictionary<int, EquivalentContributionsAssebler>  equivalentContributionsAssemblers)
@@ -196,7 +196,7 @@ namespace ISAAR.MSolve.Analyzers
                     }
                 }
                 Debug.WriteLine("NR {0}, first error: {1}, exit error: {2}", step, firstError, errorNorm);
-                UpdateSolution();
+                SaveMaterialStateAndUpdateSolution();
             }
             CopySolutionToSubdomains();//TODOMaria Copy current displacement to subdomains
             //            ClearMaterialStresses();
@@ -266,26 +266,19 @@ namespace ISAAR.MSolve.Analyzers
             }
         }
 
-        private void UpdateSolution()
-        {
-            foreach (ILinearSystem subdomain in linearSystems)
-            {
-                u[subdomain.ID].Add(du[subdomain.ID]);
-            }
-        }
-
-        public void SaveMaterialState()
+        private void SaveMaterialStateAndUpdateSolution()
         {
             foreach (ILinearSystem subdomain in linearSystems)
             {
                 subdomainUpdaters[linearSystems.Select((v, i) => new { System = v, Index = i }).First(x => x.System.ID == subdomain.ID).Index].UpdateState();
+                u[subdomain.ID].Add(du[subdomain.ID]);
             }
         }
 
         public Dictionary<int, Vector> GetConvergedSolutionVectorOfFreeDofs()
         {
             return u;
-            // return uplusdu einai to idio afou exei ginei molis UpdateSolution
+            // return uplusdu einai to idio afou exei ginei molis SaveMaterialStateAnUpdateSolution
         }
 
         private void CopySolutionToSubdomains()

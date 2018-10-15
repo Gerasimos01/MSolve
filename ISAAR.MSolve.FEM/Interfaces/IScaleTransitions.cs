@@ -9,6 +9,8 @@ namespace ISAAR.MSolve.FEM.Interfaces
     {
         double[] MacroToMicroTransition(Node boundaryNode, double[] MacroScaleVariable);
         double[] MicroToMacroTransition(Node boundaryNode, double[] MicroScaleVariable);
+        void ModifyMicrostructureTotalPrescribedBoundaryDisplacementsVectorForMacroStrainVariable(Node boundaryNode,
+            double[] MacroScaleVariable, Dictionary<int, Dictionary<DOFType, double>> totalPrescribedBoundaryDisplacements);
         int PrescribedDofsPerNode();
         int MacroscaleVariableDimension();
     }

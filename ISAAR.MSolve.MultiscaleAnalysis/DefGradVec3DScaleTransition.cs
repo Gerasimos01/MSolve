@@ -9,7 +9,7 @@ using ISAAR.MSolve.Materials;
 using ISAAR.MSolve.Solvers.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.FEM.Interfaces;
-
+using System.Collections.Generic;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
@@ -78,6 +78,42 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public int MacroscaleVariableDimension()
         {
             return 9;
+        }
+
+        public void ModifyMicrostructureTotalPrescribedBoundaryDisplacementsVectorForMacroStrainVariable(Node boundaryNode,
+            double[] DefGradVec, Dictionary<int, Dictionary<DOFType, double>> totalPrescribedBoundaryDisplacements)
+        {
+            double[,] Dq_nodal = new double[9, 3];
+            Dq_nodal[0, +0] = boundaryNode.X; // h kai katedtheian boundaryNode.X 
+            Dq_nodal[1, +1] = boundaryNode.Y;
+            Dq_nodal[2, +2] = boundaryNode.Z;
+            Dq_nodal[3, +0] = boundaryNode.Y;
+            Dq_nodal[4, +1] = boundaryNode.Z;
+            Dq_nodal[5, +2] = boundaryNode.X;
+            Dq_nodal[6, +0] = boundaryNode.Z;
+            Dq_nodal[7, +1] = boundaryNode.X;
+            Dq_nodal[8, +2] = boundaryNode.Y;
+
+            double[] thesi_prescr_xyz = new double[3];
+            double[] u_prescr_xyz_sunol = new double[3];
+
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                for (int j1 = 0; j1 < 9; j1++)
+                {
+                    thesi_prescr_xyz[i1] += Dq_nodal[j1, i1] * DefGradVec[j1]; //einai sunolikh 
+                }
+            }
+            u_prescr_xyz_sunol = new double[3] { thesi_prescr_xyz[0] - boundaryNode.X,
+                                                     thesi_prescr_xyz[1] - boundaryNode.Y,
+                                                     thesi_prescr_xyz[2] - boundaryNode.Z };
+
+            Dictionary<DOFType, double> totalBoundaryNodalDisplacements = new Dictionary<DOFType, double>();
+            totalBoundaryNodalDisplacements.Add(DOFType.X, u_prescr_xyz_sunol[0]);
+            totalBoundaryNodalDisplacements.Add(DOFType.Y, u_prescr_xyz_sunol[1]);
+            totalBoundaryNodalDisplacements.Add(DOFType.Z, u_prescr_xyz_sunol[2]);
+
+            totalPrescribedBoundaryDisplacements.Add(boundaryNode.ID, totalBoundaryNodalDisplacements);
         }
     }
 }

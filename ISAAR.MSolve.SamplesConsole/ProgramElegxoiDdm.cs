@@ -229,7 +229,7 @@ namespace ISAAR.MSolve.SamplesConsole
             var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
 
             var increments = 2;
-            var childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelop(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
+            var childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelopCopy(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
                 boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, equivalentContributionsAssemblers);
             //h epomenhgrammh einai gia paradeigma ws pros to access
             //IAnalyzer childAnalyzer2 = new NewtonRaphsonNonLinearAnalyzer(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs);
@@ -338,7 +338,7 @@ namespace ISAAR.MSolve.SamplesConsole
             var subdomainUpdaters = new[] { new NonLinearSubdomainUpdaterWithInitialConditions(model.Subdomains[0]) };
             var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
 
-            var childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelop(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
+            var childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelopCopy(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
                 boundaryNodes, initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, equivalentContributionsAssemblers);            
             childAnalyzer.SetMaxIterations = 100;
             childAnalyzer.SetIterationsForMatrixRebuild = 1;
@@ -371,7 +371,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //linearSystems[1] = new SkylineLinearSystem(1, model.Subdomains[0].Forces); // Comment MS: Gia to multiscale mporoume apla na tou perasoume ena keno dianusma me diastash force afou sto MS  den uparxei epivolh
             // fortiou mesw loads, to forces to ftiaxnei to model.connectDataStructures elegxos me model.subdomainsDictionary[1]
 
-            childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelop(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
+            childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelopCopy(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
                 boundaryNodes, initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, equivalentContributionsAssemblers);
             childAnalyzer.SetMaxIterations = 100;
             childAnalyzer.SetIterationsForMatrixRebuild = 1;
