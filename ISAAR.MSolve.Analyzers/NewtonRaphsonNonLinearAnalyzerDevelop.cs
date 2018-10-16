@@ -282,11 +282,17 @@ namespace ISAAR.MSolve.Analyzers
             }
         }
 
-        public Dictionary<int, Vector> GetConvergedSolutionVectorOfFreeDofs()
+        public Dictionary<int, Vector> GetConvergedSolutionVectorsOfFreeDofs()
         {
             return u;
             // return uplusdu einai to idio afou exei ginei molis UpdateSolution
         }
+
+        public Dictionary<int, Vector> GetConvergedIncrementalSolutionVectorsOfFreeDofs()
+        {
+            return du;
+        }
+
 
         private void CopySolutionToSubdomains()
         {

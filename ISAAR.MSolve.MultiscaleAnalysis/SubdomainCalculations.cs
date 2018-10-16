@@ -332,7 +332,10 @@ namespace ISAAR.MSolve.FEM
 
         }
 
-        public static double[] CalculateFppReactionsVector(Subdomain subdomain, Subdomain2 subdomain2, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, IVector solution, IVector dSolution)
+        public static double[] CalculateFppReactionsVector(Subdomain subdomain,  IElementMatrixProvider elementProvider,
+            IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, IVector solution, IVector dSolution,
+            Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
+            int nIncrement, int totalIncrements)
         {
             //TODOGerasimos: 1) Subdomain2 einai h upo kataskevh subdomain.cs ths Marias gia na mporoume na anaferthoume sthn methodo ths CalculateElementNodalDisplacements(..,..). 
             // Otan parei telikh morfh tha taftizetai me thn Subdomain.cs
@@ -352,8 +355,9 @@ namespace ISAAR.MSolve.FEM
                 var isEmbeddedElement = element.ElementType is IEmbeddedElement; 
                 var elStart = DateTime.Now;
                 //IMatrix2D ElementK = elementProvider.Matrix(element);
-                double[] localSolution = subdomain2.CalculateElementNodalDisplacements(element, solution);
-                double[] localdSolution = subdomain2.CalculateElementNodalDisplacements(element, dSolution);
+                var localSolution = subdomain.GetLocalVectorFromGlobal(element, solution);
+                subdomain.ImposePrescribedDisplacementsWithInitialConditionSEffect(element, localSolution, boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, nIncrement, totalIncrements);
+                double[] localdSolution = subdomain.GetLocalVectorFromGlobal(element, dSolution);
                 double[] f = element.ElementType.CalculateForces(element, localSolution, localdSolution);
 
                 times["element"] += DateTime.Now - elStart;
@@ -383,6 +387,59 @@ namespace ISAAR.MSolve.FEM
             return FppReactionVector;
 
         }
+
+        public static double[] CalculateFppReactionsVectorCopy(Subdomain subdomain, Subdomain2 subdomain2, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, IVector solution, IVector dSolution)
+        {
+            //TODOGerasimos: 1) Subdomain2 einai h upo kataskevh subdomain.cs ths Marias gia na mporoume na anaferthoume sthn methodo ths CalculateElementNodalDisplacements(..,..). 
+            // Otan parei telikh morfh tha taftizetai me thn Subdomain.cs
+            // 2)IVector solution, IVector dSolution EINAI AFTA ME TA OPOIA kaloume thn GetRHSFromSolution sthn 213 tou NRNLAnalyzer
+            double[] FppReactionVector;
+            Dictionary<int, int> boundaryNodesOrder = GetNodesOrderInDictionary(boundaryNodes);
+            FppReactionVector = new double[boundaryNodesOrder.Count * scaleTransitions.PrescribedDofsPerNode()]; // h allliws subdomain.Forces.GetLength(0)
+
+
+            var times = new Dictionary<string, TimeSpan>();
+            var totalStart = DateTime.Now;
+            times.Add("rowIndexCalculation", DateTime.Now - totalStart);
+            times.Add("element", TimeSpan.Zero);
+            times.Add("addition", TimeSpan.Zero);
+            foreach (Element element in subdomain.ElementsDictionary.Values)
+            {
+                var isEmbeddedElement = element.ElementType is IEmbeddedElement;
+                var elStart = DateTime.Now;
+                //IMatrix2D ElementK = elementProvider.Matrix(element);
+                double[] localSolution = subdomain2.CalculateElementNodalDisplacements(element, solution);
+                double[] localdSolution = subdomain2.CalculateElementNodalDisplacements(element, dSolution);
+                double[] f = element.ElementType.CalculateForces(element, localSolution, localdSolution);
+
+                times["element"] += DateTime.Now - elStart;
+
+                elStart = DateTime.Now;
+                var elementDOFTypes = element.ElementType.DOFEnumerator.GetDOFTypes(element);
+                var matrixAssemblyNodes = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element);
+                int iElementMatrixRow = 0;
+                for (int i = 0; i < elementDOFTypes.Count; i++)
+                {
+                    Node nodeRow = matrixAssemblyNodes[i];
+                    if (boundaryNodes.ContainsKey(nodeRow.ID))
+                    {
+                        for (int i1 = 0; i1 < scaleTransitions.PrescribedDofsPerNode(); i1++)
+                        {
+                            int dofrow_p = scaleTransitions.PrescribedDofsPerNode() * (boundaryNodesOrder[nodeRow.ID] - 1) + i1;
+                            FppReactionVector[dofrow_p] += f[iElementMatrixRow + i1];
+
+                        }
+                    }
+                    iElementMatrixRow += elementDOFTypes[i].Count;
+                }
+                times["addition"] += DateTime.Now - elStart;
+            }
+            var totalTime = DateTime.Now - totalStart;
+
+            return FppReactionVector;
+
+        }
+
 
         public static double[] CalculateDqFpp(double[] FppReactionVector, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes)
         {

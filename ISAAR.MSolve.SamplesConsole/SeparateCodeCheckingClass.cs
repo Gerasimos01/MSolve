@@ -90,7 +90,90 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-        public static void Check05CohMatBKstraining()
+        public static void Check05aStressIntegration()
+        {
+            double E_disp = 3.5; /*Gpa*/ double ni_disp = 0.4; // stather Poisson
+            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
+            { YoungModulus = E_disp,PoissonRatio = ni_disp,};
+            double[,] DGtr = new double[3, 3] { { 1.01, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+            double[] GLVec = Transform_DGtr_to_GLvec(DGtr);
+            material1.UpdateMaterial(GLVec);
+            double[] stressesCheck = material1.Stresses;
+
+            VectorExtensions.AssignTotalAffinityCount();
+            IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilder();
+            //IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
+
+            IFiniteElementMaterial3D microstructure3 = new Microstructure3Develop(homogeneousRveBuilder1);
+            //IFiniteElementMaterial3D microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
+
+            microstructure3.UpdateMaterial(new double[9] { 1.01, 1, 1, 0, 0, 0, 0, 0, 0 });
+            double[] stressesCheck2 = microstructure3.Stresses;
+        }
+
+        public static void Check05bStressIntegration()
+        {
+            double E_disp = 3.5; /*Gpa*/ double ni_disp = 0.4; // stather Poisson
+            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
+            { YoungModulus = E_disp, PoissonRatio = ni_disp, };
+            double[,] DGtr = new double[3, 3] { { 1.01, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+            double[] GLVec = Transform_DGtr_to_GLvec(DGtr);
+            material1.UpdateMaterial(GLVec);
+            double[] stressesCheck = material1.Stresses;
+
+            VectorExtensions.AssignTotalAffinityCount();
+            IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheck8Hexa();
+            //IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
+
+            IFiniteElementMaterial3D microstructure3 = new Microstructure3Develop(homogeneousRveBuilder1);
+            //IFiniteElementMaterial3D microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
+
+            microstructure3.UpdateMaterial(new double[9] { 1.01, 1, 1, 0, 0, 0, 0, 0, 0 });
+            double[] stressesCheck2 = microstructure3.Stresses;
+        }
+
+        private static double[] Transform_DGtr_to_GLvec(double[,] DGtr)
+        {
+            double[,] GL = new double[3, 3];
+
+            //
+            for (int m = 0; m < 3; m++)
+            {
+                for (int n = 0; n < 3; n++)
+                {
+                    GL[m, n] = 0;
+                    for (int p = 0; p < 3; p++)
+                    {
+                        GL[m, n] += DGtr[m, p] * DGtr[n, p];
+                    }
+                }
+            }
+            for (int m = 0; m < 3; m++)
+            {
+                GL[m, m] += -1;
+            }
+            for (int m = 0; m < 3; m++)
+            {
+                for (int n = 0; n < 3; n++)
+                {
+                    GL[m, n] = 0.5 * GL[m, n];
+                }
+            }
+
+            double[] GLvec = new double[6];
+            //
+            for (int m = 0; m < 3; m++)
+            {
+                GLvec[m] = GL[m, m];
+            }
+            GLvec[3] = 2 * GL[0, 1];
+            GLvec[4] = 2 * GL[1, 2];
+            GLvec[5] = 2 * GL[2, 0];
+
+            return GLvec;
+        }
+
+        public static void Check06CohMatBKstraining()
         {
             //thumizetai 
             //for (int j = 0; j < 3; j++)

@@ -20,8 +20,7 @@ using ISAAR.MSolve.Solvers.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.FEM.Providers;
-
-
+using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
@@ -51,6 +50,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             Cijrs_prev = new double[6, 6];
             matrices_not_initialized = false;
             tol = Math.Pow(10, -19);
+            constitutiveMatrix = new Matrix2D(new double[6, 6]);
         }
 
 
@@ -64,8 +64,17 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             this.model = modelAndBoundaryNodes.Item1;
             this.boundaryNodes = modelAndBoundaryNodes.Item2;
             this.volume = modelAndBoundaryNodes.Item3;
+            DefineAppropriateConstraintsForBoundaryNodes();
             this.model.ConnectDataStructures();
             this.InitializeFreeAndPrescribedDofsInitialDisplacementVectors();
+        }
+
+        private void DefineAppropriateConstraintsForBoundaryNodes()
+        {
+            foreach(Node boundaryNode in boundaryNodes.Values)
+            {
+                scaleTransitions.ImposeAppropriateConstraintsPerBoundaryNode(model, boundaryNode);
+            }
         }
 
         private void InitializeFreeAndPrescribedDofsInitialDisplacementVectors()
@@ -82,9 +91,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             {
                 scaleTransitions.ModifyMicrostructureTotalPrescribedBoundaryDisplacementsVectorForMacroStrainVariable(boundaryNode,
                 DefGradVec, initialConvergedBoundaryDisplacements);
-            }
-
-            throw new NotImplementedException();
+            }            
         }
 
         public object Clone()
@@ -148,32 +155,36 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             #region Creation of Microstructure analyzer (NRNLdevelop temporarilly). 
             var increments = 1; // microAnalyzer onomazetai o childAnalyzer
-            NewtonRaphsonNonLinearAnalyzerDevelopCopy microAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelopCopy(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
+            NewtonRaphsonNonLinearAnalyzerDevelop microAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelop(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs, uInitialFreeDOFDisplacementsPerSubdomain,
                 boundaryNodes, initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, equivalentContributionsAssemblers);
             microAnalyzer.SetMaxIterations = 100;
             microAnalyzer.SetIterationsForMatrixRebuild = 1;
             #endregion
 
-            #region solution and update of free and prescribed converged displacements vectors;
+            #region solution and update of free converged displacements vectors;
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, microAnalyzer, linearSystems);
             parentAnalyzer.BuildMatrices();
             parentAnalyzer.Initialize();
             parentAnalyzer.Solve();
-            uInitialFreeDOFDisplacementsPerSubdomain = microAnalyzer.GetConvergedSolutionVectorOfFreeDofs();
-            initialConvergedBoundaryDisplacements = totalPrescribedBoundaryDisplacements;
+            uInitialFreeDOFDisplacementsPerSubdomain = microAnalyzer.GetConvergedSolutionVectorsOfFreeDofs();// ousiastika to u pou twra taftizetai me to uPlusuu
             #endregion
 
 
             #region INTEGRATION stresses 
-            double[] FppReactionVector = SubdomainCalculations.CalculateFppReactionsVector(Subdomain subdomain, Subdomain2 subdomain2, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, IVector solution, IVector dSolution)
+            Dictionary<int, Vector> du = microAnalyzer.GetConvergedIncrementalSolutionVectorsOfFreeDofs();
+            double[] FppReactionVector = SubdomainCalculations.CalculateFppReactionsVector(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes,
+                uInitialFreeDOFDisplacementsPerSubdomain[model.Subdomains[0].ID], du[model.Subdomains[0].ID], initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, increments, increments);
+            double[] DqFpp = SubdomainCalculations.CalculateDqFpp(FppReactionVector, scaleTransitions, boundaryNodes);
 
-            double[] FPK_vec = new double[9];
-            //TODO: upologismos FPK_vec apo oloklhrwma 
+            double[] FPK_vec = new double [DqFpp.Length];
+            for (int i1 = 0; i1 < DqFpp.Length; i1++)
+            { FPK_vec[i1]=(1 / volume) * DqFpp[i1]; }
+
             double[,] DefGradMat = new double[3, 3] { { DefGradVec[0], DefGradVec[3], DefGradVec[6] }, { DefGradVec[7], DefGradVec[1], DefGradVec[4] }, { DefGradVec[5], DefGradVec[8], DefGradVec[2] } };
             double[,] FPK_mat = new double[3, 3] { { FPK_vec[0], FPK_vec[3], FPK_vec[6] }, { FPK_vec[7], FPK_vec[1], FPK_vec[4] }, { FPK_vec[5], FPK_vec[8], FPK_vec[2] } };
             double[,] SPK_mat = transformFPKtoSPK(DefGradMat, FPK_mat);
             SPK_vec = new double[6] { SPK_mat[0,0], SPK_mat[1,1], SPK_mat[2,2], SPK_mat[0,1], SPK_mat[1,2], SPK_mat[0,2] };
-            //na elegxthei h parapanw anadiataxh kai o pollaplasiasmos
+            //TODOna elegxthei h parapanw anadiataxh kai o pollaplasiasmos
             #endregion
 
             #region INTEGRATION constitutive Matrix
@@ -196,6 +207,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                     d2W_dfdf[i1, i2] = (1 / volume) * DqCondDq[i1, i2];
                 }
             }
+            #endregion
+
+            #region update of prescribed converged displacements vectors;
+            initialConvergedBoundaryDisplacements = totalPrescribedBoundaryDisplacements;
             #endregion
 
 
@@ -312,37 +327,30 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public double[] Coordinates { get; set; }
 
 
-
-
-
-
-
         #region transformation methods
         private double[,] transformFPKtoSPK(double[,] DefGradMat, double[,] FPK_mat)
         {
-            IMatrix2D DefGradMat2D = new Matrix2D(DefGradMat);
-            int linearsystemID = 1;
-            SkylineLinearSystem linearSystem = new SkylineLinearSystem(linearsystemID, new double[3] { FPK_mat[0, 0], FPK_mat[1, 0], FPK_mat[2, 0] });
-            //ILinearSystem linearSystem = new SkylineLinearSystem(linearsystemID, new double[3] { FPK_mat[0, 0], FPK_mat[1, 0], FPK_mat[2, 0] });
-            var solver = new SolverSkyline(linearSystem);
+            //IMatrix2D DefGradMat2D = new Matrix2D(DefGradMat);
+            //int linearsystemID = 1;
+            //SkylineLinearSystem linearSystem = new SkylineLinearSystem(linearsystemID, new double[3] { FPK_mat[0, 0], FPK_mat[1, 0], FPK_mat[2, 0] });
+            //var solver = new SolverSkyline(linearSystem);
 
-            // BuildMatrices();
-            linearSystem.Matrix = DefGradMat2D;
+            //// BuildMatrices();
+            //linearSystem.Matrix = DefGradMat2D;
 
-            //solver.Initialize();
-            solver.Initialize(); // dld factorize
+            ////solver.Initialize();
+            //solver.Initialize(); // dld factorize
 
-            // me thn parakatw commented out entolh anathetoume to linearSystem.RHS se ena vector sto opoio mporoumen na anaferthoume na kanoume copyTo klp.
-            //Vector linearSystemRHS = ((Vector)linearSystem.RHS); // opws fainetai sth diadikasia pou kanei o NRNLAnalyzer sthn clculateInternalRHS sto telos tou loop
+            //// me thn parakatw commented out entolh anathetoume to linearSystem.RHS se ena vector sto opoio mporoumen na anaferthoume na kanoume copyTo klp.
+            ////Vector linearSystemRHS = ((Vector)linearSystem.RHS); // opws fainetai sth diadikasia pou kanei o NRNLAnalyzer sthn clculateInternalRHS sto telos tou loop
 
             double[,] SPK_Mat = new double[3, 3];
-            Vector solution = new Vector(new double[3]);
+            //Vector solution = new Vector(new double[3]);
 
             for (int j1 = 0; j1 < 3; j1++)
             {
                 Vector RHS = new Vector(new double[3] { FPK_mat[0, j1], FPK_mat[1, j1], FPK_mat[2, j1] });
-                SkylineMatrix2D k = ((SkylineMatrix2D)linearSystem.Matrix); // opws sto solverskyline.cs sthn Solve()
-                k.Solve(RHS, solution);
+                double[] solution = commonCalculations.invert3by3(DefGradMat, RHS.Data);                
                 for (int i1 = 0; i1 < 3; i1++)
                 {
                     SPK_Mat[i1, j1] = solution[i1];
@@ -444,6 +452,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             return Cinpk;
         }
+        
         #endregion 
 
 
