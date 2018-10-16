@@ -32,7 +32,6 @@
     <Folder Include="MaterialsTest\" />
     <Folder Include="Solvers\" />
     <Folder Include="Problems\" />
-    <Folder Include="Numerical\" />
   </ItemGroup>
 
 </Project>

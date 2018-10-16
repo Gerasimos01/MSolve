@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Accord.Math.Decompositions;
 using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
 
 namespace ISAAR.MSolve.Numerical.LinearAlgebra
@@ -560,5 +561,17 @@ namespace ISAAR.MSolve.Numerical.LinearAlgebra
             Array.Copy(newData, data, data.Length);
         }
 
+        /// <summary>
+        /// Solves the linear systems A * X = B, where X = [ x1 x2 ... xn], B = [ b1 b2 ... bn]. This method uses the
+        /// LU factorization with partial pivoting: P * A = L * U.
+        /// </summary>
+        /// <param name="columnsAsRhs">The right hand side vectors as columns of a matrix B.</param>
+        /// <param name="inPlace">True to overwrite the internal array of this <see cref="Matrix2D"/> 
+        ///     with the factorization data.</param>
+        public Matrix2D SolveLU(Matrix2D rhsColumns, bool inPlace)
+        {
+            var lu = new LuDecomposition(data, isTransposed, inPlace);
+            return new Matrix2D(lu.Solve(rhsColumns.data));
+        }
     }
 }
