@@ -98,7 +98,11 @@ namespace ISAAR.MSolve.SamplesConsole
             double[,] DGtr = new double[3, 3] { { 1.01, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
             double[] GLVec = Transform_DGtr_to_GLvec(DGtr);
             material1.UpdateMaterial(GLVec);
-            double[] stressesCheck = material1.Stresses;
+            double[] stressesCheck1 = material1.Stresses;
+            DGtr = new double[3, 3] { { 1.02, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+            GLVec = Transform_DGtr_to_GLvec(DGtr);
+            material1.UpdateMaterial(GLVec);
+            double[] stressesCheck2 = material1.Stresses;
 
             VectorExtensions.AssignTotalAffinityCount();
             IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilder();
@@ -108,7 +112,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //IFiniteElementMaterial3D microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
 
             microstructure3.UpdateMaterial(new double[9] { 1.01, 1, 1, 0, 0, 0, 0, 0, 0 });
-            double[] stressesCheck2 = microstructure3.Stresses;
+            double[] stressesCheck3 = microstructure3.Stresses;
         }
 
         public static void Check05bStressIntegration()
@@ -116,20 +120,30 @@ namespace ISAAR.MSolve.SamplesConsole
             double E_disp = 3.5; /*Gpa*/ double ni_disp = 0.4; // stather Poisson
             ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
             { YoungModulus = E_disp, PoissonRatio = ni_disp, };
-            double[,] DGtr = new double[3, 3] { { 1.01, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+            double[,] DGtr = new double[3, 3] { { 1.10, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
             double[] GLVec = Transform_DGtr_to_GLvec(DGtr);
             material1.UpdateMaterial(GLVec);
-            double[] stressesCheck = material1.Stresses;
+            //double[] stressesCheck1 = material1.Stresses;
+            double[] stressesCheck1 = new double[6] {material1.Stresses[0], material1.Stresses[1], material1.Stresses[2],
+                material1.Stresses[3],material1.Stresses[4],material1.Stresses[5] };
+            DGtr = new double[3, 3] { { 1.20, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+            GLVec = Transform_DGtr_to_GLvec(DGtr);
+            material1.UpdateMaterial(GLVec);
+            material1.SaveState();
+            double[] stressesCheck2 = material1.Stresses;
 
             VectorExtensions.AssignTotalAffinityCount();
-            IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheck8Hexa();
+            IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheck27Hexa();
             //IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
 
             IFiniteElementMaterial3D microstructure3 = new Microstructure3Develop(homogeneousRveBuilder1);
             //IFiniteElementMaterial3D microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
 
-            microstructure3.UpdateMaterial(new double[9] { 1.01, 1, 1, 0, 0, 0, 0, 0, 0 });
-            double[] stressesCheck2 = microstructure3.Stresses;
+            microstructure3.UpdateMaterial(new double[9] { 1.10, 1, 1, 0, 0, 0, 0, 0, 0 });
+            double[] stressesCheck3 = microstructure3.Stresses;
+            microstructure3.UpdateMaterial(new double[9] { 1.20, 1, 1, 0, 0, 0, 0, 0, 0 });
+            microstructure3.SaveState();
+            double[] stressesCheck4 = microstructure3.Stresses;
         }
 
         private static double[] Transform_DGtr_to_GLvec(double[,] DGtr)
