@@ -58,9 +58,11 @@ namespace ISAAR.MSolve.SamplesConsole
             if (model__builder_choice == 23) // einai to benchmark 4 
             { ParadeigmataElegxwnBuilder.HexaCantileverBuilder(model, 850); }
             if (model__builder_choice == 24) // 
-            { ParadeigmataElegxwnBuilder.HexaCantileverBuilder_copyMS(model, 850); }
+            { ParadeigmataElegxwnBuilder.HexaCantileverBuilder_copyMS(model, 0.00219881744271988174427); }
             if (model__builder_choice == 25) // 
             { RVEExamplesBuilder.Reference2RVEExample10_000withRenumbering_mono_hexa(model); }
+            if (model__builder_choice == 26) // einai to benchmark 4 
+            { ParadeigmataElegxwnBuilder.HexaCantileverBuilder_material_fromMS(model, 0.00219881744271988174427); }
 
             if (model__builder_choice == 30) // einai to benchmark 4 me to neo hexa_mat
             { ParadeigmataElegxwnBuilder.Hexa_1mat_CantileverBuilder(model, 850); }
