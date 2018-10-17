@@ -96,7 +96,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         public object Clone()
         {
-            return new Microstructure2(rveBuilder);
+            return new Microstructure3Develop(rveBuilder);
         }
 
         public Dictionary<int, Node> BoundaryNodesDictionary

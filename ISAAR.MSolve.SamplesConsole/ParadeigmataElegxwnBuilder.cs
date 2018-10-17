@@ -14,7 +14,8 @@ using ISAAR.MSolve.FEM.Materials;
 using ISAAR.MSolve.FEM;
 using ISAAR.MSolve.FEM.Elements;
 using ISAAR.MSolve.MultiscaleAnalysis;
-
+using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
+using ISAAR.MSolve.Materials.Interfaces;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
@@ -130,11 +131,16 @@ namespace ISAAR.MSolve.SamplesConsole
 
         public static void HexaCantileverBuilder_copyMS(Model model, double load_value)
         {
-            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
-            {
-                YoungModulus = 1353000,
-                PoissonRatio = 0.3,
-            };
+            //ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
+            //{
+            //    YoungModulus = 1353000,
+            //    PoissonRatio = 0.3,
+            //};
+
+            IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheck27Hexa();
+            //IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
+
+            IFiniteElementMaterial3D material1 = new Microstructure3Develop(homogeneousRveBuilder1);
 
             double[,] nodeData = new double[,] { {-0.250000,-0.250000,-1.000000},
             {0.250000,-0.250000,-1.000000},

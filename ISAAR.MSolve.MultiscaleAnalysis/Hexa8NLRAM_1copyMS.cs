@@ -1392,12 +1392,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 //this.GetInitialGeometricDataAndInitializeMatrices(element);
                 this.CalculateInitialConfigurationData(element);
 
-                this.UpdateCoordinateData(new double[24],element);
-                for (int npoint = 0; npoint < materialsAtGaussPoints.Length; npoint++)// loop gia getfirstStressesFromMaterial
-                {
-                    for (int j = 0; j < 6; j++)
-                    { Spkvec[npoint][j] = materialsAtGaussPoints[npoint].Stresses[j]; }
-                }
+                this.UpdateCoordinateData(new double[24],element); 
+                //COMMMENT MS: Keep the first stress copy commented out and suppose initial stresses zero or update material with def. gradient F=Identity matrix.
+                //or TODO: this is already done Microstructure.cs if Const==null so it could be done here but it is better to do it there.
+                //for (int npoint = 0; npoint < materialsAtGaussPoints.Length; npoint++)// loop gia getfirstStressesFromMaterial
+                //{
+                //    for (int j = 0; j < 6; j++)
+                //    { Spkvec[npoint][j] = materialsAtGaussPoints[npoint].Stresses[j]; }
+                //}
                 this.InitializeBland_sunt_ol_Spkvec();// meta to get twn stresses apo to material dioiti periexei ton pol/smo suntol epi Spkvec
             }
             for (int npoint = 0; npoint < materialsAtGaussPoints.Length; npoint++)

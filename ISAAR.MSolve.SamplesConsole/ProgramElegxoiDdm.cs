@@ -32,7 +32,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice =32;   // 9 einai to megalo me to renumbering pou tsekaretai
+            model__builder_choice =24;   // 9 einai to megalo me to renumbering pou tsekaretai
 
             
             if (model__builder_choice == 1) // 
@@ -112,7 +112,7 @@ namespace ISAAR.MSolve.SamplesConsole
             var subdomainUpdaters = new[] { new NonLinearSubdomainUpdater(model.Subdomains[0]) };
             var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
 
-            var increments = 1;
+            var increments = 2;
             var childAnalyzer = new NewtonRaphsonNonLinearAnalyzer(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs);
             //h epomenhgrammh einai gia paradeigma ws pros to access
             //IAnalyzer childAnalyzer2 = new NewtonRaphsonNonLinearAnalyzer(solver, linearSystemsArray, subdomainUpdaters, subdomainMappers, provider, increments, model.TotalDOFs);
