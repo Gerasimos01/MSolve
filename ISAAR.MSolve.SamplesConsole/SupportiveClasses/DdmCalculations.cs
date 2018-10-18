@@ -92,7 +92,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 
             }
 
-            string print_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}globalDOFs.txt";
+            string print_path_gen = @"C:\Users\Dimitris Giovanis\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}globalDOFs.txt";
             string file_no = subdomainID.ToString();
             string print_path = string.Format(print_path_gen, file_no);
             Vector globalDOFS = new Vector(globalDOFs);
