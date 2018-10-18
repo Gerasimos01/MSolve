@@ -23,7 +23,7 @@ using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
-    public class HomogeneousRVEBuilderCheck27Hexa : IRVEbuilder
+    public class HomogeneousRVEBuilderCheck125Hexa : IRVEbuilder
     {
         //TODOGerasimos gia na ta krataei mesa kai na kanei build model oses fores tou zhththei
         // omoiws na ginei kai to RVE me graphene sheets 
@@ -31,7 +31,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         // int subdiscr1;
        
 
-        public HomogeneousRVEBuilderCheck27Hexa()
+        public HomogeneousRVEBuilderCheck125Hexa()
         {
             //TODOGerasimos
             // this.renumbering_vector_path=renumbering_vector_path,
@@ -55,12 +55,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             rveMatrixParameters mp;
             grapheneSheetParameters gp;
             //C:\Users\cluster 5\Desktop\Gerasimos\REFERENCE_Examples_me_develop\10_000_mono_hexa\REF_new_total_numbering.txt einai link sto PC LAB
-            string renumbering_vector_path = @"C:\Users\Dimitris Giovanis\Desktop\notes_elegxoi\MSOLVE_input_2\REF_new_total_numbering27.txt";
+            string renumbering_vector_path = @"C:\Users\Dimitris Giovanis\Desktop\notes_elegxoi\MSOLVE_input_2\REF_new_total_numbering125.txt";
             string Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_fe2_diafora_check\fe2_tax_me1_arxiko_chol_dixws_me1_OriginalRVEExampleChol_me_a1_REF2_10_000_renu_new_multiple_algorithms_check_stress_27hexa\Fxk_p_komvoi_rve.txt";
             int subdiscr1 = 1;
-            int discr1 = 3;
+            int discr1 = 5;
             // int discr2 dn xrhsimopoieitai
-            int discr3 = 3;
+            int discr3 = 5;
             int subdiscr1_shell = 7;
             int discr1_shell = 1;
 
