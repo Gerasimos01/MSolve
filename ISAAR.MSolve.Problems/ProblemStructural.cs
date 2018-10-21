@@ -64,7 +64,7 @@ namespace ISAAR.MSolve.Problems
         private void BuildKs()
         {
             //prosthiki print
-            string print_path_gen = @"C:\Users\Dimitris Giovanis\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}Stiffness.txt";
+            string print_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}Stiffness.txt";
 
 
             ks = new Dictionary<int, IMatrix2D>(model.SubdomainsDictionary.Count);
