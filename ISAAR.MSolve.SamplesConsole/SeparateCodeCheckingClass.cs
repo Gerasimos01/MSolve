@@ -141,9 +141,66 @@ namespace ISAAR.MSolve.SamplesConsole
 
             microstructure3.UpdateMaterial(new double[9] { 1.10, 1, 1, 0, 0, 0, 0, 0, 0 });
             double[] stressesCheck3 = microstructure3.Stresses;
-            microstructure3.UpdateMaterial(new double[9] { 1.20, 1, 1, 0, 0, 0, 0, 0, 0 });
             microstructure3.SaveState();
+            microstructure3.UpdateMaterial(new double[9] { 1.20, 1, 1, 0, 0, 0, 0, 0, 0 });            
             double[] stressesCheck4 = microstructure3.Stresses;
+        }
+
+        public static void CheckConstitutiveMatrixTransformation()
+        {
+            double[,] d2W_dfdf = new double[9, 9]
+                {{7.502343750000,5.000000000000,5.000000000000,0.187500000000,-0.000000000000,-0.000000000000,-0.000000000000,0.031250000000,0.000000000000},
+                {5.000000000000,7.502343750000,5.000000000000,0.187500000000,-0.000000000000,-0.000000000000,0.000000000000,0.031250000000,0.000000000000},
+                {5.000000000000,5.000000000000,7.501562500228,0.125000000000,-0.000000000000,0.000000000000,-0.000000000000,-0.000000000000,0.000000000000},
+                {0.187500000000,0.187500000000,0.125000000000,1.257031250000,-0.000000000000,0.000000000000,-0.000000000000,1.250000000000,0.000000000000},
+                {0.000000000000,-0.000000000000,0.000000000000,0.000000000000,1.251562500000,-0.000000000000,0.031250000000,-0.000000000000,1.250000000000},
+                {0.000000000000,-0.000000000000,0.000000000000,0.000000000000,-0.000000000000,1.251562500000,1.250000000000,0.000000000000,0.031250000000},
+                {-0.000000000000,-0.000000000000,0.000000000000,-0.000000000000,0.031250000000,1.250000000000,1.252343750000,-0.000000000000,0.031250000000},
+                {0.031250000000,0.031250000000,-0.000000000000,1.250000000000,-0.000000000000,-0.000000000000,0.000000000000,1.251562500000,-0.000000000000},
+                {0.000000000000,0.000000000000,0.000000000000,0.000000000000,1.250000000000,0.031250000000,0.031250000000,0.000000000000,1.252343750000},
+
+                };
+
+            double[,] DefGradMat = new double[3, 3]
+            {
+                {1.000000000000,0.025000000000,0.000000000000},
+                {0.000000000000,1.000000000000,0.000000000000},
+                {0.000000000000,0.000000000000,1.000000000000},
+            };
+
+            double[,] SPK_mat = new double[3, 3]
+            {
+                {0.001562500000,0.031250000000,0.000000000000},
+                {0.031250000000,0.002343750000,0.000000000000},
+                {-0.000000000000,0.000000000000,0.001562500000},
+            };
+
+            double[,] Cinpk = Transform_d2Wdfdf_to_Cijrs(d2W_dfdf, SPK_mat, DefGradMat); // to onomazoume Cinpk epeidh einai to 9x9 kai to diakrinoume etsi apo to Cijrs 6x6
+            // transformation se 6x6 se 2 vhmata
+            double[,] Cijrs_columns = new double[9, 6];
+            for (int i1 = 0; i1 < 9; i1++)
+            {
+                Cijrs_columns[i1, 0] = Cinpk[i1, 0];
+                Cijrs_columns[i1, 1] = Cinpk[i1, 1];
+                Cijrs_columns[i1, 2] = Cinpk[i1, 2];
+                Cijrs_columns[i1, 3] = 0.5 * (Cinpk[i1, 3] + Cinpk[i1, 7]);
+                Cijrs_columns[i1, 4] = 0.5 * (Cinpk[i1, 4] + Cinpk[i1, 8]);
+                Cijrs_columns[i1, 5] = 0.5 * (Cinpk[i1, 5] + Cinpk[i1, 6]);
+            }
+
+            double[,] Cijrs = new double[6, 6];
+
+            for (int j1 = 0; j1 < 6; j1++)
+            {
+                Cijrs[0, j1] = Cijrs_columns[0, j1];
+                Cijrs[1, j1] = Cijrs_columns[1, j1];
+                Cijrs[2, j1] = Cijrs_columns[2, j1];
+                Cijrs[3, j1] = 0.5 * (Cijrs_columns[3, j1] + Cijrs_columns[7, j1]);
+                Cijrs[4, j1] = 0.5 * (Cijrs_columns[4, j1] + Cijrs_columns[8, j1]);
+                Cijrs[5, j1] = 0.5 * (Cijrs_columns[5, j1] + Cijrs_columns[6, j1]);
+            }
+
+
         }
 
         private static double[] Transform_DGtr_to_GLvec(double[,] DGtr)
@@ -224,15 +281,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
-
-
-
-
-
-
-
-
-        private  static double[,] Transform_d2Wdfdf_to_Cijrs(double[,] Aijkl, double[,] SPK, double[,] F)
+        private static double[,] Transform_d2Wdfdf_to_Cijrs(double[,] Aijkl, double[,] SPK, double[,] F)
         {
             int[,] i_seira = { { 1, 2, 3 }, { 3, 1, 2 }, { 2, 3, 1 } };
             int[,] k_seira = { { 1, 2, 3 }, { 3, 1, 2 }, { 2, 3, 1 } };
@@ -267,61 +316,104 @@ namespace ISAAR.MSolve.SamplesConsole
             { eye9[i1, i1] = 1; }
             Vector solution = new Vector(new double[9]);
 
-            SkylineMatrix2D F__F__Mat = new SkylineMatrix2D(F__F__);
-            F__F__Mat.WriteToFile(@"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\F__F__.txt");
-            int linearsystemID = 1;
-            SkylineLinearSystem linearSystem = new SkylineLinearSystem(linearsystemID, new double[9]);
-            var solver = new SolverSkyline(linearSystem);
-            // BuildMatrices();
-            linearSystem.Matrix = F__F__Mat;
-            //solver.Initialize();
-            solver.Initialize(); // dld factorize
+            Matrix2D F__F__Mat = new Matrix2D(F__F__);
+            //int linearsystemID = 1;
+            //SkylineLinearSystem linearSystem = new SkylineLinearSystem(linearsystemID, new double[9]);
+            //var solver = new SolverSkyline(linearSystem);
+            //// BuildMatrices();
+            //linearSystem.Matrix = F__F__Mat;
+            ////solver.Initialize();
+            //solver.Initialize(); // dld factorize
 
-            for (int j1 = 0; j1 < 9; j1++)
+            //for (int j1 = 0; j1 < 9; j1++)
+            //{
+            //    Vector RHS = new Vector(new double[9] { eye9[0, j1], eye9[1, j1], eye9[2, j1], eye9[3, j1], eye9[4, j1], eye9[5, j1], eye9[6, j1], eye9[7, j1], eye9[8, j1] });
+            //    SkylineMatrix2D k = ((SkylineMatrix2D)linearSystem.Matrix); // opws sto solverskyline.cs sthn Solve()
+            //    k.Solve(RHS, solution);
+            //    for (int i1 = 0; i1 < 9; i1++)
+            //    {
+            //        F_inv[i1, j1] = solution[i1];
+            //    }
+            //}
+
+            double[,] multipleRHSs = new double[9, 9];
+            for (int i1 = 0; i1 < 3; i1++)
             {
-                Vector RHS = new Vector(new double[9] { eye9[0, j1], eye9[1, j1], eye9[2, j1], eye9[3, j1], eye9[4, j1], eye9[5, j1], eye9[6, j1], eye9[7, j1], eye9[8, j1] });
-                SkylineMatrix2D k = ((SkylineMatrix2D)linearSystem.Matrix); // opws sto solverskyline.cs sthn Solve()
-                k.Solve(RHS, solution);
-                for (int i1 = 0; i1 < 9; i1++)
+                for (int k1 = 0; k1 < 3; k1++)
                 {
-                    F_inv[i1, j1] = solution[i1];
+                    double[] A_j_l = new double[9] { Aijkl[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[k1, 0] - 1) + k1],
+                    Aijkl[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[k1, 0] - 1) + k1],
+                    Aijkl[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[k1, 0] - 1) + k1],
+                    Aijkl[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[k1, 1] - 1) + k1],
+                    Aijkl[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[k1, 1] - 1) + k1],
+                    Aijkl[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[k1, 1] - 1) + k1],
+                    Aijkl[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[k1, 2] - 1) + k1],
+                    Aijkl[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[k1, 2] - 1) + k1],
+                    Aijkl[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[k1, 2] - 1) + k1]};
+
+                    double[] sec_term = new double[9] { -SPK[i1, k1], 0, 0, 0, -SPK[i1, k1], 0, 0, 0, -SPK[i1, k1] };
+
+                    //Matrix2D F_invMat = new Matrix2D(F_inv);
+                    //Vector A_j_lVec = new Vector(A_j_l);
+                    //Vector sec_termVec = new Vector(sec_term); //comment out eginan afta afou den xreiazontai gia ta parakatw
+
+                    int RHScolumn = i1 * 3 + k1;
+                    for (int a1 = 0; a1 < 9; a1++)
+                    {
+                        multipleRHSs[a1, RHScolumn] = A_j_l[a1] + sec_term[a1];
+                    }
+
+                    //Vector C_np_ = F_invMat * (new Vector(A_j_lVec + sec_termVec)); //comment out afta
+
+                    //Cinpk[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[0, k1] - 1) + 1] = C_np_[0];
+                    //Cinpk[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[1, k1] - 1) + 2] = C_np_[1];
+                    //Cinpk[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[2, k1] - 1) + 3] = C_np_[2];
+                    //Cinpk[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[0, k1] - 1) + 1] = C_np_[3];
+                    //Cinpk[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[1, k1] - 1) + 2] = C_np_[4];
+                    //Cinpk[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[2, k1] - 1) + 3] = C_np_[5];
+                    //Cinpk[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[0, k1] - 1) + 1] = C_np_[6];
+                    //Cinpk[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[1, k1] - 1) + 2] = C_np_[7];
+                    //Cinpk[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[2, k1] - 1) + 3] = C_np_[8];
+
                 }
             }
+
+            //TODO right here inversion:
+            Matrix2D MultipleSolutions = F__F__Mat.SolveLU(new Matrix2D(multipleRHSs), true);
+            //MultipleSolutions=F__F__Mat\multipleRHSs;
 
 
             for (int i1 = 0; i1 < 3; i1++)
             {
                 for (int k1 = 0; k1 < 3; k1++)
                 {
-                    double[] A_j_l = new double[9] { Aijkl[3 * (i_seira[i1-1, 0] - 1) + i1, 3 * (k_seira[k1-1, 0] - 1) + k1],
-                    Aijkl[3 * (i_seira[i1-1, 1] - 1) + i1, 3 * (k_seira[k1-1, 0] - 1) + k1],
-                    Aijkl[3 * (i_seira[i1-1, 2] - 1) + i1, 3 * (k_seira[k1-1, 0] - 1) + k1],
-                    Aijkl[3 * (i_seira[i1-1, 0] - 1) + i1, 3 * (k_seira[k1-1, 1] - 1) + k1],
-                    Aijkl[3 * (i_seira[i1-1, 1] - 1) + i1, 3 * (k_seira[k1-1, 1] - 1) + k1],
-                    Aijkl[3 * (i_seira[i1-1, 2] - 1) + i1, 3 * (k_seira[k1-1, 1] - 1) + k1],
-                    Aijkl[3 * (i_seira[i1-1, 0] - 1) + i1, 3 * (k_seira[k1-1, 2] - 1) + k1],
-                    Aijkl[3 * (i_seira[i1-1, 1] - 1) + i1, 3 * (k_seira[k1-1, 2] - 1) + k1],
-                    Aijkl[3 * (i_seira[i1-1, 2] - 1) + i1, 3 * (k_seira[k1-1, 2] - 1) + k1]};
 
-                    double[] sec_term = new double[9] { -SPK[i1 - 1, k1 - 1], 0, 0, 0, -SPK[i1 - 1, k1 - 1], 0, 0, 0, -SPK[i1 - 1, k1 - 1] };
 
-                    Matrix2D F_invMat = new Matrix2D(F_inv);
-                    Vector A_j_lVec = new Vector(A_j_l);
-                    Vector sec_termVec = new Vector(sec_term);
-                    Vector C_np_ = F_invMat * (new Vector(A_j_lVec + sec_termVec));
+                    //Matrix2D F_invMat = new Matrix2D(F_inv);
+                    //Vector A_j_lVec = new Vector(A_j_l);
+                    //Vector sec_termVec = new Vector(sec_term); //comment out eginan afta afou den xreiazontai gia ta parakatw
 
-                    Cinpk[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[0, k1] - 1) + 1] = C_np_[0];
-                    Cinpk[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[1, k1] - 1) + 2] = C_np_[1];
-                    Cinpk[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[2, k1] - 1) + 3] = C_np_[2];
-                    Cinpk[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[0, k1] - 1) + 1] = C_np_[3];
-                    Cinpk[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[1, k1] - 1) + 2] = C_np_[4];
-                    Cinpk[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[2, k1] - 1) + 3] = C_np_[5];
-                    Cinpk[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[0, k1] - 1) + 1] = C_np_[6];
-                    Cinpk[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[1, k1] - 1) + 2] = C_np_[7];
-                    Cinpk[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[2, k1] - 1) + 3] = C_np_[8];
+                    int RHScolumn = i1 * 3 + k1;
+                    //for (int a1 = 0; a1 < 9; a1++)
+                    //{
+                    //    multipleRHSs[a1, RHScolumn] = A_j_l[a1] + sec_term[a1];
+                    //}
+
+                    //Vector C_np_ = F_invMat * (new Vector(A_j_lVec + sec_termVec)); //comment out afta
+
+                    Cinpk[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[0, k1] - 1) + 0] = MultipleSolutions[0, RHScolumn];
+                    Cinpk[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[1, k1] - 1) + 1] = MultipleSolutions[1, RHScolumn];
+                    Cinpk[3 * (i_seira[i1, 0] - 1) + i1, 3 * (k_seira[2, k1] - 1) + 2] = MultipleSolutions[2, RHScolumn];
+                    Cinpk[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[0, k1] - 1) + 0] = MultipleSolutions[3, RHScolumn];
+                    Cinpk[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[1, k1] - 1) + 1] = MultipleSolutions[4, RHScolumn];
+                    Cinpk[3 * (i_seira[i1, 1] - 1) + i1, 3 * (k_seira[2, k1] - 1) + 2] = MultipleSolutions[5, RHScolumn];
+                    Cinpk[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[0, k1] - 1) + 0] = MultipleSolutions[6, RHScolumn];
+                    Cinpk[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[1, k1] - 1) + 1] = MultipleSolutions[7, RHScolumn];
+                    Cinpk[3 * (i_seira[i1, 2] - 1) + i1, 3 * (k_seira[2, k1] - 1) + 2] = MultipleSolutions[8, RHScolumn];
 
                 }
             }
+
 
             return Cinpk;
         }

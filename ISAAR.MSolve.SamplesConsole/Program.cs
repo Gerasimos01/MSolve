@@ -149,7 +149,7 @@ namespace ISAAR.MSolve.SamplesConsole
         {
             //SolveBuildingInNoSoilSmall();
             //TrussExample.Run();
-            ProgramElegxoiDdm.SolveRVEExample(); //TODOGerasimos gia to multiscale epilegoume to 24 edw
+            //ProgramElegxoiDdm.SolveRVEExample(); //TODOGerasimos gia to multiscale epilegoume to 24 edw
             //ProgramElegxoiDdm.SolveDisplLoadsExample();
             //ProgramElegxoiDdm.SolveDisplLoadsExampleRestartAnalysis();
             //Program2copyElegxoiBenc.SolveBencExample();
@@ -163,6 +163,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass.Check03();
             //SeparateCodeCheckingClass.Check04integration();
             //SeparateCodeCheckingClass.Check05bStressIntegration();
+            SeparateCodeCheckingClass.CheckConstitutiveMatrixTransformation();
         }
     }
 }
