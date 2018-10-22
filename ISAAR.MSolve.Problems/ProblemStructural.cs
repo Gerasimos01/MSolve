@@ -61,10 +61,11 @@ namespace ISAAR.MSolve.Problems
             }
         }
 
+        int ekteleseis_counter = 0;
         private void BuildKs()
         {
             //prosthiki print
-            string print_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}Stiffness.txt";
+            string print_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}Iter{1}Stiffness.txt";
 
 
             ks = new Dictionary<int, IMatrix2D>(model.SubdomainsDictionary.Count);
@@ -85,8 +86,12 @@ namespace ISAAR.MSolve.Problems
                     for (int i = limit.Item2; i < limit.Item3; i++)
                     {
                         SkylineMatrix2D mat = GlobalMatrixAssemblerSkyline.CalculateGlobalMatrix(model.SubdomainsDictionary[k[i]], s);
+                        // prosthiki print
+                        ekteleseis_counter += 1;
+                        string counter_data = ekteleseis_counter.ToString();
+
                         string file_no = (k[i]).ToString();
-                        string print_path = string.Format(print_path_gen, file_no);
+                        string print_path = string.Format(print_path_gen, file_no,counter_data);
                         mat.WriteToFile(print_path);
                         internalKs[limit.Item1].Add(k[i], mat );
                     }
