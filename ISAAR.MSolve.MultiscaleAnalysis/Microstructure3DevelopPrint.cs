@@ -24,7 +24,7 @@ using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
-    public class Microstructure3Develop : IFiniteElementMaterial3D
+    public class Microstructure3DevelopPrint : IFiniteElementMaterial3D
     {
         private Model model { get; set; }
         //private readonly Dictionary<int, Node> nodesDictionary = new Dictionary<int, Node>();
@@ -57,7 +57,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         //double[] Stresses { get; }
         //IMatrix2D ConstitutiveMatrix { get; } TODOGerasimos
 
-        public Microstructure3Develop(IRVEbuilder rveBuilder)
+        public Microstructure3DevelopPrint(IRVEbuilder rveBuilder)
         {
             this.rveBuilder = rveBuilder;
             Tuple<Model, Dictionary<int, Node>,double> modelAndBoundaryNodes = this.rveBuilder.GetModelAndBoundaryNodes();
@@ -241,7 +241,6 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             constitutiveMatrix= new Matrix2D(Cijrs);
 
-            PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
             this.modified = CheckIfConstitutiveMatrixChanged(); 
         }
 
@@ -591,53 +590,6 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             return Cinpk;
         }
 
-        #endregion
-
-        #region Print methods for debug
-        private void PrintMethodsForDebug(double[][] KfpDq, double[][] f2_vectors, double[][] f3_vectors, double[][] KppDqVectors, double[][] f4_vectors, double[,] DqCondDq, double[,] d2W_dfdf, double[,] Cijrs)
-        {
-            string string1 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\KfpDq_{0}.txt";
-
-            for (int i2 = 0; i2 < KfpDq.GetLength(0); i2++)
-            {
-                string path = string.Format(string1, (i2 + 1).ToString());
-                Vector data = new Vector(KfpDq[i2]);
-                data.WriteToFile(path);
-            }
-
-            string string2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\KffInvKfpDq_{0}.txt";
-
-            for (int i2 = 0; i2 < f2_vectors.GetLength(0); i2++)
-            {
-                string path = string.Format(string2, (i2 + 1).ToString());
-                Vector data = new Vector(f2_vectors[i2]);
-                data.WriteToFile(path);
-            }
-
-            string string3 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\f3_vectors_{0}.txt";
-            string string4 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\KppDqVectors_{0}.txt";
-            string string5 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\f4_vectors_{0}.txt";
-
-            for (int i2 = 0; i2 < f2_vectors.GetLength(0); i2++)
-            {
-                string path = string.Format(string3, (i2 + 1).ToString());
-                Vector data = new Vector(f3_vectors[i2]);
-                data.WriteToFile(path);
-
-                path = string.Format(string4, (i2 + 1).ToString());
-                data = new Vector(KppDqVectors[i2]);
-                data.WriteToFile(path);
-
-                path = string.Format(string5, (i2 + 1).ToString());
-                data = new Vector(f4_vectors[i2]);
-                data.WriteToFile(path);
-
-            }
-
-            PrintUtilities.WriteToFile(DqCondDq, @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\DqCondDq.txt");
-            PrintUtilities.WriteToFile(d2W_dfdf, @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\d2W_dfdf.txt");
-            PrintUtilities.WriteToFile(Cijrs, @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\Cijrs.txt");
-        }
         #endregion
 
 
