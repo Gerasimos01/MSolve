@@ -253,8 +253,8 @@ namespace ISAAR.MSolve.FEM.Entities
 
         // prosthiki print
         int ekteleseis_counter = 0;
-        string string1 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_{0}.txt";
-        string string2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_micro_{0}.txt";
+        string string1 = @"C:\Users\Dimitris Giovanis\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_{0}.txt";
+        string string2 = @"C:\Users\Dimitris Giovanis\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_micro_{0}.txt";
 
         public IVector GetRHSFromSolution(IVector solution, IVector dSolution)
         {
