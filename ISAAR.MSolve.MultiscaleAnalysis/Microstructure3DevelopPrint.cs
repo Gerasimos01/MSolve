@@ -189,6 +189,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             #region INTEGRATION constitutive Matrix
             //TODOGERASIMOS edw thelei NEWtonRaphson.BuildMatrices kai sigoura to solver. Initialize kapou edw
+            provider.Reset(); // prosoxh xwris to provider.reset to BuildMatrices den tha vrei null ta ks kai den tha ta xanahtisei
             microAnalyzer.BuildMatrices();
             double[][] KfpDq = SubdomainCalculations.CalculateKfreeprescribedDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
 

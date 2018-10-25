@@ -124,6 +124,32 @@ namespace ISAAR.MSolve.FEM
             return f2_vectors;
         }
 
+        public static double[][] CalculateKffinverseKfpDqSimplifyExpression(double[][] KfpDq, Model model, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, SolverSkyline solver, Dictionary<int, ILinearSystem> linearSystems)
+        {
+            double[][] f2_vectors = new double[KfpDq.GetLength(0)][];
+            for (int i1 = 0; i1 < KfpDq.GetLength(0); i1++)
+            {
+                //double[] FirstRHS = KfpDq[0];
+                //int FirstRHSdimension = FirstRHS.GetLength;
+
+
+                SkylineLinearSystem Kff_linearSystem = new SkylineLinearSystem(1, new double[model.Subdomains[0].TotalDOFs]);
+                var K_ffsolver = new SolverSkyline(Kff_linearSystem);
+                // BuildMatrices(); exei proigithei prin thn CalculateKfreeprescribedDqMultiplications klp
+                Kff_linearSystem.Matrix = linearSystems[1].Matrix; // pairnoume dld to matrix apo ekei pou to topothetei o StaticAnalyzer otan kanei InitializeMatrices();
+                //solver.Initialize();
+                solver.Initialize(); // prin to factorize periexei if opote den tha kanei thn idia douleia duo fores
+
+                Vector Kff_solution = new Vector(new double[model.Subdomains[0].TotalDOFs]);
+                Vector K_ffRHS = new Vector(KfpDq[i1]);
+                SkylineMatrix2D k_temp = ((SkylineMatrix2D)Kff_linearSystem.Matrix); // opws sto solverskyline.cs sthn Solve()
+                k_temp.Solve(K_ffRHS, Kff_solution);
+                f2_vectors[i1] = Kff_solution.Data;
+            }
+
+            return f2_vectors;
+        }
+
         public static double[][] CalculateKpfKffinverseKfpDq(double[][] f2_vectors, Subdomain subdomain, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes)
         {
             Dictionary<int, Dictionary<DOFType, int>> nodalDOFsDictionary = subdomain.NodalDOFsDictionary;
