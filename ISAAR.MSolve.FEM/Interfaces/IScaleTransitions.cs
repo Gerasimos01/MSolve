@@ -12,7 +12,7 @@ namespace ISAAR.MSolve.FEM.Interfaces
         void ModifyMicrostructureTotalPrescribedBoundaryDisplacementsVectorForMacroStrainVariable(Node boundaryNode,
             double[] MacroScaleVariable, Dictionary<int, Dictionary<DOFType, double>> totalPrescribedBoundaryDisplacements);
         void ImposeAppropriateConstraintsPerBoundaryNode(Model model, Node boundaryNode);
-        int PrescribedDofsPerNode();
+        int PrescribedDofsPerNode(); // TODO: pithanws epistrofh kai to poioi einai me input sugkekrimeno node
         int MacroscaleVariableDimension();
     }
 }
