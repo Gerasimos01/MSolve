@@ -23,9 +23,9 @@ using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
-    public class GrapheneReinforcedRVEBuilderExample3GrSh : IRVEbuilder
+    public class GrapheneReinforcedRVEBuilder : IRVEbuilder
     {
-        public GrapheneReinforcedRVEBuilderExample3GrSh()
+        public GrapheneReinforcedRVEBuilder()
         { }
 
         public Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
@@ -45,21 +45,21 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
             rveMatrixParameters mp;
             grapheneSheetParameters gp;
-            string renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_7368dofs\REF_new_total_numbering.txt";
+            string renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria\REF2_10__000_renu_new_multiple_algorithms_check_develop\REF_new_total_numbering.txt";
             string Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria\REF2_10__000_renu_new_multiple_algorithms_check_develop\Fxk_p_komvoi_rve.txt";
-            string o_xsunol_input_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_7368dofs\o_xsunol_gs_{0}.txt";
+            string o_xsunol_input_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria\REF2_10__000_renu_new_multiple_algorithms_check_develop\o_xsunol_gs_{0}.txt";
             int subdiscr1 = 4;
             int discr1 = 4;
             // int discr2 dn xrhsimopoieitai
             int discr3 = 10;
-            int subdiscr1_shell = 8;
+            int subdiscr1_shell = 7;
             int discr1_shell = 1;
             mpgp = FEMMeshBuilder.GetReferenceKanonikhGewmetriaRveExampleParameters(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
-            mp = mpgp.Item1; mp.hexa1 = 10; mp.hexa2 = 10; mp.hexa3 = 10;
+            mp = mpgp.Item1;
             gp = mpgp.Item2;
 
 
-            int graphene_sheets_number = 3;
+            int graphene_sheets_number = 10;
             o_x_parameters[] model_o_x_parameteroi = new o_x_parameters[graphene_sheets_number];
             double[][] ekk_xyz = new double[graphene_sheets_number][];
             //double[][] ekk_xyz = new double[2][] { new double[] { 0, 0, 0 }, new double[] { 0.25 * 105, 0, 0.25 * 40 } };
