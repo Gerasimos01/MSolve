@@ -193,21 +193,21 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             microAnalyzer.BuildMatrices();
             double[][] KfpDq = SubdomainCalculations.CalculateKfreeprescribedDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
 
-            //calculate matrices for debug
-            (var constrainedNodalDOFsDictionary,var  TotalConstrainedDOFs) = SubdomainCalculations.GetConstrainednodalDOFsDictionaryForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
-            var Dq = SubdomainCalculations.GetDqTransitionsMatrixForDebugging(model.Subdomains[0], elementProvider,  scaleTransitions,boundaryNodes,  constrainedNodalDOFsDictionary,  TotalConstrainedDOFs);
-            var Kfp = SubdomainCalculations.GetKfpMatrixForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
-            var Kff = SubdomainCalculations.CalculateGlobalMatrix(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
-            var Kfp_Dq = (new Matrix2D(Kfp)) * (new Matrix2D(Dq));
-            var Kpp = SubdomainCalculations.GetKppMatrixForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
-            var KffinvKfpDq = (new Matrix2D(Kff)).SolveLU(Kfp_Dq, true);
-            var KpfKffinvKfpDq = (new Matrix2D(Kfp)).Transpose() * KffinvKfpDq;
-            var Kpp_Dq= (new Matrix2D(Kpp)) * (new Matrix2D(Dq));
-            var ektosDq = new double[Kpp_Dq.Rows, Kpp_Dq.Columns]; // - KpfKffinvKfpDq;
-            for (int i1 = 0; i1 < Kpp_Dq.Rows; i1++){for (int i2 = 0; i2 < Kpp_Dq.Columns; i2++){ ektosDq[i1, i2] = Kpp_Dq[i1, i2] - KpfKffinvKfpDq[i1, i2]; }};
-            var Dq_CondDq = (new Matrix2D(Dq)).Transpose() * (new Matrix2D(ektosDq));
-            var d2W_dfdf_ch = new Matrix2D(Dq_CondDq.Data); d2W_dfdf_ch.Scale((1 / volume));
-            //
+            ////calculate matrices for debug
+            //(var constrainedNodalDOFsDictionary,var  TotalConstrainedDOFs) = SubdomainCalculations.GetConstrainednodalDOFsDictionaryForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
+            //var Dq = SubdomainCalculations.GetDqTransitionsMatrixForDebugging(model.Subdomains[0], elementProvider,  scaleTransitions,boundaryNodes,  constrainedNodalDOFsDictionary,  TotalConstrainedDOFs);
+            //var Kfp = SubdomainCalculations.GetKfpMatrixForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
+            //var Kff = SubdomainCalculations.CalculateGlobalMatrix(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
+            //var Kfp_Dq = (new Matrix2D(Kfp)) * (new Matrix2D(Dq));
+            //var Kpp = SubdomainCalculations.GetKppMatrixForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
+            //var KffinvKfpDq = (new Matrix2D(Kff)).SolveLU(Kfp_Dq, true);
+            //var KpfKffinvKfpDq = (new Matrix2D(Kfp)).Transpose() * KffinvKfpDq;
+            //var Kpp_Dq= (new Matrix2D(Kpp)) * (new Matrix2D(Dq));
+            //var ektosDq = new double[Kpp_Dq.Rows, Kpp_Dq.Columns]; // - KpfKffinvKfpDq;
+            //for (int i1 = 0; i1 < Kpp_Dq.Rows; i1++){for (int i2 = 0; i2 < Kpp_Dq.Columns; i2++){ ektosDq[i1, i2] = Kpp_Dq[i1, i2] - KpfKffinvKfpDq[i1, i2]; }};
+            //var Dq_CondDq = (new Matrix2D(Dq)).Transpose() * (new Matrix2D(ektosDq));
+            //var d2W_dfdf_ch = new Matrix2D(Dq_CondDq.Data); d2W_dfdf_ch.Scale((1 / volume));
+            ////
 
             // to BUildmatirces to exoume krathsei panw exw apo th sunarthsh tou f2
             double[][] f2_vectors = SubdomainCalculations.CalculateKffinverseKfpDq(KfpDq, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);            
@@ -258,7 +258,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             constitutiveMatrix= new Matrix2D(Cijrs);
 
-            PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
+            //PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
             this.modified = CheckIfConstitutiveMatrixChanged(); 
         }
 
@@ -613,7 +613,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         #region Print methods for debug
         private void PrintMethodsForDebug(double[][] KfpDq, double[][] f2_vectors, double[][] f3_vectors, double[][] KppDqVectors, double[][] f4_vectors, double[,] DqCondDq, double[,] d2W_dfdf, double[,] Cijrs)
         {
-            string string1 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\KfpDq_{0}.txt";
+            string string0 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integration\d2\";
+
+            string string1 = String.Concat(string0, @"KfpDq_{0}.txt");
 
             for (int i2 = 0; i2 < KfpDq.GetLength(0); i2++)
             {
@@ -622,7 +624,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 data.WriteToFile(path);
             }
 
-            string string2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\KffInvKfpDq_{0}.txt";
+            string string2 = String.Concat(string0, @"KffInvKfpDq_{0}.txt");
+
+
 
             for (int i2 = 0; i2 < f2_vectors.GetLength(0); i2++)
             {
@@ -631,9 +635,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 data.WriteToFile(path);
             }
 
-            string string3 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\f3_vectors_{0}.txt";
-            string string4 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\KppDqVectors_{0}.txt";
-            string string5 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\f4_vectors_{0}.txt";
+            string string3 = String.Concat(string0, @"f3_vectors_{0}.txt");
+            string string4 = String.Concat(string0, @"KppDqVectors_{0}.txt");
+            string string5 = String.Concat(string0, @"f4_vectors_{0}.txt");
 
             for (int i2 = 0; i2 < f2_vectors.GetLength(0); i2++)
             {
@@ -651,9 +655,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             }
 
-            PrintUtilities.WriteToFile(DqCondDq, @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\DqCondDq.txt");
-            PrintUtilities.WriteToFile(d2W_dfdf, @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\d2W_dfdf.txt");
-            PrintUtilities.WriteToFile(Cijrs, @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\Cijrs.txt");
+            PrintUtilities.WriteToFile(DqCondDq, String.Concat(string0, @"DqCondDq.txt"));
+            PrintUtilities.WriteToFile(d2W_dfdf,  String.Concat(string0, @"d2W_dfdf.txt"));
+            PrintUtilities.WriteToFile(Cijrs, String.Concat(string0, @"Cijrs.txt"));
         }
         #endregion
 

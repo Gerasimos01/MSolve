@@ -248,6 +248,40 @@ namespace ISAAR.MSolve.SamplesConsole
             double[] stressesCheck4 = microstructure3.Stresses;
         }
 
+        public static void Check09bStressIntegrationStrainFE2()
+        {
+            double E_disp = 3.5; /*Gpa*/ double ni_disp = 0.4; // stather Poisson
+            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
+            { YoungModulus = E_disp, PoissonRatio = ni_disp, };
+            double[,] DGtr = new double[3, 3] { { 1.10, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+            double[] GLVec = Transform_DGtr_to_GLvec(DGtr);
+            material1.UpdateMaterial(GLVec);
+            //double[] stressesCheck1 = material1.Stresses;
+            double[] stressesCheck1 = new double[6] {material1.Stresses[0], material1.Stresses[1], material1.Stresses[2],
+                material1.Stresses[3],material1.Stresses[4],material1.Stresses[5] };
+            DGtr = new double[3, 3] { { 1.20, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+            GLVec = Transform_DGtr_to_GLvec(DGtr);
+            material1.UpdateMaterial(GLVec);
+            material1.SaveState();
+            double[] stressesCheck2 = material1.Stresses;
+
+            VectorExtensions.AssignTotalAffinityCount();
+            IRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderCHECKzeroEstrainfe2();
+            //IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
+
+            IFiniteElementMaterial3D microstructure3 = new Microstructure3Develop(homogeneousRveBuilder1);
+            //IFiniteElementMaterial3D microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
+
+            microstructure3.UpdateMaterial(new double[9] { 1,0.995548518728336,1.03039263387409,-5.18077793066249e-17,0.00608083650156188,-0.0222489521716709,0.0667140176791647,-0.00445148127166406,6.68129711107579e-16 });
+            double[] stressesCheck3 = microstructure3.Stresses;
+            double[,] consCheck1 = new double[6, 6];
+            for (int i1 = 0; i1 < 6; i1++) { for (int i2 = 0; i2 < 6; i2++) { consCheck1[i1, i2] = microstructure3.ConstitutiveMatrix[i1, i2]; } }
+            microstructure3.SaveState();
+            //microstructure3.UpdateMaterial(new double[9] { 1.10, 1, 1, 0, 0, 0, 0, 0, 0 });
+            //double[] stressesCheck4 = microstructure3.Stresses;
+        }
+
+
         public static void CheckConstitutiveMatrixTransformation()
         {
             double[,] d2W_dfdf = new double[9, 9]
