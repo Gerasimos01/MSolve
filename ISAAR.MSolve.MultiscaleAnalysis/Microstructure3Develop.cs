@@ -26,6 +26,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 {
     public class Microstructure3Develop : IFiniteElementMaterial3D
     {
+        //TODO: create base class and use it for different microstructures-scale transitions.
         private Model model { get; set; }
         //private readonly Dictionary<int, Node> nodesDictionary = new Dictionary<int, Node>();
         private Dictionary<int, Node> boundaryNodes { get; set; }
@@ -230,6 +231,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             initialConvergedBoundaryDisplacements = totalPrescribedBoundaryDisplacements;
             #endregion
 
+            #region constitutive tensors transformation methods
             double[,] d2W_dFtrdFtr = Reorder_d2Wdfdf_to_d2W_dFtrdFtr(d2W_dfdf);
 
             double[,] Cinpk = Transform_d2WdFtrdFtr_to_Cijrs(d2W_dFtrdFtr, SPK_mat, DefGradMat); // to onomazoume Cinpk epeidh einai to 9x9 kai to diakrinoume etsi apo to Cijrs 6x6
@@ -256,8 +258,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 Cijrs[4, j1] = 0.5 * (Cijrs_columns[4, j1] + Cijrs_columns[8, j1]);
                 Cijrs[5, j1] = 0.5 * (Cijrs_columns[5, j1] + Cijrs_columns[6, j1]);
             }
+            #endregion
 
-            constitutiveMatrix= new Matrix2D(Cijrs);
+            constitutiveMatrix = new Matrix2D(Cijrs);
 
             //PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
             this.modified = CheckIfConstitutiveMatrixChanged(); 
@@ -325,7 +328,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         {
             //microAnalyzer.SaveMaterialState() //TODO this can be used as well but nessesary analyzers should be defined
 
-            var linearSystems = new Dictionary<int, ILinearSystem>(); //I think this should be done automatically 
+            var linearSystems = new Dictionary<int, ILinearSystem>(); //TODO: these lines are not used 
             linearSystems[1] = new SkylineLinearSystem(1, model.Subdomains[0].Forces);
             // TODO alternatively:
             //var linearSystems = new Dictionary<int, ILinearSystem>();

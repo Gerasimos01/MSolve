@@ -253,6 +253,7 @@ namespace ISAAR.MSolve.FEM.Entities
 
         // prosthiki print
         int ekteleseis_counter = 0;
+        int ekteleseis_counter2 = 0;
         string string1 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_{0}.txt";
         string string2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_micro_{0}.txt";
 
@@ -286,8 +287,8 @@ namespace ISAAR.MSolve.FEM.Entities
             int nIncrement, int totalIncrements)
         {
             // prosthiki print
-            ekteleseis_counter += 1;
-            string counter_data = ekteleseis_counter.ToString();
+            ekteleseis_counter2 += 1;
+            string counter_data = ekteleseis_counter2.ToString();
             string path = string.Format(string2, counter_data);
             //solution.WriteToFile(path);
             double[] solution_data = new double[solution.Length];
