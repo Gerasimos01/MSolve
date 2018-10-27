@@ -26,6 +26,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 {
     public class Microstructure3Develop : IFiniteElementMaterial3D
     {
+        //TODO: create base class and use it for different microstructures-scale transitions.
         private Model model { get; set; }
         //private readonly Dictionary<int, Node> nodesDictionary = new Dictionary<int, Node>();
         private Dictionary<int, Node> boundaryNodes { get; set; }
@@ -193,21 +194,21 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             microAnalyzer.BuildMatrices();
             double[][] KfpDq = SubdomainCalculations.CalculateKfreeprescribedDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
 
-            //calculate matrices for debug
-            (var constrainedNodalDOFsDictionary,var  TotalConstrainedDOFs) = SubdomainCalculations.GetConstrainednodalDOFsDictionaryForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
-            var Dq = SubdomainCalculations.GetDqTransitionsMatrixForDebugging(model.Subdomains[0], elementProvider,  scaleTransitions,boundaryNodes,  constrainedNodalDOFsDictionary,  TotalConstrainedDOFs);
-            var Kfp = SubdomainCalculations.GetKfpMatrixForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
-            var Kff = SubdomainCalculations.CalculateGlobalMatrix(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
-            var Kfp_Dq = (new Matrix2D(Kfp)) * (new Matrix2D(Dq));
-            var Kpp = SubdomainCalculations.GetKppMatrixForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
-            var KffinvKfpDq = (new Matrix2D(Kff)).SolveLU(Kfp_Dq, true);
-            var KpfKffinvKfpDq = (new Matrix2D(Kfp)).Transpose() * KffinvKfpDq;
-            var Kpp_Dq= (new Matrix2D(Kpp)) * (new Matrix2D(Dq));
-            var ektosDq = new double[Kpp_Dq.Rows, Kpp_Dq.Columns]; // - KpfKffinvKfpDq;
-            for (int i1 = 0; i1 < Kpp_Dq.Rows; i1++){for (int i2 = 0; i2 < Kpp_Dq.Columns; i2++){ ektosDq[i1, i2] = Kpp_Dq[i1, i2] - KpfKffinvKfpDq[i1, i2]; }};
-            var Dq_CondDq = (new Matrix2D(Dq)).Transpose() * (new Matrix2D(ektosDq));
-            var d2W_dfdf_ch = new Matrix2D(Dq_CondDq.Data); d2W_dfdf_ch.Scale((1 / volume));
-            //
+            ////calculate matrices for debug
+            //(var constrainedNodalDOFsDictionary,var  TotalConstrainedDOFs) = SubdomainCalculations.GetConstrainednodalDOFsDictionaryForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
+            //var Dq = SubdomainCalculations.GetDqTransitionsMatrixForDebugging(model.Subdomains[0], elementProvider,  scaleTransitions,boundaryNodes,  constrainedNodalDOFsDictionary,  TotalConstrainedDOFs);
+            //var Kfp = SubdomainCalculations.GetKfpMatrixForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
+            //var Kff = SubdomainCalculations.CalculateGlobalMatrix(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
+            //var Kfp_Dq = (new Matrix2D(Kfp)) * (new Matrix2D(Dq));
+            //var Kpp = SubdomainCalculations.GetKppMatrixForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes, constrainedNodalDOFsDictionary, TotalConstrainedDOFs);
+            //var KffinvKfpDq = (new Matrix2D(Kff)).SolveLU(Kfp_Dq, true);
+            //var KpfKffinvKfpDq = (new Matrix2D(Kfp)).Transpose() * KffinvKfpDq;
+            //var Kpp_Dq= (new Matrix2D(Kpp)) * (new Matrix2D(Dq));
+            //var ektosDq = new double[Kpp_Dq.Rows, Kpp_Dq.Columns]; // - KpfKffinvKfpDq;
+            //for (int i1 = 0; i1 < Kpp_Dq.Rows; i1++){for (int i2 = 0; i2 < Kpp_Dq.Columns; i2++){ ektosDq[i1, i2] = Kpp_Dq[i1, i2] - KpfKffinvKfpDq[i1, i2]; }};
+            //var Dq_CondDq = (new Matrix2D(Dq)).Transpose() * (new Matrix2D(ektosDq));
+            //var d2W_dfdf_ch = new Matrix2D(Dq_CondDq.Data); d2W_dfdf_ch.Scale((1 / volume));
+            ////
 
             // to BUildmatirces to exoume krathsei panw exw apo th sunarthsh tou f2
             double[][] f2_vectors = SubdomainCalculations.CalculateKffinverseKfpDq(KfpDq, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);            
@@ -230,8 +231,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             initialConvergedBoundaryDisplacements = totalPrescribedBoundaryDisplacements;
             #endregion
 
+            #region constitutive tensors transformation methods
+            double[,] d2W_dFtrdFtr = Reorder_d2Wdfdf_to_d2W_dFtrdFtr(d2W_dfdf);
 
-            double[,] Cinpk = Transform_d2Wdfdf_to_Cijrs(d2W_dfdf, SPK_mat, DefGradMat); // to onomazoume Cinpk epeidh einai to 9x9 kai to diakrinoume etsi apo to Cijrs 6x6
+            double[,] Cinpk = Transform_d2WdFtrdFtr_to_Cijrs(d2W_dFtrdFtr, SPK_mat, DefGradMat); // to onomazoume Cinpk epeidh einai to 9x9 kai to diakrinoume etsi apo to Cijrs 6x6
             // transformation se 6x6 se 2 vhmata
             double[,] Cijrs_columns = new double[9, 6];
             for (int i1 = 0; i1 < 9; i1++)
@@ -255,13 +258,43 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 Cijrs[4, j1] = 0.5 * (Cijrs_columns[4, j1] + Cijrs_columns[8, j1]);
                 Cijrs[5, j1] = 0.5 * (Cijrs_columns[5, j1] + Cijrs_columns[6, j1]);
             }
+            #endregion
 
-            constitutiveMatrix= new Matrix2D(Cijrs);
+            constitutiveMatrix = new Matrix2D(Cijrs);
 
-            PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
+            //PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
             this.modified = CheckIfConstitutiveMatrixChanged(); 
         }
 
+        private double[,] Reorder_d2Wdfdf_to_d2W_dFtrdFtr(double[,] d2W_dfdf)
+        {
+            int[,] matLineData = new int[3, 3] { { 1, 4, 7 }, {8, 2, 5 }, { 6,9,3} };
+
+            double[,] d2W_dFtrdFtr = new double[9, 9];
+
+            for (int i1 = 1; i1 < 4; i1++)
+            {
+                for (int i2 = 1; i2 < 4; i2++)
+                {
+                    for (int i3 = 1; i3 < 4; i3++)
+                    {
+                        for (int i4 = 1; i4 < 4; i4++)
+                        {
+
+                            int d2 = i1; int d1 = i2; int d4 = i3; int d3 = i4;
+
+                            int matLineA = matLineData[i1-1, i2-1]; //meion 1 logw zero based
+                            int matRowA =  matLineData[i3-1, i4-1];
+                            int matLineW = matLineData[d1-1, d2-1];
+                            int matRowW =  matLineData[d3-1, d4-1];
+
+                            d2W_dFtrdFtr[matLineA-1, matRowA-1] = d2W_dfdf[matLineW-1, matRowW-1];
+                        }
+                    }
+                }
+            }
+            return d2W_dFtrdFtr;
+        }
 
         private bool CheckIfConstitutiveMatrixChanged()
         {
@@ -295,7 +328,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         {
             //microAnalyzer.SaveMaterialState() //TODO this can be used as well but nessesary analyzers should be defined
 
-            var linearSystems = new Dictionary<int, ILinearSystem>(); //I think this should be done automatically 
+            var linearSystems = new Dictionary<int, ILinearSystem>(); //TODO: these lines are not used 
             linearSystems[1] = new SkylineLinearSystem(1, model.Subdomains[0].Forces);
             // TODO alternatively:
             //var linearSystems = new Dictionary<int, ILinearSystem>();
@@ -471,7 +504,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             return Cinpk;
         }
 
-        private double[,] Transform_d2Wdfdf_to_Cijrs(double[,] Aijkl, double[,] SPK, double[,] F)
+        private double[,] Transform_d2WdFtrdFtr_to_Cijrs(double[,] Aijkl, double[,] SPK, double[,] F)
         {
             int[,] i_seira = { { 1, 2, 3 }, { 3, 1, 2 }, { 2, 3, 1 } };
             int[,] k_seira = { { 1, 2, 3 }, { 3, 1, 2 }, { 2, 3, 1 } };
@@ -613,7 +646,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         #region Print methods for debug
         private void PrintMethodsForDebug(double[][] KfpDq, double[][] f2_vectors, double[][] f3_vectors, double[][] KppDqVectors, double[][] f4_vectors, double[,] DqCondDq, double[,] d2W_dfdf, double[,] Cijrs)
         {
-            string string1 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\KfpDq_{0}.txt";
+            string string0 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integration\d2\";
+
+            string string1 = String.Concat(string0, @"KfpDq_{0}.txt");
 
             for (int i2 = 0; i2 < KfpDq.GetLength(0); i2++)
             {
@@ -622,7 +657,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 data.WriteToFile(path);
             }
 
-            string string2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\KffInvKfpDq_{0}.txt";
+            string string2 = String.Concat(string0, @"KffInvKfpDq_{0}.txt");
+
+
 
             for (int i2 = 0; i2 < f2_vectors.GetLength(0); i2++)
             {
@@ -631,9 +668,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 data.WriteToFile(path);
             }
 
-            string string3 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\f3_vectors_{0}.txt";
-            string string4 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\KppDqVectors_{0}.txt";
-            string string5 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\f4_vectors_{0}.txt";
+            string string3 = String.Concat(string0, @"f3_vectors_{0}.txt");
+            string string4 = String.Concat(string0, @"KppDqVectors_{0}.txt");
+            string string5 = String.Concat(string0, @"f4_vectors_{0}.txt");
 
             for (int i2 = 0; i2 < f2_vectors.GetLength(0); i2++)
             {
@@ -651,9 +688,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             }
 
-            PrintUtilities.WriteToFile(DqCondDq, @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\DqCondDq.txt");
-            PrintUtilities.WriteToFile(d2W_dfdf, @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\d2W_dfdf.txt");
-            PrintUtilities.WriteToFile(Cijrs, @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_2\REF2_10__000_renu_new_multiple_algorithms_check_develop_1GrSh_correct_coh_CHECK_integrationZeroE8hexa\d2\Cijrs.txt");
+            PrintUtilities.WriteToFile(DqCondDq, String.Concat(string0, @"DqCondDq.txt"));
+            PrintUtilities.WriteToFile(d2W_dfdf,  String.Concat(string0, @"d2W_dfdf.txt"));
+            PrintUtilities.WriteToFile(Cijrs, String.Concat(string0, @"Cijrs.txt"));
         }
         #endregion
 
