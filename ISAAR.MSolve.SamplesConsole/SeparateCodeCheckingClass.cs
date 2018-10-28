@@ -281,6 +281,75 @@ namespace ISAAR.MSolve.SamplesConsole
             //double[] stressesCheck4 = microstructure3.Stresses;
         }
 
+        public static void Check10bStressIntegration5GrSh1RveForDemonstration()
+        {
+
+            VectorExtensions.AssignTotalAffinityCount();
+            IRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample5GrSh1RVE();
+            //IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
+
+            IFiniteElementMaterial3D microstructure3 = new Microstructure3Develop(homogeneousRveBuilder1);
+            //IFiniteElementMaterial3D microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
+
+            int cycles = 4;
+            double[] totalStrain = new double[9] { 1.1, 1, 1, -5.18077793066249e-17, 0, 0, 0, 0, 0 };
+            double[][] strainHistory = new double[cycles][];
+            double[] initialDefGrad = new double[9] { 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+            double[] strainIncr = new double[totalStrain.Length]; for (int l = 0; l < totalStrain.Length; l++) { strainIncr[l] = (totalStrain[l] - initialDefGrad[l]) / ((double)cycles); }
+            for (int l = 0; l < cycles; l++)
+            {
+                strainHistory[l] = new double[totalStrain.Length];
+                for (int i1 = 0; i1 < totalStrain.Length; i1++) { strainHistory[l][i1] = initialDefGrad[i1] + (strainIncr[i1] * ((double)l + 1)); }
+            }
+
+            (double[][] stressHistory, double[][,] constitutiveMatrixHistory) = StressStrainHistory(strainHistory, microstructure3);
+
+
+
+            //microstructure3.UpdateMaterial(new double[9] { 1, 0.995548518728336, 1.03039263387409, -5.18077793066249e-17, 0.00608083650156188, -0.0222489521716709, 0.0667140176791647, -0.00445148127166406, 6.68129711107579e-16 });
+            //double[] stressesCheck3 = microstructure3.Stresses;
+            //double[,] consCheck1 = new double[6, 6];
+            //for (int i1 = 0; i1 < 6; i1++) { for (int i2 = 0; i2 < 6; i2++) { consCheck1[i1, i2] = microstructure3.ConstitutiveMatrix[i1, i2]; } }
+            //microstructure3.SaveState();
+
+            //microstructure3.UpdateMaterial(new double[9] { 1.10, 1, 1, 0, 0, 0, 0, 0, 0 });
+            //double[] stressesCheck4 = microstructure3.Stresses;
+        }
+
+        public static void Check10bStressIntegration0GrSh1RveForDemonstration()
+        {
+
+            VectorExtensions.AssignTotalAffinityCount();
+            IRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderCHECKzeroE8hexa();
+            //IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
+
+            IFiniteElementMaterial3D microstructure3 = new Microstructure3Develop(homogeneousRveBuilder1);
+            //IFiniteElementMaterial3D microstructure3copyConsCheck = new Microstructure3copyConsCheckEna(homogeneousRveBuilder1);
+
+            int cycles = 4;
+            double[] totalStrain = new double[9] { 1, 0.995548518728336, 1.03039263387409, -5.18077793066249e-17, 0.00608083650156188, -0.0222489521716709, 0.0667140176791647, -0.00445148127166406, 6.68129711107579e-16 };
+            double[][] strainHistory = new double[cycles][];
+            double[] initialDefGrad = new double[9] { 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+            double[] strainIncr = new double[totalStrain.Length]; for (int l = 0; l < totalStrain.Length; l++) { strainIncr[l] = (totalStrain[l] - initialDefGrad[l]) / ((double)cycles); }
+            for (int l = 0; l < cycles; l++)
+            {
+                strainHistory[l] = new double[totalStrain.Length];
+                for (int i1 = 0; i1 < totalStrain.Length; i1++) { strainHistory[l][i1] = initialDefGrad[i1] + (strainIncr[i1] * ((double)l + 1)); }
+            }
+
+            (double[][] stressHistory, double[][,] constitutiveMatrixHistory) = StressStrainHistory(strainHistory, microstructure3);
+
+
+
+            //microstructure3.UpdateMaterial(new double[9] { 1, 0.995548518728336, 1.03039263387409, -5.18077793066249e-17, 0.00608083650156188, -0.0222489521716709, 0.0667140176791647, -0.00445148127166406, 6.68129711107579e-16 });
+            //double[] stressesCheck3 = microstructure3.Stresses;
+            //double[,] consCheck1 = new double[6, 6];
+            //for (int i1 = 0; i1 < 6; i1++) { for (int i2 = 0; i2 < 6; i2++) { consCheck1[i1, i2] = microstructure3.ConstitutiveMatrix[i1, i2]; } }
+            //microstructure3.SaveState();
+
+            //microstructure3.UpdateMaterial(new double[9] { 1.10, 1, 1, 0, 0, 0, 0, 0, 0 });
+            //double[] stressesCheck4 = microstructure3.Stresses;
+        }
 
         public static void CheckConstitutiveMatrixTransformation()
         {
@@ -554,7 +623,7 @@ namespace ISAAR.MSolve.SamplesConsole
             return Cinpk;
         }
 
-        private static Tuple< double [][], double[] [,]> StressStrainHistory(double [][] strainHistory, IFiniteElementMaterial3D testedMaterial)
+        private static Tuple< double [][], double[] [,]> StressStrainHistoryCopy(double [][] strainHistory, IFiniteElementMaterial3D testedMaterial)
         {
             double[][] stressHistory = new double[strainHistory.GetLength(0)][];
             double[][,] constitutiveMatrixHistory = new double[strainHistory.GetLength(0)][,];
@@ -576,6 +645,28 @@ namespace ISAAR.MSolve.SamplesConsole
             return new Tuple<double[][], double[][,]>(stressHistory, constitutiveMatrixHistory);
         }
 
+        private static (double[][] stressHistory, double[][,] constitutiveMatrixHistory) StressStrainHistory(double[][] strainHistory, IFiniteElementMaterial3D testedMaterial)
+        {
+            double[][] stressHistory = new double[strainHistory.GetLength(0)][];
+            double[][,] constitutiveMatrixHistory = new double[strainHistory.GetLength(0)][,];
+
+            for (int l = 0; l < strainHistory.GetLength(0); l++)
+            {
+                testedMaterial.UpdateMaterial(strainHistory[l]);
+                testedMaterial.SaveState();
+                stressHistory[l] = new double[testedMaterial.Stresses.Length];
+                testedMaterial.Stresses.CopyTo(stressHistory[l], 0);
+                constitutiveMatrixHistory[l] = new double[testedMaterial.ConstitutiveMatrix.Columns, testedMaterial.ConstitutiveMatrix.Rows];
+
+                for (int m = 0; m < testedMaterial.ConstitutiveMatrix.Columns; m++)
+                {
+                    for (int n = 0; n < testedMaterial.ConstitutiveMatrix.Rows; n++)
+                    { constitutiveMatrixHistory[l][m, n] = testedMaterial.ConstitutiveMatrix[m, n]; }
+                }
+            }
+
+            return (stressHistory, constitutiveMatrixHistory);
+        }
 
     }
 }
