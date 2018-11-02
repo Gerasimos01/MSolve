@@ -169,7 +169,8 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass.Check08bStressIntegration();
             //SeparateCodeCheckingClass.Check09bStressIntegrationStrainFE2();
             //SeparateCodeCheckingClass.Check10bStressIntegration0GrSh1RveForDemonstration();
-            SeparateCodeCheckingClass.Check10bStressIntegration5GrSh1RveForDemonstration();
+            //SeparateCodeCheckingClass.Check10bStressIntegration5GrSh1RveForDemonstration();
+            SeparateCodeCheckingClass.Check11bStressIntegrationMultipleSubdomainMethods();
         }
     }
 }

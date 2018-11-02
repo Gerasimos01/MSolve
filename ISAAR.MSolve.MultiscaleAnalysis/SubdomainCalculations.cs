@@ -108,7 +108,7 @@ namespace ISAAR.MSolve.FEM
 
 
                 SkylineLinearSystem Kff_linearSystem = new SkylineLinearSystem(1, new double[model.Subdomains[0].TotalDOFs]);
-                var K_ffsolver = new SolverSkyline(Kff_linearSystem);
+                var K_ffsolver = new SolverSkyline(Kff_linearSystem);//TODO: this is not used for anything
                 // BuildMatrices(); exei proigithei prin thn CalculateKfreeprescribedDqMultiplications klp
                 Kff_linearSystem.Matrix = linearSystems[1].Matrix; // pairnoume dld to matrix apo ekei pou to topothetei o StaticAnalyzer otan kanei InitializeMatrices();
                 //solver.Initialize();
