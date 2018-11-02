@@ -119,6 +119,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         public static double[][] CombineMultipleSubdomainsIntegrationVectorsIntoTotal(Dictionary<int, double[][]> VectorsSubdomains, IScaleTransitions scaleTransitions)
         {
+
+
             double[][] totalVectors = new double[scaleTransitions.MacroscaleVariableDimension()][]; //or VectorsSubdomains.getLength(0);
             int oneSubdomainID = VectorsSubdomains.Keys.ElementAt(0);
             for (int i1 = 0; i1 < scaleTransitions.MacroscaleVariableDimension(); i1++)
@@ -139,6 +141,41 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             }
 
             return totalVectors;
+
+        }
+
+        public static Dictionary<int,double[]> CalculateFppReactionsVectorSubdomains(Model model, IElementMatrixProvider elementProvider,
+            IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes,Dictionary<int, Vector> solution, Dictionary<int, Vector> dSolution,
+            Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
+            int nIncrement, int totalIncrements)
+        {
+            Dictionary<int, double[]> FppReactionVectorSubdomains = new Dictionary<int, double[]>();
+
+            foreach (Subdomain subdomain in model.Subdomains)
+            {
+                FppReactionVectorSubdomains.Add(subdomain.ID, SubdomainCalculations.CalculateFppReactionsVector(subdomain, elementProvider, scaleTransitions, boundaryNodes,
+                solution[subdomain.ID], dSolution[subdomain.ID], initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, nIncrement, totalIncrements));
+            }
+
+            return FppReactionVectorSubdomains;
+
+        }
+
+        internal static double[] CombineMultipleSubdomainsStressesIntegrationVectorsIntoTotal(Dictionary<int, double[]> fppReactionVectorSubdomains)
+        {
+
+            double[] totalVector = new double[fppReactionVectorSubdomains.ElementAt(0).Value.GetLength(0)];
+
+            foreach (int subdomainID in fppReactionVectorSubdomains.Keys)
+            {
+                for (int i1 = 0; i1 < totalVector.GetLength(0); i1++)
+                {
+                    totalVector[i1] += fppReactionVectorSubdomains[subdomainID][i1];
+                }
+            }
+
+            return totalVector;
+
         }
     }
 }

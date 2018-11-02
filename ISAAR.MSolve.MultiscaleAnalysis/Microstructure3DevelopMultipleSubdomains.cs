@@ -190,8 +190,15 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             #region INTEGRATION stresses 
             Dictionary<int, Vector> du = microAnalyzer.GetConvergedIncrementalSolutionVectorsOfFreeDofs();
-            double[] FppReactionVector = SubdomainCalculations.CalculateFppReactionsVector(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes,
-                uInitialFreeDOFDisplacementsPerSubdomain[model.Subdomains[0].ID], du[model.Subdomains[0].ID], initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, increments, increments);
+            //A.6
+            //double[] FppReactionVector = SubdomainCalculations.CalculateFppReactionsVector(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes,
+            //    uInitialFreeDOFDisplacementsPerSubdomain[model.Subdomains[0].ID], du[model.Subdomains[0].ID], initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, increments, increments);
+            Dictionary<int, double[]> FppReactionVectorSubdomains = SubdomainCalculationsMultiple.CalculateFppReactionsVectorSubdomains(model, elementProvider, scaleTransitions, boundaryNodes,
+                uInitialFreeDOFDisplacementsPerSubdomain, du, initialConvergedBoundaryDisplacements, totalPrescribedBoundaryDisplacements, increments, increments);
+            double[] FppReactionVector= SubdomainCalculationsMultiple.CombineMultipleSubdomainsStressesIntegrationVectorsIntoTotal(FppReactionVectorSubdomains);
+
+
+
             double[] DqFpp = SubdomainCalculations.CalculateDqFpp(FppReactionVector, scaleTransitions, boundaryNodes);
 
             double[] FPK_vec = new double [DqFpp.Length];
