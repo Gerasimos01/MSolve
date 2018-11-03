@@ -143,8 +143,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 linearSystems.Add(subdomain.ID, new SkylineLinearSystem(subdomain.ID, subdomain.Forces));// prosoxh sto Id twn subdomain
             }
 
-            ProblemStructural provider = new ProblemStructural(model, linearSystems);
             var solver = new SolverSkyline(linearSystems[1]); //TODO this depends on the number of model.SubdomainsDictionary.Values
+            ProblemStructural provider = new ProblemStructural(model, linearSystems); //B.1 apo edw Methodos Analyze microstructure
             //var linearSystemsArray = new[] { linearSystems[1] }; //those depend on the number of model.SubdomainsDictionary.Values as well
             //var subdomainUpdaters = new[] { new NonLinearSubdomainUpdaterWithInitialConditions(model.Subdomains[0]) };
             //var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
@@ -183,7 +183,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             StaticAnalyzer parentAnalyzer = new StaticAnalyzer(provider, microAnalyzer, linearSystems);
             parentAnalyzer.BuildMatrices();
             parentAnalyzer.Initialize();
-            parentAnalyzer.Solve();
+            parentAnalyzer.Solve(); //B.2 ews edw Methodos Analyze microstructure
             uInitialFreeDOFDisplacementsPerSubdomain = microAnalyzer.GetConvergedSolutionVectorsOfFreeDofs();// ousiastika to u pou twra taftizetai me to uPlusuu
             #endregion
 
