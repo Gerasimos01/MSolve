@@ -235,29 +235,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             double[,] d2W_dFtrdFtr = Reorder_d2Wdfdf_to_d2W_dFtrdFtr(d2W_dfdf);
 
             double[,] Cinpk = Transform_d2WdFtrdFtr_to_Cijrs(d2W_dFtrdFtr, SPK_mat, DefGradMat); // to onomazoume Cinpk epeidh einai to 9x9 kai to diakrinoume etsi apo to Cijrs 6x6
-            // transformation se 6x6 se 2 vhmata
-            double[,] Cijrs_columns = new double[9, 6];
-            for (int i1 = 0; i1 < 9; i1++)
-            {
-                Cijrs_columns[i1, 0] = Cinpk[i1, 0];
-                Cijrs_columns[i1, 1] = Cinpk[i1, 1];
-                Cijrs_columns[i1, 2] = Cinpk[i1, 2];
-                Cijrs_columns[i1, 3] = 0.5 * (Cinpk[i1, 3] + Cinpk[i1, 7]);
-                Cijrs_columns[i1, 4] = 0.5 * (Cinpk[i1, 4] + Cinpk[i1, 8]);
-                Cijrs_columns[i1, 5] = 0.5 * (Cinpk[i1, 5] + Cinpk[i1, 6]);
-            }
 
-            double[,] Cijrs = new double[6, 6];
+            double[,] Cijrs = CombineCinpkTensorTermsIntoMatrix(Cinpk);
 
-            for (int j1 = 0; j1 < 6; j1++)
-            {
-                Cijrs[0, j1] = Cijrs_columns[0, j1];
-                Cijrs[1, j1] = Cijrs_columns[1, j1];
-                Cijrs[2, j1] = Cijrs_columns[2, j1];
-                Cijrs[3, j1] = 0.5 * (Cijrs_columns[3, j1] + Cijrs_columns[7, j1]);
-                Cijrs[4, j1] = 0.5 * (Cijrs_columns[4, j1] + Cijrs_columns[8, j1]);
-                Cijrs[5, j1] = 0.5 * (Cijrs_columns[5, j1] + Cijrs_columns[6, j1]);
-            }
             #endregion
 
             constitutiveMatrix = new Matrix2D(Cijrs);
@@ -266,35 +246,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             this.modified = CheckIfConstitutiveMatrixChanged(); 
         }
 
-        private double[,] Reorder_d2Wdfdf_to_d2W_dFtrdFtr(double[,] d2W_dfdf)
-        {
-            int[,] matLineData = new int[3, 3] { { 1, 4, 7 }, {8, 2, 5 }, { 6,9,3} };
-
-            double[,] d2W_dFtrdFtr = new double[9, 9];
-
-            for (int i1 = 1; i1 < 4; i1++)
-            {
-                for (int i2 = 1; i2 < 4; i2++)
-                {
-                    for (int i3 = 1; i3 < 4; i3++)
-                    {
-                        for (int i4 = 1; i4 < 4; i4++)
-                        {
-
-                            int d2 = i1; int d1 = i2; int d4 = i3; int d3 = i4;
-
-                            int matLineA = matLineData[i1-1, i2-1]; //meion 1 logw zero based
-                            int matRowA =  matLineData[i3-1, i4-1];
-                            int matLineW = matLineData[d1-1, d2-1];
-                            int matRowW =  matLineData[d3-1, d4-1];
-
-                            d2W_dFtrdFtr[matLineA-1, matRowA-1] = d2W_dfdf[matLineW-1, matRowW-1];
-                        }
-                    }
-                }
-            }
-            return d2W_dFtrdFtr;
-        }
+        
 
         private bool CheckIfConstitutiveMatrixChanged()
         {
@@ -639,6 +591,66 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
 
             return Cinpk;
+        }
+
+        private double[,] Reorder_d2Wdfdf_to_d2W_dFtrdFtr(double[,] d2W_dfdf)
+        {
+            int[,] matLineData = new int[3, 3] { { 1, 4, 7 }, { 8, 2, 5 }, { 6, 9, 3 } };
+
+            double[,] d2W_dFtrdFtr = new double[9, 9];
+
+            for (int i1 = 1; i1 < 4; i1++)
+            {
+                for (int i2 = 1; i2 < 4; i2++)
+                {
+                    for (int i3 = 1; i3 < 4; i3++)
+                    {
+                        for (int i4 = 1; i4 < 4; i4++)
+                        {
+
+                            int d2 = i1; int d1 = i2; int d4 = i3; int d3 = i4;
+
+                            int matLineA = matLineData[i1 - 1, i2 - 1]; //meion 1 logw zero based
+                            int matRowA = matLineData[i3 - 1, i4 - 1];
+                            int matLineW = matLineData[d1 - 1, d2 - 1];
+                            int matRowW = matLineData[d3 - 1, d4 - 1];
+
+                            d2W_dFtrdFtr[matLineA - 1, matRowA - 1] = d2W_dfdf[matLineW - 1, matRowW - 1];
+                        }
+                    }
+                }
+            }
+            return d2W_dFtrdFtr;
+        }
+
+        private double[,] CombineCinpkTensorTermsIntoMatrix(double[,] Cinpk)
+        {
+            // transformation se 6x6 se 2 vhmata
+
+            double[,] Cijrs_columns = new double[9, 6];
+            for (int i1 = 0; i1 < 9; i1++)
+            {
+                Cijrs_columns[i1, 0] = Cinpk[i1, 0];
+                Cijrs_columns[i1, 1] = Cinpk[i1, 1];
+                Cijrs_columns[i1, 2] = Cinpk[i1, 2];
+                Cijrs_columns[i1, 3] = 0.5 * (Cinpk[i1, 3] + Cinpk[i1, 7]);
+                Cijrs_columns[i1, 4] = 0.5 * (Cinpk[i1, 4] + Cinpk[i1, 8]);
+                Cijrs_columns[i1, 5] = 0.5 * (Cinpk[i1, 5] + Cinpk[i1, 6]);
+            }
+
+            double[,] Cijrs = new double[6, 6];
+
+            for (int j1 = 0; j1 < 6; j1++)
+            {
+                Cijrs[0, j1] = Cijrs_columns[0, j1];
+                Cijrs[1, j1] = Cijrs_columns[1, j1];
+                Cijrs[2, j1] = Cijrs_columns[2, j1];
+                Cijrs[3, j1] = 0.5 * (Cijrs_columns[3, j1] + Cijrs_columns[7, j1]);
+                Cijrs[4, j1] = 0.5 * (Cijrs_columns[4, j1] + Cijrs_columns[8, j1]);
+                Cijrs[5, j1] = 0.5 * (Cijrs_columns[5, j1] + Cijrs_columns[6, j1]);
+            }
+
+            return Cijrs;
         }
 
         #endregion
