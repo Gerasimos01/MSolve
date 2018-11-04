@@ -98,7 +98,7 @@ namespace ISAAR.MSolve.FEM
             return KfpDqVectors;
         }
 
-        public static double[][] CalculateKffinverseKfpDq(double[][] KfpDq, Model model, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, SolverSkyline solver, Dictionary<int, ILinearSystem> linearSystems)
+        public static double[][] CalculateKffinverseKfpDq(double[][] KfpDq, Model model, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, ISolver solver, Dictionary<int, ILinearSystem> linearSystems)
         {
             double[][] f2_vectors = new double[KfpDq.GetLength(0)][];
             for (int i1 = 0; i1 < KfpDq.GetLength(0); i1++)
@@ -124,7 +124,7 @@ namespace ISAAR.MSolve.FEM
             return f2_vectors;
         }
 
-        public static double[][] CalculateKffinverseKfpDqSimplifyExpression(double[][] KfpDq, Model model, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, SolverSkyline solver, Dictionary<int, ILinearSystem> linearSystems)
+        public static double[][] CalculateKffinverseKfpDqSimplifyExpression(double[][] KfpDq, Model model, IElementMatrixProvider elementProvider, IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, ISolver solver, Dictionary<int, ILinearSystem> linearSystems)
         {
             double[][] f2_vectors = new double[KfpDq.GetLength(0)][];
             for (int i1 = 0; i1 < KfpDq.GetLength(0); i1++)

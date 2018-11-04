@@ -84,7 +84,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             }            
         }
 
-        public virtual NewtonRaphsonNonLinearAnalyzerDevelop AnalyzeMicrostructure(Model model, Dictionary<int, ILinearSystem> linearSystems, ISolver solver,
+        public virtual (NewtonRaphsonNonLinearAnalyzerDevelop, ProblemStructural,ElementStructuralStiffnessProvider, SubdomainGlobalMapping[]) AnalyzeMicrostructure(Model model, Dictionary<int, ILinearSystem> linearSystems, ISolver solver,
             int increments, int MaxIterations, int IterationsForMatrixRebuild, Dictionary<int, Dictionary<DOFType, double>> totalPrescribedBoundaryDisplacements,
             Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Node> boundaryNodes, Dictionary<int, Vector> uInitialFreeDOFDisplacementsPerSubdomain)
         {
@@ -128,7 +128,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             parentAnalyzer.Solve();
             #endregion
 
-            return microAnalyzer;
+            return (microAnalyzer,provider,elementProvider,subdomainMappers);
         }
     }
 }

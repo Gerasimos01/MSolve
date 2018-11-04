@@ -1851,7 +1851,7 @@ namespace ISAAR.MSolve.FEM.Elements
             //IMatrix2D<double> element_stiffnessMatrix = new Matrix2D<double>(k_stoixeiou_coh); // TODO giati de ginetai return dof.Enumerator.GetTransformedMatrix, xrhsh symmetric
             IMatrix2D element_stiffnessMatrix = new Matrix2D(k_stoixeiou_coh2); // TODO giati de ginetai return dof.Enumerator.GetTransformedMatrix, xrhsh symmetric
             //return element_stiffnessMatrix; //PROSTHIKI EMBEDDED: Line Commented Out
-            IMatrix2D superElement_stiffnessMatrix= dofEnumerator.GetTransformedMatrix(element_stiffnessMatrix);// PROSTHIKI GIA CHECK EMBEDDDED
+            //IMatrix2D superElement_stiffnessMatrix= dofEnumerator.GetTransformedMatrix(element_stiffnessMatrix);// PROSTHIKI GIA CHECK EMBEDDDED
             return dofEnumerator.GetTransformedMatrix(element_stiffnessMatrix); // PROSTHIKI EMBEDDED
         }
 

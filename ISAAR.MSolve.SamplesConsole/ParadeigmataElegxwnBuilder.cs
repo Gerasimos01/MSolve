@@ -477,7 +477,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //    PoissonRatio = 0.3,
             //};
 
-            IRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample3GrSh();
+            IRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample1GrSh();
             //IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderCheckEnaHexa();
 
             IFiniteElementMaterial3D material1 = new Microstructure3Develop(homogeneousRveBuilder1);

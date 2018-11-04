@@ -16,7 +16,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
     public static class SubdomainCalculationsMultiple
     {
         public static Dictionary<int, double[][]> CalculateKffinverseKfpDqSubdomains(Dictionary<int,double[][]> KfpDqSubdomains , Model model, IElementMatrixProvider elementProvider, 
-            IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, SolverSkyline solver, Dictionary<int, ILinearSystem> linearSystems, ISubdomainGlobalMapping[] mappings)
+            IScaleTransitions scaleTransitions, Dictionary<int, Node> boundaryNodes, ISolver solver, Dictionary<int, ILinearSystem> linearSystems, ISubdomainGlobalMapping[] mappings)
         {
 
             #region Creation of solution vectors structure
