@@ -171,7 +171,8 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass.Check10bStressIntegration0GrSh1RveForDemonstration();
             //SeparateCodeCheckingClass.Check10bStressIntegration5GrSh1RveForDemonstration();
             //SeparateCodeCheckingClass.Check11bStressIntegrationMultipleSubdomainMethods();
-            SeparateCodeCheckingClass.Check12bStressIntegrationMultipleSubdomainMethodsUseBase();
+            //SeparateCodeCheckingClass.Check12bStressIntegrationMultipleSubdomainMethodsUseBase();
+            SeparateCodeCheckingClass.CheckPartitionLimitsArray();
 
         }
     }

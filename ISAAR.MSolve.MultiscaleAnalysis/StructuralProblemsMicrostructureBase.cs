@@ -59,6 +59,52 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         }
 
+        public virtual Dictionary<int, Element> GetBoundaryFiniteElementsDictionary(Subdomain subdomain, Dictionary<int, Node> boundaryNodes)
+        {
+            Dictionary<int, Element> subdomainBoundaryElements = new Dictionary<int, Element>();
+
+            foreach (Element element in subdomain.ElementsDictionary.Values)
+            {
+                bool containsBoundaryNode = false;
+
+                var elementDOFTypes = element.ElementType.DOFEnumerator.GetDOFTypes(element);
+                var matrixAssemblyNodes = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element);
+                for (int j = 0; j < elementDOFTypes.Count; j++)
+                {
+                    Node elementNode = matrixAssemblyNodes[j];
+                    if (boundaryNodes.ContainsKey(elementNode.ID))
+                    {
+                        containsBoundaryNode = true;
+                        break;
+                    }
+                }
+
+                if (containsBoundaryNode)
+                {
+                    subdomainBoundaryElements.Add(element.ID, element);
+                }
+
+            }
+
+            return subdomainBoundaryElements;
+
+        }
+
+        public virtual Dictionary<int, Dictionary<int, Element>> GetSubdomainsBoundaryFiniteElementsDictionaries(Model model, Dictionary<int, Node> boundaryNodes)
+        {
+            Dictionary<int, Dictionary<int, Element>> subdomainsBoundaryElements = new Dictionary<int, Dictionary<int, Element>>();
+
+            foreach (Subdomain subdomain in model.Subdomains)
+            {
+                Dictionary<int, Element> subdBoundaryElements = GetBoundaryFiniteElementsDictionary(subdomain, boundaryNodes);
+                subdomainsBoundaryElements.Add(subdomain.ID, subdBoundaryElements);
+            }
+
+            return subdomainsBoundaryElements;
+            
+        }
+
+
         public virtual Dictionary<int, ILinearSystem> CreateNecessaryLinearSystems(Model model)
         {
             var linearSystems = new Dictionary<int, ILinearSystem>();

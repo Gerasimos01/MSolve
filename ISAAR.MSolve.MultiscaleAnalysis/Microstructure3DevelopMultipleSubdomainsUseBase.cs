@@ -229,6 +229,16 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             double[][] KfpDq = SubdomainCalculations.CalculateKfreeprescribedDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
             Dictionary<int, double[][]> KfpDqSubdomains = SubdomainCalculationsMultiple.CalculateKfreeprescribedDqMultiplicationsMultiple(model, elementProvider, scaleTransitions, boundaryNodes);
 
+
+            // TODO: replace provider.Reset(); microAnalyzer.BuildMatrices(); 
+            //Dictionary<int, double[][]> KfpDqSubdomains =...; Dictionary<int, double[][]> KppDqVectorsSubdomains =...;
+            //with the following two commands
+            //var boundaryElements = GetSubdomainsBoundaryFiniteElementsDictionaries(model, boundaryNodes);
+            //(Dictionary<int, double[][]> KfpDqSubdomains, Dictionary<int, double[][]> KppDqVectorsSubdomains) =
+            //    SubdomainCalculationsSimultaneous.UpdateSubdomainKffAndCalculateKfpDqAndKppDqpMultiple(model,
+            //    elementProvider, scaleTransitions, boundaryNodes, boundaryElements,linearSystems);
+
+
             ////calculate matrices for debug
             //(var constrainedNodalDOFsDictionary,var  TotalConstrainedDOFs) = SubdomainCalculations.GetConstrainednodalDOFsDictionaryForDebugging(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
             //var Dq = SubdomainCalculations.GetDqTransitionsMatrixForDebugging(model.Subdomains[0], elementProvider,  scaleTransitions,boundaryNodes,  constrainedNodalDOFsDictionary,  TotalConstrainedDOFs);

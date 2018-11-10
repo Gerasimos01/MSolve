@@ -418,6 +418,13 @@ namespace ISAAR.MSolve.SamplesConsole
             double[] stressesCheck4 = microstructure3.Stresses;
         }
 
+        public static void CheckPartitionLimitsArray()
+        {
+            int[] ch01 = new int[10];
+
+            var ch02 = ch01.PartitionLimits(7);
+        }
+
         public static void CheckConstitutiveMatrixTransformation()
         {
             double[,] d2W_dfdf = new double[9, 9]
