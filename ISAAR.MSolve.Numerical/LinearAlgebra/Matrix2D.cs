@@ -573,5 +573,11 @@ namespace ISAAR.MSolve.Numerical.LinearAlgebra
             var lu = new LuDecomposition(data, isTransposed, inPlace);
             return new Matrix2D(lu.Solve(rhsColumns.data));
         }
+
+        public Vector SolveLU(double[] rhsColumn, bool inPlace)
+        {
+            var lu = new LuDecomposition(data, isTransposed, inPlace);
+            return new Vector(lu.Solve(rhsColumn));
+        }
     }
 }

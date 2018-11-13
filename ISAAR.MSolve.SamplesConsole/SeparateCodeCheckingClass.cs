@@ -425,6 +425,28 @@ namespace ISAAR.MSolve.SamplesConsole
             var ch02 = ch01.PartitionLimits(7);
         }
 
+        public static void CheckStressStrainBonSlipMaterial()
+        {
+            VectorExtensions.AssignTotalAffinityCount();
+            BondSlipCohMat material1 = new BondSlipCohMat(100, 10, 100, 100, new double[2], new double[2], 1e-10);
+            int loadsteps_2 = 120;
+            double[][] DeltaEhist = new double[2*loadsteps_2][];
+            double phi_metakinhshs = (30 / 360) * 2 * Math.PI;
+            double[] epsilon_max = new double[3] { 2.8 * Math.Cos(phi_metakinhshs), 2.8 * Math.Sin(phi_metakinhshs), 2.8 };
+            for (int i1 = 0; i1 < loadsteps_2; i1++)
+            { DeltaEhist[i1] = new double[3] { (1 / (double)loadsteps_2) * epsilon_max[0], (1 / (double)loadsteps_2) * epsilon_max[1], (1 / (double)loadsteps_2) * epsilon_max[2] }; }
+            for (int i1 = loadsteps_2; i1 <2* loadsteps_2; i1++)
+            { DeltaEhist[i1] = new double[3] { -1.5*(1 / (double)loadsteps_2) * epsilon_max[0], -1.5*(1 / (double)loadsteps_2) * epsilon_max[1], -1.5*(1 / (double)loadsteps_2) * epsilon_max[2] }; }
+            double[][] Ehist = new double[2 * loadsteps_2][];
+            Ehist[0] = new double[3] { DeltaEhist[0][0], DeltaEhist[0][1], DeltaEhist[0][2] };
+            for (int i1 = 1; i1 <2*loadsteps_2; i1++)
+            { Ehist[i1] = new double[3] { Ehist[i1-1][0]+DeltaEhist[i1][0], Ehist[i1 - 1][1] + DeltaEhist[i1][1], Ehist[i1 - 1][2] + DeltaEhist[i1][2] }; }
+
+
+            (double[][] stressHistory, double[][,] constitutiveMatrixHistory) = StressStrainHistory(Ehist, material1);
+
+        }
+
         public static void CheckConstitutiveMatrixTransformation()
         {
             double[,] d2W_dfdf = new double[9, 9]
