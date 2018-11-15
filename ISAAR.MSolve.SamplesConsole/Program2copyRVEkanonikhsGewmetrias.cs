@@ -17,7 +17,7 @@ using ISAAR.MSolve.FEM.Materials;
 using ISAAR.MSolve.Materials;
 using ISAAR.MSolve.SamplesConsole;
 using ISAAR.MSolve.Solvers.Interfaces;
-
+using ISAAR.MSolve.MultiscaleAnalysis;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
@@ -31,7 +31,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // EPILOGH MONTELOU
             int model__builder_choice;
-            model__builder_choice =207;   // 9 einai to megalo me to renumbering pou tsekaretai
+            model__builder_choice =208;   // 9 einai to megalo me to renumbering pou tsekaretai
 
             
             if (model__builder_choice == 1) // 
@@ -46,6 +46,20 @@ namespace ISAAR.MSolve.SamplesConsole
             if (model__builder_choice == 207) // 
             { //RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInput(model);
                 RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample1000ddm(model);
+                int[][] subdElementIds = DdmCalculations.CalculateSubdElementIds(6, 6, 6, 3, 3, model);
+                DdmCalculations.SeparateSubdomains(model, subdElementIds);
+                foreach (int subdomainID in model.SubdomainsDictionary.Keys)
+                {
+                    Subdomain subd = model.SubdomainsDictionary[subdomainID];
+                    DdmCalculations.PrintDictionary(subd.GlobalNodalDOFsDictionary, subd.TotalDOFs, subd.ID);
+                }
+            }
+            if (model__builder_choice == 208) // 
+            { //RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInput(model);
+
+                var Rvebuilder = new GrapheneReinforcedRVEBuilderCHECKddmExample();
+                model = Rvebuilder.GetModelAndBoundaryNodes().Item1;
+                //RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample1000ddm(model);
                 int[][] subdElementIds = DdmCalculations.CalculateSubdElementIds(6, 6, 6, 3, 3, model);
                 DdmCalculations.SeparateSubdomains(model, subdElementIds);
                 foreach (int subdomainID in model.SubdomainsDictionary.Keys)

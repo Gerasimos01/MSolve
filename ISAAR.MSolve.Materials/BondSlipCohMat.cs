@@ -121,7 +121,7 @@ namespace ISAAR.MSolve.Materials
                 while (((new Vector(res_vec)).Norm / t_max) > tol || iter == 0)
                 {
                     //compute tangential matrix (residual derivatives)
-                    double com_term2 = Math.Pow(Math.Pow(sigma[0] - alpha[0], 2) + Math.Pow(sigma[1] - alpha[1], 2), (-3 / 2));
+                    double com_term2 = Math.Pow(Math.Pow(sigma[0] - alpha[0], 2) + Math.Pow(sigma[1] - alpha[1], 2), (-((double)3 /(double)2)));
                     Matrix2D dmi_dti = new Matrix2D(2, 2);
                     dmi_dti[0, 0] = com_term2 * Math.Pow(sigma[1] - alpha[1], 2);
                     dmi_dti[0, 1] = -com_term2 * (sigma[0] - alpha[0]) * (sigma[1] - alpha[1]);
@@ -152,7 +152,7 @@ namespace ISAAR.MSolve.Materials
                     Matrix2D dra_dra = new Matrix2D(new double[2, 2] { { dmi_dai[0, 0], dmi_dai[0, 1] }, { dmi_dai[1, 0], dmi_dai[1, 1] } });
                     dra_dra.Scale(-Delta_l * c1);
                     dra_dra.Data[0, 0] += 1;
-                    dra_dra.Data[0, 0] += 1;
+                    dra_dra.Data[1, 1] += 1;
 
                     double[] dra_dl = new double[2] { -c1 * m[0], -c1 * m[1] };
 

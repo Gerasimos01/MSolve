@@ -431,7 +431,7 @@ namespace ISAAR.MSolve.SamplesConsole
             BondSlipCohMat material1 = new BondSlipCohMat(100, 10, 100, 100, new double[2], new double[2], 1e-10);
             int loadsteps_2 = 120;
             double[][] DeltaEhist = new double[2*loadsteps_2][];
-            double phi_metakinhshs = (30 / 360) * 2 * Math.PI;
+            double phi_metakinhshs = ((double)30 /(double) 360) * 2 * Math.PI;
             double[] epsilon_max = new double[3] { 2.8 * Math.Cos(phi_metakinhshs), 2.8 * Math.Sin(phi_metakinhshs), 2.8 };
             for (int i1 = 0; i1 < loadsteps_2; i1++)
             { DeltaEhist[i1] = new double[3] { (1 / (double)loadsteps_2) * epsilon_max[0], (1 / (double)loadsteps_2) * epsilon_max[1], (1 / (double)loadsteps_2) * epsilon_max[2] }; }
