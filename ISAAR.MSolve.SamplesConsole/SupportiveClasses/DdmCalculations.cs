@@ -8,6 +8,7 @@ using ISAAR.MSolve.FEM.Providers;
 using ISAAR.MSolve.Solvers.Skyline;
 using ISAAR.MSolve.Solvers.Interfaces;
 using ISAAR.MSolve.PreProcessor.Elements;
+using System.Linq;
 
 namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 {
@@ -98,5 +99,211 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             Vector globalDOFS = new Vector(globalDOFs);
             globalDOFS.WriteToFile(print_path);
         }
+
+        public static (Dictionary<int, Dictionary<int, IList<int>>>, Dictionary<int, List<int>>) FindEmbeddedElementsSubdomains(Model model)
+        {
+            //1
+            Dictionary<int, Dictionary<int, IList<int>>> EmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem = new Dictionary<int, Dictionary<int, IList<int>>>(); //embedded element- host subdomains -specific elements in subdomains
+            //2
+            Dictionary<int, List<int>> hexaConnectsShells = new Dictionary<int, List<int>>();
+            //3
+            List<int> totalEmbeddedElements = new List<int>();
+
+            foreach (Element element in model.ElementsDictionary.Values)
+            {
+                if (element.ElementType is IEmbeddedElement)
+                {
+                    Dictionary<int, IList<int>> HostSubdomains = new Dictionary<int, IList<int>>();
+                    foreach (var embeddedNode in ((IEmbeddedElement)element).EmbeddedNodes)
+                    {
+                        //1
+                        Element hostELement = embeddedNode.EmbeddedInElement;
+                        if (HostSubdomains.ContainsKey(hostELement.Subdomain.ID))
+                        {
+                            if (!HostSubdomains[hostELement.Subdomain.ID].Contains(hostELement.ID))
+                            {
+                                HostSubdomains[hostELement.Subdomain.ID].Add(hostELement.ID);
+                            }
+                        }
+                        else
+                        {
+                            List<int> specificElementsIDs = new List<int>();
+                            specificElementsIDs.Add(hostELement.ID);
+                            HostSubdomains.Add(hostELement.Subdomain.ID, specificElementsIDs);                            
+                        }
+                        //2
+                        if (hexaConnectsShells.ContainsKey(hostELement.ID))
+                        {
+                            if (!hexaConnectsShells[hostELement.ID].Contains(element.ID))
+                            {
+                                hexaConnectsShells[hostELement.ID].Add(element.ID);
+                            }
+                        }
+                        else
+                        {
+                            List<int> connectionElementsData1 = new List<int>();
+                            connectionElementsData1.Add(element.ID);
+                            hexaConnectsShells.Add(hostELement.ID, connectionElementsData1);
+                        }
+                    }
+                    if (HostSubdomains.Count > 1) // gia =1 den exoume dilhma gia to se poia subdomain tha entaxthei
+                    { EmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem.Add(element.ID, HostSubdomains); }
+                }
+            }
+            return (EmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem,hexaConnectsShells);
+        }
+
+        public static Dictionary<int, Dictionary<int, IList<int>>> FindAmbiguousEmbeddedElementsSubdomains(Model model)
+        {
+            Dictionary<int, Dictionary<int, IList<int>>> EmbeddedElementsHostSubdomainsAndElements = new Dictionary<int, Dictionary<int, IList<int>>>();
+
+            foreach (Element element in model.ElementsDictionary.Values)
+            {
+                if (element.ElementType is IEmbeddedElement)
+                {
+                    Dictionary<int, IList<int>> HostSubdomains = new Dictionary<int, IList<int>>();
+                    foreach (var embeddedNode in ((IEmbeddedElement)element).EmbeddedNodes)
+                    {
+                        Element hostELement = embeddedNode.EmbeddedInElement;
+                        if (HostSubdomains.ContainsKey(hostELement.Subdomain.ID))
+                        {
+                            if (!HostSubdomains[hostELement.Subdomain.ID].Contains(hostELement.ID))
+                            {
+                                HostSubdomains[hostELement.Subdomain.ID].Add(hostELement.ID);
+                            }
+                        }
+                        else
+                        {
+                            List<int> specificElementsIDs = new List<int>();
+                            specificElementsIDs.Add(hostELement.ID);
+                            HostSubdomains.Add(hostELement.Subdomain.ID, specificElementsIDs);
+                        }
+                    }
+
+                    if (HostSubdomains.Count > 1)
+                    { EmbeddedElementsHostSubdomainsAndElements.Add(element.ID, HostSubdomains); }
+                }
+            }
+            return EmbeddedElementsHostSubdomainsAndElements;
+        }
+
+        public static void DetermineOnlyNeededCombinations( 
+            Dictionary<int, Dictionary<int, IList<int>>> EmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem,
+            Dictionary<int, List<int>> hexaConnectsShells)
+        {
+            //List<List<>> CombinationElements
+            Dictionary<int, List<int>> connectedShellElementsLists = new Dictionary<int, List<int>>();
+
+            //List<int> connectedShells1 = new List<int>();
+
+            foreach (int hexaID in hexaConnectsShells.Keys)
+            {
+                //foreach (int connectedShell in hexaConnectsShells[hexaID])
+                //{
+                List<int> foundInLists = new List<int>();
+
+                foreach (int ListID in connectedShellElementsLists.Keys)
+                {
+                    bool isShellFoundInList = false;
+                    
+                    foreach (int shellELement in hexaConnectsShells[hexaID])
+                    {
+                        if (connectedShellElementsLists[ListID].Contains(shellELement))
+                        {
+                            isShellFoundInList = true;
+
+                            if (!foundInLists.Contains(ListID))
+                            { foundInLists.Add(ListID); }
+                            //prosthese kai ta upoloipa shell sth lista
+                            //kai oles tis upoloipes listes pou ta periexoun 
+                        }
+                    }
+                }
+
+                int foundInListsNum = foundInLists.Count();
+                if (foundInListsNum==0)
+                {
+                    List<int> newConnectedShellsList = new List<int>();
+                    foreach (int shellELement in hexaConnectsShells[hexaID])
+                    {
+                        newConnectedShellsList.Add(shellELement);
+                    }
+
+                    connectedShellElementsLists.Add(connectedShellElementsLists.Count()+1, newConnectedShellsList);
+                }
+                if (foundInListsNum==1)
+                {
+                    var updatedList = connectedShellElementsLists[foundInLists.ElementAt(0)];
+                    foreach (int shellELement in hexaConnectsShells[hexaID])
+                    {
+                        if(!updatedList.Contains(shellELement))
+                        { updatedList.Add(shellELement); }
+
+                    }
+                }
+                if (foundInListsNum>1)
+                {
+                    //lists[1] = lists[1].Union(lists[2]).ToList();
+                    //lists.Remove(2);
+
+                    for (int i1=1; i1<foundInListsNum; i1++)
+                    {
+                        connectedShellElementsLists[foundInLists.ElementAt(0)] = 
+                            connectedShellElementsLists[foundInLists.ElementAt(0)].Union(connectedShellElementsLists[foundInLists.ElementAt(i1)]).ToList();
+                        //todo: concat can be used as well if it is known that there are not duplicates
+                        connectedShellElementsLists.Remove(foundInLists.ElementAt(i1));
+                    }
+                }
+
+
+
+                //connectedShellElementsLists[0].Union(connectedShellElementsLists[1]);
+
+                //}
+            }
+            
+
+
+        }
+
+        public static void CalculateCombinationSolution(List<int> connectedShellElementsLists, Dictionary<int, Dictionary<int, IList<int>>> EmbeddedElementsHostSubdomainsAndElements)
+        {
+            int solutionVectorSize = connectedShellElementsLists.Count();
+            int possibleSolutions = 1;            
+            foreach(int shellId in connectedShellElementsLists)
+            {
+                possibleSolutions *= EmbeddedElementsHostSubdomainsAndElements[shellId].Count();
+            }
+            List<int>[] possibleSolutionHexas = new List<int>[possibleSolutions];
+            //element ids twn hexas pou tha einai boundary
+
+            int previousDivider = 1;
+            int choices = 2;
+
+            foreach (int shellId in connectedShellElementsLists)
+            {
+                for (int i1 = 0; i1 < solutionVectorSize; i1++)
+                {
+                    int SubregionsSize = solutionVectorSize / previousDivider;
+                    int subregionsSeparationSize = SubregionsSize / EmbeddedElementsHostSubdomainsAndElements[shellId].Count();
+                }
+            }
+
+            //var solutionhexaElementsIds = 
+            int[] hexaIds = new int[2] { 0, 1 };
+            var unique = hexaIds.Distinct().Count();
+
+            int maxSubdElements = 0;
+            foreach (var subdmNhexas in EmbeddedElementsHostSubdomainsAndElements.Values)
+            {
+                foreach(var hexaList in subdmNhexas.Values)
+                {
+
+                }
+            }
+
+        }
     }
+
+
 }

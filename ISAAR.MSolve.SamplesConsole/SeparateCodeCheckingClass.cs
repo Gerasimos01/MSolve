@@ -425,6 +425,21 @@ namespace ISAAR.MSolve.SamplesConsole
             var ch02 = ch01.PartitionLimits(7);
         }
 
+        public static void CheckListUnionInDictionary()
+        {
+            List<int> list1 = new List<int>() { 1, 1, 1, 2, 3, 4, 5, 5, 7 };
+            List<int> list2 = new List<int>() { 4, 5, 5, 7, 8, 9, 10, 10, 11 };
+            Dictionary<int, List<int>> lists = new Dictionary<int, List<int>>();
+            lists.Add(1,list1);
+            lists.Add(2, list2);
+
+            lists[1]= lists[1].Union(lists[2]).ToList();
+            lists.Remove(2);
+
+            List<int> ch01 = new List<int>(10);
+            int ch02 = ch01.Capacity;
+        }
+
         public static void CheckStressStrainBonSlipMaterial()
         {
             VectorExtensions.AssignTotalAffinityCount();
