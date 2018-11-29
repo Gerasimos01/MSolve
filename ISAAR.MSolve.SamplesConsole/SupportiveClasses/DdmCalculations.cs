@@ -58,6 +58,52 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             return subdElementIds;
         }
 
+        public static int[][] CalculateSubdElementIdsVerticalHexaOnly(int hexa1, int hexa2, int hexa3, int elem1, int elem2, Model model,int nSubdomains)
+        {
+            //int[][] subdElementIds = new int[8][];
+            int[][] subdElementIds = new int[nSubdomains][];
+            for (int i1 = 0; i1 < nSubdomains; i1++)
+            { subdElementIds[i1] = new int[hexa1 * hexa2 * hexa3 / nSubdomains]; }
+           
+
+
+            int[] subdElementCounters = new int[8];
+
+            for (int h1 = 0; h1 < hexa1; h1++)
+            {
+                for (int h2 = 0; h2 < hexa2; h2++)
+                {
+                    for (int h3 = 0; h3 < hexa3; h3++)
+                    {
+                        int ElementID = h1 + 1 + (h2 + 1 - 1) * hexa1 + (h3 + 1 - 1) * (hexa1) * hexa2; // h1+1 dioti h1 einai zero based
+
+                        int s1; int s2; int s3;
+                        if (h1 <= 0.5 * hexa1 - 1) { s1 = 1; } else { s1 = 2; };
+                        if (h2 <= 0.5 * hexa2 - 1) { s2 = 1; } else { s2 = 2; };
+                        if (h3 <= 0.5 * hexa3 - 1) { s3 = 1; } else { s3 = 2; };
+
+                        int subdID = s1 + (s2 - 1) * 2 + (s3 - 1) * 4;
+
+                        subdElementIds[subdID - 1][subdElementCounters[subdID - 1]] = ElementID;
+                        subdElementCounters[subdID - 1] += 1;
+                        //model.ElementsDictionary.Add(e1.ID, e1);
+                        //model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e1.ID, e1);
+
+                    }
+                }
+            }
+
+
+            //int subdID = 8;
+
+            for (int ElementID = hexa1 * hexa2 * hexa3 + 1; ElementID < hexa1 * hexa2 * hexa3 + 3 * (elem1 * elem2) + 1; ElementID++)
+            {
+                subdElementIds[7][subdElementCounters[7]] = ElementID;
+                subdElementCounters[7] += 1;
+            }
+            return subdElementIds;
+        }
+
         public static void SeparateSubdomains(Model model, int[][] subdElementIds)
         {
             model.SubdomainsDictionary.Clear();

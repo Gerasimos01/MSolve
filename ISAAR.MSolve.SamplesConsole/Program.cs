@@ -173,9 +173,9 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass.Check11bStressIntegrationMultipleSubdomainMethods();
             //SeparateCodeCheckingClass.Check12bStressIntegrationMultipleSubdomainMethodsUseBase();
             //SeparateCodeCheckingClass.CheckPartitionLimitsArray();
-            //SeparateCodeCheckingClass.CheckStressStrainBonSlipMaterial();
+            SeparateCodeCheckingClass.CheckStressStrainBonSlipMaterial();
             //Program2copyRVEkanonikhsGewmetrias.SolveRVEExample();
-            SeparateCodeCheckingClass.CheckListUnionInDictionary();
+            //SeparateCodeCheckingClass.CheckListUnionInDictionary();
 
 
         }

@@ -763,6 +763,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
             for (int l = 0; l < strainHistory.GetLength(0); l++)
             {
+                if (l==42)
+                {
+                    Console.Write("breakPointIsHere");
+                }
                 testedMaterial.UpdateMaterial(strainHistory[l]);
                 testedMaterial.SaveState();
                 stressHistory[l] = new double[testedMaterial.Stresses.Length];

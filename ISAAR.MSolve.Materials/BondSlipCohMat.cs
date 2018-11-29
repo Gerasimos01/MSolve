@@ -61,7 +61,7 @@ namespace ISAAR.MSolve.Materials
 
             c1 = (k_elastic * k_elastic2) / (k_elastic - k_elastic2);
             matrices_not_initialized = false;
-            tol = Math.Pow(10, -19);
+            //tol = Math.Pow(10, -19); //TODO: check for other convergence issues (let tol=1e-10)
 
             alpha = new double[2] { a_0[0], a_0[1] };
         }
@@ -170,7 +170,7 @@ namespace ISAAR.MSolve.Materials
                         {drf_ds[0],drf_ds[1],drf_da1,drf_da2,drf_dl}});
 
                     // solution and update of vectors
-                    Vector Solution = tangent_matrix.SolveLU(res_vec, true);
+                    Vector Solution = tangent_matrix.SolveLU(res_vec, false);
                     sigma[0] += -Solution[0];
                     sigma[1] += -Solution[1];
                     alpha[0] += -Solution[2];
@@ -194,7 +194,7 @@ namespace ISAAR.MSolve.Materials
                     iter += 1;
                 }
                 Matrix2D eye5 = new Matrix2D(new double[5, 5]); for (int i1 = 0; i1 < 5; i1++) { eye5[i1, i1] = 1; }; 
-                var tangent_matrix_inv = tangent_matrix.SolveLU(eye5, true);
+                var tangent_matrix_inv = tangent_matrix.SolveLU(eye5, false);
 
                 for (int i1 = 0; i1 < 2; i1++)
                 {
