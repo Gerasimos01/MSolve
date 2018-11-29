@@ -18,7 +18,7 @@ namespace ISAAR.MSolve.SamplesConsole
 {
     class ParadeigmataElegxwnBuilder2
     {
-        public static void ShellPlateBuilder(Model model, double load_value)
+        public static void ShellPlateBuilder(Model model, double load_value)// TODO: NEEDS TO BE CHECKED
         {
             // proelefsi: branch master idio onoma ParadeigmataElegxwnBuilder2.ShellPlateBuilder(Model model, double load_value)
             //proelefsi2: integration/nonlinear_elements (fash dhmiourgias me Ser pro merge with Isaar devlopment)
