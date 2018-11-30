@@ -106,14 +106,16 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             totalPrescribedBoundaryDisplacements.Add(boundaryNode.ID, totalBoundaryNodalDisplacements);
         }
 
-        public void ImposeAppropriateConstraintsPerBoundaryNode(Model model, Node boundaryNode)
+        public void ImposeAppropriateAndRigidBodyConstraintsPerBoundaryNode(Model model, Node boundaryNode, Dictionary<Node, IList<DOFType>> RigidBodyNodeConstraints)
         {
-                Dictionary<Node, IList<DOFType>> RigidBodyNodeConstraints = new Dictionary<Node, IList<DOFType>>();            
-           
                 model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.X);
                 model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Y);
-                model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Z);
-            
+                model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Z);           
+        }
+
+        public void ImposeAppropriateConstraintsPerBoundaryNode(Model model, Node boundaryNode)
+        {
+            throw new System.NotSupportedException();
         }
     }
 }

@@ -122,5 +122,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Y);
             model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Z);
         }
+
+        public void ImposeAppropriateAndRigidBodyConstraintsPerBoundaryNode(Model model, Node boundaryNode, Dictionary<Node, IList<DOFType>> RigidBodyNodeConstraints)
+        {
+            throw new System.NotSupportedException();
+        }
     }
 }
