@@ -13,9 +13,9 @@ using System.Collections.Generic;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
-    public class SmallStrain3Dto2DScaleTransition : IScaleTransitions
+    public class SmallStrain3Dto2DplaneStrainScaleTransition : IScaleTransitions
     {
-        public SmallStrain3Dto2DScaleTransition()
+        public SmallStrain3Dto2DplaneStrainScaleTransition()
         { }
 
         public double[] MacroToMicroTransition(Node boundaryNode, double[] MacroScaleVariable)
@@ -94,23 +94,26 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             //SHMEIWSH: an prosthesoume sto totalBoundaryNodalDIsplacements trith metakinhsh (dld logw u_prescr_xyz_sunol[3]) ==0
             // ousiastika h methodos "ImposePrescribedDisplacementsWithInitialConditionSEffect" ths subdomain.cs tha paei kai tha 
-            //xanagrapsei panw apo to 0 tou localsolution enos element (pou prokuptei gia dof = onstrained) thn timh 0
+            //xanagrapsei panw apo to 0 tou localsolution enos element (pou prokuptei ean exoume thesei sthnepomenh methodo dof = constrained) thn timh 0
             //pou tha vrei sto totalBoundaryNodalDIsplacements. an ekei den exoume valei timh (dld logw u_prescr_xyz_sunol[3] ==0
             //sto  DOFType.Z tou Dictionary) den tha peiraxei to mhden tou localsolution opote einai to idio.
 
             Dictionary<DOFType, double> totalBoundaryNodalDisplacements = new Dictionary<DOFType, double>();
             totalBoundaryNodalDisplacements.Add(DOFType.X, u_prescr_xyz_sunol[0]);
             totalBoundaryNodalDisplacements.Add(DOFType.Y, u_prescr_xyz_sunol[1]);
-            //totalBoundaryNodalDisplacements.Add(DOFType.Z, u_prescr_xyz_sunol[2]);
+            //totalBoundaryNodalDisplacements.Add(DOFType.Z, u_prescr_xyz_sunol[2]); (OPOTE plane strain mporoume na ton valiume ton periorismo apla tha epanaupologizetai)
 
             totalPrescribedBoundaryDisplacements.Add(boundaryNode.ID, totalBoundaryNodalDisplacements);
         }
 
         public void ImposeAppropriateConstraintsPerBoundaryNode(Model model, Node boundaryNode)
         {
-            model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.X);
-            model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Y);
-            model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Z);
+                Dictionary<Node, IList<DOFType>> RigidBodyNodeConstraints = new Dictionary<Node, IList<DOFType>>();            
+           
+                model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.X);
+                model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Y);
+                model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Z);
+            
         }
     }
 }
