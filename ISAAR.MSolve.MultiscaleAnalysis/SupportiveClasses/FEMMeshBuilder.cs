@@ -555,5 +555,37 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
 
         }
 
+        public static Dictionary<Node, IList<DOFType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath)
+        {
+            //PROELEFSI: RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix_withRenumbering()
+            //ALLAGES: return type and nodes and dofs to be constrained
+
+            Dictionary<Node, IList<DOFType>> RigidBodyNodeConstraints = new Dictionary<Node, IList<DOFType>>();
+
+            // Perioxh renumbering initialization 
+            renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
+            // perioxh renumbering initialization ews edw 
+
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+            int nodeID;
+
+            nodeID = renumbering.GetNewNodeNumbering(Topol_rve(1, 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+            RigidBodyNodeConstraints.Add(model.NodesDictionary[nodeID], new List<DOFType>(){ DOFType.X, DOFType.Y, DOFType.Z });
+            
+
+            nodeID = renumbering.GetNewNodeNumbering(Topol_rve(hexa1 + 1, 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+            RigidBodyNodeConstraints.Add(model.NodesDictionary[nodeID], new List<DOFType>() { DOFType.X, DOFType.Y, DOFType.Z });
+            
+            nodeID = renumbering.GetNewNodeNumbering(Topol_rve(1, hexa2 + 1, 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+            RigidBodyNodeConstraints.Add(model.NodesDictionary[nodeID], new List<DOFType>() { DOFType.X, DOFType.Y, DOFType.Z });
+
+            //nodeID = renumbering.GetNewNodeNumbering(Topol_rve(1, 1, hexa3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+
+            return RigidBodyNodeConstraints;
+
+        }
+
     }
 }
