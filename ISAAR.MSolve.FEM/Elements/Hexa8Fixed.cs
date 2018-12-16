@@ -611,7 +611,10 @@ namespace ISAAR.MSolve.FEM.Elements
 
         public void ClearMaterialState()
         {
-            foreach (IContinuumMaterial3D m in materialsAtGaussPoints) m.ClearState();
+            //TODO: the next throws an exception. Investigate. Possible changes in Analyzers may be the cause.
+            //foreach (IContinuumMaterial3D m in materialsAtGaussPoints) m.ClearState();
+            // bug dowsn't show in elastic NRNLanalyzer in the elastic region as the problems allways 
+            //converges at the first iteration and there is no need for (provider reset(tthat throws the old stiffness matrix)) and matrix rebuild
         }
 
         public void SaveMaterialState()

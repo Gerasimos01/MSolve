@@ -245,3 +245,5 @@ ModelManifest.xml
 .fake/
 *.iga
 *.dat
+/ISAAR.MSolve.MultiscaleAnalysis
+/ISAAR.MSolve.MultiscaleAnalysisMerge/GrapheneReinforcedRVEBuilderExample3GrSh.cs

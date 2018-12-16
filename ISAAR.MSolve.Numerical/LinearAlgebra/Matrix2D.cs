@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Accord.Math.Decompositions;
 using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
 
 namespace ISAAR.MSolve.Numerical.LinearAlgebra
@@ -634,6 +635,18 @@ namespace ISAAR.MSolve.Numerical.LinearAlgebra
             for (int i = 0; i < m.Data.Length; i++)
                 m.Data[0, i] = vector[i];
             return m;
-        }        
+        }
+
+        public Matrix2D SolveLU(Matrix2D rhsColumns, bool inPlace)
+        {
+            var lu = new LuDecomposition(data, isTransposed, inPlace);
+            return new Matrix2D(lu.Solve(rhsColumns.data));
+        }
+
+        public Vector SolveLU(double[] rhsColumn, bool inPlace)
+        {
+            var lu = new LuDecomposition(data, isTransposed, inPlace);
+            return new Vector(lu.Solve(rhsColumn));
+        }
     }
 }

@@ -5,4 +5,7 @@
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Accord.Math" Version="3.8.0" />
+  </ItemGroup>
 </Project>

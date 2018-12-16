@@ -11,7 +11,7 @@ namespace ISAAR.MSolve.Materials
     public class ElasticMaterial2D : IIsotropicContinuumMaterial2D
     {
         private readonly double[] strains = new double[3];
-        private readonly double[] stresses = new double[3];
+        private double[] stresses = new double[3];
         private double[,] constitutiveMatrix = null;
 
         public double[] Coordinates { get; set; }
@@ -74,6 +74,11 @@ namespace ISAAR.MSolve.Materials
                 constitutiveMatrix[1, 0] = PoissonRatio * aux;
                 constitutiveMatrix[2, 2] = (1 - 2 * PoissonRatio) / 2 * aux;
             }
+
+            // paremvash gia stress calculation 
+            stresses = (new Matrix2D(constitutiveMatrix) * strains).Data;
+            // prosoxh prepei na diorthwthoun kai ta strains na ginontai add ta strains tou update analoga pws orizoume to update strain tou ulikou
+
         }
 
         #endregion

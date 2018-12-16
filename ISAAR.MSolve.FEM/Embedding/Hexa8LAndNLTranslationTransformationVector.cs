@@ -42,7 +42,7 @@ namespace ISAAR.MSolve.FEM.Embedding
 
         private void CheckElementType(IFiniteElement element)
         {
-            bool validElement = element is Hexa8;
+            bool validElement = element is Hexa8Fixed;
             validElement |= element is Hexa8NonLinear;
             if (!(validElement)) throw new ArgumentException("Host element is not Hexa8 or Hexa8NL.");
         }
