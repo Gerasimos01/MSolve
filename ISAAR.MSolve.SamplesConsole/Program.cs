@@ -158,7 +158,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass.Check05dStressIntegration();
             //SeparateCodeCheckingClass.Check05c2StressIntegration();
             //SeparateCodeCheckingClass.Check05d2StressIntegration();
-            //SeparateCodeCheckingClass.Check05eStressIntegration();
+            SeparateCodeCheckingClass.Check05eCheckStressIntegration();
             //ProgramElegxoiDdm.SolveRVEExample(); //provolos hexa grammika apla
 
 
