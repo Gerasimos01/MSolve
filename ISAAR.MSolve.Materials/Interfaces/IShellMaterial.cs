@@ -12,6 +12,7 @@ namespace ISAAR.MSolve.Materials.Interfaces
         new IShellMaterial Clone();
         double[] NormalVectorV3 { get; set; } 
         double[] TangentVectorV1 { get; set; }
-        void UpdateMaterial(double[] GLvec);
+	    double[] TangentVectorV2 { get; set; }
+		void UpdateMaterial(double[] GLvec);
     }
 }
