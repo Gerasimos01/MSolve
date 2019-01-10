@@ -4,6 +4,7 @@ using ISAAR.MSolve.Materials;
 using ISAAR.MSolve.Materials.Interfaces; //using ISAAR.MSolve.PreProcessor.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis;
 using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
+using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using ISAAR.MSolve.MultiscaleAnalysisMerge;
 using ISAAR.MSolve.Numerical.LinearAlgebra; //using ISAAR.MSolve.Matrices;
 using ISAAR.MSolve.Solvers.Skyline;
@@ -915,6 +916,42 @@ namespace ISAAR.MSolve.SamplesConsole
         //    //double[] stressesCheck4 = microstructure3.Stresses;
         //}
 
+        public static void ExampleParametricStudyCyclicConference()
+        {
+            //proelefsi Check10cStressIntegration5GrSh1RveForDemonstration
+            //allages to 1)strainhistory, 2)to uliko shell to 3)graohene builder kai 4)parametroi cohesive tha ginei parametriko
+
+            
+            VectorExtensions.AssignTotalAffinityCount();
+            //arxiko paradeigma finite strains:
+            //IRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample5GrSh1RVEstif();           
+            //IContinuumMaterial3DDefGrad microstructure3 = new Microstructure3Develop(homogeneousRveBuilder1);
+            //neo paradeigma:
+            IdegenerateRVEbuilder RveBuilder1 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPost();
+            var Vec1 = new Vector(new double[3] { 1, 0, 0 });
+            var Vec2 = new Vector(new double[3] { 0, 1, 0 });
+            var material4 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu(RveBuilder1, false) { TangentVectorV1 = new double[3] { Vec1[0], Vec1[1], Vec1[2] }, TangentVectorV2 = new double[3] { Vec2[0], Vec2[1], Vec2[2] } }; ;
+
+
+            int cycles = 5;
+            double[] totalStrain = new double[3] { 0.05, 0, 0 };
+            double[] initialstrain = new double[3] {  0, 0, 0 };
+            double[][] strainHistory1 = CreateStrainHistoryInterpolation(totalStrain, initialstrain, cycles);
+            double[][] strainHistory2 = CreateStrainHistoryInterpolation(initialstrain, totalStrain, cycles);
+            double[][] strainHistory = CombineStrainHistoriesIntoOne(strainHistory1, strainHistory2);
+
+
+
+            (double[][] stressHistory, double[][,] constitutiveMatrixHistory) = StressStrainHistory(strainHistory, material4);
+
+            double[,] strainHistoryArray = ConvertStressHistoryTodoubleArray(strainHistory);
+            double[,] stressHistoryArray = ConvertStressHistoryTodoubleArray(stressHistory);
+
+            PrintUtilities.WriteToFile(strainHistoryArray, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\strainHistoryShell.txt");
+            PrintUtilities.WriteToFile(stressHistoryArray, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\stressHistoryShell.txt");
+
+        }
+
         public static void CheckProxeiroStressElastic()
         {
             double E_disp = 3.5; /*Gpa*/ double ni_disp = 0.4; // stather Poisson
@@ -1502,6 +1539,33 @@ namespace ISAAR.MSolve.SamplesConsole
                     Console.Write("breakPointIsHere");
                 }
                 testedMaterial.UpdateMaterial(new StressStrainVectorContinuum3D(strainHistory[l]));
+                testedMaterial.SaveState();
+                stressHistory[l] = new double[testedMaterial.Stresses.Length];
+                testedMaterial.Stresses.CopyTo(stressHistory[l], 0);
+                constitutiveMatrixHistory[l] = new double[testedMaterial.ConstitutiveMatrix.Columns, testedMaterial.ConstitutiveMatrix.Rows];
+
+                for (int m = 0; m < testedMaterial.ConstitutiveMatrix.Columns; m++)
+                {
+                    for (int n = 0; n < testedMaterial.ConstitutiveMatrix.Rows; n++)
+                    { constitutiveMatrixHistory[l][m, n] = testedMaterial.ConstitutiveMatrix[m, n]; }
+                }
+            }
+
+            return (stressHistory, constitutiveMatrixHistory);
+        }
+
+        private static (double[][] stressHistory, double[][,] constitutiveMatrixHistory) StressStrainHistory(double[][] strainHistory, IShellMaterial testedMaterial)
+        {
+            double[][] stressHistory = new double[strainHistory.GetLength(0)][];
+            double[][,] constitutiveMatrixHistory = new double[strainHistory.GetLength(0)][,];
+
+            for (int l = 0; l < strainHistory.GetLength(0); l++)
+            {
+                if (l == 42)
+                {
+                    Console.Write("breakPointIsHere");
+                }
+                testedMaterial.UpdateMaterial(strainHistory[l]);
                 testedMaterial.SaveState();
                 stressHistory[l] = new double[testedMaterial.Stresses.Length];
                 testedMaterial.Stresses.CopyTo(stressHistory[l], 0);

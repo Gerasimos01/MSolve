@@ -140,7 +140,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         {
 
             if (matrices_not_initialized) 
-            { this.InitializeMatrices(); } // mporei na mpei kai ston constructor to initialization an exoume kai ta surface basis vectors ekei
+            {
+                this.InitializeMatrices();
+                this.InitializeData();
+            } // mporei na mpei kai ston constructor to initialization an exoume kai ta surface basis vectors ekei
 
             double[] rveCoordinatesSmallStrainVec = TransformStrains(smallStrainVec);
             smallStrainVec = rveCoordinatesSmallStrainVec;

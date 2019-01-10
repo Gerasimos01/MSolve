@@ -172,7 +172,8 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass.Check05h4StressIntegration();
             //SeparateCodeCheckingClass.Check05h4SharedRves();
             //SeparateCodeCheckingClass.Check05h3ConstiOnlyStressIntegration();
-            SeparateCodeCheckingClass.CheckRandomIntCreation();
+            //SeparateCodeCheckingClass.CheckRandomIntCreation();
+            SeparateCodeCheckingClass.ExampleParametricStudyCyclicConference();
         }
     }
 }
