@@ -17,7 +17,7 @@ using ISAAR.MSolve.Numerical.LinearAlgebra;
 
 namespace ISAAR.MSolve.MultiscaleAnalysisMerge
 {
-    public class Shell2dRVEMaterialHost : IShellMaterial
+    public class Shell2dRVEMaterialHostConst : IShellMaterial
     {
         public double[] NormalVectorV3 { get; set; }
         public double[] TangentVectorV1 { get; set; }
@@ -29,22 +29,48 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge
         private int gpCounter;
         private IdegenerateRVEbuilder rveBuilderToClone;
 
-        IShellMaterial coreMaterial;
+        //IShellMaterial coreMaterial;
+        double[,] coreConstitutive;
 
         private Dictionary<int, IShellMaterial> coreMaterials;
+        private Dictionary<int, double[,]> MaterialDatabase;
 
-        public Shell2dRVEMaterialHost(int rveDatabaseSize, int gpsPerRve, int gpCounter, IdegenerateRVEbuilder rVEbuilder)
+        public Shell2dRVEMaterialHostConst(int rveDatabaseSize, int gpsPerRve, int gpCounter, IdegenerateRVEbuilder rVEbuilder)
         {
             this.rveDatabaseSize = rveDatabaseSize;
             this.gpsPerRve = gpsPerRve;
             this.gpCounter = gpCounter;
             coreMaterials = new Dictionary<int, IShellMaterial>();
             this.rveBuilderToClone = rVEbuilder;
+            CreateConstitutiveTensorsDatabase();
         }
 
-        private Shell2dRVEMaterialHost(IShellMaterial coreMaterial)
+        private void CreateConstitutiveTensorsDatabase()
         {
-            this.coreMaterial = coreMaterial;
+            MaterialDatabase = new Dictionary<int, double[,]>(rveDatabaseSize);
+
+            for (int rve_id=1; rve_id<rveDatabaseSize+1;rve_id++)
+            {
+                var newMaterial = new
+                Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu((IdegenerateRVEbuilder)rveBuilderToClone.Clone(rve_id), true);
+                newMaterial.TangentVectorV1 = new double[3] { 1, 0, 0 };
+                newMaterial.TangentVectorV2 = new double[3] { 0, 1, 0 };
+                newMaterial.NormalVectorV3 = new double[3] { 0, 0, 1 };
+                var newCOnstitutive = new double[3, 3];
+                for (int i1 = 0; i1 < 3; i1++) { for (int i2 = 0; i2 < 3; i2++) { newCOnstitutive[i1, i2] = newMaterial.ConstitutiveMatrix[i1, i2]; } }
+                MaterialDatabase.Add(rve_id, newCOnstitutive);
+            }
+
+        }
+
+        //private Shell2dRVEMaterialHostConst(IShellMaterial coreMaterial)
+        //{
+        //    this.coreMaterial = coreMaterial;
+        //}
+
+        private Shell2dRVEMaterialHostConst(double[,] coreCons)
+        {
+            this.coreConstitutive = coreCons;
         }
 
         public IShellMaterial Clone()
@@ -56,20 +82,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge
                 gpCounter += -(rveDatabaseSize * gpsPerRve);
             }
 
-            int rve_id = ((gpCounter-1) / gpsPerRve) + 1; //TODO: edw tha xrhsimopoiithei to rand()
+            int rve_id = ((gpCounter-1) / gpsPerRve) + 1;      //TODO: xrhsh tou rand()     
 
-            if(!coreMaterials.ContainsKey(rve_id))
-            {
-                coreMaterials[rve_id] = new
-                Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu((IdegenerateRVEbuilder)rveBuilderToClone.Clone(rve_id), true);
-                coreMaterials[rve_id].TangentVectorV1 = new double[3] { 1, 0, 0 };
-                coreMaterials[rve_id].TangentVectorV2 = new double[3] { 0, 1, 0 };
-                coreMaterials[rve_id].NormalVectorV3 = new double[3] { 0, 0, 1 };
-
-            }
-
-            var sharedRVEmat = new Shell2dRVEMaterialHost(coreMaterials[rve_id]);
-            return sharedRVEmat;
+            var sharedRVEmaterial = new Shell2dRVEMaterialHostConst(MaterialDatabase[rve_id]);
+            return sharedRVEmaterial;
         }
 
         object ICloneable.Clone()
@@ -90,7 +106,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge
         {
             var transformationMatrix=this.CalculateTransformationMatrix(new Vector(TangentVectorV1), new Vector(TangentVectorV2));
             var coreConstCopy = new double[3, 3];
-            for (int i1 = 0; i1 < 3; i1++) { for (int i2 = 0; i2 < 3; i2++) { coreConstCopy[i1, i2] = coreMaterial.ConstitutiveMatrix[i1, i2]; } }
+            for (int i1 = 0; i1 < 3; i1++) { for (int i2 = 0; i2 < 3; i2++) { coreConstCopy[i1, i2] = coreConstitutive[i1, i2]; } }
             consMat = (transformationMatrix.Transpose() * (new Matrix2D(coreConstCopy)) * transformationMatrix);
         }
 

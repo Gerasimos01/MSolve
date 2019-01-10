@@ -683,6 +683,38 @@ namespace ISAAR.MSolve.SamplesConsole
             var Matrix6 = new Matrix2D(3, 3); for (int i1 = 0; i1 < 3; i1++) { for (int i2 = 0; i2 < 3; i2++) { Matrix6[i1, i2] = material6.ConstitutiveMatrix[i1, i2]; } }
         }
 
+        public static void Check05h4SharedRvesConst()
+        {
+            //PROELEFSI: exei stoixeia apo to Check05h4StressIntegration()        
+            VectorExtensions.AssignTotalAffinityCount();
+            var Vec1 = new Vector(new double[3] { 1, 0, 0 });
+            var Vec2 = new Vector(new double[3] { 0.5, 2, 0 });
+            IdegenerateRVEbuilder RveBuilder1 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPost();
+            var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu(RveBuilder1, false) { TangentVectorV1 = new double[3] { Vec1[0], Vec1[1], Vec1[2] }, TangentVectorV2 = new double[3] { Vec2[0], Vec2[1], Vec2[2] } }; ;
+            var Matrix1 = new Matrix2D(3, 3); for (int i1 = 0; i1 < 3; i1++) { for (int i2 = 0; i2 < 3; i2++) { Matrix1[i1, i2] = material1.ConstitutiveMatrix[i1, i2]; } }
+
+            var Vec3 = new Vector(new double[3] { 1, 0.5, 0 });
+            var Vec4 = new Vector(new double[3] { -0.5, 1, 0 });
+            IdegenerateRVEbuilder RveBuilder2 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPost2();
+            var material2 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu(RveBuilder2, false) { TangentVectorV1 = new double[3] { Vec3[0], Vec3[1], Vec3[2] }, TangentVectorV2 = new double[3] { Vec4[0], Vec4[1], Vec4[2] } }; ;
+            var Matrix2 = new Matrix2D(3, 3); for (int i1 = 0; i1 < 3; i1++) { for (int i2 = 0; i2 < 3; i2++) { Matrix2[i1, i2] = material2.ConstitutiveMatrix[i1, i2]; } }
+
+            //PROSOXH!!!!!!!!!!!!!
+            //proswrina exoun allaxthei ta data sto path tou parakatw graphene builder gia na trexoume apo database me 10 rves
+            IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
+            var BasicMaterial = new Shell2dRVEMaterialHostConst(2, 2, 0, RveBuilder3);
+
+            var material3 = BasicMaterial.Clone();
+            material3.TangentVectorV1 = new double[3] { Vec1[0], Vec1[1], Vec1[2] }; material3.TangentVectorV2 = new double[3] { Vec2[0], Vec2[1], Vec2[2] };
+            var Matrix3 = new Matrix2D(3, 3); for (int i1 = 0; i1 < 3; i1++) { for (int i2 = 0; i2 < 3; i2++) { Matrix3[i1, i2] = material3.ConstitutiveMatrix[i1, i2]; } }
+
+            var material4 = BasicMaterial.Clone();
+            var material5 = BasicMaterial.Clone();
+
+            var material6 = BasicMaterial.Clone();
+            material6.TangentVectorV1 = new double[3] { Vec3[0], Vec3[1], Vec3[2] }; material6.TangentVectorV2 = new double[3] { Vec4[0], Vec4[1], Vec4[2] };
+            var Matrix6 = new Matrix2D(3, 3); for (int i1 = 0; i1 < 3; i1++) { for (int i2 = 0; i2 < 3; i2++) { Matrix6[i1, i2] = material6.ConstitutiveMatrix[i1, i2]; } }
+        }
 
         //public static void Check05eCheckStressIntegration()
         //{

@@ -657,12 +657,119 @@ namespace ISAAR.MSolve.IGA.Tests
                 model = null;
                 modelReader = null;
                 solverBuilder = null;
-                solver = null;// solver.Dispose();
+                solver.Dispose();
                 provider = null; childAnalyzer = null; parentAnalyzer = null; paraview = null; solutiondata = null;
                 #endregion
             }
         }
 
+        [Fact]
+        public void SimpleHoodBenchmarkMKLStochasticElastic2()
+        {
 
+            int totalsimulations = 3;
+
+            #region Genika settings
+            //LibrarySettings.LinearAlgebraProviders = LinearAlgebraProviderChoice.MKL;
+            VectorExtensions.AssignTotalAffinityCount();
+            #endregion
+
+            for (int simulation_id = 1; simulation_id < totalsimulations + 1; simulation_id++)
+            {
+                Analyze(simulation_id);
+            }
+        }
+
+        private void Analyze(int analysis_No)
+        {
+            Model model = new Model();
+            var filename = "attempt2";
+            string filepath = $"..\\..\\..\\InputFiles\\{filename}.iga";
+            IGAFileReader modelReader = new IGAFileReader(model, filepath);
+
+            var runMs = false;
+            var transformationA = false;
+
+            if (runMs)
+            {
+
+
+            }
+            else
+            {
+                if (transformationA)
+                {
+                    var thickness = 0.015;
+                    modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, new ShellElasticMaterial2D()
+                    {
+                        PoissonRatio = 0.4,
+                        YoungModulus = 3.5
+                    }, thickness);
+                }
+                else
+                {
+                    var thickness = 0.015;
+                    modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, new ShellElasticMaterial2Dtransformationb()
+                    {
+                        PoissonRatio = 0.4,
+                        YoungModulus = 3.5
+                    }, thickness);
+                }
+            }
+
+            for (int i = 0; i < 100; i++)
+            {
+                var id = model.ControlPoints[i].ID;
+                model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.X });
+                model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.Y });
+                model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.Z });
+            }
+
+            for (int i = model.ControlPoints.Count - 100; i < model.ControlPoints.Count; i++)
+            {
+                var id = model.ControlPoints[i].ID;
+                model.Loads.Add(new Load()
+                {
+                    Amount = 1,
+                    ControlPoint = model.ControlPointsDictionary[id],
+                    DOF = DOFType.Z
+                });
+            }
+            var solverBuilder = new SuiteSparseSolver.Builder();
+            solverBuilder.DofOrderer = new DofOrderer(
+                new NodeMajorDofOrderingStrategy(), AmdReordering.CreateWithSuiteSparseAmd());
+            SuiteSparseSolver solver = solverBuilder.BuildSolver(model);
+
+            //var solverBuilder = new SkylineSolver.Builder();
+            //SkylineSolver solver = solverBuilder2.BuildSolver(model);
+
+            // Structural problem provider
+            var provider = new ProblemStructural_v2(model, solver);
+
+            // Linear static analysis
+            var childAnalyzer = new LinearAnalyzer_v2(solver);
+            var parentAnalyzer = new StaticAnalyzer_v2(model, solver, provider, childAnalyzer);
+
+            // Run the analysis
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
+
+            string outputString = "Analysis_no_" + analysis_No.ToString() + "_output";
+
+            var paraview = new ParaviewTsplineShells(model, solver.LinearSystems[0].Solution, outputString);
+            paraview.CreateParaviewFile();
+
+            double[] solutiondata = solver.LinearSystems[0].Solution.CopyToArray();
+            PrintUtilities.WriteToFileVector(new double[1] { new Vector(solutiondata).Norm }, $"..\\..\\..\\OutputFiles\\{outputString}SolutionNorm.txt");
+
+            #region empty data
+            model.Clear();
+            model = null;
+            modelReader = null;
+            solverBuilder = null;
+            solver.Dispose();
+            provider = null; childAnalyzer = null; parentAnalyzer = null; paraview = null; solutiondata = null;
+            #endregion
+        }
     }
 }
