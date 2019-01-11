@@ -308,9 +308,79 @@ namespace ISAAR.MSolve.IGA.Tests
 			PrintUtilities.WriteToFileVector(solutionData, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_1.txt");
 		}
 
+        [Fact]
+        public void SquareShellMaterialMultiscaleBenchmarkStructured()
+        {
+            VectorExtensions.AssignTotalAffinityCount();
+            Model model = new Model();
+            string filename = "..\\..\\..\\InputFiles\\square_structured.iga";
+            IGAFileReader modelReader = new IGAFileReader(model, filename);
 
-		//[Fact]
-		public void SimpleHoodBenchmark()
+            var thickness = 1.0;
+
+            //VectorExtensions.AssignTotalAffinityCount();
+            int database_size = 2;
+            IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
+            var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimuRand(RveBuilder3, true, database_size);
+            //IdegenerateRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHost();
+            //var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu(homogeneousRveBuilder1, true);
+
+
+            modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, material1, thickness);
+            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X < 1e-6))
+            {
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
+            }
+            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.Y < 1e-6))
+            {
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
+            }
+            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X > 1 - 1e-6))
+            {
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
+            }
+            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.Y > 1 - 1e-6))
+            {
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
+            }
+
+            foreach (var controlPoint in model.ControlPointsDictionary.Values)
+            {
+                model.Loads.Add(new Load()
+                {
+                    Amount = -10,
+                    ControlPoint = model.ControlPointsDictionary[controlPoint.ID],
+                    DOF = DOFType.Z
+                });
+            }
+            var solverBuilder = new SuiteSparseSolver.Builder();
+            solverBuilder.DofOrderer = new DofOrderer(
+                new NodeMajorDofOrderingStrategy(), new NullReordering());
+            ISolver_v2 solver = solverBuilder.BuildSolver(model);
+
+            var provider = new ProblemStructural_v2(model, solver);
+
+            var childAnalyzer = new LinearAnalyzer_v2(solver);
+            var parentAnalyzer = new StaticAnalyzer_v2(model, solver, provider, childAnalyzer);
+
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
+
+            var solutionData = solver.LinearSystems[0].Solution.CopyToArray();
+            PrintUtilities.WriteToFileVector(solutionData, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_1.txt");
+        }
+
+
+        //[Fact]
+        public void SimpleHoodBenchmark()
 		{
 			VectorExtensions.AssignTotalAffinityCount();
 			Model model = new Model();
