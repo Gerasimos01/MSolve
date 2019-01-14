@@ -319,14 +319,105 @@ namespace ISAAR.MSolve.IGA.Tests
             var thickness = 1.0;
 
             //VectorExtensions.AssignTotalAffinityCount();
-            int database_size = 2;
-            IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
-            var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimuRand(RveBuilder3, true, database_size);
+            int database_size = 1;
+            //ULIKO 323 - 324 xrhsimopoithke prin apo to elastic
+            //IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
+            //var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimuRand(RveBuilder3, true, database_size);
+
+            //IdegenerateRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHost();
+            //var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu(homogeneousRveBuilder1, true);
+
+            //var material1 = new ShellElasticMaterial2D()
+            //{
+            //    PoissonRatio = 0.4,
+            //    YoungModulus = 3.5
+            //};
+            var material1 = new ShellElasticMaterial2Dtransformationb()
+            {
+                PoissonRatio = 0.4,
+                YoungModulus = 3.5
+            };
+
+            modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, material1, thickness);
+            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X < 1e-6))
+            {
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
+            }
+            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.Y < 1e-6))
+            {
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
+            }
+            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X > 1 - 1e-6))
+            {
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
+            }
+            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.Y > 1 - 1e-6))
+            {
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
+                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
+            }
+
+            foreach (var controlPoint in model.ControlPointsDictionary.Values)
+            {
+                model.Loads.Add(new Load()
+                {
+                    Amount = -10,
+                    ControlPoint = model.ControlPointsDictionary[controlPoint.ID],
+                    DOF = DOFType.Z
+                });
+            }
+            var solverBuilder = new SuiteSparseSolver.Builder();
+            solverBuilder.DofOrderer = new DofOrderer(
+                new NodeMajorDofOrderingStrategy(), new NullReordering());
+            ISolver_v2 solver = solverBuilder.BuildSolver(model);
+
+            var provider = new ProblemStructural_v2(model, solver);
+
+            var childAnalyzer = new LinearAnalyzer_v2(solver);
+            var parentAnalyzer = new StaticAnalyzer_v2(model, solver, provider, childAnalyzer);
+
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
+
+            var solutionData = solver.LinearSystems[0].Solution.CopyToArray();
+            PrintUtilities.WriteToFileVector(solutionData, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_1.txt");
+        }
+
+        [Fact]
+        public void SquareShellMaterialMultiscaleBenchmarkStructuredSuntom1efsi()
+        {
+            VectorExtensions.AssignTotalAffinityCount();
+            Model model = new Model();
+            string filename = "..\\..\\..\\InputFiles\\square_structured.iga";
+            IGAFileReader modelReader = new IGAFileReader(model, filename);
+
+            var thickness = 1.0;
+
+            //VectorExtensions.AssignTotalAffinityCount();
+            //int database_size = 2;
+            //IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
+            //var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimuRand(RveBuilder3, true, database_size);
+
             //IdegenerateRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHost();
             //var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu(homogeneousRveBuilder1, true);
 
 
-            modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, material1, thickness);
+            IdegenerateRVEbuilder RveBuilder4 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
+            var BasicMaterial = new Shell2dRVEMaterialHostConst(1, 2, 0, RveBuilder4);
+            //var BasicMaterial = new ShellElasticMaterial2D()
+            //{
+            //    PoissonRatio = 0.4,
+            //    YoungModulus = 3.5
+            //};
+
+            modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, BasicMaterial, thickness);
             foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X < 1e-6))
             {
                 model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
@@ -528,10 +619,14 @@ namespace ISAAR.MSolve.IGA.Tests
         [Fact] //commented out: requires mkl and suitesparse can't be test
         public void SimpleHoodBenchmarkMKLStochastic()
         {
-            var runMs = true;
-            IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
-            var BasicMaterial = new Shell2dRVEMaterialHost(50, 2, 0, RveBuilder3);
-            int totalsimulations = 3;
+            VectorExtensions.AssignTotalAffinityCount();
+
+            var runMs = false;
+            //IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
+            //var BasicMaterial = new Shell2dRVEMaterialHost(50, 2, 0, RveBuilder3);
+            IdegenerateRVEbuilder RveBuilder4 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
+            var BasicMaterial = new Shell2dRVEMaterialHostConst(1, 2, 0, RveBuilder4);
+            int totalsimulations = 1;
 
             #region Genika settings
             //LibrarySettings.LinearAlgebraProviders = LinearAlgebraProviderChoice.MKL;
@@ -618,6 +713,7 @@ namespace ISAAR.MSolve.IGA.Tests
 
                 double[] solutiondata = solver.LinearSystems[0].Solution.CopyToArray();
                 PrintUtilities.WriteToFileVector(new double[1] { new Vector(solutiondata).Norm }, $"..\\..\\..\\OutputFiles\\{outputString}SolutionNorm.txt");
+                PrintUtilities.WriteToFileVector(solutiondata, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_1.txt");
 
                 #region empty data
                 model.Clear();
