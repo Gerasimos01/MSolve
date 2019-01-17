@@ -394,6 +394,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
                 int addedDivider = EmbeddedElementsHostSubdomainsAndElements[shellId].Count();
                 int subregionsSize = regionsSize / addedDivider;
 
+                
                 for (int i2 = 0; i2 < previousDivider; i2++)
                 {
                     for (int i3 = 0; i3 < addedDivider; i3++)
@@ -401,7 +402,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
                         int subregionPosition = i2 * regionsSize + i3 * subregionsSize;
                         for (int i4 = 0; i4 < subregionsSize; i4++)
                         {
-                            int solutionId = subregionsSize + i4;
+                            int solutionId = subregionPosition + i4;
                             if (possibleSolutionPenaltyHexas[solutionId] == null)
                             {
                                 possibleSolutionPenaltyHexas[solutionId] = new List<int>();
@@ -410,8 +411,9 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
                         }
                     }
                 }
-
                 previousDivider = previousDivider * addedDivider;
+
+
             }
 
             //count penalty hexas and estimate costs
@@ -426,7 +428,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             {
                 if(possibleSolutionCosts[i1]==chosenSolutionValue)
                 {
-                    solutionPosition = i1 + 1;
+                    solutionPosition = i1;
                     break;
                 }
             }
@@ -434,13 +436,15 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             //retrieve solution vector (subdomain IDs)
             var solutionVectorSubdomainIDs = new int[solutionVectorSize];
             previousDivider = 1;
-            int remainder= possibleSolutions;
+            int remainder= solutionPosition;
             int counter = 0;
+            int divider = 1;
             foreach (int shellId in connectedShellElementsList)
             {
-                int divider = EmbeddedElementsHostSubdomainsAndElements[shellId].Count();
-                int SolutionValuePosition = remainder / divider;
-                remainder = remainder % divider;
+                divider = divider* EmbeddedElementsHostSubdomainsAndElements[shellId].Count();
+                int currentRegionSize = possibleSolutions / divider;
+                int SolutionValuePosition = remainder / currentRegionSize;
+                remainder = remainder % currentRegionSize;
                 solutionVectorSubdomainIDs[counter] = EmbeddedElementsHostSubdomainsAndElements[shellId].ElementAt(SolutionValuePosition).Key;
                 counter += 1;
             }
