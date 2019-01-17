@@ -350,6 +350,103 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             }
 
         }
+
+        public static int[] CalculateCombinationSolution2(List<int> connectedShellElementsList, Dictionary<int, Dictionary<int, IList<int>>> EmbeddedElementsHostSubdomainsAndElements)
+        {
+            int solutionVectorSize = connectedShellElementsList.Count();
+            int possibleSolutions = 1;
+            foreach (int shellId in connectedShellElementsList)
+            {
+                possibleSolutions *= EmbeddedElementsHostSubdomainsAndElements[shellId].Count();
+            }
+            List<int>[] possibleSolutionPenaltyHexas = new List<int>[possibleSolutions];
+            //element ids twn hexas pou tha einai boundary
+
+
+
+
+            int previousDivider = 1;
+            
+            foreach (int shellId in connectedShellElementsList)
+            {
+                //create chosenSubdomainPenaltyHexas : foreach subdomainId where the shellId will be added it contains the (host) hexaIds
+                // that belong to the other not chosen subdomains
+                Dictionary<int, List<int>> chosenSubdomainPenaltyHexas = new Dictionary<int, List<int>>();
+                foreach (int ChosenSubdomainId in EmbeddedElementsHostSubdomainsAndElements[shellId].Keys)
+                {
+                    List<int> chosenSubdomainPenaltyHexaIDs = new List<int>();
+                    foreach (int otherSubdomainsId in EmbeddedElementsHostSubdomainsAndElements[shellId].Keys)
+                    {
+                        if (!(otherSubdomainsId == ChosenSubdomainId))
+                        {
+                            foreach (int hexaID in EmbeddedElementsHostSubdomainsAndElements[shellId][otherSubdomainsId])
+                            {
+                                //edw thelei kai if hexaID den einai boundary logw allou shellId pou den einai ambiguous
+                                if (!chosenSubdomainPenaltyHexaIDs.Contains(hexaID)) chosenSubdomainPenaltyHexaIDs.Add(hexaID);
+                            }
+                        }
+                    }
+                    chosenSubdomainPenaltyHexas.Add(ChosenSubdomainId, chosenSubdomainPenaltyHexaIDs);
+                }
+
+                // modify solution penalty hexas in possibleSolutionPenaltyHexas
+                int regionsSize = possibleSolutions / previousDivider;
+                int addedDivider = EmbeddedElementsHostSubdomainsAndElements[shellId].Count();
+                int subregionsSize = regionsSize / addedDivider;
+
+                for (int i2 = 0; i2 < previousDivider; i2++)
+                {
+                    for (int i3 = 0; i3 < addedDivider; i3++)
+                    {
+                        int subregionPosition = i2 * regionsSize + i3 * subregionsSize;
+                        for (int i4 = 0; i4 < subregionsSize; i4++)
+                        {
+                            int solutionId = subregionsSize + i4;
+                            if (possibleSolutionPenaltyHexas[solutionId] == null)
+                            {
+                                possibleSolutionPenaltyHexas[solutionId] = new List<int>();
+                            }
+                            possibleSolutionPenaltyHexas[solutionId] = possibleSolutionPenaltyHexas[solutionId].Union(chosenSubdomainPenaltyHexas.ElementAt(i3).Value).ToList();
+                        }
+                    }
+                }
+
+                previousDivider = previousDivider * addedDivider;
+            }
+
+            //count penalty hexas and estimate costs
+            var possibleSolutionCosts = new int[possibleSolutions];
+            for (int i1 = 0; i1 < possibleSolutions; i1++)
+            {
+                possibleSolutionCosts[i1] = possibleSolutionPenaltyHexas[i1].Count();
+            }
+            int chosenSolutionValue = possibleSolutionCosts.Min();
+            int solutionPosition =0;
+            for (int i1 = 0; i1 < possibleSolutions; i1++)
+            {
+                if(possibleSolutionCosts[i1]==chosenSolutionValue)
+                {
+                    solutionPosition = i1 + 1;
+                    break;
+                }
+            }
+
+            //retrieve solution vector (subdomain IDs)
+            var solutionVectorSubdomainIDs = new int[solutionVectorSize];
+            previousDivider = 1;
+            int remainder= possibleSolutions;
+            int counter = 0;
+            foreach (int shellId in connectedShellElementsList)
+            {
+                int divider = EmbeddedElementsHostSubdomainsAndElements[shellId].Count();
+                int SolutionValuePosition = remainder / divider;
+                remainder = remainder % divider;
+                solutionVectorSubdomainIDs[counter] = EmbeddedElementsHostSubdomainsAndElements[shellId].ElementAt(SolutionValuePosition).Key;
+                counter += 1;
+            }
+
+            return solutionVectorSubdomainIDs;
+        }
     }
 
 

@@ -15,6 +15,7 @@ using ISAAR.MSolve.MultiscaleAnalysis;
 using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using ISAAR.MSolve.FEM.Materials;
+using ISAAR.MSolve.SamplesConsole.SupportiveClasses;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
@@ -1089,6 +1090,34 @@ namespace ISAAR.MSolve.SamplesConsole
             }
 
             return strainHistory;
+        }
+
+        public static void CheckSubdomainsEmbeddedSeparations()
+        {
+            var EmbeddedElementsHostSubdomainsAndElements = new Dictionary<int, Dictionary<int, IList<int>>>();
+
+            var shell1Hosts = new Dictionary<int, IList<int>>();
+            shell1Hosts.Add(1, new List<int>(3) { 2, 5, 7 });
+            shell1Hosts.Add(2, new List<int>(3) { 8, 9, 10 });
+            shell1Hosts.Add(3, new List<int>(3) { 3, 4, 6 });
+            EmbeddedElementsHostSubdomainsAndElements.Add(11, shell1Hosts);
+
+            var shell2Hosts = new Dictionary<int, IList<int>>();
+            shell2Hosts.Add(1, new List<int>(3) { 2, 5 });
+            shell2Hosts.Add(2, new List<int>(3) { 7,8, 9, 10 });
+            shell2Hosts.Add(3, new List<int>(3) { 3, 4, 6 });
+            EmbeddedElementsHostSubdomainsAndElements.Add(12, shell2Hosts);
+
+            var shell3Hosts = new Dictionary<int, IList<int>>();
+            shell3Hosts.Add(1, new List<int>(3) { 2, 5 });
+            shell3Hosts.Add(2, new List<int>(3) { 7, 8, 9, 10,4,6 });
+            shell3Hosts.Add(3, new List<int>(3) { 3 });
+            EmbeddedElementsHostSubdomainsAndElements.Add(13, shell3Hosts);
+
+            var connectedShellElementsList = new List<int>(3) { 11, 12, 13 };
+
+            var solution = DdmCalculations.CalculateCombinationSolution2(connectedShellElementsList, EmbeddedElementsHostSubdomainsAndElements);
+
         }
     }
 }
