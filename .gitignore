@@ -243,3 +243,5 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/ISAAR.MSolve.IGA.Tests/InputFiles
+/ISAAR.MSolve.IGA.Tests/OutputFiles
