@@ -144,5 +144,50 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 
             return subdIdsAndElements;
         }
+
+        public static void MakeModelDictionariesZeroBasedForDecomposer(Model model)
+        {
+            model.SubdomainsDictionary[1].ID = 0;
+            Subdomain subdomain_ini = model.SubdomainsDictionary[1];
+            model.SubdomainsDictionary.Remove(1);
+            model.SubdomainsDictionary.Add(0, subdomain_ini);
+
+            Dictionary<int, Element> ElementsDictionary_2 = new Dictionary<int, Element>(model.ElementsDictionary.Count);
+            for (int i1 = 0; i1 < model.ElementsDictionary.Count; i1++)
+            {
+                ElementsDictionary_2.Add(model.ElementsDictionary[i1 + 1].ID - 1, model.ElementsDictionary[i1 + 1]);
+                ElementsDictionary_2[model.ElementsDictionary[i1 + 1].ID - 1].ID += -1;
+            }
+            int nElement = model.ElementsDictionary.Count;
+            for (int i1 = 0; i1 < nElement; i1++)
+            {
+                model.ElementsDictionary.Remove(i1 + 1);
+                model.SubdomainsDictionary[0].ElementsDictionary.Remove(i1 + 1);
+            }
+            for (int i1 = 0; i1 < nElement; i1++)
+            {
+                model.ElementsDictionary.Add(ElementsDictionary_2[i1].ID, ElementsDictionary_2[i1]);
+                model.SubdomainsDictionary[0].ElementsDictionary.Add(ElementsDictionary_2[i1].ID, ElementsDictionary_2[i1]);
+            }
+
+            Dictionary<int, Node> NodesDictionary_2 = new Dictionary<int, Node>(model.NodesDictionary.Count);
+            for (int i1 = 0; i1 < model.NodesDictionary.Count; i1++)
+            {
+                NodesDictionary_2.Add(model.NodesDictionary[i1 + 1].ID - 1, model.NodesDictionary[i1 + 1]);
+                NodesDictionary_2[model.NodesDictionary[i1 + 1].ID - 1].ID += -1;
+            }
+
+            int nNode = model.NodesDictionary.Count;
+            for (int i1 = 0; i1 < nNode; i1++)
+            {
+                model.NodesDictionary.Remove(i1 + 1);
+                //model.SubdomainsDictionary[0].NodesDictionary.Remove(i1 + 1); // den peirazoume to subdomain nodesDictionary, ftiahnetai mono tou (pithanws apo to connect data Structures)
+            }
+            for (int i1 = 0; i1 < nNode; i1++)
+            {
+                model.NodesDictionary.Add(NodesDictionary_2[i1].ID, NodesDictionary_2[i1]);
+                //model.SubdomainsDictionary[0].NodesDictionary.Add(NodesDictionary_2[i1].ID, NodesDictionary_2[i1]); // den peirazoume to subdomain nodesDictionary, ftiahnetai mono tou (pithanws apo to connect data Structures)
+            }
+        }
     }
 }
