@@ -24,7 +24,7 @@ using ISAAR.MSolve.Discretization.Interfaces;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
-    public class GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataGPgrSh : IdegenerateRVEbuilder
+    public class GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataGPgrSh : IRVEbuilder // IdegenerateRVEbuilder
     {
         //PROELEFSI GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostDataGPgrSh
         //allages:i)undo allages sxetikes me to linear kai me to peripheral
@@ -84,7 +84,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             mpgp = FEMMeshBuilder.GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
             mp = mpgp.Item1; //mp.hexa1 = 9; mp.hexa2 = 9; mp.hexa3 = 9;
             gp = mpgp.Item2;
-            gp.D_f_1 = gpNeo.D_f_1; gp.D_f_3 = gpNeo.D_f_3; gp.D_o_1 = gpNeo.D_o_1; gp.D_o_3 = gpNeo.D_o_3; gp.T_o_1 = gpNeo.T_o_1; gp.T_o_3 = gpNeo.T_o_3; gp.n_curve = gpNeo.n_curve;
+            if (!(gpNeo == null))
+            { gp.D_f_1 = gpNeo.D_f_1; gp.D_f_3 = gpNeo.D_f_3; gp.D_o_1 = gpNeo.D_o_1; gp.D_o_3 = gpNeo.D_o_3; gp.T_o_1 = gpNeo.T_o_1; gp.T_o_3 = gpNeo.T_o_3; gp.n_curve = gpNeo.n_curve; }
 
             o_x_parameters[] model_o_x_parameteroi = new o_x_parameters[graphene_sheets_number];
             double[][] ekk_xyz = new double[graphene_sheets_number][];
@@ -92,7 +93,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
 
             Dq = new double[9, 3 * (((mp.hexa1 + 1) * (mp.hexa2 + 1) * (mp.hexa3 + 1)) - ((mp.hexa1 - 1) * (mp.hexa2 - 1) * (mp.hexa3 - 1)))];
-            FEMMeshBuilder.LinearHexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(model, mp, Dq, renumbering_vector_path, boundaryNodes);
+            FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering_vector_path, boundaryNodes);
             double volume = mp.L01 * mp.L02 * mp.L03;
 
             int hexaElementsNumber = model.ElementsDictionary.Count();
@@ -145,11 +146,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         }
 
-        public Dictionary<Node, IList<DOFType>> GetModelRigidBodyNodeConstraints(Model model)
-        {
-            return FEMMeshBuilder.GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(model, mp.hexa1, mp.hexa2, mp.hexa3, renumbering_vector_path);
-            //TODO:  Pithanws na epistrefetai apo GetModelAndBoundaryNodes ... AndConstraints.
-        }
+        // PROSOXH DEN ARKEI MONO TO PARAKATW NA GINEI UNCOMMENT WSTE NA GINEI IMPLEMENT TO IDegenerateRVEBuilder 
+        //xreiazetai kai na xrhsimopoithei h katallhlh methodos tou femmeshbuilder gia to model and boundary nodes na dinei mono ta peripheral
+        //public Dictionary<Node, IList<DOFType>> GetModelRigidBodyNodeConstraints(Model model)
+        //{
+        //    return FEMMeshBuilder.GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(model, mp.hexa1, mp.hexa2, mp.hexa3, renumbering_vector_path);
+        //    //TODO:  Pithanws na epistrefetai apo GetModelAndBoundaryNodes ... AndConstraints.
+        //}
 
     }
 }
