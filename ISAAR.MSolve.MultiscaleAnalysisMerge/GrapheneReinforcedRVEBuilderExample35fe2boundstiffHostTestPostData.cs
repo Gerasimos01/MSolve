@@ -24,12 +24,10 @@ using ISAAR.MSolve.Discretization.Interfaces;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
-    public class GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostData : IdegenerateRVEbuilder
+    public class GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostData : IRVEbuilder //IdegenerateRVEbuilder
     {
         //PROELEFSI GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData
-        // allages: i)sundesh me to path C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_5grsh_1RVE
-        //pou exei to fe2boundeNodes
-        //ii)undo allaages sxetikes me to linear kai me to peripheral
+        // allages:i)undo allages sxetikes me to linear kai me to peripheral
 
         Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
         rveMatrixParameters mp;
@@ -87,7 +85,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
 
             Dq = new double[9, 3 * (((mp.hexa1 + 1) * (mp.hexa2 + 1) * (mp.hexa3 + 1)) - ((mp.hexa1 - 1) * (mp.hexa2 - 1) * (mp.hexa3 - 1)))];
-            FEMMeshBuilder.LinearHexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(model, mp, Dq, renumbering_vector_path, boundaryNodes);
+            FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering_vector_path, boundaryNodes);
             double volume = mp.L01 * mp.L02 * mp.L03;
 
             int hexaElementsNumber = model.ElementsDictionary.Count();
@@ -140,11 +138,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         }
 
-        public Dictionary<Node, IList<DOFType>> GetModelRigidBodyNodeConstraints(Model model)
-        {
-            return FEMMeshBuilder.GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(model, mp.hexa1, mp.hexa2, mp.hexa3, renumbering_vector_path);
-            //TODO:  Pithanws na epistrefetai apo GetModelAndBoundaryNodes ... AndConstraints.
-        }
+        // PROSOXH DEN ARKEI MONO TO PARAKATW NA GINEI UNCOMMENT WSTE NA GINEI IMPLEMENT TO IDegenerateRVEBuilder 
+        //xreiazetai kai na xrhsimopoithei h katallhlh methodos tou femmeshbuilder gia to model and boundary nodes na dinei mono ta peripheral
+        //public Dictionary<Node, IList<DOFType>> GetModelRigidBodyNodeConstraints(Model model)
+        //{
+        //    return FEMMeshBuilder.GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(model, mp.hexa1, mp.hexa2, mp.hexa3, renumbering_vector_path);
+        //    //TODO:  Pithanws na epistrefetai apo GetModelAndBoundaryNodes ... AndConstraints.
+        //}
 
     }
 }
