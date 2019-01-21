@@ -234,7 +234,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             return EmbeddedElementsHostSubdomainsAndElements;
         }
 
-        public static void DetermineOnlyNeededCombinations( 
+        public static Dictionary<int, List<int>> DetermineOnlyNeededCombinations( 
             Dictionary<int, Dictionary<int, IList<int>>> EmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem,
             Dictionary<int, List<int>> hexaConnectsShells)
         {
@@ -308,8 +308,8 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 
                 //}
             }
-            
 
+            return connectedShellElementsLists;
 
         }
 

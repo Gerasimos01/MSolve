@@ -135,7 +135,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
         public static int[][] ConvertIntListToArray(Dictionary<int, List<int>> AssignedSubdomains)
         {
             int maxSubdId = AssignedSubdomains.Keys.Max();
-            int[][] subdIdsAndElements = new int[maxSubdId][];
+            int[][] subdIdsAndElements = new int[maxSubdId][]; //todo:revisit this
 
             foreach (int subdID in AssignedSubdomains.Keys)
             {
