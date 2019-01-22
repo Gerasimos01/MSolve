@@ -85,12 +85,16 @@ namespace ISAAR.MSolve.FEM
             foreach (var element in Model.ElementsDictionary.Values)
             {
                 var usedElement = new Dictionary<Element, bool>(Model.ElementsDictionary.Count);//bool[] usedElement = new bool[Model.ElementsDictionary.Count];//mask
+                foreach(Element e1 in Model.ElementsDictionary.Values) { usedElement.Add(e1, false); }
+
                 ElementAdjacency.Add(element,new List<Element>());
                 usedElement[element] = true;
                 foreach (var node in element.NodesDictionary.Values)
                 {
                     foreach (var nodeElement in node.ElementsDictionary.Values)
                     {
+                        if (!usedElement.ContainsKey(nodeElement)) { usedElement.Add(nodeElement, false); };
+
                         if (usedElement[nodeElement]) continue;
                         ElementAdjacency[element].Add(nodeElement);
                         usedElement[nodeElement] = true;
@@ -103,7 +107,9 @@ namespace ISAAR.MSolve.FEM
         {
             //TODO: return IndexOutOfRangeException if nodes,elements or subdomains numbering does not start with 0.
             var isInteriorBoundaryElement = new Dictionary<Element, bool>(Model.ElementsDictionary.Count); //bool[] isInteriorBoundaryElement= new bool[Model.ElementsDictionary.Count];
+            foreach(Element element in Model.ElementsDictionary.Values) { isInteriorBoundaryElement.Add(element, false); }
             var isInteriorBoundaryNode = new Dictionary<Node, bool>(Model.NodesDictionary.Count); //bool[] isInteriorBoundaryNode = new bool[Model.NodesDictionary.Count];
+            foreach(Node node in Model.NodesDictionary.Values) { isInteriorBoundaryNode.Add(node, false); }
 
             // Number of Elements per subdomain
             numberOfElementsPerSubdomain =(Model.ElementsDictionary.Count % NumberOfProcessors==0)?
@@ -219,6 +225,8 @@ namespace ISAAR.MSolve.FEM
         private List<Node>  CalculateInterface(Dictionary<Node,int> nodeWeight, Dictionary<Node,bool> isInteriorBoundaryNode, List<Element>  ElementsRenumbered, int usedElementsCounter, int counterSubdomainElements, int counterSubdomain)
         {
             var locmask = new Dictionary<Node, bool>(Model.NodesDictionary.Count);// new bool[Model.NodesDictionary.Count];
+            foreach(Node node in Model.NodesDictionary.Values) { locmask.Add(node, false); }
+
             List<Node> SubdomainInterfaceNodes = new List<Node>();            
 
             for (int i = usedElementsCounter; i < usedElementsCounter + counterSubdomainElements; i++)
@@ -226,7 +234,7 @@ namespace ISAAR.MSolve.FEM
                 int elementID = ElementsRenumbered[i].ID;
                 foreach (Node node in Model.ElementsDictionary[elementID].NodesDictionary.Values)
                 {
-                    if((nodeWeight[node] !=0||isInteriorBoundaryNode[node])&&!locmask[node])
+                    if ((nodeWeight[node] !=0||isInteriorBoundaryNode[node])&&!locmask[node])
                     {
                         isInteriorBoundaryNode[node] = true;
                         locmask[node] = true;

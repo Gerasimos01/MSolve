@@ -175,7 +175,8 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass.CheckRandomIntCreation();
             //SeparateCodeCheckingClass.ExampleParametricStudy2CyclicConference(); //run this
             //SeparateCodeCheckingClass.Check05h4SharedRvesConst();
-            SeparateCodeCheckingClass.CheckSubdomainsEmbeddedSeparations();
+            //SeparateCodeCheckingClass.CheckSubdomainsEmbeddedSeparations();
+            SeparatecodeCheckingClass3.CheckHexaFirst();
         }
     }
 }

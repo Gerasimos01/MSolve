@@ -24,7 +24,7 @@ using ISAAR.MSolve.Discretization.Interfaces;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
-    public class GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataGPgrSh : IRVEbuilder // IdegenerateRVEbuilder
+    public class GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataGPgrShDdm : IRVEbuilder // IdegenerateRVEbuilder
     {
         //PROELEFSI GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostDataGPgrSh
         //allages:i)undo allages sxetikes me to linear kai me to peripheral
@@ -40,14 +40,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         int graphene_sheets_number;
 
 
-        public GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataGPgrSh(int RVE_id, grapheneSheetParameters gpNeo, int graphene_sheets_number)
+        public GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataGPgrShDdm(int RVE_id, grapheneSheetParameters gpNeo, int graphene_sheets_number)
         {
             this.RVE_id = RVE_id;
             this.gpNeo = gpNeo;
             this.graphene_sheets_number = graphene_sheets_number;
         }
 
-        public IRVEbuilder Clone(int a) => new GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataGPgrSh(a,gpNeo,graphene_sheets_number);
+        public IRVEbuilder Clone(int a) => new GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataGPgrShDdm(a,gpNeo,graphene_sheets_number);
     
         public Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
         {
