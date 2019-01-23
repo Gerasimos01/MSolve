@@ -22,5 +22,11 @@ namespace ISAAR.MSolve.SamplesConsole
             var modelBuilder = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostEmbSearchDdm();
             var ModelAndNodes = modelBuilder.GetModelAndBoundaryNodes();
         }
+
+        public static void CheckLargeModelSeparation()
+        {
+            var modelBuilder = new GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataDdm(1);
+            var ModelAndNodes = modelBuilder.GetModelAndBoundaryNodes();
+        }
     }
 }
