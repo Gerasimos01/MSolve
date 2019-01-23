@@ -283,18 +283,18 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             }
         }
 
-        public static (Dictionary<int, Dictionary<int, IList<int>>>, Dictionary<int, List<int>>, Dictionary<int, List<int>>) FindEmbeddedElementsSubdomainsCorrectedSimple(Model model, int totalSubdomains)
+        public static  Dictionary<int, List<int>> FindEmbeddedElementsSubdomainsCorrectedSimple(Model model, int totalSubdomains)
         {
             Dictionary<int, List<int>> AssignedSubdomains = new Dictionary<int, List<int>>(totalSubdomains);//TODO mporoume na tou dwsoume arxikh diastash ean thn exoume
             // to exw int (tou Dict dld) sumvolizei to subdomain ID
             // ta mesa int (dld afta pou periexei to List) einai ta IDs twn element pou tha mpoun se afth th subdomain
 
             //1
-            Dictionary<int, Dictionary<int, IList<int>>> AmbiguousEmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem = new Dictionary<int, Dictionary<int, IList<int>>>(); //embedded element- host subdomains -specific elements in subdomains
+            //Dictionary<int, Dictionary<int, IList<int>>> AmbiguousEmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem = new Dictionary<int, Dictionary<int, IList<int>>>(); //embedded element- host subdomains -specific elements in subdomains
             // einai ola ta ambiguous
 
             //2
-            Dictionary<int, List<int>> hexaConnectsShells = new Dictionary<int, List<int>>();
+            //Dictionary<int, List<int>> hexaConnectsShells = new Dictionary<int, List<int>>();
             //3
             List<int> totalEmbeddedElements = new List<int>();
 
@@ -324,43 +324,41 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
                             HostSubdomains.Add(hostELement.Subdomain.ID, specificElementsIDs);
                         }
                         //2
-                        if (hexaConnectsShellsLocal.ContainsKey(hostELement.ID))
-                        {
-                            if (!hexaConnectsShellsLocal[hostELement.ID].Contains(element.ID))
-                            {
-                                hexaConnectsShellsLocal[hostELement.ID].Add(element.ID);
-                            }
-                        }
-                        else
-                        {
-                            List<int> connectionElementsData1 = new List<int>();
-                            connectionElementsData1.Add(element.ID);
-                            hexaConnectsShellsLocal.Add(hostELement.ID, connectionElementsData1);
-                        }
+                        //if (hexaConnectsShellsLocal.ContainsKey(hostELement.ID))
+                        //{
+                        //    if (!hexaConnectsShellsLocal[hostELement.ID].Contains(element.ID))
+                        //    {
+                        //        hexaConnectsShellsLocal[hostELement.ID].Add(element.ID);
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    List<int> connectionElementsData1 = new List<int>();
+                        //    connectionElementsData1.Add(element.ID);
+                        //    hexaConnectsShellsLocal.Add(hostELement.ID, connectionElementsData1);
+                        //}
                     }
                     if (HostSubdomains.Count > 1) // gia =1 den exoume dilhma gia to se poia subdomain tha entaxthei
                     {
-                        AmbiguousEmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem.Add(element.ID, HostSubdomains);
-                        foreach (int hexaID in hexaConnectsShellsLocal.Keys)
+                        int chosenSubdomainId = 0;
+                        int hexaListlength = 0;
+                        foreach (int subdId in HostSubdomains.Keys)
                         {
-                            if (hexaConnectsShells.Keys.Contains(hexaID))
+                            if(HostSubdomains[subdId].Count>hexaListlength)
                             {
-                                foreach (int connectedShellId in hexaConnectsShellsLocal[hexaID])
-                                {
-                                    if (!hexaConnectsShells[hexaID].Contains(connectedShellId))
-                                    {
-                                        hexaConnectsShells[hexaID].Add(connectedShellId);
-                                    }
-                                }
+                                chosenSubdomainId = subdId;
+                                hexaListlength = HostSubdomains[subdId].Count;
                             }
-                            else
-                            {
-                                hexaConnectsShells.Add(hexaID, new List<int>());
-                                foreach (int connectedShellId in hexaConnectsShellsLocal[hexaID])
-                                {
-                                    hexaConnectsShells[hexaID].Add(connectedShellId);
-                                }
-                            }
+                        }
+                        if (AssignedSubdomains.ContainsKey(chosenSubdomainId))
+                        {
+                            AssignedSubdomains[chosenSubdomainId].Add(element.ID);
+                        }
+                        else
+                        {
+                            List<int> subdElementsIds = new List<int>();
+                            subdElementsIds.Add(element.ID);
+                            AssignedSubdomains.Add(chosenSubdomainId, subdElementsIds);
                         }
                     }
                     if (HostSubdomains.Count == 1)
@@ -379,7 +377,7 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 
                 }
             }
-            return (AmbiguousEmbeddedElementsHostSubdomainsAndSpecifcHexaElementsInThem, hexaConnectsShells, AssignedSubdomains);
+            return AssignedSubdomains;
         }
     }
 }

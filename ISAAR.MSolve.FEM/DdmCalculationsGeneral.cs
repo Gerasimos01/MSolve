@@ -291,6 +291,15 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             return subdCohElementIds;
         }
 
+        public static int[][] DetermineCoheiveELementsSubdomainsSimple(Model model, int totalSubdomains)
+        {
+            Dictionary<int, List<int>> AssignedSubdomains =
+               DdmCalculationsPartb.FindEmbeddedElementsSubdomainsCorrectedSimple(model, totalSubdomains);            
+           
+            int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomains);
+            return subdCohElementIdsDirect;
+        }
+
         public static int[][] DetermineShellELementsSubdomains(Model model, int totalSubdomains, int[][] subdCohElementIds,
             int[] lowerCohesiveBound, int[] upperCohesiveBound,int[] grShElementssnumber)
         {
