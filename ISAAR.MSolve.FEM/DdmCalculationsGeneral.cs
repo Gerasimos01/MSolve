@@ -306,24 +306,28 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             List<int>[] subdShellElementIds = new List<int>[totalSubdomains];
             for (int i1 = 0; i1 < totalSubdomains; i1++)
             {
-                subdShellElementIds[i1] = new List<int>(subdCohElementIds[i1].Length);
+                if (!(subdCohElementIds[i1] == null))
+                { subdShellElementIds[i1] = new List<int>(subdCohElementIds[i1].Length); }
             }
 
             for (int i1 = 0; i1 < totalSubdomains; i1++)
             {
-                for (int i2 = 0; i2 < subdCohElementIds[i1].Length; i2++)
+                if (!(subdCohElementIds[i1] == null))
                 {
-                    int cohID = subdCohElementIds[i1][i2];
-                    for (int i3 = 0; i3 < lowerCohesiveBound.Length; i3++)
+                    for (int i2 = 0; i2 < subdCohElementIds[i1].Length; i2++)
                     {
-                        if ((lowerCohesiveBound[i3]<=cohID)&(upperCohesiveBound[i3]>=cohID))
+                        int cohID = subdCohElementIds[i1][i2];
+                        for (int i3 = 0; i3 < lowerCohesiveBound.Length; i3++)
                         {
-                            //subdID=i1;
-                            if (!subdShellElementIds[i1].Contains(cohID - grShElementssnumber[i3]))
-                            { subdShellElementIds[i1].Add(cohID - grShElementssnumber[i3]); }
-                            break;
-                        }
+                            if ((lowerCohesiveBound[i3] <= cohID) & (upperCohesiveBound[i3] >= cohID))
+                            {
+                                //subdID=i1;
+                                if (!subdShellElementIds[i1].Contains(cohID - grShElementssnumber[i3]))
+                                { subdShellElementIds[i1].Add(cohID - grShElementssnumber[i3]); }
+                                break;
+                            }
 
+                        }
                     }
                 }
             }
@@ -331,7 +335,8 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             int[][] subdShellElementIdsArrays = new int[subdShellElementIds.Length][];
             for (int i1 = 0; i1 < subdShellElementIds.Length; i1++)
             {
-                subdShellElementIdsArrays[i1] = subdShellElementIds[i1].ToArray();
+                if (!(subdShellElementIds[i1] == null))
+                { subdShellElementIdsArrays[i1] = subdShellElementIds[i1].ToArray(); }
             }
 
             return subdShellElementIdsArrays;

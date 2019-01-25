@@ -140,7 +140,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             var CohesiveGroupping = new EmbeddedCohesiveSubGrouping(model, hostSubGroups, embdeddedGroup);
 
             //ds4
-            int[][] subdCohElementIds =DdmCalculationsGeneral.DetermineCoheiveELementsSubdomains(model, totalSubdomains);
+            int[][] subdCohElementIds =DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple(model, totalSubdomains);
             int[][] subdShellElementIds = DdmCalculationsGeneral.DetermineShellELementsSubdomains(model, totalSubdomains, subdCohElementIds,
             lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
             int[][] subdElementIds1 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdHexaIds, subdCohElementIds);
