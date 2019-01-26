@@ -228,7 +228,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             microAnalyzer.BuildMatrices();
 
             //A.1 //TODO: comment out old commands
-            double[][] KfpDq = SubdomainCalculations.CalculateKfreeprescribedDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
+            //double[][] KfpDq = SubdomainCalculations.CalculateKfreeprescribedDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
             Dictionary<int, double[][]> KfpDqSubdomains = SubdomainCalculationsMultiple.CalculateKfreeprescribedDqMultiplicationsMultiple(model, elementProvider, scaleTransitions, boundaryNodes);
 
 
@@ -259,7 +259,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             // to BUildmatirces to exoume krathsei panw exw apo th sunarthsh tou f2
             //A.2
-            double[][] f2_vectors = SubdomainCalculations.CalculateKffinverseKfpDq(KfpDq, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);            
+            //double[][] f2_vectors = SubdomainCalculations.CalculateKffinverseKfpDq(KfpDq, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);            
             Dictionary<int, double[][]> f2_vectorsSubdomains = SubdomainCalculationsMultiple.CalculateKffinverseKfpDqSubdomains(KfpDqSubdomains, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);
 
             //A.3

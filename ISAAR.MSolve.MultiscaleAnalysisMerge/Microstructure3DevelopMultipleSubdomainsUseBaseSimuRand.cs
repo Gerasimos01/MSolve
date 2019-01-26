@@ -32,12 +32,15 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         private Model model { get; set; }
         //private readonly Dictionary<int, Node> nodesDictionary = new Dictionary<int, Node>();
         private Dictionary<int, Node> boundaryNodes { get; set; }
+        Dictionary<int, Dictionary<int, Element>> boundaryElements;
         private IRVEbuilder rveBuilder;
+        private bool EstimateOnlyLinearResponse;
         //private NewtonRaphsonNonLinearAnalyzer microAnalyzer;
         private double volume;
         Dictionary<int, Vector> uInitialFreeDOFDisplacementsPerSubdomain;
         Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements;
         private IScaleTransitions scaleTransitions = new DefGradVec3DScaleTransition();
+        Random rnd1 = new Random();
 
 
         // aparaithta gia to implementation tou IFiniteElementMaterial3D
@@ -60,17 +63,28 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         //double[] Stresses { get; }
         //IMatrix2D ConstitutiveMatrix { get; } TODOGerasimos
 
-        public Microstructure3DevelopMultipleSubdomainsUseBaseSimuRand(IRVEbuilder rveBuilder)
+        //Random properties 
+        private int database_size;
+
+        public Microstructure3DevelopMultipleSubdomainsUseBaseSimuRand(IRVEbuilder rveBuilder, bool EstimateOnlyLinearResponse, int database_size)
         {
             this.rveBuilder = rveBuilder;
-            Tuple<Model, Dictionary<int, Node>,double> modelAndBoundaryNodes = this.rveBuilder.GetModelAndBoundaryNodes();
+            this.EstimateOnlyLinearResponse = EstimateOnlyLinearResponse;
+            this.database_size = database_size;            
+        }
+
+        private void InitializeData()
+        {
+            Tuple<Model, Dictionary<int, Node>, double> modelAndBoundaryNodes = this.rveBuilder.GetModelAndBoundaryNodes();
             this.model = modelAndBoundaryNodes.Item1;
             this.boundaryNodes = modelAndBoundaryNodes.Item2;
+            this.boundaryElements = GetSubdomainsBoundaryFiniteElementsDictionaries(model, boundaryNodes);
             this.volume = modelAndBoundaryNodes.Item3;
             DefineAppropriateConstraintsForBoundaryNodes();
             this.model.ConnectDataStructures();
             this.InitializeFreeAndPrescribedDofsInitialDisplacementVectors();
         }
+
 
         private void DefineAppropriateConstraintsForBoundaryNodes()
         {
@@ -99,7 +113,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         public object Clone()
         {
-            return new Microstructure3DevelopMultipleSubdomainsUseBaseSimuRand(rveBuilder);
+            int new_rve_id = rnd1.Next(1, database_size + 1);
+            return new Microstructure3DevelopMultipleSubdomainsUseBaseSimuRand(rveBuilder.Clone(new_rve_id), EstimateOnlyLinearResponse, database_size);
         }
 
         public Dictionary<int, Node> BoundaryNodesDictionary
@@ -115,7 +130,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         {
 
             if (matrices_not_initialized) 
-            { this.InitializeMatrices(); } // mporei na mpei kai ston constructor to initialization
+            {
+                this.InitializeMatrices();
+                this.InitializeData();
+            } // mporei na mpei kai ston constructor to initialization
 
             for (int i1 = 0; i1 < 6; i1++)
             {
@@ -223,13 +241,19 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             #endregion
 
             #region INTEGRATION constitutive Matrix
-            //TODOGERASIMOS edw thelei NEWtonRaphson.BuildMatrices kai sigoura to solver. Initialize kapou edw
-            provider.Reset(); // prosoxh xwris to provider.reset to BuildMatrices den tha vrei null ta ks kai den tha ta xanahtisei
-            microAnalyzer.BuildMatrices();
+            //simultaneous methods antikathistoun ta epomena commented oti tha antikatastathoun
+            (Dictionary<int, double[][]> KfpDqSubdomains, Dictionary<int, double[][]> KppDqVectorsSubdomains) = SubdomainCalculationsSimultaneous.UpdateSubdomainKffAndCalculateKfpDqAndKppDqpMultiple(model, elementProvider, scaleTransitions, boundaryNodes, boundaryElements, linearSystems);
+
+
+            //antikathistwntai apo simulatneous methods:
+            //provider.Reset(); // prosoxh xwris to provider.reset to BuildMatrices den tha vrei null ta ks kai den tha ta xanahtisei
+            //microAnalyzer.BuildMatrices();
 
             //A.1 //TODO: comment out old commands
-            double[][] KfpDq = SubdomainCalculations.CalculateKfreeprescribedDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
-            Dictionary<int, double[][]> KfpDqSubdomains = SubdomainCalculationsMultiple.CalculateKfreeprescribedDqMultiplicationsMultiple(model, elementProvider, scaleTransitions, boundaryNodes);
+            //double[][] KfpDq = SubdomainCalculations.CalculateKfreeprescribedDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
+
+            //antikathistwntai apo simulatneous methods:
+            //Dictionary<int, double[][]> KfpDqSubdomains = SubdomainCalculationsMultiple.CalculateKfreeprescribedDqMultiplicationsMultiple(model, elementProvider, scaleTransitions, boundaryNodes);
 
 
             // TODO: replace provider.Reset(); microAnalyzer.BuildMatrices(); 
@@ -259,7 +283,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             // to BUildmatirces to exoume krathsei panw exw apo th sunarthsh tou f2
             //A.2
-            double[][] f2_vectors = SubdomainCalculations.CalculateKffinverseKfpDq(KfpDq, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);            
+            // double[][] f2_vectors = SubdomainCalculations.CalculateKffinverseKfpDq(KfpDq, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);            
             Dictionary<int, double[][]> f2_vectorsSubdomains = SubdomainCalculationsMultiple.CalculateKffinverseKfpDqSubdomains(KfpDqSubdomains, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);
 
             //A.3
@@ -268,7 +292,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             //A.4
             // KppDqVectors = SubdomainCalculations.CalculateKppDqMultiplications(model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
-            Dictionary<int, double[][]> KppDqVectorsSubdomains = SubdomainCalculationsMultiple.CalculateKppDqSubdomainsMultiplications(model, elementProvider, scaleTransitions, boundaryNodes);
+            //antikathistwntai apo simulatneous methods:
+            //Dictionary<int, double[][]> KppDqVectorsSubdomains = SubdomainCalculationsMultiple.CalculateKppDqSubdomainsMultiplications(model, elementProvider, scaleTransitions, boundaryNodes);
+
 
             //A.5
             double[][] f3_vectors = SubdomainCalculationsMultiple.CombineMultipleSubdomainsIntegrationVectorsIntoTotal(f3_vectorsSubdomains,scaleTransitions);
@@ -711,6 +737,89 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             return d2W_dFtrdFtr;
         }
         #endregion
+
+        public void CalculateOriginalConstitutiveMatrixWithoutNLAnalysis()
+        {
+            this.InitializeData();
+            if (matrices_not_initialized)
+            {
+                this.InitializeMatrices();
+                this.InitializeData();
+            } // mporei na mpei kai ston constructor to initialization
+            
+            var linearSystems = CreateNecessaryLinearSystems(model);            
+            var solver = GetAppropriateSolver(linearSystems);
+            var elementProvider = new ElementStructuralStiffnessProvider();
+            
+
+            
+            #region INTEGRATION constitutive Matrix
+            (Dictionary<int, double[][]> KfpDqSubdomains, Dictionary<int, double[][]> KppDqVectorsSubdomains) = SubdomainCalculationsSimultaneous.UpdateSubdomainKffAndCalculateKfpDqAndKppDqpMultiple(model, elementProvider, scaleTransitions, boundaryNodes, boundaryElements, linearSystems);
+
+
+            //antikathistwntai apo simulatneous methods:
+            //provider.Reset(); // prosoxh xwris to provider.reset to BuildMatrices den tha vrei null ta ks kai den tha ta xanahtisei
+            //microAnalyzer.BuildMatrices();
+            
+            //antikathistwntai apo simulatneous methods:
+            //Dictionary<int, double[][]> KfpDqSubdomains = SubdomainCalculationsMultiple.CalculateKfreeprescribedDqMultiplicationsMultiple(model, elementProvider, scaleTransitions, boundaryNodes);
+            
+            //A.2
+            // double[][] f2_vectors = SubdomainCalculations.CalculateKffinverseKfpDq(KfpDq, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);            
+            Dictionary<int, double[][]> f2_vectorsSubdomains = SubdomainCalculationsMultiple.CalculateKffinverseKfpDqSubdomains(KfpDqSubdomains, model, elementProvider, scaleTransitions, boundaryNodes, solver, linearSystems);
+
+            //A.3
+            // f3_vectors = SubdomainCalculations.CalculateKpfKffinverseKfpDq(f2_vectors, model.Subdomains[0], elementProvider, scaleTransitions, boundaryNodes);
+            Dictionary<int, double[][]> f3_vectorsSubdomains = SubdomainCalculationsMultiple.CalculateKpfKffinverseKfpDqSubdomains(f2_vectorsSubdomains, model, elementProvider, scaleTransitions, boundaryNodes);
+
+            //A.4
+            //antikathistwntai apo simulatneous methods:
+            //Dictionary<int, double[][]> KppDqVectorsSubdomains = SubdomainCalculationsMultiple.CalculateKppDqSubdomainsMultiplications(model, elementProvider, scaleTransitions, boundaryNodes);
+
+
+            //A.5
+            double[][] f3_vectors = SubdomainCalculationsMultiple.CombineMultipleSubdomainsIntegrationVectorsIntoTotal(f3_vectorsSubdomains, scaleTransitions);
+            double[][] KppDqVectors = SubdomainCalculationsMultiple.CombineMultipleSubdomainsIntegrationVectorsIntoTotal(KppDqVectorsSubdomains, scaleTransitions);
+
+            double[][] f4_vectors = SubdomainCalculations.SubtractConsecutiveVectors(KppDqVectors, f3_vectors);
+            double[,] DqCondDq = SubdomainCalculations.CalculateDqCondDq(f4_vectors, scaleTransitions, boundaryNodes);
+
+            double[,] d2W_dfdf = new double[DqCondDq.GetLength(0), DqCondDq.GetLength(1)];
+            for (int i1 = 0; i1 < DqCondDq.GetLength(0); i1++)
+            {
+                for (int i2 = 0; i2 < DqCondDq.GetLength(1); i2++)
+                {
+                    d2W_dfdf[i1, i2] = (1 / volume) * DqCondDq[i1, i2];
+                }
+            }
+            
+            #endregion
+
+            #region constitutive tensors transformation methods
+            double[,] d2W_dFtrdFtr = Reorder_d2Wdfdf_to_d2W_dFtrdFtr(d2W_dfdf);
+
+            double[,] SPK_mat = new double[3, 3] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } }; double[,] DefGradMat=new double[3, 3] { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+            double[,] Cinpk = Transform_d2WdFtrdFtr_to_Cijrs(d2W_dFtrdFtr, SPK_mat, DefGradMat); // to onomazoume Cinpk epeidh einai to 9x9 kai to diakrinoume etsi apo to Cijrs 6x6
+
+            double[,] Cijrs = CombineCinpkTensorTermsIntoMatrix(Cinpk);
+           
+            constitutiveMatrix = new Matrix2D(Cijrs);
+            #endregion
+
+            //PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
+            this.modified = CheckIfConstitutiveMatrixChanged();
+
+            if (EstimateOnlyLinearResponse)
+            {
+                model = null;
+                boundaryElements = null;
+                boundaryNodes = null;
+                rveBuilder = null;
+                uInitialFreeDOFDisplacementsPerSubdomain = null;
+                initialConvergedBoundaryDisplacements = null;
+                Cijrs_prev = null;
+            }
+        }
 
         #region Print methods for debug
         private void PrintMethodsForDebug(double[][] KfpDq, double[][] f2_vectors, double[][] f3_vectors, double[][] KppDqVectors, double[][] f4_vectors, double[,] DqCondDq, double[,] d2W_dfdf, double[,] Cijrs)
