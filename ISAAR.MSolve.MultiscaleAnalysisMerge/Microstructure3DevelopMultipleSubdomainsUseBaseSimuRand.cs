@@ -350,7 +350,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         {
             get
             {
-                if (constitutiveMatrix == null) UpdateMaterial(new double[9] { 1,1,1,0,0,0,0,0,0 }); // TODOGerasimos arxiko constitutive mporei na upologizetai pio efkola
+                if (constitutiveMatrix == null) CalculateOriginalConstitutiveMatrixWithoutNLAnalysis(); // TODOGerasimos arxiko constitutive mporei na upologizetai pio efkola
                 return constitutiveMatrix;
             }
         }
