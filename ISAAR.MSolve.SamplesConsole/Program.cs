@@ -15,6 +15,7 @@ using ISAAR.MSolve.FEM.Elements;
 using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.FEM.Materials;
 using ISAAR.MSolve.Materials.Interfaces;
+using ISAAR.MSolve.SamplesConsole.DdmBenchmarks1;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
@@ -177,7 +178,10 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass.Check05h4SharedRvesConst();
             //SeparateCodeCheckingClass.CheckSubdomainsEmbeddedSeparations();
             //SeparatecodeCheckingClass3.CheckHexaFirst();
-            SeparatecodeCheckingClass3.CheckLargeModelSeparation();
+            //SeparatecodeCheckingClass3.CheckLargeModelSeparation();
+            //IntegrationElasticCantileverBenchmark.RunExample();
+            //ProgramElegxoiDdm.SolveRVEExample();
+            SeparateCodeCheckingClass2.CheckStrainFromElasticCantileverFe2();
         }
     }
 }

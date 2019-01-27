@@ -110,7 +110,50 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
+        public static void CheckStrainFromElasticCantileverFe2()
+        {
+            //proelefsi ExampleParametricStudy2CyclicConferenceSlip
+            //allages gp dosmeno exwterika
+            var gpNeo = new grapheneSheetParameters()
+            {
+                //parametroi cohesive epifaneias
+                T_o_3 = 0.12,//0.20,                   //0.05,  // 1Gpa = 1000Mpa = 1000N / mm2
+                D_o_3 = 0.15,//0.25,                   //0.5, // nm
+                D_f_3 = 4,                      // nm
+                T_o_1 = 0.12,//0.20,                   //0.05,// Gpa
+                D_o_1 = 0.15,//0.25,                   //0.5, // nm
+                D_f_1 = 4,                      // nm
+                n_curve = 1.4
+            };
 
+            VectorExtensions.AssignTotalAffinityCount();
+            //arxiko paradeigma finite strains:
+            //IRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample5GrSh1RVEstif();           
+            //IContinuumMaterial3DDefGrad microstructure3 = new Microstructure3Develop(homogeneousRveBuilder1);
+            //neo paradeigma:
+            IRVEbuilder RveBuilder1 = new GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostData(1);
+            var material4 = new Microstructure3DevelopMultipleSubdomainsUseBaseSimuRand(RveBuilder1, false, 1);
+
+
+            int cycles = 4;
+            var totalStrainMat = new double[3, 3] { { 1.0536, 0, 0.1600 }, { 0, 1, 0 }, { 0, 0, 1 } };
+            double[] totalStrain = new double[9] { totalStrainMat[0, 0], totalStrainMat[1, 1], totalStrainMat[2, 2], totalStrainMat[1, 0], totalStrainMat[2, 1], totalStrainMat[0, 2], totalStrainMat[2, 0], totalStrainMat[0, 1], totalStrainMat[1, 2], };//MS
+            double[] initialstrain = new double[9] { 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+            double[][] strainHistory1 = CreateStrainHistoryInterpolation(totalStrain, initialstrain, cycles);
+            double[][] strainHistory2 = CreateStrainHistoryInterpolation(initialstrain, totalStrain, cycles);
+            double[][] strainHistory = CombineStrainHistoriesIntoOne(strainHistory1, strainHistory2);
+
+
+
+            (double[][] stressHistory, double[][,] constitutiveMatrixHistory) = StressStrainHistory(strainHistory, material4);
+
+            double[,] strainHistoryArray = ConvertStressHistoryTodoubleArray(strainHistory);
+            double[,] stressHistoryArray = ConvertStressHistoryTodoubleArray(stressHistory);
+
+            PrintUtilities.WriteToFile(strainHistoryArray, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\strainHistoryShell.txt");
+            PrintUtilities.WriteToFile(stressHistoryArray, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\stressHistoryShell.txt");
+
+        }
 
 
 

@@ -11,6 +11,7 @@ using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.FEM.Interfaces;
 using System.Collections.Generic;
 using ISAAR.MSolve.Discretization.Interfaces;
+using ISAAR.MSolve.Discretization;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
@@ -119,9 +120,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         public void ImposeAppropriateConstraintsPerBoundaryNode(Model model, Node boundaryNode)
         {
-            model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.X);
-            model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Y);
-            model.NodesDictionary[boundaryNode.ID].Constraints.Add(DOFType.Z);
+            model.NodesDictionary[boundaryNode.ID].Constraints.Add(new Constraint { DOF = DOFType.X });
+            model.NodesDictionary[boundaryNode.ID].Constraints.Add(new Constraint { DOF = DOFType.Y });
+            model.NodesDictionary[boundaryNode.ID].Constraints.Add(new Constraint { DOF = DOFType.Z });
         }
 
         public void ImposeAppropriateAndRigidBodyConstraintsPerBoundaryNode(Model model, Node boundaryNode, Dictionary<Node, IList<DOFType>> RigidBodyNodeConstraints)

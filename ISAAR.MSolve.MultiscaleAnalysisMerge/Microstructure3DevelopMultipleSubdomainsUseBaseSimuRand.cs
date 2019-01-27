@@ -28,6 +28,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 {
     public class Microstructure3DevelopMultipleSubdomainsUseBaseSimuRand : StructuralProblemsMicrostructureBase, IContinuumMaterial3DDefGrad
     {
+        //PROELEFSI aplo copy apo nl_elements_test.
+        //allages apo UseBase egine UseBaseSimuRand me odhgo Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimuRand se sxesh me to Microstru...Transformation.cs
+
         //TODO: create base class and use it for different microstructures-scale transitions.
         private Model model { get; set; }
         //private readonly Dictionary<int, Node> nodesDictionary = new Dictionary<int, Node>();
@@ -45,7 +48,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         // aparaithta gia to implementation tou IFiniteElementMaterial3D
         Matrix2D constitutiveMatrix;
-        private double[] SPK_vec;
+        private double[] SPK_vec=new double[6];
         private bool modified; // opws sto MohrCoulomb gia to modified
 
         private double[,] Cijrs_prev;
