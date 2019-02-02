@@ -216,7 +216,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             return gpmp;
         }
 
-        public static void HexaElementsOnlyRVEwithRenumbering_forMS(Model model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
+        public static void HexaElementsOnlyRVEwithRenumbering_forMS(Model_v2 model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
         {
             // Perioxh renumbering initialization 
             renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
@@ -303,7 +303,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                             e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
                         }
                         model.ElementsDictionary.Add(e1.ID, e1);
-                        model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e1.ID, e1);
+                        model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
                         elementCounter++;
                     }
                 }
@@ -338,7 +338,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             }
         }
 
-        public static void AddGrapheneSheet_with_o_x_Input_withRenumbering(Model model, grapheneSheetParameters gp, double[] ekk_xyz, o_x_parameters o_x_parameters, string renumberingVectorPath, string o_xsunol_input_path)
+        public static void AddGrapheneSheet_with_o_x_Input_withRenumbering(Model_v2 model, grapheneSheetParameters gp, double[] ekk_xyz, o_x_parameters o_x_parameters, string renumberingVectorPath, string o_xsunol_input_path)
         {
             // Perioxh renumbering initialization 
             renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
@@ -464,7 +464,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                     e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e2.ID, e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add(e2);
                 eswterikosElementCounter++;
             }
             int arithmosShellElements = eswterikosElementCounter;
@@ -536,7 +536,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e2.ID, e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
                 eswterikosElementCounter++;
             }
             // orismos elements katw strwshs ews edw
@@ -594,14 +594,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e2.ID, e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
                 eswterikosElementCounter++;
             }
             // orismos elements anw strwshs ews edw
 
         }
 
-        public static Dictionary<Node, IList<DOFType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath)
+        public static Dictionary<Node, IList<DOFType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model_v2 model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath)
         {
             //PROELEFSI: RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix_withRenumbering()
             //ALLAGES: return type and nodes and dofs to be constrained
@@ -633,7 +633,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
 
         }
 
-        public static void AddGrapheneSheet_with_o_x_Input_withRenumberingBondSlip(Model model, grapheneSheetParameters gp, double[] ekk_xyz, o_x_parameters o_x_parameters, string renumberingVectorPath, string o_xsunol_input_path)
+        public static void AddGrapheneSheet_with_o_x_Input_withRenumberingBondSlip(Model_v2 model, grapheneSheetParameters gp, double[] ekk_xyz, o_x_parameters o_x_parameters, string renumberingVectorPath, string o_xsunol_input_path)
         {
             // Perioxh renumbering initialization 
             renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
@@ -759,7 +759,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                     e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e2.ID, e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
                 eswterikosElementCounter++;
             }
             int arithmosShellElements = eswterikosElementCounter;
@@ -822,7 +822,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e2.ID, e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
                 eswterikosElementCounter++;
             }
             // orismos elements katw strwshs ews edw
@@ -881,14 +881,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e2.ID, e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
                 eswterikosElementCounter++;
             }
             // orismos elements anw strwshs ews edw
 
         }
 
-        public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS(Model model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
+        public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS(Model_v2 model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
         {
             //COPY apo FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS()
             //allages grammika elements kai artihmisi nodes pou afta xreiazontai
@@ -978,7 +978,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                             e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
                         }
                         model.ElementsDictionary.Add(e1.ID, e1);
-                        model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e1.ID, e1);
+                        model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
                         elementCounter++;
                     }
                 }
@@ -1015,7 +1015,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             }
         }
 
-        public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(Model model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
+        public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(Model_v2 model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
         {
             //COPY apo FEMMeshBuilder.LinearHexaElementsOnlyRVEwithRenumbering_forMS()
             //allages boundary nodes mono ta peripheral 
@@ -1105,7 +1105,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                             e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
                         }
                         model.ElementsDictionary.Add(e1.ID, e1);
-                        model.SubdomainsDictionary[subdomainID].ElementsDictionary.Add(e1.ID, e1);
+                        model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
                         elementCounter++;
                     }
                 }
@@ -1182,7 +1182,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             }
         }
 
-        public static IEnumerable<Element> GetHostGroupForCohesiveElement(Element cohesive, rveMatrixParameters mp, Model model, string renumberingVectorPath)
+        public static IEnumerable<Element> GetHostGroupForCohesiveElement(Element cohesive, rveMatrixParameters mp, Model_v2 model, string renumberingVectorPath)
         {            
 
             int hexa1 = mp.hexa1;// diakritopoihsh
