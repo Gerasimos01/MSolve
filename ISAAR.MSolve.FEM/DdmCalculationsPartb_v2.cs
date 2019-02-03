@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 {
-    public static class DdmCalculationsPartb
+    public static class DdmCalculationsPartb_v2 // exei allaxei mono to onoma den exei ginei update se model_v2 xrhsh klp.
     {
         public static (Dictionary<int, Dictionary<int, IList<int>>>, Dictionary<int, List<int>>, Dictionary<int, List<int>>) FindEmbeddedElementsSubdomains(Model model,int totalSubdomains)
         {

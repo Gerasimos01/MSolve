@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ISAAR.MSolve.FEM
 {
-    public class AutomaticDomainDecomposer2
+    public class AutomaticDomainDecomposer2_v2 // exei allaxei mono to onoma den exei ginei update se model_v2 xrhsh klp.
     {
         private readonly Model Model;
         private readonly int NumberOfProcessors;
@@ -16,7 +16,7 @@ namespace ISAAR.MSolve.FEM
         List<Element> ElementsRenumbered = new List<Element>();
         Dictionary<int,List<Node>> SubdomainInterfaceNodes =new Dictionary<int, List<Node>>();
 
-        public AutomaticDomainDecomposer2(Model model, int numberOfProcessors)
+        public AutomaticDomainDecomposer2_v2(Model model, int numberOfProcessors)
         {
             this.NumberOfProcessors = numberOfProcessors;
             this.Model = model;

@@ -8,7 +8,7 @@ using ISAAR.MSolve.Discretization.Interfaces;
 
 namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 {
-    public static class  DdmCalculations
+    public static class DdmCalculations_v2 // exei allaxei mono to onoma den exei ginei update se model_v2 xrhsh klp.
     {
         public static int[][] CalculateSubdElementIds(int hexa1, int hexa2, int hexa3, int elem1, int elem2, Model model)
         {

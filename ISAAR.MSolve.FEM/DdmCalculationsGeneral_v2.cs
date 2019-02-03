@@ -6,15 +6,15 @@ using System.IO;
 
 namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 {
-    public static class DdmCalculationsGeneral
+    public static class DdmCalculationsGeneral_v2
     {
-        public static void BuildModelInterconnectionData(Model model)
+        public static void BuildModelInterconnectionData(Model_v2 model) //xreiazetai na ginei oloklhro update se model_v2 xrhsh dioti exei prosarmostei mono h methodos h prwth
         {
             //private void BuildSubdomainOfEachElement()
-            foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
+            foreach (Subdomain_v2 subdomain in model.SubdomainsDictionary.Values)
             {
-                foreach (Element element in subdomain.ElementsDictionary.Values)
-                { element.Subdomain = subdomain; }
+                foreach (Element element in subdomain.Elements)
+                { element.Subdomain_v2 = subdomain; }
             }
 
             //private void BuildElementDictionaryOfEachNode()            
@@ -25,12 +25,13 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             }
 
             foreach (Node node in model.NodesDictionary.Values)
-            { node.BuildSubdomainDictionary(); }
+            { node.BuildSubdomainDictionary_v2(); }
 
-            
 
-            foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
-            { subdomain.BuildNodesDictionary(); }
+
+            foreach (Subdomain_v2 subdomain in model.SubdomainsDictionary.Values)
+            { subdomain.DefineNodesFromElements(); }  //BuildNodesDictionary(); }
+            //TODO afto tha ginei commented out afou den mporoume na to kanoume undo build meta
         }
 
         public static void UndoModelInterconnectionDataBuild(Model model)
