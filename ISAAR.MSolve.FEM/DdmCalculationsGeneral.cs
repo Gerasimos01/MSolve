@@ -28,9 +28,9 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             { node.BuildSubdomainDictionary(); }
 
             
-
-            foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
-            { subdomain.BuildNodesDictionary(); }
+            //TEMP comment
+            //foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
+            //{ subdomain.BuildNodesDictionary(); }
         }
 
         public static void UndoModelInterconnectionDataBuild(Model model)
@@ -57,12 +57,12 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             //{ node.BuildSubdomainDictionary(); }
 
 
-
-            foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
-            {
-                //subdomain.BuildNodesDictionary();
-                subdomain.NodesDictionary.Clear();
-            }
+            //TEMP comment
+            //foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
+            //{
+            //    //to clear einai undo ths exhs entolhs//subdomain.BuildNodesDictionary();
+            //    subdomain.NodesDictionary.Clear();
+            //}
         }
 
         public static int[][] DetermineHexaElementsSubdomainsFromModel(Model model)

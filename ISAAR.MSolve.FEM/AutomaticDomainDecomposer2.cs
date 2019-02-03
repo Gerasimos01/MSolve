@@ -68,12 +68,12 @@ namespace ISAAR.MSolve.FEM
                 node.SubdomainsDictionary.Clear();
                 node.BuildSubdomainDictionary();
             }
-
-            foreach (Subdomain subdomain in Model.SubdomainsDictionary.Values)
-            {
-                subdomain.NodesDictionary.Clear();
-                subdomain.BuildNodesDictionary();
-            }
+            //TEMP comment
+            //foreach (Subdomain subdomain in Model.SubdomainsDictionary.Values)
+            //{
+            //    subdomain.NodesDictionary.Clear();
+            //    subdomain.BuildNodesDictionary();
+            //}
         }
 
         private void Adjacency()

@@ -28,19 +28,19 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             { node.BuildSubdomainDictionary_v2(); }
 
 
-
-            foreach (Subdomain_v2 subdomain in model.SubdomainsDictionary.Values)
-            { subdomain.DefineNodesFromElements(); }  //BuildNodesDictionary(); }
-            //TODO afto tha ginei commented out afou den mporoume na to kanoume undo build meta
+            //TEMP COMMENT OUT
+            //foreach (Subdomain_v2 subdomain in model.SubdomainsDictionary.Values)
+            //{ subdomain.DefineNodesFromElements(); }  //BuildNodesDictionary(); }
+            ////TODO afto tha ginei commented out afou den mporoume na to kanoume undo build meta
         }
 
-        public static void UndoModelInterconnectionDataBuild(Model model)
+        public static void UndoModelInterconnectionDataBuild(Model_v2 model)
         {
             //private void BuildSubdomainOfEachElement()
-            foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
+            foreach (Subdomain_v2 subdomain in model.SubdomainsDictionary.Values)
             {
-                foreach (Element element in subdomain.ElementsDictionary.Values)
-                { element.Subdomain = null; }  // subdomain; }
+                foreach (Element element in subdomain.Elements)
+                { element.Subdomain_v2 = null; }  // subdomain; }
             }
 
             //private void BuildElementDictionaryOfEachNode()            
@@ -52,18 +52,18 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             foreach (Node node in model.NodesDictionary.Values)
             {
                 node.ElementsDictionary.Clear();
-                node.SubdomainsDictionary.Clear();
+                node.SubdomainsDictionary_v2.Clear(); //to ena mono egine v2 opws fainetai sto Node.BuildSubdomainDictionary_v2().
             }
             //foreach (Node node in model.NodesDictionary.Values)
             //{ node.BuildSubdomainDictionary(); }
 
 
-
-            foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
-            {
-                //subdomain.BuildNodesDictionary();
-                subdomain.NodesDictionary.Clear();
-            }
+            //TEMP COMMENT OUT opote den xreiazetai na ginei update se v2
+            //foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
+            //{
+            //    //entolh antistoixh tou exhs: //subdomain.BuildNodesDictionary();
+            //    subdomain.NodesDictionary.Clear();
+            //}
         }
 
         public static int[][] DetermineHexaElementsSubdomainsFromModel(Model model)
