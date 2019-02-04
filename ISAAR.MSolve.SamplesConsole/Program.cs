@@ -178,12 +178,13 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass.Check05h4SharedRvesConst();
             //SeparateCodeCheckingClass.CheckSubdomainsEmbeddedSeparations();
             //SeparatecodeCheckingClass3.CheckHexaFirst();
-            SeparatecodeCheckingClass3.CheckLargeModelSeparation();
+            //SeparatecodeCheckingClass3.CheckLargeModelSeparation(); 
             //IntegrationElasticCantileverBenchmark.RunExample();
             //ProgramElegxoiDdm.SolveRVEExample();
             //SeparateCodeCheckingClass2.CheckStrainFromElasticCantileverFe2();
             //SeparateCodeCheckingClass4.Check05bStressIntegrationObjeIntegration();
             //SeparateCodeCheckingClass.Check05bStressIntegration();
+            IntegrationTests2.NRNLAnalyzerDevelopTest.SolveDisplLoadsExample();
         }
     }
 }
