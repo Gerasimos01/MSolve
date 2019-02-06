@@ -184,7 +184,8 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass2.CheckStrainFromElasticCantileverFe2();
             //SeparateCodeCheckingClass4.Check05bStressIntegrationObjeIntegration();
             //SeparateCodeCheckingClass.Check05bStressIntegration();
-            IntegrationTests2.NRNLAnalyzerDevelopTest.SolveDisplLoadsExample();
+            //IntegrationTests2.NRNLAnalyzerDevelopTest.SolveDisplLoadsExample();
+            IntegrationTests2.NRNLAnalyzerDevelopTest_v2.SolveDisplLoadsExample();
         }
     }
 }

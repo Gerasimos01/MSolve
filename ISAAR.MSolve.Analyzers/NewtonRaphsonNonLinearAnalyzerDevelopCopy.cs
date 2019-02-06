@@ -18,10 +18,10 @@ namespace ISAAR.MSolve.Analyzers
 {
     public class NewtonRaphsonNonLinearAnalyzerDevelopCopy : IChildAnalyzer
     {
-        private readonly Dictionary<int, ILinearSystem_v2> linearSystems;
+        private readonly IReadOnlyDictionary<int, ILinearSystem_v2> linearSystems;
         protected readonly IStructuralModel_v2 model;
-        private readonly NonLinearSubdomainUpdaterWithInitialConditions_v2[] subdomainUpdaters;
-        private readonly ISubdomainGlobalMapping[] mappings; 
+        private readonly Dictionary<int,NonLinearSubdomainUpdaterWithInitialConditions_v2> subdomainUpdaters;
+        //private readonly ISubdomainGlobalMapping[] mappings; 
         private readonly int increments;
         private readonly int totalDOFs;
         private int maxSteps = 1000;
@@ -43,16 +43,16 @@ namespace ISAAR.MSolve.Analyzers
         private readonly Dictionary<int, LinearAnalyzerLogFactory> logFactories = new Dictionary<int, LinearAnalyzerLogFactory>();
         private readonly Dictionary<int, IAnalyzerLog[]> logs = new Dictionary<int, IAnalyzerLog[]>();
 
-        public NewtonRaphsonNonLinearAnalyzerDevelopCopy(IStructuralModel_v2 model, ISolver_v2 solver, Dictionary<int, ILinearSystem_v2> linearSystems, NonLinearSubdomainUpdaterWithInitialConditions_v2[] subdomainUpdaters, ISubdomainGlobalMapping[] mappings,
+        public NewtonRaphsonNonLinearAnalyzerDevelopCopy(IStructuralModel_v2 model, ISolver_v2 solver, IReadOnlyDictionary<int, ILinearSystem_v2> linearSystems, Dictionary<int, NonLinearSubdomainUpdaterWithInitialConditions_v2> subdomainUpdaters,
             INonLinearProvider_v2 provider, int increments, int totalDOFs, Dictionary<int, IVector> uInitialFreeDOFDisplacementsPerSubdomain,
             Dictionary<int, Node> boundaryNodes, Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
-            Dictionary<int, EquivalentContributionsAssebler_v2> equivalentContributionsAssemblers)
+            Dictionary<int, EquivalentContributionsAssebler_v2> equivalentContributionsAssemblers)//, ISubdomainGlobalMapping[] mappings)
         {
             this.model = model;
             this.solver = solver;
             this.subdomainUpdaters = subdomainUpdaters;
-            this.mappings = mappings;
-            this.linearSystems = linearSystems;
+            //this.mappings = mappings;
+            this.linearSystems = solver.LinearSystems;
             this.provider = provider;
             this.increments = increments;
             this.totalDOFs = totalDOFs;
@@ -64,7 +64,7 @@ namespace ISAAR.MSolve.Analyzers
             this.totalBoundaryDisplacements = totalBoundaryDisplacements;
             this.equivalentContributionsAssemblers = equivalentContributionsAssemblers;
 
-            InitializeInternalVectors();
+            //InitializeInternalVectors();
         }
 
         public int SetMaxIterations
@@ -164,6 +164,7 @@ namespace ISAAR.MSolve.Analyzers
 
         public void Initialize()
         {
+            InitializeInternalVectors();
             solver.Initialize();
         }
 

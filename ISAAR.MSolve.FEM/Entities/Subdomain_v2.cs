@@ -6,6 +6,7 @@ using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Numerical.Commons;
+using System.IO;
 
 //TODO: remove code that calculates rhs vector components (nodal loads, constraints, etc). It should be moved to dedicated 
 //      classes like EquivalentLoadAssembler, so that it can be reused between subdomains of different projects (FEM, IGA, XFEM).
@@ -81,6 +82,7 @@ namespace ISAAR.MSolve.FEM.Entities
 
         public void DefineNodesFromElements()
         {
+            nodes.Clear(); // Necessary if the same model has been used in a previous analysis. Otherwise each node would be added twice.
             var nodeComparer = Comparer<Node>.Create((Node node1, Node node2) => node1.ID - node2.ID);
             var nodeSet = new SortedSet<Node>(nodeComparer);
             foreach (Element element in Elements)
@@ -278,14 +280,14 @@ namespace ISAAR.MSolve.FEM.Entities
         // prosthiki print
         public static void WriteToFileVector(double[] array, string path2)
         {
-            //var writer2 = new StreamWriter(path2);
-            //for (int i = 0; i < array.GetLength(0); ++i)
-            //{
-            //    writer2.Write(array[i]);
-            //    writer2.Write(' ');
-            //    writer2.WriteLine(); // allagh seiras (dld grafei oti exei mesa h parenths=esh edw keno kai allazei seira)
-            //}
-            //writer2.Flush();
+            var writer2 = new StreamWriter(path2);
+            for (int i = 0; i < array.GetLength(0); ++i)
+            {
+                writer2.Write(array[i]);
+                writer2.Write(' ');
+                writer2.WriteLine(); // allagh seiras (dld grafei oti exei mesa h parenths=esh edw keno kai allazei seira)
+            }
+            writer2.Flush();
 
         }
 
