@@ -4,6 +4,7 @@ using ISAAR.MSolve.FEM.Entities;
 using System;
 using System.Collections.Generic;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
+using ISAAR.MSolve.Analyzers.NonLinear;
 
 namespace ISAAR.MSolve.Analyzers
 {
@@ -16,7 +17,7 @@ namespace ISAAR.MSolve.Analyzers
 			this.subdomain = subdomain;
 		}
 
-		public IVector GetRHSFromSolutionWithInitialDisplacemntsEffect(IVectorView solution, IVectorView dSolution, Dictionary<int, Node> boundaryNodes,
+		public IVector GetRHSFromSolutionWithInitialDisplacemntsEffect(IVectorView solution, IVectorView dSolution, Dictionary<int, Node_v2> boundaryNodes,
 			Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
 			int nIncrement, int totalIncrements) //TODO leave 
 		{

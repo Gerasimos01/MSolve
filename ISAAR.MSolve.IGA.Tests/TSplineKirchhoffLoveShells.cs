@@ -8,14 +8,10 @@ using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.IGA.Entities;
 using ISAAR.MSolve.IGA.Postprocessing;
 using ISAAR.MSolve.IGA.Readers;
-using ISAAR.MSolve.LinearAlgebra;
 using ISAAR.MSolve.Materials;
-using ISAAR.MSolve.MultiscaleAnalysis;
-using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
-using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
-using ISAAR.MSolve.MultiscaleAnalysisMerge;
 using ISAAR.MSolve.Numerical.LinearAlgebra;
 using ISAAR.MSolve.Problems;
+using ISAAR.MSolve.Solvers;
 using ISAAR.MSolve.Solvers.Direct;
 using ISAAR.MSolve.Solvers.Interfaces;
 using ISAAR.MSolve.Solvers.Ordering;
@@ -77,8 +73,8 @@ namespace ISAAR.MSolve.IGA.Tests
 			parentAnalyzer.Initialize();
 			parentAnalyzer.Solve();
 
-			var paraview = new ParaviewTsplineShells(model, solver.LinearSystems[0].Solution, filename);
-			paraview.CreateParaviewFile();
+			//var paraview = new ParaviewTsplineShells(model, solver.LinearSystems[0].Solution, filename);
+			//paraview.CreateParaviewFile();
 
 			var expectedSolutionVector = new Vector(new double[]
 			{
@@ -241,237 +237,8 @@ namespace ISAAR.MSolve.IGA.Tests
 
 		}
 
-		[Fact]
-		public void SquareShellMaterialMultiscaleBenchmark()
-		{
-			VectorExtensions.AssignTotalAffinityCount();
-			Model model = new Model();
-			string filename = "..\\..\\..\\InputFiles\\square_unstructured.iga";
-			IGAFileReader modelReader = new IGAFileReader(model, filename);
-
-			var thickness = 1.0;
-
-			//VectorExtensions.AssignTotalAffinityCount();
-			IdegenerateRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHost();
-			var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu(homogeneousRveBuilder1, true);
-
-
-			modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, material1, thickness);
-			foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X < 1e-6))
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint {DOF=DOFType.X});
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-			}
-			foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.Y < 1e-6))
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-			}
-			foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X > 1 - 1e-6))
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-			}
-			foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.Y > 1 - 1e-6))
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-			}
-
-			foreach (var controlPoint in model.ControlPointsDictionary.Values)
-			{
-				model.Loads.Add(new Load()
-				{
-					Amount = -10,
-					ControlPoint = model.ControlPointsDictionary[controlPoint.ID],
-					DOF = DOFType.Z
-				});
-			}
-			var solverBuilder = new SuiteSparseSolver.Builder();
-			solverBuilder.DofOrderer = new DofOrderer(
-				new NodeMajorDofOrderingStrategy(), new NullReordering());
-			ISolver_v2 solver = solverBuilder.BuildSolver(model);
-
-			var provider = new ProblemStructural_v2(model, solver);
-
-			var childAnalyzer = new LinearAnalyzer_v2(solver);
-			var parentAnalyzer = new StaticAnalyzer_v2(model, solver, provider, childAnalyzer);
-
-			parentAnalyzer.Initialize();
-			parentAnalyzer.Solve();
-
-			var solutionData=solver.LinearSystems[0].Solution.CopyToArray();
-			PrintUtilities.WriteToFileVector(solutionData, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_1.txt");
-		}
-
-        [Fact]
-        public void SquareShellMaterialMultiscaleBenchmarkStructured()
-        {
-            VectorExtensions.AssignTotalAffinityCount();
-            Model model = new Model();
-            string filename = "..\\..\\..\\InputFiles\\square_structured.iga";
-            IGAFileReader modelReader = new IGAFileReader(model, filename);
-
-            var thickness = 1.0;
-
-            //VectorExtensions.AssignTotalAffinityCount();
-            int database_size = 1;
-            //ULIKO 323 - 324 xrhsimopoithke prin apo to elastic
-            //IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
-            //var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimuRand(RveBuilder3, true, database_size);
-
-            //IdegenerateRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHost();
-            //var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu(homogeneousRveBuilder1, true);
-
-            //var material1 = new ShellElasticMaterial2D()
-            //{
-            //    PoissonRatio = 0.4,
-            //    YoungModulus = 3.5
-            //};
-            var material1 = new ShellElasticMaterial2Dtransformationb()
-            {
-                PoissonRatio = 0.4,
-                YoungModulus = 3.5
-            };
-
-            modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, material1, thickness);
-            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X < 1e-6))
-            {
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-            }
-            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.Y < 1e-6))
-            {
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-            }
-            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X > 1 - 1e-6))
-            {
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-            }
-            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.Y > 1 - 1e-6))
-            {
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-            }
-
-            foreach (var controlPoint in model.ControlPointsDictionary.Values)
-            {
-                model.Loads.Add(new Load()
-                {
-                    Amount = -10,
-                    ControlPoint = model.ControlPointsDictionary[controlPoint.ID],
-                    DOF = DOFType.Z
-                });
-            }
-            var solverBuilder = new SuiteSparseSolver.Builder();
-            solverBuilder.DofOrderer = new DofOrderer(
-                new NodeMajorDofOrderingStrategy(), new NullReordering());
-            ISolver_v2 solver = solverBuilder.BuildSolver(model);
-
-            var provider = new ProblemStructural_v2(model, solver);
-
-            var childAnalyzer = new LinearAnalyzer_v2(solver);
-            var parentAnalyzer = new StaticAnalyzer_v2(model, solver, provider, childAnalyzer);
-
-            parentAnalyzer.Initialize();
-            parentAnalyzer.Solve();
-
-            var solutionData = solver.LinearSystems[0].Solution.CopyToArray();
-            PrintUtilities.WriteToFileVector(solutionData, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_1.txt");
-        }
-
-        [Fact]
-        public void SquareShellMaterialMultiscaleBenchmarkStructuredSuntom1efsi()
-        {
-            VectorExtensions.AssignTotalAffinityCount();
-            Model model = new Model();
-            string filename = "..\\..\\..\\InputFiles\\square_structured.iga";
-            IGAFileReader modelReader = new IGAFileReader(model, filename);
-
-            var thickness = 1.0;
-
-            //VectorExtensions.AssignTotalAffinityCount();
-            //int database_size = 2;
-            //IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
-            //var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimuRand(RveBuilder3, true, database_size);
-
-            //IdegenerateRVEbuilder homogeneousRveBuilder1 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHost();
-            //var material1 = new Microstructure3DevelopMultipleSubdomainsUseBaseSmallStrainsShelltransformationSimu(homogeneousRveBuilder1, true);
-
-
-            IdegenerateRVEbuilder RveBuilder4 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
-            var BasicMaterial = new Shell2dRVEMaterialHostConst(1, 2, 0, RveBuilder4);
-            //var BasicMaterial = new ShellElasticMaterial2D()
-            //{
-            //    PoissonRatio = 0.4,
-            //    YoungModulus = 3.5
-            //};
-
-            modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, BasicMaterial, thickness);
-            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X < 1e-6))
-            {
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-            }
-            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.Y < 1e-6))
-            {
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-            }
-            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.X > 1 - 1e-6))
-            {
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-            }
-            foreach (var controlPoint in model.ControlPointsDictionary.Values.Where(cp => cp.Y > 1 - 1e-6))
-            {
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.X });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Y });
-                model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint { DOF = DOFType.Z });
-            }
-
-            foreach (var controlPoint in model.ControlPointsDictionary.Values)
-            {
-                model.Loads.Add(new Load()
-                {
-                    Amount = -10,
-                    ControlPoint = model.ControlPointsDictionary[controlPoint.ID],
-                    DOF = DOFType.Z
-                });
-            }
-            var solverBuilder = new SuiteSparseSolver.Builder();
-            solverBuilder.DofOrderer = new DofOrderer(
-                new NodeMajorDofOrderingStrategy(), new NullReordering());
-            ISolver_v2 solver = solverBuilder.BuildSolver(model);
-
-            var provider = new ProblemStructural_v2(model, solver);
-
-            var childAnalyzer = new LinearAnalyzer_v2(solver);
-            var parentAnalyzer = new StaticAnalyzer_v2(model, solver, provider, childAnalyzer);
-
-            parentAnalyzer.Initialize();
-            parentAnalyzer.Solve();
-
-            var solutionData = solver.LinearSystems[0].Solution.CopyToArray();
-            PrintUtilities.WriteToFileVector(solutionData, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_1.txt");
-        }
-
-
-        //[Fact]
-        public void SimpleHoodBenchmark()
+		//[Fact]
+		public void SimpleHoodBenchmark()
 		{
 			VectorExtensions.AssignTotalAffinityCount();
 			Model model = new Model();
@@ -479,22 +246,23 @@ namespace ISAAR.MSolve.IGA.Tests
 			string filepath = $"..\\..\\..\\InputFiles\\{filename}.iga";
 			IGAFileReader modelReader = new IGAFileReader(model, filepath);
 
-            //var thickness = 1.0;
-            //modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.LinearMaterial,new ShellElasticMaterial2D
-            //{
-            //	PoissonRatio = 0.3,
-            //	YoungModulus = 1e5,
-            //}, thickness);
+			//var thickness = 1.0;
 
-            modelReader.CreateTSplineShellsModelFromFile();
-            model.PatchesDictionary[0].Material = new ElasticMaterial2D(StressState2D.PlaneStress)
-            {
-                PoissonRatio = 0.3,
-                YoungModulus = 10000 //PROSOXH: na antikatastathei me to kanoniko material
-            };
-            model.PatchesDictionary[0].Thickness = 1;
+			//modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.LinearMaterial,new ShellElasticMaterial2D
+			//{
+			//	PoissonRatio = 0.3,
+			//	YoungModulus = 1e5,
+			//}, thickness);
+			modelReader.CreateTSplineShellsModelFromFile();
 
-            for (int i = 0; i < 100; i++)
+			model.PatchesDictionary[0].Material = new ElasticMaterial2D(StressState2D.PlaneStress)
+			{
+				PoissonRatio = 0.3,
+				YoungModulus = 10000
+			};
+			model.PatchesDictionary[0].Thickness = 1;
+
+			for (int i = 0; i < 100; i++)
 			{
 				var id = model.ControlPoints[i].ID;
 				model.ControlPointsDictionary[id].Constrains.Add(new Constraint(){DOF = DOFType.X});
@@ -533,47 +301,23 @@ namespace ISAAR.MSolve.IGA.Tests
 			paraview.CreateParaviewFile();
 		}
 
-		[Fact] //commented out: requires mkl and suitesparse can't be test
+		//[Fact]
 		public void SimpleHoodBenchmarkMKL()
 		{
-            //LibrarySettings.LinearAlgebraProviders = LinearAlgebraProviderChoice.MKL;
 			VectorExtensions.AssignTotalAffinityCount();
 			Model model = new Model();
 			var filename = "attempt2";
 			string filepath = $"..\\..\\..\\InputFiles\\{filename}.iga";
 			IGAFileReader modelReader = new IGAFileReader(model, filepath);
 
-            var runMs = true;
-            var transformationA = false;
-
-            if (runMs)
-            {
-                IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
-                var BasicMaterial = new Shell2dRVEMaterialHost(2, 2, 0, RveBuilder3);
-                var thickness = 1.0;
-                modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, BasicMaterial, thickness);
-            }
-            else
-            {
-                if (transformationA)
-                {
-                    var thickness = 1.0;
-                    modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, new ShellElasticMaterial2D()
-                    {
-                        PoissonRatio = 0.4,
-                        YoungModulus = 3.5
-                    }, thickness);
-                }
-                else
-                {
-                    var thickness = 1.0;
-                    modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, new ShellElasticMaterial2Dtransformationb()
-                    {
-                        PoissonRatio = 0.4,
-                        YoungModulus = 3.5
-                    }, thickness);
-                }
-            }
+			var thickness = 1.0;
+			
+			modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial,new ShellElasticMaterial2D()
+			{
+				PoissonRatio = 0.3,
+				YoungModulus = 10000
+			}, thickness);
+			
 
 			for (int i = 0; i < 100; i++)
 			{
@@ -609,333 +353,8 @@ namespace ISAAR.MSolve.IGA.Tests
 			parentAnalyzer.Initialize();
 			parentAnalyzer.Solve();
 
-            var paraview = new ParaviewTsplineShells(model, solver.LinearSystems[0].Solution, filename);
-            paraview.CreateParaviewFile();
-
-            double[] solutiondata =solver.LinearSystems[0].Solution.CopyToArray();
-            PrintUtilities.WriteToFileVector(new double[1] { new Vector(solutiondata).Norm }, $"..\\..\\..\\OutputFiles\\{filename}SolutionNorm.txt");
-        }
-
-        [Fact] //commented out: requires mkl and suitesparse can't be test
-        public void SimpleHoodBenchmarkMKLStochastic()
-        {
-            VectorExtensions.AssignTotalAffinityCount();
-
-            var runMs = false;
-            //IdegenerateRVEbuilder RveBuilder3 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
-            //var BasicMaterial = new Shell2dRVEMaterialHost(50, 2, 0, RveBuilder3);
-            IdegenerateRVEbuilder RveBuilder4 = new GrapheneReinforcedRVEBuilderExample3GrSh1RVEstifDegenAndLinearPeripheralHostTestPostData(1);
-            var BasicMaterial = new Shell2dRVEMaterialHostConst(1, 2, 0, RveBuilder4);
-            int totalsimulations = 1;
-
-            #region Genika settings
-            //LibrarySettings.LinearAlgebraProviders = LinearAlgebraProviderChoice.MKL;
-            VectorExtensions.AssignTotalAffinityCount();
-            #endregion
-
-            for (int simulation_id = 1; simulation_id < totalsimulations + 1; simulation_id++)
-            {
-                Model model = new Model();
-                var filename = "attempt2";
-                string filepath = $"..\\..\\..\\InputFiles\\{filename}.iga";
-                IGAFileReader modelReader = new IGAFileReader(model, filepath);
-
-                var transformationA = false;
-
-                if (runMs)
-                {
-                    var thickness = 0.015;
-                    modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, BasicMaterial, thickness);
-                }
-                else
-                {
-                    if (transformationA)
-                    {
-                        var thickness = 0.015;
-                        modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, new ShellElasticMaterial2D()
-                        {
-                            PoissonRatio = 0.4,
-                            YoungModulus = 3.5
-                        }, thickness);
-                    }
-                    else
-                    {
-                        var thickness = 0.015;
-                        modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, new ShellElasticMaterial2Dtransformationb()
-                        {
-                            PoissonRatio = 0.4,
-                            YoungModulus = 3.5
-                        }, thickness);
-                    }
-                }
-
-                for (int i = 0; i < 100; i++)
-                {
-                    var id = model.ControlPoints[i].ID;
-                    model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.X });
-                    model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.Y });
-                    model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.Z });
-                }
-
-                for (int i = model.ControlPoints.Count - 100; i < model.ControlPoints.Count; i++)
-                {
-                    var id = model.ControlPoints[i].ID;
-                    model.Loads.Add(new Load()
-                    {
-                        Amount = 1,
-                        ControlPoint = model.ControlPointsDictionary[id],
-                        DOF = DOFType.Z
-                    });
-                }
-                var solverBuilder = new SuiteSparseSolver.Builder();
-                solverBuilder.DofOrderer = new DofOrderer(
-                    new NodeMajorDofOrderingStrategy(), AmdReordering.CreateWithSuiteSparseAmd());
-                SuiteSparseSolver solver = solverBuilder.BuildSolver(model);
-
-                //var solverBuilder = new SkylineSolver.Builder();
-                //SkylineSolver solver = solverBuilder2.BuildSolver(model);
-
-                // Structural problem provider
-                var provider = new ProblemStructural_v2(model, solver);
-
-                // Linear static analysis
-                var childAnalyzer = new LinearAnalyzer_v2(solver);
-                var parentAnalyzer = new StaticAnalyzer_v2(model, solver, provider, childAnalyzer);
-
-                // Run the analysis
-                parentAnalyzer.Initialize();
-                parentAnalyzer.Solve();
-
-                string outputString = "Analysis_no_" + simulation_id.ToString() + "_output";
-
-                var paraview = new ParaviewTsplineShells(model, solver.LinearSystems[0].Solution, outputString);
-                paraview.CreateParaviewFile();
-
-                double[] solutiondata = solver.LinearSystems[0].Solution.CopyToArray();
-                PrintUtilities.WriteToFileVector(new double[1] { new Vector(solutiondata).Norm }, $"..\\..\\..\\OutputFiles\\{outputString}SolutionNorm.txt");
-                PrintUtilities.WriteToFileVector(solutiondata, @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\U_sunol_1.txt");
-
-                #region empty data
-                model.Clear();
-                model = null;
-                modelReader = null;
-                solverBuilder = null;
-                solver.Dispose();
-                provider = null; childAnalyzer = null; parentAnalyzer = null; paraview = null; solutiondata = null;
-                #endregion
-            }
-        }
-
-        [Fact] //commented out: requires mkl and suitesparse can't be test
-        public void SimpleHoodBenchmarkMKLStochasticElastic()
-        {                        
-            int totalsimulations = 3;
-
-            #region Genika settings
-            //LibrarySettings.LinearAlgebraProviders = LinearAlgebraProviderChoice.MKL;
-            VectorExtensions.AssignTotalAffinityCount();
-            #endregion
-
-            for (int simulation_id = 1; simulation_id < totalsimulations + 1; simulation_id++)
-            {
-                Model model = new Model();
-                var filename = "attempt2";
-                string filepath = $"..\\..\\..\\InputFiles\\{filename}.iga";
-                IGAFileReader modelReader = new IGAFileReader(model, filepath);
-
-                var runMs = false;
-                var transformationA = false;
-
-                if (runMs)
-                {
-                   
-
-                }
-                else
-                {
-                    if (transformationA)
-                    {
-                        var thickness = 0.015;
-                        modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, new ShellElasticMaterial2D()
-                        {
-                            PoissonRatio = 0.4,
-                            YoungModulus = 3.5
-                        }, thickness);
-                    }
-                    else
-                    {
-                        var thickness = 0.015;
-                        modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, new ShellElasticMaterial2Dtransformationb()
-                        {
-                            PoissonRatio = 0.4,
-                            YoungModulus = 3.5
-                        }, thickness);
-                    }
-                }
-
-                for (int i = 0; i < 100; i++)
-                {
-                    var id = model.ControlPoints[i].ID;
-                    model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.X });
-                    model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.Y });
-                    model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.Z });
-                }
-
-                for (int i = model.ControlPoints.Count - 100; i < model.ControlPoints.Count; i++)
-                {
-                    var id = model.ControlPoints[i].ID;
-                    model.Loads.Add(new Load()
-                    {
-                        Amount = 1,
-                        ControlPoint = model.ControlPointsDictionary[id],
-                        DOF = DOFType.Z
-                    });
-                }
-                var solverBuilder = new SuiteSparseSolver.Builder();
-                solverBuilder.DofOrderer = new DofOrderer(
-                    new NodeMajorDofOrderingStrategy(), AmdReordering.CreateWithSuiteSparseAmd());
-                SuiteSparseSolver solver = solverBuilder.BuildSolver(model);
-
-                //var solverBuilder = new SkylineSolver.Builder();
-                //SkylineSolver solver = solverBuilder2.BuildSolver(model);
-
-                // Structural problem provider
-                var provider = new ProblemStructural_v2(model, solver);
-
-                // Linear static analysis
-                var childAnalyzer = new LinearAnalyzer_v2(solver);
-                var parentAnalyzer = new StaticAnalyzer_v2(model, solver, provider, childAnalyzer);
-
-                // Run the analysis
-                parentAnalyzer.Initialize();
-                parentAnalyzer.Solve();
-
-                string outputString = "Analysis_no_" + simulation_id.ToString() + "_output";
-
-                var paraview = new ParaviewTsplineShells(model, solver.LinearSystems[0].Solution, outputString);
-                paraview.CreateParaviewFile();
-
-                double[] solutiondata = solver.LinearSystems[0].Solution.CopyToArray();
-                PrintUtilities.WriteToFileVector(new double[1] { new Vector(solutiondata).Norm }, $"..\\..\\..\\OutputFiles\\{outputString}SolutionNorm.txt");
-
-                #region empty data
-                model.Clear();
-                model = null;
-                modelReader = null;
-                solverBuilder = null;
-                solver.Dispose();
-                provider = null; childAnalyzer = null; parentAnalyzer = null; paraview = null; solutiondata = null;
-                #endregion
-            }
-        }
-
-        [Fact]
-        public void SimpleHoodBenchmarkMKLStochasticElastic2()
-        {
-
-            int totalsimulations = 3;
-
-            #region Genika settings
-            //LibrarySettings.LinearAlgebraProviders = LinearAlgebraProviderChoice.MKL;
-            VectorExtensions.AssignTotalAffinityCount();
-            #endregion
-
-            for (int simulation_id = 1; simulation_id < totalsimulations + 1; simulation_id++)
-            {
-                Analyze(simulation_id);
-            }
-        }
-
-        private void Analyze(int analysis_No)
-        {
-            Model model = new Model();
-            var filename = "attempt2";
-            string filepath = $"..\\..\\..\\InputFiles\\{filename}.iga";
-            IGAFileReader modelReader = new IGAFileReader(model, filepath);
-
-            var runMs = false;
-            var transformationA = false;
-
-            if (runMs)
-            {
-
-
-            }
-            else
-            {
-                if (transformationA)
-                {
-                    var thickness = 0.015;
-                    modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, new ShellElasticMaterial2D()
-                    {
-                        PoissonRatio = 0.4,
-                        YoungModulus = 3.5
-                    }, thickness);
-                }
-                else
-                {
-                    var thickness = 0.015;
-                    modelReader.CreateTSplineShellsModelFromFile(IGAFileReader.TSplineShellTypes.ThicknessMaterial, new ShellElasticMaterial2Dtransformationb()
-                    {
-                        PoissonRatio = 0.4,
-                        YoungModulus = 3.5
-                    }, thickness);
-                }
-            }
-
-            for (int i = 0; i < 100; i++)
-            {
-                var id = model.ControlPoints[i].ID;
-                model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.X });
-                model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.Y });
-                model.ControlPointsDictionary[id].Constrains.Add(new Constraint() { DOF = DOFType.Z });
-            }
-
-            for (int i = model.ControlPoints.Count - 100; i < model.ControlPoints.Count; i++)
-            {
-                var id = model.ControlPoints[i].ID;
-                model.Loads.Add(new Load()
-                {
-                    Amount = 1,
-                    ControlPoint = model.ControlPointsDictionary[id],
-                    DOF = DOFType.Z
-                });
-            }
-            var solverBuilder = new SuiteSparseSolver.Builder();
-            solverBuilder.DofOrderer = new DofOrderer(
-                new NodeMajorDofOrderingStrategy(), AmdReordering.CreateWithSuiteSparseAmd());
-            SuiteSparseSolver solver = solverBuilder.BuildSolver(model);
-
-            //var solverBuilder = new SkylineSolver.Builder();
-            //SkylineSolver solver = solverBuilder2.BuildSolver(model);
-
-            // Structural problem provider
-            var provider = new ProblemStructural_v2(model, solver);
-
-            // Linear static analysis
-            var childAnalyzer = new LinearAnalyzer_v2(solver);
-            var parentAnalyzer = new StaticAnalyzer_v2(model, solver, provider, childAnalyzer);
-
-            // Run the analysis
-            parentAnalyzer.Initialize();
-            parentAnalyzer.Solve();
-
-            string outputString = "Analysis_no_" + analysis_No.ToString() + "_output";
-
-            var paraview = new ParaviewTsplineShells(model, solver.LinearSystems[0].Solution, outputString);
-            paraview.CreateParaviewFile();
-
-            double[] solutiondata = solver.LinearSystems[0].Solution.CopyToArray();
-            PrintUtilities.WriteToFileVector(new double[1] { new Vector(solutiondata).Norm }, $"..\\..\\..\\OutputFiles\\{outputString}SolutionNorm.txt");
-
-            #region empty data
-            model.Clear();
-            model = null;
-            modelReader = null;
-            solverBuilder = null;
-            solver.Dispose();
-            provider = null; childAnalyzer = null; parentAnalyzer = null; paraview = null; solutiondata = null;
-            #endregion
-        }
-    }
+			//var paraview = new ParaviewTsplineShells(model, solver.LinearSystems[0].Solution, filename);
+			//paraview.CreateParaviewFile();
+		}
+	}
 }

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Numerical.Commons;
-using System.IO;
 
 //TODO: remove code that calculates rhs vector components (nodal loads, constraints, etc). It should be moved to dedicated 
 //      classes like EquivalentLoadAssembler, so that it can be reused between subdomains of different projects (FEM, IGA, XFEM).
@@ -14,7 +14,7 @@ namespace ISAAR.MSolve.FEM.Entities
 {
     public class Subdomain_v2 : ISubdomain_v2
     {
-        private readonly List<Node> nodes = new List<Node>();
+        private readonly List<Node_v2> nodes = new List<Node_v2>();
 
         public Subdomain_v2(int id)
         {
@@ -23,15 +23,15 @@ namespace ISAAR.MSolve.FEM.Entities
 
         public Table<INode, DOFType, double> Constraints { get; } = new Table<INode, DOFType, double>();
 
-        IReadOnlyList<IElement> ISubdomain_v2.Elements => Elements;
-        public List<Element> Elements { get; } = new List<Element>();
+        IReadOnlyList<IElement_v2> ISubdomain_v2.Elements => Elements;
+        public List<Element_v2> Elements { get; } = new List<Element_v2>();
 
         //public IList<EmbeddedNode> EmbeddedNodes { get; } = new List<EmbeddedNode>();
 
         public int ID { get; }
 
         IReadOnlyList<INode> ISubdomain_v2.Nodes => nodes;
-        public IReadOnlyList<Node> Nodes => nodes;
+        public IReadOnlyList<Node_v2> Nodes => nodes;
 
         public ISubdomainFreeDofOrdering DofOrdering { get; set; }
 
@@ -42,7 +42,7 @@ namespace ISAAR.MSolve.FEM.Entities
         //    get
         //    {
         //        bool modified = false;
-        //        foreach (Element element in elementsDictionary.Values)
+        //        foreach (Element_v2 element in elementsDictionary.Values)
         //            if (element.ElementType.MaterialModified)
         //            {
         //                modified = true;
@@ -56,38 +56,37 @@ namespace ISAAR.MSolve.FEM.Entities
 
         //TODO: Ideally this is set by the Model, Cluster and should not be modified during the analysis. Actually it should be 
         //      the same as Constraints.
-        public Table<Node, DOFType, double> NodalLoads { get; set; }
+        public Table<Node_v2, DOFType, double> NodalLoads { get; set; }
 
         //TODO: This belongs in EquivalentLoadsAssembler
         //TODO: the constraintScalingFactor parameter is not used.
-        public Vector CalculateElementIncrementalConstraintDisplacements(IElement element, double constraintScalingFactor)//QUESTION: would it be maybe more clear if we passed the constraintsDictionary as argument??
+        public double[] CalculateElementIncrementalConstraintDisplacements(IElement_v2 element, double constraintScalingFactor)//QUESTION: would it be maybe more clear if we passed the constraintsDictionary as argument??
         {
-            var elementNodalDisplacements = Vector.CreateZero(DofOrdering.CountElementDofs(element));
+            var elementNodalDisplacements = new double[DofOrdering.CountElementDofs(element)];
             ApplyConstraintDisplacements(element, elementNodalDisplacements, Constraints);
             return elementNodalDisplacements;
         }
 
-        public Vector CalculateElementDisplacements(Element element, IVectorView globalDisplacementVector)//QUESTION: would it be maybe more clear if we passed the constraintsDictionary as argument??
+        public double[] CalculateElementDisplacements(Element_v2 element, IVectorView globalDisplacementVector)//QUESTION: would it be maybe more clear if we passed the constraintsDictionary as argument??
         {
-            var elementNodalDisplacements = Vector.CreateZero(DofOrdering.CountElementDofs(element));
-            DofOrdering.ExtractVectorElementFromSubdomain(element, globalDisplacementVector, elementNodalDisplacements);
+            double[] elementNodalDisplacements = DofOrdering.ExtractVectorElementFromSubdomain(element, globalDisplacementVector);
             ApplyConstraintDisplacements(element, elementNodalDisplacements, Constraints);
             return elementNodalDisplacements;
         }
 
         public void ClearMaterialStresses()
         {
-            foreach (Element element in Elements) element.ElementType.ClearMaterialStresses();
+            foreach (Element_v2 element in Elements) element.ElementType.ClearMaterialStresses();
         }
 
         public void DefineNodesFromElements()
         {
             nodes.Clear(); // Necessary if the same model has been used in a previous analysis. Otherwise each node would be added twice.
-            var nodeComparer = Comparer<Node>.Create((Node node1, Node node2) => node1.ID - node2.ID);
-            var nodeSet = new SortedSet<Node>(nodeComparer);
-            foreach (Element element in Elements)
+            var nodeComparer = Comparer<Node_v2>.Create((Node_v2 node1, Node_v2 node2) => node1.ID - node2.ID);
+            var nodeSet = new SortedSet<Node_v2>(nodeComparer);
+            foreach (Element_v2 element in Elements)
             {
-                foreach (Node node in element.Nodes) nodeSet.Add(node);
+                foreach (Node_v2 node in element.Nodes) nodeSet.Add(node);
             }
             nodes.AddRange(nodeSet);
 
@@ -104,7 +103,7 @@ namespace ISAAR.MSolve.FEM.Entities
             //TODO: perhaps it is more efficient to traverse the global constraints instead of the subdomain's nodes, provided
             //      the latter are stored as a set. 
             //TODO: the next could be a Table method: Table.KeepDataOfRows(IEnumerable<TRow> rows)
-            foreach (Node node in Nodes)
+            foreach (Node_v2 node in Nodes)
             {
                 bool isNodeConstrained = globalConstraints.TryGetDataOfRow(node,
                     out IReadOnlyDictionary<DOFType, double> constraintsOfNode);
@@ -167,18 +166,18 @@ namespace ISAAR.MSolve.FEM.Entities
         public IVector GetRhsFromSolution(IVectorView solution, IVectorView dSolution)
         {
             var forces = Vector.CreateZero(DofOrdering.NumFreeDofs); //TODO: use Vector
-            foreach (Element element in Elements)
+            foreach (Element_v2 element in Elements)
             {
                 //var localSolution = GetLocalVectorFromGlobal(element, solution);//TODOMaria: This is where the element displacements are calculated //removeMaria
                 //var localdSolution = GetLocalVectorFromGlobal(element, dSolution);//removeMaria
 
                 //TODO: ElementType should operate with Vector instead of double[]. Then the ToRawArray() calls can be removed
-                double[] localSolution = CalculateElementDisplacements(element, solution).ToRawArray();
-                double[] localdSolution = CalculateElementDisplacements(element, dSolution).ToRawArray();
+                double[] localSolution = CalculateElementDisplacements(element, solution);
+                double[] localdSolution = CalculateElementDisplacements(element, dSolution);
                 element.ElementType.CalculateStresses(element, localSolution, localdSolution);
                 if (element.ElementType.MaterialModified)
-                    element.Subdomain_v2.MaterialsModified = true;
-                var f = Vector.CreateFromArray(element.ElementType.CalculateForces(element, localSolution, localdSolution));
+                    element.Subdomain.MaterialsModified = true;
+                var f = element.ElementType.CalculateForces(element, localSolution, localdSolution);
                 DofOrdering.AddVectorElementToSubdomain(element, f, forces);
             }
             return forces;
@@ -187,12 +186,12 @@ namespace ISAAR.MSolve.FEM.Entities
         public void ResetMaterialsModifiedProperty()
         {
             this.MaterialsModified = false;
-            foreach (Element element in Elements) element.ElementType.ResetMaterialModified();
+            foreach (Element_v2 element in Elements) element.ElementType.ResetMaterialModified();
         }
 
         public void SaveMaterialState()
         {
-            foreach (Element element in Elements) element.ElementType.SaveMaterialState();
+            foreach (Element_v2 element in Elements) element.ElementType.SaveMaterialState();
         }
 
         //TODO: I am against modifying the constraints table of the subdomain. Instead the analyzer should keep a constraint
@@ -203,12 +202,12 @@ namespace ISAAR.MSolve.FEM.Entities
         //      by various analyzer classes and as such does not need rewriting for IGA, XFEM or other problem types. Also it 
         //      can perform optimizations, such as using a prescribed displacements vector and element constrained dof maps,
         //      similarly to how free displacements are handled by ISubdomainFreeDofOrdering
-        private static void ApplyConstraintDisplacements(IElement element, Vector elementNodalDisplacements,
+        private static void ApplyConstraintDisplacements(IElement_v2 element, double[] elementNodalDisplacements,
             Table<INode, DOFType, double> constraints)
         {
             int elementDofIdx = 0;
-            IList<INode> nodes = element.IElementType.DOFEnumerator.GetNodesForMatrixAssembly(element);
-            IList<IList<DOFType>> dofs = element.IElementType.DOFEnumerator.GetDOFTypes(element);
+            IList<INode> nodes = element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element);
+            IList<IList<DOFType>> dofs = element.ElementType.DofEnumerator.GetDOFTypes(element);
             for (int i = 0; i < nodes.Count; ++i)
             {
                 //bool isConstrainedNode = constraintsDictionary.TryGetValue(nodes[i].ID, 
@@ -234,7 +233,7 @@ namespace ISAAR.MSolve.FEM.Entities
         }
 
         //ADDED1
-        public IVector GetRHSFromSolutionWithInitialDisplacemntsEffect(IVectorView solution, IVectorView dSolution, Dictionary<int, Node> boundaryNodes,
+        public IVector GetRHSFromSolutionWithInitialDisplacemntsEffect(IVectorView solution, IVectorView dSolution, Dictionary<int, Node_v2> boundaryNodes,
             Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
             int nIncrement, int totalIncrements)
         {
@@ -245,30 +244,28 @@ namespace ISAAR.MSolve.FEM.Entities
             string path = string.Format(string2, counter_data);
             //solution.WriteToFile(path);
             double[] solution_data = new double[solution.Length];
-            solution_data=solution.CopyToArray();
+            solution_data = solution.CopyToArray();
             WriteToFileVector(solution_data, path);
 
-            var forces = Vector.CreateZero(DofOrdering.NumFreeDofs); //TODO: use Vector
-            foreach (Element element in Elements)
+            var forces = Vector.CreateZero(DofOrdering.NumFreeDofs);
+            foreach (Element_v2 element in Elements)
             {
-                var localSolution = GetLocalVectorFromGlobalWithoutPrescribedDisplacements(element, solution).ToRawArray();
+                double[] localSolution = GetLocalVectorFromGlobalWithoutPrescribedDisplacements(element, solution);
                 ImposePrescribedDisplacementsWithInitialConditionSEffect(element, localSolution, boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, nIncrement, totalIncrements);
-                var localdSolution = GetLocalVectorFromGlobalWithoutPrescribedDisplacements(element, dSolution).ToRawArray();
+                double[] localdSolution = GetLocalVectorFromGlobalWithoutPrescribedDisplacements(element, dSolution);
                 ImposePrescribed_d_DisplacementsWithInitialConditionSEffect(element, localdSolution, boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, nIncrement, totalIncrements);
                 element.ElementType.CalculateStresses(element, localSolution, localdSolution);
                 if (element.ElementType.MaterialModified)
                     element.Subdomain.MaterialsModified = true;
-                var f = Vector.CreateFromArray(element.ElementType.CalculateForces(element, localSolution, localdSolution));
+                double[] f = element.ElementType.CalculateForces(element, localSolution, localdSolution);
                 DofOrdering.AddVectorElementToSubdomain(element, f, forces);
             }
             return forces;
         }
 
-        private Vector GetLocalVectorFromGlobalWithoutPrescribedDisplacements(Element element, IVectorView globalDisplacementVector)
+        private double[] GetLocalVectorFromGlobalWithoutPrescribedDisplacements(Element_v2 element, IVectorView globalDisplacementVector)
         {
-            Vector elementNodalDisplacements = Vector.CreateZero(DofOrdering.CountElementDofs(element));
-            DofOrdering.ExtractVectorElementFromSubdomain(element, globalDisplacementVector, elementNodalDisplacements);
-            return elementNodalDisplacements;
+            return DofOrdering.ExtractVectorElementFromSubdomain(element, globalDisplacementVector);
         }
 
         //// prosthiki print
@@ -288,16 +285,15 @@ namespace ISAAR.MSolve.FEM.Entities
                 writer2.WriteLine(); // allagh seiras (dld grafei oti exei mesa h parenths=esh edw keno kai allazei seira)
             }
             writer2.Flush();
-
         }
 
-        public void ImposePrescribedDisplacementsWithInitialConditionSEffect(Element element, double[] localSolution, Dictionary<int, Node> boundaryNodes,
+        public void ImposePrescribedDisplacementsWithInitialConditionSEffect(Element_v2 element, double[] localSolution, Dictionary<int, Node_v2> boundaryNodes,
             Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
             int nIncrement, int totalIncrements)
         {
 
-            var elementDOFTypes = element.ElementType.DOFEnumerator.GetDOFTypes(element);
-            var matrixAssemblyNodes = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element);
+            var elementDOFTypes = element.ElementType.DofEnumerator.GetDOFTypes(element);
+            var matrixAssemblyNodes = element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element);
             int iElementMatrixColumn = 0;
             for (int j = 0; j < elementDOFTypes.Count; j++)
             {
@@ -320,27 +316,26 @@ namespace ISAAR.MSolve.FEM.Entities
                 }
                 iElementMatrixColumn += nodalDofsNumber;
             }
-
         }
 
-        public void ImposePrescribed_d_DisplacementsWithInitialConditionSEffect(Element element, double[] localSolution, Dictionary<int, Node> boundaryNodes,
+        public void ImposePrescribed_d_DisplacementsWithInitialConditionSEffect(Element_v2 element, double[] localSolution, Dictionary<int, Node_v2> boundaryNodes,
             Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
             int nIncrement, int totalIncrements)
         {
 
-            var elementDOFTypes = element.ElementType.DOFEnumerator.GetDOFTypes(element);
-            var matrixAssemblyNodes = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element);
+            var elementDofTypes = element.ElementType.DofEnumerator.GetDOFTypes(element);
+            var matrixAssemblyNodes = element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element);
             int iElementMatrixColumn = 0;
-            for (int j = 0; j < elementDOFTypes.Count; j++)
+            for (int j = 0; j < elementDofTypes.Count; j++)
             {
                 INode nodeColumn = matrixAssemblyNodes[j];
-                int nodalDofsNumber = elementDOFTypes[j].Count;
+                int nodalDofsNumber = elementDofTypes[j].Count;
                 if (boundaryNodes.ContainsKey(nodeColumn.ID))
                 {
                     Dictionary<DOFType, double> nodalConvergedDisplacements = initialConvergedBoundaryDisplacements[nodeColumn.ID];
                     Dictionary<DOFType, double> nodalTotalDisplacements = totalBoundaryDisplacements[nodeColumn.ID];
                     int positionOfDofInNode = 0;
-                    foreach (DOFType doftype1 in elementDOFTypes[j])
+                    foreach (DOFType doftype1 in elementDofTypes[j])
                     {
                         if (nodalConvergedDisplacements.ContainsKey(doftype1))
                         {

@@ -6,31 +6,29 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System;
-using System.Collections.Generic;
-using ISAAR.MSolve.FEM.Entities;
-using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
+using ISAAR.MSolve.LinearAlgebra.Matrices;
 
 namespace ISAAR.MSolve.FEM
 {
     public class EquivalentContributionsAssebler_v2
     {
         private Subdomain_v2 subdomain;
-        private IElementMatrixProvider elementProvider;
+        private IElementMatrixProvider_v2 elementProvider;
         /// <summary>
         /// ELEMENT provider tha perastei profanws o ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
         /// kai subdomain prosoxh sta ID idia me ta linearsystems
         /// </summary>
         /// <param name="subdomain"></param>
         /// <param name="elementProvider"></param>
-        public EquivalentContributionsAssebler_v2(Subdomain_v2 subdomain, IElementMatrixProvider elementProvider)
+        public EquivalentContributionsAssebler_v2(Subdomain_v2 subdomain, IElementMatrixProvider_v2 elementProvider)
         {
             this.subdomain = subdomain;
             this.elementProvider = elementProvider;
         }
 
-        public Vector CalculateKfreeprescribedUpMultiplicationForSubdRHSContribution(Dictionary<int, Node> boundaryNodes,
+        public Vector CalculateKfreeprescribedUpMultiplicationForSubdRHSContribution(Dictionary<int, Node_v2> boundaryNodes,
             Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
             int nIncrement, int totalIncrements)
         {
@@ -45,16 +43,16 @@ namespace ISAAR.MSolve.FEM
             times.Add("element", TimeSpan.Zero);
             times.Add("addition", TimeSpan.Zero);
 
-            foreach (Element element in subdomain.Elements) //_v2.3 ElementsDictionary.Values)    // TODOGerasimos edw mporei na xrhsimopoihthei to dictionary twn eleement pou exoun fp nodes
+            foreach (Element_v2 element in subdomain.Elements) //_v2.3 ElementsDictionary.Values)    // TODOGerasimos edw mporei na xrhsimopoihthei to dictionary twn eleement pou exoun fp nodes
             {
-                var isEmbeddedElement = element.ElementType is IEmbeddedElement;
+                var isEmbeddedElement = element.ElementType is IEmbeddedElement_v2;
                 var elStart = DateTime.Now;
-                IMatrix2D ElementK = elementProvider.Matrix(element);
+                IMatrix ElementK = elementProvider.Matrix(element);
                 times["element"] += DateTime.Now - elStart;
 
                 elStart = DateTime.Now;
-                var elementDOFTypes = element.ElementType.DOFEnumerator.GetDOFTypes(element);
-                var matrixAssemblyNodes = element.ElementType.DOFEnumerator.GetNodesForMatrixAssembly(element);
+                var elementDOFTypes = element.ElementType.DofEnumerator.GetDOFTypes(element);
+                var matrixAssemblyNodes = element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element);
                 int iElementMatrixRow = 0;
                 for (int i = 0; i < elementDOFTypes.Count; i++)
                 {

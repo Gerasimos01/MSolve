@@ -46,7 +46,7 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
             model.ConnectDataStructures();
             #endregion
 
-            ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
+            ElementStructuralStiffnessProvider_v2 elementProvider = new ElementStructuralStiffnessProvider_v2();
             Dictionary<int, EquivalentContributionsAssebler_v2> equivalentContributionsAssemblers = new Dictionary<int, EquivalentContributionsAssebler_v2>();//SUNOLIKA STOIXEIA model.SubdomainsDictionary.Count oi oles tis model.subdomains ekei mallon deginontai access me ID.
             equivalentContributionsAssemblers.Add(model.SubdomainsDictionary[1].ID, new EquivalentContributionsAssebler_v2(model.SubdomainsDictionary[1], elementProvider));
             var solverBuilder = new SkylineSolver.Builder();
@@ -60,7 +60,7 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
             #region create boundary nodes and create displacements for 1st increment
             Dictionary<int, IVector> uInitialFreeDOFDisplacementsPerSubdomain = new Dictionary<int, IVector>();
             uInitialFreeDOFDisplacementsPerSubdomain.Add(model.SubdomainsDictionary[1].ID, Vector.CreateZero(44));//ordering1.NumGlobalFreeDofs prosoxh sto Id twn subdomain
-            Dictionary<int, Node> boundaryNodes = new Dictionary<int, Node>();
+            Dictionary<int, Node_v2> boundaryNodes = new Dictionary<int, Node_v2>();
             for (int k = 17; k < 21; k++)
             {
                 boundaryNodes.Add(model.NodesDictionary[k].ID, model.NodesDictionary[k]);
@@ -122,7 +122,7 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
             #endregion
 
             #region Creation of nessesary analyzers and solution 
-            ElementStructuralStiffnessProvider elementProvider2 = new ElementStructuralStiffnessProvider();
+            ElementStructuralStiffnessProvider_v2 elementProvider2 = new ElementStructuralStiffnessProvider_v2();
             Dictionary<int, EquivalentContributionsAssebler_v2> equivalentContributionsAssemblers2 = new Dictionary<int, EquivalentContributionsAssebler_v2>();//SUNOLIKA STOIXEIA model.SubdomainsDictionary.Count oi oles tis model.subdomains ekei mallon deginontai access me ID.
             equivalentContributionsAssemblers2.Add(model.SubdomainsDictionary[1].ID, new EquivalentContributionsAssebler_v2(model.SubdomainsDictionary[1], elementProvider2));
             var solverBuilder2 = new SkylineSolver.Builder();
@@ -151,7 +151,7 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
 
         public static void HexaCantileverBuilderDispControl(Model_v2 model, double load_value)
         {
-            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = 1353000,
                 PoissonRatio = 0.3,
@@ -186,19 +186,19 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
             // orismos shmeiwn
             for (int nNode = 0; nNode < nodeData.GetLength(0); nNode++)
             {
-                model.NodesDictionary.Add(nNode + 1, new Node() { ID = nNode + 1, X = nodeData[nNode, 0], Y = nodeData[nNode, 1], Z = nodeData[nNode, 2] });
+                model.NodesDictionary.Add(nNode + 1, new Node_v2() { ID = nNode + 1, X = nodeData[nNode, 0], Y = nodeData[nNode, 1], Z = nodeData[nNode, 2] });
 
             }
 
             // orismos elements 
-            Element e1;
+            Element_v2 e1;
             int subdomainID = 1;
             for (int nElement = 0; nElement < elementData.GetLength(0); nElement++)
             {
-                e1 = new Element()
+                e1 = new Element_v2()
                 {
                     ID = nElement + 1,
-                    ElementType = new Hexa8NonLinear(material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+                    ElementType = new Hexa8NonLinear_v2(material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
                 };
                 for (int j = 0; j < 8; j++)
                 {

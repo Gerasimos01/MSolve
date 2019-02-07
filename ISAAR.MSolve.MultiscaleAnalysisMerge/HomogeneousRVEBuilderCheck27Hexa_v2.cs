@@ -41,17 +41,17 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         }
         public IRVEbuilder_v2 Clone(int a) => new HomogeneousRVEBuilderCheck27Hexa_v2();
 
-        public Tuple<Model_v2, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
+        public Tuple<Model_v2, Dictionary<int, Node_v2>,double> GetModelAndBoundaryNodes()
         {
            return Reference2RVEExample10_000withRenumbering_mono_hexa();
         }
 
-        public static Tuple<Model_v2, Dictionary<int, Node>,double> Reference2RVEExample10_000withRenumbering_mono_hexa()
+        public static Tuple<Model_v2, Dictionary<int, Node_v2>,double> Reference2RVEExample10_000withRenumbering_mono_hexa()
         {
             Model_v2 model = new Model_v2();
             model.SubdomainsDictionary.Add(1, new Subdomain_v2(1)); // subdomainId=1 //
 
-            Dictionary<int, Node> boundaryNodes= new Dictionary<int, Node>();
+            Dictionary<int, Node_v2> boundaryNodes= new Dictionary<int, Node_v2>();
             // COPY APO: Reference2RVEExample100_000withRenumbering_mono_hexa
             double[,] Dq = new double[1, 1];
             Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
@@ -117,7 +117,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             //IEnumerable<Element> embdeddedGroup = model.ElementsDictionary.Where(x => (Array.IndexOf(EmbElementsIds, x.Key) > -1)).Select(kv => kv.Value); // dld einai null afth th stigmh
             //var embeddedGrouping = new EmbeddedCohesiveGrouping(model, hostGroup, embdeddedGroup);
 
-            return new Tuple<Model_v2, Dictionary<int, Node>,double>(model, boundaryNodes,volume);
+            return new Tuple<Model_v2, Dictionary<int, Node_v2>,double>(model, boundaryNodes,volume);
         }
     }
 }

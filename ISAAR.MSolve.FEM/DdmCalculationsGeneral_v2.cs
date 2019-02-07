@@ -13,19 +13,19 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             //private void BuildSubdomainOfEachElement()
             foreach (Subdomain_v2 subdomain in model.SubdomainsDictionary.Values)
             {
-                foreach (Element element in subdomain.Elements)
-                { element.Subdomain_v2 = subdomain; }
+                foreach (Element_v2 element in subdomain.Elements)
+                { element.Subdomain = subdomain; }
             }
 
             //private void BuildElementDictionaryOfEachNode()            
-            foreach (Element element in model.ElementsDictionary.Values)
+            foreach (Element_v2 element in model.ElementsDictionary.Values)
             {
-                foreach (Node node in element.Nodes)
+                foreach (Node_v2 node in element.Nodes)
                 { node.ElementsDictionary.Add(element.ID, element); }
             }
 
-            foreach (Node node in model.NodesDictionary.Values)
-            { node.BuildSubdomainDictionary_v2(); }
+            foreach (Node_v2 node in model.NodesDictionary.Values)
+            { node.BuildSubdomainDictionary(); }
 
 
             //TEMP COMMENT OUT
@@ -39,8 +39,8 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             //private void BuildSubdomainOfEachElement()
             foreach (Subdomain_v2 subdomain in model.SubdomainsDictionary.Values)
             {
-                foreach (Element element in subdomain.Elements)
-                { element.Subdomain_v2 = null; }  // subdomain; }
+                foreach (Element_v2 element in subdomain.Elements)
+                { element.Subdomain = null; }  // subdomain; }
             }
 
             //private void BuildElementDictionaryOfEachNode()            
@@ -49,10 +49,10 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
             //    foreach (Node node in element.Nodes)
             //    { node.ElementsDictionary.Add(element.ID, element); }
             //}
-            foreach (Node node in model.NodesDictionary.Values)
+            foreach (Node_v2 node in model.NodesDictionary.Values)
             {
                 node.ElementsDictionary.Clear();
-                node.SubdomainsDictionary_v2.Clear(); //to ena mono egine v2 opws fainetai sto Node.BuildSubdomainDictionary_v2().
+                node.SubdomainsDictionary.Clear(); //to ena mono egine v2 opws fainetai sto Node.BuildSubdomainDictionary_v2().
             }
             //foreach (Node node in model.NodesDictionary.Values)
             //{ node.BuildSubdomainDictionary(); }

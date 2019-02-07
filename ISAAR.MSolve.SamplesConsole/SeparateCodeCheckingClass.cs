@@ -1142,7 +1142,7 @@ namespace ISAAR.MSolve.SamplesConsole
         public static void Check13RunFe2Shell()
         {
             var a1 = new TSplineKirchhoffLoveShells();
-            a1.SquareShellMaterialMultiscaleBenchmark();
+            //a1.SquareShellMaterialMultiscaleBenchmark();
         }
 
         public static void Check14remainderUse()

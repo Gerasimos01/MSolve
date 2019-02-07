@@ -1,29 +1,33 @@
+﻿using ISAAR.MSolve.IGA.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using ISAAR.MSolve.Discretization;
-using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.IGA.Entities;
-using ISAAR.MSolve.IGA.Entities.Loads;
-using ISAAR.MSolve.IGA.Interfaces;
+using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
 using ISAAR.MSolve.IGA.Problems.SupportiveClasses;
+using ISAAR.MSolve.Numerical.LinearAlgebra;
+using ISAAR.MSolve.IGA.Entities.Loads;
+using ISAAR.MSolve.Discretization.Interfaces;
+using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.Materials;
 using ISAAR.MSolve.Materials.Interfaces;
-using ISAAR.MSolve.Numerical.LinearAlgebra;
-using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
 
-namespace ISAAR.MSolve.IGA.Elements
+namespace ISAAR.MSolve.IGA.Problems.Structural.Elements
 {
 	public class NURBSElement2D : Element, IStructuralIsogeometricElement
 	{
-		protected readonly static DOFType[] controlPointDOFTypes = new DOFType[] { DOFType.X, DOFType.Y };
+		protected readonly static DOFType[] controlPointDOFTypes = new DOFType[] {DOFType.X, DOFType.Y};
 		protected DOFType[][] dofTypes;
-		protected IElementDOFEnumerator dofEnumerator = new GenericDOFEnumerator();
+		protected IElementDofEnumerator_v2 dofEnumerator = new GenericDofEnumerator_v2();
 		private DynamicMaterial dynamicProperties;
 
 		#region IStructuralIsogeometricElement
 
 
-		public IElementDOFEnumerator DOFEnumerator
+		public IElementDofEnumerator_v2 DofEnumerator
 		{
 			get { return dofEnumerator; }
 
@@ -35,9 +39,9 @@ namespace ISAAR.MSolve.IGA.Elements
 			get { return ElementDimensions.TwoD; }
 		}
 
-		public IList<IList<DOFType>> GetElementDOFTypes(IElement element)
+		public IList<IList<DOFType>> GetElementDOFTypes(IElement_v2 element)
 		{
-			var nurbsElement = (NURBSElement2D)element;
+			var nurbsElement = (NURBSElement2D) element;
 			dofTypes = new DOFType[nurbsElement.ControlPoints.Count][];
 			for (int i = 0; i < nurbsElement.ControlPoints.Count; i++)
 			{
@@ -68,34 +72,24 @@ namespace ISAAR.MSolve.IGA.Elements
 			throw new NotImplementedException();
 		}
 
-		public void SaveMaterialState()
-		{
-			throw new NotImplementedException();
-		}
-
 		public void ClearMaterialState()
 		{
 			throw new NotImplementedException();
 		}
 
-		public void ClearMaterialStresses()
+		public IMatrix DampingMatrix(IElement_v2 element)
 		{
 			throw new NotImplementedException();
 		}
 
-		public IMatrix2D DampingMatrix(IElement element)
+		public IMatrix MassMatrix(IElement_v2 element)
 		{
 			throw new NotImplementedException();
 		}
 
-		public IMatrix2D MassMatrix(IElement element)
+		public IMatrix StiffnessMatrix(IElement_v2 element)
 		{
-			throw new NotImplementedException();
-		}
-
-		public IMatrix2D StiffnessMatrix(IElement element)
-		{
-			var nurbsElement = (NURBSElement2D)element;
+			var nurbsElement = (NURBSElement2D) element;
 			IList<GaussLegendrePoint3D> gaussPoints = CreateElementGaussPoints(nurbsElement);
 			Matrix2D stiffnessMatrixElement = new Matrix2D(nurbsElement.ControlPointsDictionary.Count * 2,
 				nurbsElement.ControlPointsDictionary.Count * 2);
@@ -115,7 +109,7 @@ namespace ISAAR.MSolve.IGA.Elements
 				}
 
 				double jacdet = jacobianMatrix[0, 0] * jacobianMatrix[1, 1]
-								- jacobianMatrix[1, 0] * jacobianMatrix[0, 1];
+				                - jacobianMatrix[1, 0] * jacobianMatrix[0, 1];
 
 				Matrix2D B1 = new Matrix2D(3, 4);
 
@@ -142,7 +136,7 @@ namespace ISAAR.MSolve.IGA.Elements
 				Matrix2D stiffnessMatrixGaussPoint = B.Transpose() * ElasticityMatrix;
 				stiffnessMatrixGaussPoint = stiffnessMatrixGaussPoint * B;
 				stiffnessMatrixGaussPoint = stiffnessMatrixGaussPoint *
-											(jacdet * gaussPoints[j].WeightFactor * nurbsElement.Patch.Thickness);
+				                            (jacdet * gaussPoints[j].WeightFactor * nurbsElement.Patch.Thickness);
 
 				for (int m = 0; m < nurbsElement.ControlPoints.Count * 2; m++)
 				{
@@ -153,18 +147,18 @@ namespace ISAAR.MSolve.IGA.Elements
 				}
 			}
 
-			return stiffnessMatrixElement;
+			return Matrix.CreateFromArray(stiffnessMatrixElement.Data);
 		}
 
 
 		public double[,] CalculateDisplacementsForPostProcessing(Element element, double[,] localDisplacements)
 		{
 			var nurbsElement = (NURBSElement2D)element;
-			var knotParametricCoordinatesKsi = new Vector(new double[] { element.Knots[0].Ksi, element.Knots[2].Ksi });
+			var knotParametricCoordinatesKsi= new Vector(new double[]{element.Knots[0].Ksi, element.Knots[2].Ksi });
 			var knotParametricCoordinatesHeta = new Vector(new double[] { element.Knots[0].Heta, element.Knots[1].Heta });
 			NURBS2D nurbs = new NURBS2D(nurbsElement, nurbsElement.ControlPoints, knotParametricCoordinatesKsi, knotParametricCoordinatesHeta);
 			var knotDisplacements = new double[4, 2];
-			var paraviewKnotRenumbering = new int[] { 0, 3, 1, 2 };
+			var paraviewKnotRenumbering = new int[] {0, 3, 1, 2};
 			for (int j = 0; j < element.Knots.Count; j++)
 			{
 				for (int i = 0; i < element.ControlPoints.Count; i++)
@@ -225,7 +219,7 @@ namespace ISAAR.MSolve.IGA.Elements
 				Vector surfaceBasisVector3 = surfaceBasisVector1 ^ surfaceBasisVector2;
 
 				double jacdet = jacobianMatrix[0, 0] * jacobianMatrix[1, 1]
-								- jacobianMatrix[1, 0] * jacobianMatrix[0, 1];
+				                - jacobianMatrix[1, 0] * jacobianMatrix[0, 1];
 
 				for (int k = 0; k < element.ControlPoints.Count; k++)
 				{
@@ -238,8 +232,8 @@ namespace ISAAR.MSolve.IGA.Elements
 
 					if (neumannLoad.ContainsKey(dofIDX))
 						neumannLoad[dofIDX] += nurbs.NurbsValues[k, j] * jacdet * gaussPoints[j].WeightFactor *
-											   neumann.Value(xGaussPoint, yGaussPoint, zGaussPoint)[0] *
-											   surfaceBasisVector3[0];
+						                       neumann.Value(xGaussPoint, yGaussPoint, zGaussPoint)[0] *
+						                       surfaceBasisVector3[0];
 					else
 						neumannLoad.Add(dofIDX,
 							nurbs.NurbsValues[k, j] * jacdet * gaussPoints[j].WeightFactor *
@@ -247,8 +241,8 @@ namespace ISAAR.MSolve.IGA.Elements
 
 					if (neumannLoad.ContainsKey(dofIDY))
 						neumannLoad[dofIDY] += nurbs.NurbsValues[k, j] * jacdet * gaussPoints[j].WeightFactor *
-											   neumann.Value(xGaussPoint, yGaussPoint, zGaussPoint)[1] *
-											   surfaceBasisVector3[1];
+						                       neumann.Value(xGaussPoint, yGaussPoint, zGaussPoint)[1] *
+						                       surfaceBasisVector3[1];
 					else
 						neumannLoad.Add(dofIDY,
 							nurbs.NurbsValues[k, j] * jacdet * gaussPoints[j].WeightFactor *
@@ -256,8 +250,8 @@ namespace ISAAR.MSolve.IGA.Elements
 
 					if (neumannLoad.ContainsKey(dofIDZ))
 						neumannLoad[dofIDZ] += nurbs.NurbsValues[k, j] * jacdet * gaussPoints[j].WeightFactor *
-											   neumann.Value(xGaussPoint, yGaussPoint, zGaussPoint)[2] *
-											   surfaceBasisVector3[2];
+						                       neumann.Value(xGaussPoint, yGaussPoint, zGaussPoint)[2] *
+						                       surfaceBasisVector3[2];
 					else
 						neumannLoad.Add(dofIDZ,
 							nurbs.NurbsValues[k, j] * jacdet * gaussPoints[j].WeightFactor *
@@ -273,7 +267,7 @@ namespace ISAAR.MSolve.IGA.Elements
 		public Dictionary<int, double> CalculateLoadingCondition(Element element, Face face,
 			PressureBoundaryCondition pressure)
 		{
-			var dofs = new DOFType[] { DOFType.X, DOFType.Y, DOFType.Z };
+			var dofs = new DOFType[] {DOFType.X, DOFType.Y, DOFType.Z};
 
 			IList<GaussLegendrePoint3D> gaussPoints =
 				CreateElementGaussPoints(element, face.Degrees[0], face.Degrees[1]);
@@ -313,18 +307,18 @@ namespace ISAAR.MSolve.IGA.Elements
 				Vector surfaceBasisVector3 = surfaceBasisVector1 ^ surfaceBasisVector2;
 
 				double jacdet = jacobianMatrix[0, 0] * jacobianMatrix[1, 1]
-								- jacobianMatrix[1, 0] * jacobianMatrix[0, 1];
+				                - jacobianMatrix[1, 0] * jacobianMatrix[0, 1];
 
 				for (int k = 0; k < element.ControlPoints.Count; k++)
 				{
 					for (int m = 0; m < 3; m++)
 					{
-						int dofID = element.Model.GlobalDofOrdering.GlobalFreeDofs[element.ControlPoints[k], dofs[m]];
+						int dofID = element.Model.GlobalDofOrdering.GlobalFreeDofs[element.ControlPoints[k],dofs[m]];
 						;
 						if (pressureLoad.ContainsKey(dofID))
 						{
 							pressureLoad[dofID] += nurbs.NurbsValues[k, j] * jacdet * gaussPoints[j].WeightFactor *
-												   pressure.Value * surfaceBasisVector3[m];
+							                       pressure.Value * surfaceBasisVector3[m];
 						}
 						else
 						{

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.IGA.Elements;
+using ISAAR.MSolve.IGA.Problems.Structural.Elements;
 
 namespace ISAAR.MSolve.IGA.Entities
 {

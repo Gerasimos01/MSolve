@@ -13,6 +13,9 @@ using ISAAR.MSolve.FEM;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.Solvers.Commons;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
+using ISAAR.MSolve.Solvers.LinearSystems;
+using ISAAR.MSolve.Analyzers.NonLinear;
+using ISAAR.MSolve.Solvers;
 
 namespace ISAAR.MSolve.Analyzers
 {
@@ -35,17 +38,17 @@ namespace ISAAR.MSolve.Analyzers
         private readonly Dictionary<int, IVector> u = new Dictionary<int, IVector>();
         private readonly Dictionary<int, IVector> du = new Dictionary<int, IVector>();
         private readonly Dictionary<int, IVector> uPlusdu = new Dictionary<int, IVector>();
-        Dictionary<int, Node> boundaryNodes;
+        Dictionary<int, Node_v2> boundaryNodes;
         Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements;
         Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements;
         private readonly Dictionary<int, EquivalentContributionsAssebler_v2> equivalentContributionsAssemblers;
         private readonly Vector globalRhs;
-        private readonly Dictionary<int, LinearAnalyzerLogFactory> logFactories = new Dictionary<int, LinearAnalyzerLogFactory>();
-        private readonly Dictionary<int, IAnalyzerLog[]> logs = new Dictionary<int, IAnalyzerLog[]>();
+        private readonly Dictionary<int, LinearAnalyzerLogFactory_v2> logFactories = new Dictionary<int, LinearAnalyzerLogFactory_v2>();
+        private readonly Dictionary<int, IAnalyzerLog_v2[]> logs = new Dictionary<int, IAnalyzerLog_v2[]>();
 
         public NewtonRaphsonNonLinearAnalyzerDevelopCopy(IStructuralModel_v2 model, ISolver_v2 solver, IReadOnlyDictionary<int, ILinearSystem_v2> linearSystems, Dictionary<int, NonLinearSubdomainUpdaterWithInitialConditions_v2> subdomainUpdaters,
             INonLinearProvider_v2 provider, int increments, int totalDOFs, Dictionary<int, IVector> uInitialFreeDOFDisplacementsPerSubdomain,
-            Dictionary<int, Node> boundaryNodes, Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
+            Dictionary<int, Node_v2> boundaryNodes, Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
             Dictionary<int, EquivalentContributionsAssebler_v2> equivalentContributionsAssemblers)//, ISubdomainGlobalMapping[] mappings)
         {
             this.model = model;
@@ -100,11 +103,11 @@ namespace ISAAR.MSolve.Analyzers
         //            l.StoreResults(start, end, linearSystems[id].Solution);
         //}
 
-        public Dictionary<int, LinearAnalyzerLogFactory> LogFactories { get { return logFactories; } }
+        public Dictionary<int, LinearAnalyzerLogFactory_v2> LogFactories { get { return logFactories; } }
 
         #region IAnalyzer Members
 
-        public Dictionary<int, IAnalyzerLog[]> Logs { get { return logs; } }
+        public Dictionary<int, IAnalyzerLog_v2[]> Logs { get { return logs; } }
 
         public IParentAnalyzer ParentAnalyzer// exei diorthothei apo bas v2
         {
@@ -238,7 +241,7 @@ namespace ISAAR.MSolve.Analyzers
                 }
                 IVector internalRhs = subdomainUpdaters[id].GetRHSFromSolutionWithInitialDisplacemntsEffect(uPlusdu[id], du[id], boundaryNodes,
                 initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, currentIncrement + 1, totalIncrements);//TODOMaria this calculates the internal forces
-                provider.ProcessInternalRhs(linearSystem, internalRhs, uPlusdu[id]);//TODOMaria this does nothing
+                provider.ProcessInternalRhs(linearSystem.Subdomain, internalRhs, uPlusdu[id]);//TODOMaria this does nothing
                                                                                     //(new Vector<double>(u[subdomain.ID] + du[subdomain.ID])).Data);
 
                 if (parentAnalyzer != null)

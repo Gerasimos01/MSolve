@@ -185,7 +185,7 @@ namespace ISAAR.MSolve.FEM.Embedding
             //if (e == null || !isElementEmbedded) return matrix;
             if (e == null) return matrix;
             if (e.EmbeddedNodes.Count == 0) return matrix;
-            return transformationMatrix.MultiplyTransposeThisTimesOtherTimesThis((Matrix2D)matrix);
+            return new Matrix2D(transformationMatrix.ThisTransposeTimesOtherTimesThis(Matrix.CreateFromArray(((Matrix2D)matrix).Data)).CopyToArray2D());
         }
 
         public double[] GetTransformedDisplacementsVector(double[] vector)

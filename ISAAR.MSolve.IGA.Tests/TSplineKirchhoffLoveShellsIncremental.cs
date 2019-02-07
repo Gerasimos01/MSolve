@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using ISAAR.MSolve.Analyzers;
 using ISAAR.MSolve.Analyzers.Interfaces;
+using ISAAR.MSolve.Analyzers.NonLinear;
 using ISAAR.MSolve.Discretization;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.IGA.Entities;
@@ -14,6 +15,7 @@ using ISAAR.MSolve.Logging;
 using ISAAR.MSolve.Materials;
 using ISAAR.MSolve.Numerical.LinearAlgebra;
 using ISAAR.MSolve.Problems;
+using ISAAR.MSolve.Solvers;
 using ISAAR.MSolve.Solvers.Direct;
 using ISAAR.MSolve.Solvers.Interfaces;
 using ISAAR.MSolve.Solvers.Ordering;
@@ -53,7 +55,7 @@ namespace ISAAR.MSolve.IGA.Tests
 			var subdomainDofsIDs = new int[model.GlobalDofOrdering.NumGlobalFreeDofs]; for (int i1 = 0; i1 < model.GlobalDofOrdering.NumGlobalFreeDofs; i1++) { subdomainDofsIDs[i1] = i1; }
 			watchDofs.Add(pathcID, subdomainDofsIDs);
 			var log1= new TotalDisplacementsPerIterationLog(watchDofs);
-			childAnalyzer.TotalDisplacementsPerIterationLog = log1;
+			//childAnalyzer.TotalDisplacementsPerIterationLog = log1;
             var parentAnalyzer = new StaticAnalyzer_v2(model, solver, provider, childAnalyzer);
 
             parentAnalyzer.Initialize();

@@ -216,7 +216,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             return gpmp;
         }
 
-        public static void HexaElementsOnlyRVEwithRenumbering_forMS(Model_v2 model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
+        public static void HexaElementsOnlyRVEwithRenumbering_forMS(Model_v2 model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node_v2> boundaryNodes)
         {
             // Perioxh renumbering initialization 
             renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
@@ -256,7 +256,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
                         nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-                        model.NodesDictionary.Add(nodeID, new Node() { ID = nodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                        model.NodesDictionary.Add(nodeID, new Node_v2() { ID = nodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
                         nodeCounter++;
                     }
                 }
@@ -267,12 +267,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             int elementCounter = 0;
             int subdomainID = 1;
 
-            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_disp,
                 PoissonRatio = ni_disp,
             };
-            Element e1;
+            Element_v2 e1;
             int ElementID;
             int[] globalNodeIDforlocalNode_i = new int[8];
 
@@ -292,10 +292,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         globalNodeIDforlocalNode_i[6] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
                         globalNodeIDforlocalNode_i[7] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
 
-                        e1 = new Element()
+                        e1 = new Element_v2()
                         {
                             ID = ElementID,
-                            ElementType = new Hexa8NonLinear(material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+                            ElementType = new Hexa8NonLinear_v2(material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
                         };
 
                         for (int j = 0; j < 8; j++)
@@ -395,7 +395,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 nodeCoordY = o_xsunol[6 * nNode + 1];
                 nodeCoordZ = o_xsunol[6 * nNode + 2];
 
-                model.NodesDictionary.Add(NodeID, new Node() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                model.NodesDictionary.Add(NodeID, new Node_v2() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
                 eswterikosNodeCounter++;
             }
             int arithmosShmeiwnShellMidsurface = eswterikosNodeCounter;
@@ -403,7 +403,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
 
 
             // perioxh orismou shell elements
-            ShellElasticMaterial3D material2 = new ShellElasticMaterial3D()
+            ShellElasticMaterial3D_v2 material2 = new ShellElasticMaterial3D_v2()
             {
                 YoungModulus = E_shell,
                 PoissonRatio = ni_shell,
@@ -419,7 +419,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             double[] Tk_vec = new double[8];
             double[][] VH = new double[8][];
             int[] midsurfaceNodeIDforlocalShellNode_i = new int[8];
-            Element e2;
+            Element_v2 e2;
             int ElementID;
             int subdomainID = 1;
 
@@ -441,11 +441,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                     VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[j1] - 1) + 5];
                 }
 
-                e2 = new Element()
+                e2 = new Element_v2()
                 {
                     ID = ElementID,
                     //
-                    ElementType = new Shell8NonLinear(material2, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) //ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
+                    ElementType = new Shell8NonLinear_v2(material2, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) //ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
                     {
                         //oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
@@ -478,13 +478,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 nodeCoordY = o_xsunol[6 * nNode + 1] - 0.5 * tk * o_xsunol[6 * nNode + 4];
                 nodeCoordZ = o_xsunol[6 * nNode + 2] - 0.5 * tk * o_xsunol[6 * nNode + 5];
 
-                model.NodesDictionary.Add(NodeID, new Node() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                model.NodesDictionary.Add(NodeID, new Node_v2() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
                 eswterikosNodeCounter++;
             }
             //
 
             //orismos elements katw strwshs
-            BenzeggaghKenaneCohesiveMaterial material3 = new Materials.BenzeggaghKenaneCohesiveMaterial()
+            BenzeggaghKenaneCohesiveMaterial_v2 material3 = new Materials.BenzeggaghKenaneCohesiveMaterial_v2()
             {
                 T_o_3 = T_o_3,
                 D_o_3 = D_o_3,
@@ -509,10 +509,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                     VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 5];
                 }
 
-                e2 = new Element()
+                e2 = new Element_v2()
                 {
                     ID = ElementID,
-                    ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+                    ElementType = new CohesiveShell8ToHexa20_v2(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
                     {
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
                                                  new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
@@ -549,7 +549,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 nodeCoordY = o_xsunol[6 * nNode + 1] + 0.5 * tk * o_xsunol[6 * nNode + 4];
                 nodeCoordZ = o_xsunol[6 * nNode + 2] + 0.5 * tk * o_xsunol[6 * nNode + 5];
 
-                model.NodesDictionary.Add(NodeID, new Node() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                model.NodesDictionary.Add(NodeID, new Node_v2() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
                 eswterikosNodeCounter++;
             }
             //
@@ -567,10 +567,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                     VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 5];
                 }
 
-                e2 = new Element()
+                e2 = new Element_v2()
                 {
                     ID = ElementID,
-                    ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+                    ElementType = new CohesiveShell8ToHexa20_v2(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
                     {
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
                                                  new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
@@ -601,12 +601,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
 
         }
 
-        public static Dictionary<Node, IList<DOFType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model_v2 model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath)
+        public static Dictionary<Node_v2, IList<DOFType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model_v2 model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath)
         {
             //PROELEFSI: RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix_withRenumbering()
             //ALLAGES: return type and nodes and dofs to be constrained
 
-            Dictionary<Node, IList<DOFType>> RigidBodyNodeConstraints = new Dictionary<Node, IList<DOFType>>();
+            Dictionary<Node_v2, IList<DOFType>> RigidBodyNodeConstraints = new Dictionary<Node_v2, IList<DOFType>>();
 
             // Perioxh renumbering initialization 
             renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
@@ -690,7 +690,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 nodeCoordY = o_xsunol[6 * nNode + 1];
                 nodeCoordZ = o_xsunol[6 * nNode + 2];
 
-                model.NodesDictionary.Add(NodeID, new Node() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                model.NodesDictionary.Add(NodeID, new Node_v2() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
                 eswterikosNodeCounter++;
             }
             int arithmosShmeiwnShellMidsurface = eswterikosNodeCounter;
@@ -698,7 +698,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
 
 
             // perioxh orismou shell elements
-            ShellElasticMaterial3D material2 = new ShellElasticMaterial3D()
+            ShellElasticMaterial3D_v2 material2 = new ShellElasticMaterial3D_v2()
             {
                 YoungModulus = E_shell,
                 PoissonRatio = ni_shell,
@@ -714,7 +714,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             double[] Tk_vec = new double[8];
             double[][] VH = new double[8][];
             int[] midsurfaceNodeIDforlocalShellNode_i = new int[8];
-            Element e2;
+            Element_v2 e2;
             int ElementID;
             int subdomainID = 1;
 
@@ -736,11 +736,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                     VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[j1] - 1) + 5];
                 }
 
-                e2 = new Element()
+                e2 = new Element_v2()
                 {
                     ID = ElementID,
                     //
-                    ElementType = new Shell8NonLinear(material2, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) //ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
+                    ElementType = new Shell8NonLinear_v2(material2, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) //ElementType = new Shell8dispCopyGetRAM_1(material2, 3, 3, 3)
                     {
                         //oVn_i= new double[][] { new double [] {ElementID, ElementID }, new double [] { ElementID, ElementID } },
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalShellNode_i[0] - 1) + 5] },
@@ -773,13 +773,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 nodeCoordY = o_xsunol[6 * nNode + 1] - 0.5 * tk * o_xsunol[6 * nNode + 4];
                 nodeCoordZ = o_xsunol[6 * nNode + 2] - 0.5 * tk * o_xsunol[6 * nNode + 5];
 
-                model.NodesDictionary.Add(NodeID, new Node() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                model.NodesDictionary.Add(NodeID, new Node_v2() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
                 eswterikosNodeCounter++;
             }
             //
 
             //orismos elements katw strwshs
-            BondSlipCohMat material3 = new Materials.BondSlipCohMat(T_o_1,D_o_1,0.1,T_o_3,D_o_3,new double[2],new double[2],1e-10);            
+            BondSlipCohMat_v2 material3 = new Materials.BondSlipCohMat_v2(T_o_1,D_o_1,0.1,T_o_3,D_o_3,new double[2],new double[2],1e-10);            
 
             int[] midsurfaceNodeIDforlocalCohesiveNode_i = new int[8];
             for (int nElement = 0; nElement < elements; nElement++)
@@ -795,10 +795,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                     VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 5];
                 }
 
-                e2 = new Element()
+                e2 = new Element_v2()
                 {
                     ID = ElementID,
-                    ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+                    ElementType = new CohesiveShell8ToHexa20_v2(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
                     {
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
                                                  new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
@@ -835,7 +835,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 nodeCoordY = o_xsunol[6 * nNode + 1] + 0.5 * tk * o_xsunol[6 * nNode + 4];
                 nodeCoordZ = o_xsunol[6 * nNode + 2] + 0.5 * tk * o_xsunol[6 * nNode + 5];
 
-                model.NodesDictionary.Add(NodeID, new Node() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                model.NodesDictionary.Add(NodeID, new Node_v2() { ID = NodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
                 eswterikosNodeCounter++;
             }
             //
@@ -854,10 +854,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                     VH[j1][2] = o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[j1] - 1) + 5];
                 }
 
-                e2 = new Element()
+                e2 = new Element_v2()
                 {
                     ID = ElementID,
-                    ElementType = new CohesiveShell8ToHexa20(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
+                    ElementType = new CohesiveShell8ToHexa20_v2(material3, GaussLegendre2D.GetQuadratureWithOrder(3, 3)) //ElementType = new cohesive_shell_to_hexaCopyGetEmbeRAM_1(material3, 3, 3)
                     {
                         oVn_i = new double[][] { new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[0] - 1) + 5] },
                                                  new double[] { o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 3], o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 4],o_xsunol[6 * (midsurfaceNodeIDforlocalCohesiveNode_i[1] - 1) + 5] },
@@ -888,7 +888,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
 
         }
 
-        public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS(Model_v2 model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
+        public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS(Model_v2 model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node_v2> boundaryNodes)
         {
             //COPY apo FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS()
             //allages grammika elements kai artihmisi nodes pou afta xreiazontai
@@ -931,7 +931,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
                         nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-                        model.NodesDictionary.Add(nodeID, new Node() { ID = nodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                        model.NodesDictionary.Add(nodeID, new Node_v2() { ID = nodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
                         nodeCounter++;
                     }
                 }
@@ -942,12 +942,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             int elementCounter = 0;
             int subdomainID = 1;
 
-            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_disp,
                 PoissonRatio = ni_disp,
             };
-            Element e1;
+            Element_v2 e1;
             int ElementID;
             int[] globalNodeIDforlocalNode_i = new int[8];
 
@@ -967,10 +967,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         globalNodeIDforlocalNode_i[0] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
                         globalNodeIDforlocalNode_i[1] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
 
-                        e1 = new Element()
+                        e1 = new Element_v2()
                         {
                             ID = ElementID,
-                            ElementType = new Hexa8Fixed(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
+                            ElementType = new Hexa8Fixed_v2(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
                         };
 
                         for (int j = 0; j < 8; j++)
@@ -1015,7 +1015,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             }
         }
 
-        public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(Model_v2 model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
+        public static void LinearHexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(Model_v2 model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node_v2> boundaryNodes)
         {
             //COPY apo FEMMeshBuilder.LinearHexaElementsOnlyRVEwithRenumbering_forMS()
             //allages boundary nodes mono ta peripheral 
@@ -1058,7 +1058,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
                         nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-                        model.NodesDictionary.Add(nodeID, new Node() { ID = nodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
+                        model.NodesDictionary.Add(nodeID, new Node_v2() { ID = nodeID, X = nodeCoordX, Y = nodeCoordY, Z = nodeCoordZ });
                         nodeCounter++;
                     }
                 }
@@ -1069,12 +1069,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             int elementCounter = 0;
             int subdomainID = 1;
 
-            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            ElasticMaterial3D_v2 material1 = new ElasticMaterial3D_v2()
             {
                 YoungModulus = E_disp,
                 PoissonRatio = ni_disp,
             };
-            Element e1;
+            Element_v2 e1;
             int ElementID;
             int[] globalNodeIDforlocalNode_i = new int[8];
 
@@ -1094,10 +1094,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         globalNodeIDforlocalNode_i[0] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
                         globalNodeIDforlocalNode_i[1] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
 
-                        e1 = new Element()
+                        e1 = new Element_v2()
                         {
                             ID = ElementID,
-                            ElementType = new Hexa8Fixed(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
+                            ElementType = new Hexa8Fixed_v2(material1),//, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) 
                         };
 
                         for (int j = 0; j < 8; j++)
@@ -1182,7 +1182,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             }
         }
 
-        public static IEnumerable<Element> GetHostGroupForCohesiveElement(Element cohesive, rveMatrixParameters mp, Model_v2 model, string renumberingVectorPath)
+        public static IEnumerable<Element_v2> GetHostGroupForCohesiveElement(Element_v2 cohesive, rveMatrixParameters mp, Model_v2 model, string renumberingVectorPath)
         {            
 
             int hexa1 = mp.hexa1;// diakritopoihsh
@@ -1192,7 +1192,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
             int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
 
-            IList<Element> possibleHosts = new List<Element>(8);
+            IList<Element_v2> possibleHosts = new List<Element_v2>(8);
 
             double tol = 3e-10; //apo hexa8.GetNaturalCoordinates
 
@@ -1204,7 +1204,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             var cohNodes = cohesive.NodesDictionary.Values.ToList();
             for (int i1 = 8; i1 < 16; i1++)
             {
-                Node embNode = cohNodes[i1];
+                Node_v2 embNode = cohNodes[i1];
 
                 // kata to dhmiourgia_sundesmologias_embed_t.m
                 double x_ek = embNode.X + 0.5 * mp.L01;
@@ -1301,7 +1301,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 possibleHostIds.Add(possibleHosts.ElementAt(i1).ID);
             }
             possibleHostIds.Sort();
-            possibleHosts = new List<Element>(possibleHosts.Count());
+            possibleHosts = new List<Element_v2>(possibleHosts.Count());
             for (int k1 = 0; k1 < possibleHostIds.Count; k1++)
             {
                 possibleHosts.Add(model.ElementsDictionary[possibleHostIds[k1]]);
