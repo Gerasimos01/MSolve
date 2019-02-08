@@ -281,7 +281,7 @@ namespace ISAAR.MSolve.Analyzers
             foreach (ILinearSystem_v2 linearSystem in linearSystems.Values)
             {
                 int id = linearSystem.Subdomain.ID;
-                u[id].Add(du[id]);
+                u[id].AddIntoThis(du[id]);
             }
         }
 

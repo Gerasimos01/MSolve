@@ -49,7 +49,7 @@ namespace ISAAR.MSolve.Analyzers
             if (ChildAnalyzer == null) throw new InvalidOperationException("Static analyzer must contain an embedded analyzer.");
             //InitalizeMatrices();
 
-            model.ConnectDataStructures();
+            //model.ConnectDataStructures();
             model.GlobalDofOrdering = solver.DofOrderer.OrderDofs(model);
             model.AssignLoads();
 

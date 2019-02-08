@@ -264,7 +264,7 @@ namespace ISAAR.MSolve.FEM.Entities
             return forces;
         }
 
-        private Vector GetLocalVectorFromGlobalWithoutPrescribedDisplacements(Element element, IVectorView globalDisplacementVector)
+        public Vector GetLocalVectorFromGlobalWithoutPrescribedDisplacements(Element element, IVectorView globalDisplacementVector)
         {
             Vector elementNodalDisplacements = Vector.CreateZero(DofOrdering.CountElementDofs(element));
             DofOrdering.ExtractVectorElementFromSubdomain(element, globalDisplacementVector, elementNodalDisplacements);
