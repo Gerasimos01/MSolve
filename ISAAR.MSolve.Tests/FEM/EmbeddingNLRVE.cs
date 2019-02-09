@@ -132,7 +132,7 @@ namespace ISAAR.MSolve.Tests.FEM
             // Solver
             var solverBuilder = new SkylineSolver.Builder();
             solverBuilder.DofOrderer = new DofOrderer(new SimpleDofOrderingStrategy(), new NodeMajorReordering());
-            SkylineSolver solver = solverBuilder.BuildSolver(model);
+            ISolver_v2 solver = solverBuilder.BuildSolver(model);
 
             // Problem type
             var provider = new ProblemStructural_v2(model, solver);

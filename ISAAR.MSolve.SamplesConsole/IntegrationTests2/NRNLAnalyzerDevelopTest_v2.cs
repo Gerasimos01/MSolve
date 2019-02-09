@@ -127,7 +127,7 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
             equivalentContributionsAssemblers2.Add(model.SubdomainsDictionary[1].ID, new EquivalentContributionsAssebler_v2(model.SubdomainsDictionary[1], elementProvider2));
             var solverBuilder2 = new SkylineSolver.Builder();
             solverBuilder2.DofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
-            SkylineSolver solver2 = solverBuilder2.BuildSolver(model);
+            ISolver_v2 solver2 = solverBuilder2.BuildSolver(model);
             var linearSystems2 = solver2.LinearSystems; // elegxos me model.subdomainsDictionary[1]
             ProblemStructural_v2 provider2 = new ProblemStructural_v2(model, solver2);
             //var linearSystemsArray = new[] { linearSystems[1] };

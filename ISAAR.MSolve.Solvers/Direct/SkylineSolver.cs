@@ -108,7 +108,7 @@ namespace ISAAR.MSolve.Solvers.Direct
         //    }
         //}
 
-        public class Builder
+        public class Builder:ISolverBuilder_v2
         {
             public Builder() { }
 
@@ -116,11 +116,17 @@ namespace ISAAR.MSolve.Solvers.Direct
                 = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
 
             public double FactorizationPivotTolerance { get; set; } = 1E-15;
-
-            public SkylineSolver BuildSolver(IStructuralModel_v2 model)
+            
+            public ISolver_v2 BuildSolver(IStructuralModel_v2 model)
             {
                 return new SkylineSolver(model, FactorizationPivotTolerance, DofOrderer);
             }
+
+            public ISolverBuilder_v2 Clone()
+            {
+                return new SkylineSolver.Builder();
+            }
+
         }
 
         private class SkylineSystem : LinearSystem_v2<SkylineMatrix, Vector>

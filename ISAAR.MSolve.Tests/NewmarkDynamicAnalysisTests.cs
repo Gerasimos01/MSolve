@@ -129,7 +129,7 @@ namespace ISAAR.MSolve.Tests
 
             // Solver
             var solverBuilder = new SkylineSolver.Builder();
-            SkylineSolver solver = solverBuilder.BuildSolver(model);
+            ISolver_v2 solver = solverBuilder.BuildSolver(model);
 
             solver.LinearSystems[subdomainID].SetMatrix(
                 SkylineMatrix.CreateFromArrays(2, new double[] { 6, 4, -2 }, new int[] { 0, 1, 3 }, true)); // K = [6 -2; -2 4]

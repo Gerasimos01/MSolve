@@ -226,7 +226,7 @@ namespace ISAAR.MSolve.Tests
             var solverBuilder = new SkylineSolver.Builder();
             // If we reorder, the expected displacements might correspond to different dofs
             //solverBuilder.DofOrderer = new DofOrderer(new SimpleDofOrderingStrategy(), AmdReordering.CreateWithSuiteSparseAmd());
-            SkylineSolver solver = solverBuilder.BuildSolver(model);
+            ISolver_v2 solver = solverBuilder.BuildSolver(model);
 
             // Choose the provider of the problem -> here a structural problem
             var provider = new ProblemStructural_v2(model, solver);
@@ -449,7 +449,7 @@ namespace ISAAR.MSolve.Tests
 
             // Choose linear equation system solver
             var solverBuilder = new SkylineSolver.Builder();
-            SkylineSolver solver = solverBuilder.BuildSolver(model);
+            ISolver_v2 solver = solverBuilder.BuildSolver(model);
 
             // Choose the provider of the problem -> here a structural problem
             var provider = new ProblemStructural_v2(model, solver);

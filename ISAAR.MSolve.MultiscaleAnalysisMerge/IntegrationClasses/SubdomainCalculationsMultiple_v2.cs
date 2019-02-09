@@ -3,7 +3,7 @@ using System.Collections.Generic;
 //using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.FEM.Entities;
 //using ISAAR.MSolve.Numerical.LinearAlgebra;
-using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
+//using ISAAR.MSolve.Numerical.LinearAlgebra.Interfaces;
 using ISAAR.MSolve.FEM.Providers;
 using ISAAR.MSolve.Solvers.Skyline;
 using ISAAR.MSolve.Solvers.Interfaces;
@@ -125,7 +125,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             return KppDqVectorsSubdomains;
         }
 
-        public static double[][] CombineMultipleSubdomainsIntegrationVectorsIntoTotal(Dictionary<int, double[][]> VectorsSubdomains, IScaleTransitions scaleTransitions)
+
+
+
+        #region v2 methods
+        public static double[][] CombineMultipleSubdomainsIntegrationVectorsIntoTotal_v2(Dictionary<int, double[][]> VectorsSubdomains, IScaleTransitions_v2 scaleTransitions)
         {
 
 
@@ -150,12 +154,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             return totalVectors;
 
-        }       
-     
+        }
 
-        #region v2 methods
         public static Dictionary<int, double[]> CalculateFppReactionsVectorSubdomains_v2(Model_v2 model, IElementMatrixProvider elementProvider,
-            IScaleTransitions_v2 scaleTransitions, Dictionary<int, Node> boundaryNodes, Dictionary<int, IVectorView> solution, Dictionary<int, IVectorView> dSolution,
+            IScaleTransitions_v2 scaleTransitions, Dictionary<int, Node> boundaryNodes, Dictionary<int, IVector> solution, Dictionary<int, IVector> dSolution,
             Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
             int nIncrement, int totalIncrements)
         {
@@ -251,7 +253,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             return f2_vectorsSubdomains;
         }
 
-        public static Dictionary<int, double[][]> CalculateKpfKffinverseKfpDqSubdomains(Dictionary<int, double[][]> f2_vectorsSubdomains, Model_v2 model, IElementMatrixProvider elementProvider, IScaleTransitions_v2 scaleTransitions, Dictionary<int, Node> boundaryNodes)
+        public static Dictionary<int, double[][]> CalculateKpfKffinverseKfpDqSubdomains_v2(Dictionary<int, double[][]> f2_vectorsSubdomains, Model_v2 model, IElementMatrixProvider elementProvider, IScaleTransitions_v2 scaleTransitions, Dictionary<int, Node> boundaryNodes)
         {
             Dictionary<int, double[][]> f3_vectorsSubdomains = new Dictionary<int, double[][]>();
 

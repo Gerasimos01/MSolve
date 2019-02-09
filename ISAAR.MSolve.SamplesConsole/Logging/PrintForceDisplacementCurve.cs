@@ -111,7 +111,7 @@ namespace ISAAR.MSolve.SamplesConsole.Logging
 
             // Choose linear equation system solver
             var solverBuilder = new SkylineSolver.Builder();
-            SkylineSolver solver = solverBuilder.BuildSolver(model);
+            ISolver_v2 solver = solverBuilder.BuildSolver(model);
             //solver.LinearSystems[subdomainID].RhsVector = model.SubdomainsDictionary[subdomainID].Forces;
 
             // Choose the provider of the problem -> here a structural problem

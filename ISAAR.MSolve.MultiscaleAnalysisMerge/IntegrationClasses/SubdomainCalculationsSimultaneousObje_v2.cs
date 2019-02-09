@@ -323,7 +323,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         Dictionary<int, int> boundaryNodesOrder;
         int currentSubdomainID;
 
-        public (Dictionary<int, double[][]>, Dictionary<int, double[][]>) UpdateSubdomainKffAndCalculateKfpDqAndKppDqpMultipleObje(Model_v2 model, IElementMatrixProvider elementProvider, IScaleTransitions_v2 scaleTransitions,
+        public (Dictionary<int, double[][]>, Dictionary<int, double[][]>) UpdateSubdomainKffAndCalculateKfpDqAndKppDqpMultipleObje_v2(Model_v2 model, IElementMatrixProvider elementProvider, IScaleTransitions_v2 scaleTransitions,
             Dictionary<int, Node> boundaryNodes, Dictionary<int, Dictionary<int, Element>> boundaryElements,ISolver_v2 solver)
         {
             IReadOnlyDictionary<int, ILinearSystem_v2> linearSystems = solver.LinearSystems; //v2.3
