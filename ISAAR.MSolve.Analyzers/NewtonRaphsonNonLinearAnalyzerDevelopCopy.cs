@@ -23,7 +23,7 @@ namespace ISAAR.MSolve.Analyzers
         private readonly Dictionary<int,NonLinearSubdomainUpdaterWithInitialConditions_v2> subdomainUpdaters;
         //private readonly ISubdomainGlobalMapping[] mappings; 
         private readonly int increments;
-        private readonly int totalDOFs;
+        //private readonly int totalDOFs;
         private int maxSteps = 1000;
         private int stepsForMatrixRebuild = 0;
         private readonly double tolerance = 1e-3;
@@ -39,12 +39,12 @@ namespace ISAAR.MSolve.Analyzers
         Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements;
         Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements;
         private readonly Dictionary<int, EquivalentContributionsAssebler_v2> equivalentContributionsAssemblers;
-        private readonly Vector globalRhs;
+        private Vector globalRhs;
         private readonly Dictionary<int, LinearAnalyzerLogFactory> logFactories = new Dictionary<int, LinearAnalyzerLogFactory>();
         private readonly Dictionary<int, IAnalyzerLog[]> logs = new Dictionary<int, IAnalyzerLog[]>();
 
         public NewtonRaphsonNonLinearAnalyzerDevelopCopy(IStructuralModel_v2 model, ISolver_v2 solver, IReadOnlyDictionary<int, ILinearSystem_v2> linearSystems, Dictionary<int, NonLinearSubdomainUpdaterWithInitialConditions_v2> subdomainUpdaters,
-            INonLinearProvider_v2 provider, int increments, int totalDOFs, Dictionary<int, IVector> uInitialFreeDOFDisplacementsPerSubdomain,
+            INonLinearProvider_v2 provider, int increments, Dictionary<int, IVector> uInitialFreeDOFDisplacementsPerSubdomain,
             Dictionary<int, Node> boundaryNodes, Dictionary<int, Dictionary<DOFType, double>> initialConvergedBoundaryDisplacements, Dictionary<int, Dictionary<DOFType, double>> totalBoundaryDisplacements,
             Dictionary<int, EquivalentContributionsAssebler_v2> equivalentContributionsAssemblers)//, ISubdomainGlobalMapping[] mappings)
         {
@@ -55,8 +55,7 @@ namespace ISAAR.MSolve.Analyzers
             this.linearSystems = solver.LinearSystems;
             this.provider = provider;
             this.increments = increments;
-            this.totalDOFs = totalDOFs;
-            this.globalRhs = Vector.CreateZero(totalDOFs);
+            //this.globalRhs = Vector.CreateZero(model.GlobalDofOrdering.NumGlobalFreeDofs); 
             this.u = uInitialFreeDOFDisplacementsPerSubdomain; //prosthiki MS, TODO:possibly check for compatibility elements format: u.Add(subdomain.ID, new Vector(subdomain.RHS.Length));
                                                                //this.uPlusdu = uInitialFreeDOFDisplacementsPerSubdomain; //prosthiki MS: commented out possible pass by reference
             this.boundaryNodes = boundaryNodes;
@@ -120,7 +119,7 @@ namespace ISAAR.MSolve.Analyzers
 
         public void InitializeInternalVectors()//TODOMaria: this is probably where the initial internal nodal vector is calculated
         {
-            globalRhs.Clear();
+            globalRhs = Vector.CreateZero(model.GlobalDofOrdering.NumGlobalFreeDofs);
             rhs.Clear();
             //u.Clear(); prosthiki MS
             du.Clear();

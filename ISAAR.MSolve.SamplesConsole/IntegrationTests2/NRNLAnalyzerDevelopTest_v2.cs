@@ -91,7 +91,7 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
             //var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
             var increments = 1;
 
-            var childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelopCopy(model,solver, linearSystems, subdomainUpdaters,  provider, increments, 44, uInitialFreeDOFDisplacementsPerSubdomain,
+            var childAnalyzer = new NewtonRaphsonNonLinearAnalyzerDevelopCopy(model,solver, linearSystems, subdomainUpdaters,  provider, increments, uInitialFreeDOFDisplacementsPerSubdomain,
                 boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, equivalentContributionsAssemblers);            
             childAnalyzer.SetMaxIterations = 100;
             childAnalyzer.SetIterationsForMatrixRebuild = 1;
@@ -136,7 +136,7 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
             //var subdomainMappers = new[] { new SubdomainGlobalMapping(model.Subdomains[0]) };
             var increments2 = 1;
 
-            var childAnalyzer2 = new NewtonRaphsonNonLinearAnalyzerDevelopCopy(model, solver2, linearSystems2, subdomainUpdaters2, provider2, increments2, model.GlobalDofOrdering.NumGlobalFreeDofs, uInitialFreeDOFDisplacementsPerSubdomain,
+            var childAnalyzer2 = new NewtonRaphsonNonLinearAnalyzerDevelopCopy(model, solver2, linearSystems2, subdomainUpdaters2, provider2, increments2,  uInitialFreeDOFDisplacementsPerSubdomain,
                 boundaryNodes, initialConvergedBoundaryDisplacements, totalBoundaryDisplacements, equivalentContributionsAssemblers2);
             childAnalyzer2.SetMaxIterations = 100;
             childAnalyzer2.SetIterationsForMatrixRebuild = 1;
