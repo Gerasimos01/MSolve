@@ -185,8 +185,8 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass4.Check05bStressIntegrationObjeIntegration();
             //SeparateCodeCheckingClass.Check05bStressIntegration();
             //IntegrationTests2.NRNLAnalyzerDevelopTest.SolveDisplLoadsExample();
-            //IntegrationTests2.NRNLAnalyzerDevelopTest_v2.SolveDisplLoadsExample();
-            SeparateCodeCheckingClass4.Check05bStressIntegrationObje_v2_Integration();
+            IntegrationTests2.NRNLAnalyzerDevelopTest_v2.SolveDisplLoadsExample();
+            //SeparateCodeCheckingClass4.Check05bStressIntegrationObje_v2_Integration();
         }
     }
 }

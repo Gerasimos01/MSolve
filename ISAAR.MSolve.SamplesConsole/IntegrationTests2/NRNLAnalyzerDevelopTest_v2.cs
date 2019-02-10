@@ -52,6 +52,7 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
             var solverBuilder = new SkylineSolver.Builder();
             solverBuilder.DofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
             var solver = solverBuilder.BuildSolver(model);
+            model.GlobalDofOrdering = solver.DofOrderer.OrderDofs(model);
 
             //DdmCalculationsGeneral_v2.BuildModelInterconnectionData(model);
             //var ordering1=solver.DofOrderer.OrderDofs(model);
@@ -129,6 +130,10 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
             solverBuilder2.DofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
             ISolver_v2 solver2 = solverBuilder2.BuildSolver(model);
             var linearSystems2 = solver2.LinearSystems; // elegxos me model.subdomainsDictionary[1]
+            foreach (ILinearSystem_v2 linearSystem in linearSystems2.Values)
+            {
+                linearSystem.RhsVector = linearSystem.Subdomain.Forces;
+            }
             ProblemStructural_v2 provider2 = new ProblemStructural_v2(model, solver2);
             //var linearSystemsArray = new[] { linearSystems[1] };
             var subdomainUpdaters2 = new Dictionary<int, NonLinearSubdomainUpdaterWithInitialConditions_v2>(1);
@@ -144,7 +149,7 @@ namespace ISAAR.MSolve.SamplesConsole.IntegrationTests2
             StaticAnalyzer_v2 parentAnalyzer2 = new StaticAnalyzer_v2(model, solver2, provider2, childAnalyzer2);
             //parentAnalyzer2.BuildMatrices();
             //DdmCalculationsGeneral_v2.UndoModelInterconnectionDataBuild(model);
-            parentAnalyzer2.Initialize();
+            childAnalyzer2.Initialize(); //parentAnalyzer2.Initialize();
             parentAnalyzer2.Solve();
             #endregion
         }

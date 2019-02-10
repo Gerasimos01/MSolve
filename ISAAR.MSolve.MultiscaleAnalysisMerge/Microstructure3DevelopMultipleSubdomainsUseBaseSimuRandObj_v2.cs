@@ -498,7 +498,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             }
 
             //TODO use solution multiple RHSs when pavailable :Matrix2D MultipleSolutions = F__F__Mat.SolveLU(new Matrix2D(multipleRHSs), true);
-            (Matrix inverse,var determinant) = F__F__Mat.InvertAndDetermninant();
+            Matrix inverse = F__F__Mat.Invert();
             Matrix MultipleSolutions = Matrix.CreateZero(9, 9);
             for (int i1=0; i1<9; i1++)
             {
