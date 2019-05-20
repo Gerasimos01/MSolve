@@ -34,6 +34,17 @@ namespace ISAAR.MSolve.Solvers.Ordering
                     nodalDOFTypesDictionary[element.Nodes[i].ID].AddRange(element.ElementType.DofEnumerator.GetDofTypesForDofEnumeration(element)[i]);
                 }
             }
+            //foreach (IElement element in elements)
+            //{
+            //    var elementNodes = element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element);
+            //    for (int i = 0; i < elementNodes.Count; i++)
+            //    {
+            //        if (!nodalDOFTypesDictionary.ContainsKey(elementNodes[i].ID))
+            //            nodalDOFTypesDictionary.Add(elementNodes[i].ID, new List<IDofType>());
+            //        nodalDOFTypesDictionary[elementNodes[i].ID].AddRange(element.ElementType.DofEnumerator.GetDofTypesForMatrixAssembly(element)[i]);                    
+            //        ///nodalDOFTypesDictionary[elementNodes[i].ID].AddRange(elementNodes[i].);
+            //    }
+            //}
 
             var freeDofs = new DofTable();
             foreach (INode node in sortedNodes)
@@ -47,6 +58,11 @@ namespace ISAAR.MSolve.Solvers.Ordering
                 //            dofTypes.Add(dof);
                 //    }
                 //}
+
+                if (node.ID == 1129)
+                {
+                    string breakpoint = "@here";
+                }
 
                 Dictionary<IDofType, int> dofsDictionary = new Dictionary<IDofType, int>();
                 //foreach (DOFType dofType in dofTypes.Distinct<DOFType>())

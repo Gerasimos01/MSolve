@@ -1293,6 +1293,46 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 
         }
 
+        public static void PrintSubdomainDataForPostPro2(Dictionary<int, int[]> subdBoundariesNodes, string generalPath, string fileAddedPath)
+        {            
+            string boundNodesPath = generalPath + fileAddedPath;
+
+            #region boundary nodes 
+            int boundNodeLength = 0;
+            foreach(int subdBoundNodeID  in subdBoundariesNodes.Keys)
+            {
+                 int[] connectedsubdsIDs = subdBoundariesNodes[subdBoundNodeID];
+                int numSubdomains = connectedsubdsIDs.Length;
+                boundNodeLength += 1 + 1 + numSubdomains; // nodeID, endeixh gia to posa, subdomainIDS
+            }
+            var boundPrint = new int[boundNodeLength];
+            int boundPrintCounter = 0;
+            foreach (int subdBoundNodeID in subdBoundariesNodes.Keys)
+            {
+                boundPrint[boundPrintCounter] = subdBoundNodeID;
+                boundPrintCounter += 1;
+                int[] connectedsubdsIDs = subdBoundariesNodes[subdBoundNodeID];
+                int numSubdomains = connectedsubdsIDs.Length;
+                boundPrint[boundPrintCounter] = numSubdomains;
+                boundPrintCounter += 1;
+                for (int i2 = 0; i2 < connectedsubdsIDs.Length; i2++)
+                {
+                    boundPrint[boundPrintCounter] = connectedsubdsIDs[i2];
+                    boundPrintCounter += 1;
+                }
+            }
+
+            WriteToFileVector(boundPrint, boundNodesPath);
+            #endregion
+
+
+
+
+
+
+
+        }
+
         public static (int[], int[], int[]) GetSubdomainDataForPostPro(int[][] subdHexaIds, int[][] subdCohElementIds, int[][] subdShellElementIds, string generalPath)
         {
             string hexaPath = generalPath + @"\subdomainHexas.txt";
