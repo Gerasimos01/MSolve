@@ -31,11 +31,11 @@ using ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    public class SeparateCodeCheckingClass5
+    public class SeparateCodeCheckingClass6
     {
         public static double /*(double[], double[], double[], double[], IVector, IVector)*/ StiffnessMatrixOutputWrite()
         {
-            var rveBuilder = new RveGrShMultipleSeparatedDevelop(1);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopHexaOnly(1);
 
             var ModelAndNodes = rveBuilder.GetModelAndBoundaryNodes();
             Model model = ModelAndNodes.Item1;
@@ -117,14 +117,6 @@ namespace ISAAR.MSolve.SamplesConsole
                     GlobalDofCoupledDataSubdIds.Add(globalDofId, subdIds);
                     GlobalDofCoupledDataLocalDofsInSubdIds.Add(globalDofId, localIds);
                 }
-
-                bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(node, StructuralDof.RotationX, out int dofValue);
-                {
-                    if(check)
-                    {
-                        string breakpoint = "here";
-                    }
-                }
             }
 
             DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(GlobalDofCoupledDataSubdIds, rveBuilder.subdomainOutputPath, @"\GlobalDofCoupledDataSubdIds.txt");
@@ -196,7 +188,5 @@ namespace ISAAR.MSolve.SamplesConsole
 
             return new double() ;
         }
-
-
     }
 }

@@ -47,6 +47,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //LinearRves.CheckShellScaleTransitionsAndMicrostructure();
             //SolveCantileverWithStochasticMaterial();
             SeparateCodeCheckingClass5.StiffnessMatrixOutputWrite();
+//            SeparateCodeCheckingClass6.StiffnessMatrixOutputWrite();
         }
 
         private static void SolveBuildingInNoSoilSmall()

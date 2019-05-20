@@ -176,11 +176,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             CornerNodesData[0] = new int[3] { 5 - 1, 5 - 1, 5 - 1 };
 
             // kai extra corner nodes
-            CornerNodesData[1] = new int[3] { 1 - 1, 5 - 1, 5 - 1 };
+            CornerNodesData[1] = new int[3] { 2 - 1, 5 - 1, 5 - 1 };
             CornerNodesData[2] = new int[3] { 8 - 1, 5 - 1, 5 - 1 };
-            CornerNodesData[3] = new int[3] { 5 - 1, 1 - 1, 5 - 1 };
+            CornerNodesData[3] = new int[3] { 5 - 1, 2 - 1, 5 - 1 };
             CornerNodesData[4] = new int[3] { 5 - 1, 8 - 1, 5 - 1 };
-            CornerNodesData[5] = new int[3] { 5 - 1, 5 - 1, 1 - 1 };
+            CornerNodesData[5] = new int[3] { 5 - 1, 5 - 1, 2 - 1 };
             CornerNodesData[6] = new int[3] { 5 - 1, 5 - 1, 8 - 1 };
 
 
@@ -221,10 +221,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             }
             #endregion
 
+            DefineAppropriateConstraintsForBoundaryNodes(model, boundaryNodes);
+
             subdFreeBRNodes = new Dictionary<int, int[]>(); //nodeID, subdomainIDs  
             foreach (Node node in model.Nodes)
             {
-                if ((node.SubdomainsDictionary.Keys.Count()>1 && !EmbeddedNodes.Contains(node)) && (!CornerNodesIds.Keys.Contains(node.ID) && !model.Constraints.Contains(node,StructuralDof.TranslationX)))
+                if ((node.SubdomainsDictionary.Keys.Count()>1 && !EmbeddedNodes.Contains(node)) && (!CornerNodesIds.Keys.Contains(node.ID) && (node.Constraints.Count() == 0)))
                 {
                     int[] subdIDs = node.SubdomainsDictionary.Keys.ToArray();
                     subdFreeBRNodes.Add(node.ID, subdIDs);
@@ -261,6 +263,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         //    return FEMMeshBuilder.GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(model, mp.hexa1, mp.hexa2, mp.hexa3, renumbering_vector_path);
         //    //TODO:  Pithanws na epistrefetai apo GetModelAndBoundaryNodes ... AndConstraints.
         //}
-
+        private void DefineAppropriateConstraintsForBoundaryNodes(Model model, Dictionary<int, Node> boundaryNodes)
+        {
+            IScaleTransitions scaleTransitions = new DefGradVec3DScaleTransition();
+            foreach (Node boundaryNode in boundaryNodes.Values)
+            {
+                scaleTransitions.ImposeAppropriateConstraintsPerBoundaryNode(model, boundaryNode);
+            }
+        }
     }
 }
