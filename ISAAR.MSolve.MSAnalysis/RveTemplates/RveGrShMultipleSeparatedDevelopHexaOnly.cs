@@ -18,7 +18,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
     /// Use of model separation methods is made.
     /// Authors Gerasimos Sotiropoulos
     /// </summary>
-    public class RveGrShMultipleSeparatedDevelop : IRVEbuilder //IdegenerateRVEbuilder
+    public class RveGrShMultipleSeparatedDevelopHexaOnly : IRVEbuilder //IdegenerateRVEbuilder
     {
         //GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataDdm
         //Origin branch: example/ms_development_nl_elements_merge (xwris sto telos )
@@ -39,12 +39,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         string renumbering_vector_path;
         int RVE_id;
 
-        public RveGrShMultipleSeparatedDevelop(int RVE_id)
+        public RveGrShMultipleSeparatedDevelopHexaOnly(int RVE_id)
         {
             this.RVE_id = RVE_id;
         }
 
-        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelop(a);
+        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopHexaOnly(a);
     
         public Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
         {
