@@ -64,13 +64,32 @@ namespace ISAAR.MSolve.SamplesConsole
                 CornerNodesIdAndGlobalDofs.Add(corrnerNodeID, new int[3] { model.GlobalDofOrdering.GlobalFreeDofs[CornerNode, StructuralDof.TranslationX],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[CornerNode, StructuralDof.TranslationY],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[CornerNode, StructuralDof.TranslationZ]});
+
+                bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(CornerNode, StructuralDof.RotationX, out int globalDofId);
+                if(check)
+                {
+                    string breakpoint = "here";
+                }
             }
             foreach (int boundaryNodeID in rveBuilder.subdFreeBRNodes.Keys)
             {
                 Node boundaryNode = model.NodesDictionary[boundaryNodeID];
-                subdBRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[3] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
+
+                bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(boundaryNode, StructuralDof.RotationX, out int globalDofId);
+                if (!check)
+                {
+                    subdBRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[3] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationY],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationZ]});
+                }
+                else
+                {
+                    subdBRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[5] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
+                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationY],
+                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationZ],
+                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.RotationX],
+                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.RotationY]});
+                }
             }
             DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndGlobalDofs, rveBuilder.subdomainOutputPath, @"\CornerNodesAndGlobalDofsIds.txt");
             DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdBRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\SubdBRNodesAndGlobalDofsIds.txt");
@@ -103,28 +122,24 @@ namespace ISAAR.MSolve.SamplesConsole
                 Node node = model.NodesDictionary[nodeID];
                 int[] subdIds = node.SubdomainsDictionary.Keys.ToArray();
 
-                StructuralDof[] dofs = new StructuralDof[3] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ };
+                StructuralDof[] dofs = new StructuralDof[5] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ,StructuralDof.RotationX,StructuralDof.RotationY };
 
                 foreach (StructuralDof doftype in dofs)
                 {
-                    int globalDofId = model.GlobalDofOrdering.GlobalFreeDofs[node, doftype];
-                    int[] localIds = new int[subdIds.Length];
-
-                    for (int i1 = 0; i1 < subdIds.Length; i1++)
+                    bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(node, doftype, out int globalDofId);
+                    if (check)
                     {
-                        localIds[i1] = model.SubdomainsDictionary[subdIds[i1]].FreeDofOrdering.FreeDofs[node, doftype];
-                    }
-                    GlobalDofCoupledDataSubdIds.Add(globalDofId, subdIds);
-                    GlobalDofCoupledDataLocalDofsInSubdIds.Add(globalDofId, localIds);
-                }
+                        int[] localIds = new int[subdIds.Length];
 
-                bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(node, StructuralDof.RotationX, out int dofValue);
-                {
-                    if(check)
-                    {
-                        string breakpoint = "here";
+                        for (int i1 = 0; i1 < subdIds.Length; i1++)
+                        {
+                            localIds[i1] = model.SubdomainsDictionary[subdIds[i1]].FreeDofOrdering.FreeDofs[node, doftype];
+                        }
+                        GlobalDofCoupledDataSubdIds.Add(globalDofId, subdIds);
+                        GlobalDofCoupledDataLocalDofsInSubdIds.Add(globalDofId, localIds);
                     }
                 }
+
             }
 
             DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(GlobalDofCoupledDataSubdIds, rveBuilder.subdomainOutputPath, @"\GlobalDofCoupledDataSubdIds.txt");
