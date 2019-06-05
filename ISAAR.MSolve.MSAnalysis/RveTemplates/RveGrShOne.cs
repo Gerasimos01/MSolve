@@ -5,7 +5,8 @@ using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using ISAAR.MSolve.PreProcessor.Embedding;
-
+using ISAAR.MSolve.Solvers;
+using ISAAR.MSolve.Solvers.Direct;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
@@ -39,6 +40,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
         {
             return Reference2RVEExample10000withRenumberingwithInput_forMS();
+        }
+
+        public ISolver GetAppropriateSolver(Model model)
+        {
+            return (new SkylineSolver.Builder()).BuildSolver(model);
         }
 
         private Tuple<Model, Dictionary<int, Node>,double> Reference2RVEExample10000withRenumberingwithInput_forMS()

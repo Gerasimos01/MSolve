@@ -1,16 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using ISAAR.MSolve.Discretization.FreedomDegrees;
-using ISAAR.MSolve.Discretization.Interfaces;
+﻿using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.FEM;
 using ISAAR.MSolve.FEM.Embedding;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
+using ISAAR.MSolve.LinearAlgebra.Iterative.Termination;
 using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses;
 using ISAAR.MSolve.PreProcessor.Embedding;
+using ISAAR.MSolve.Solvers;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Preconditioning;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
@@ -36,6 +40,22 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public Dictionary<int, int[]> subdFreeBRNodes { get; private set; }
         public string subdomainOutputPath { get; private set; }
         public IList<Node> EmbeddedNodes { get; private set; }
+
+        private Dictionary<int, INode[]> cornerNodes;
+
+        public ISolver GetAppropriateSolver(Model model)
+        {
+            //Setup solver
+            var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
+            interfaceSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1);
+            interfaceSolverBuilder.PcgConvergenceTolerance = 1E-10;
+            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodes);
+            fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
+            fetiSolverBuilder.ProblemIsHomogeneous = false;
+            fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
+            FetiDPSolver fetiSolver = fetiSolverBuilder.BuildSolver(model);
+            return fetiSolver;
+        }
 
         Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
         rveMatrixParameters mp;
@@ -203,6 +223,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 CornerNodesIds.Add(nodeID, coordinates);
                 CornerNodesIdAndsubdomains.Add(nodeID, model.NodesDictionary[nodeID].SubdomainsDictionary.Keys.ToArray());
             }
+
+            cornerNodes = DefineCornerNodesPerSubdomainAndOtherwise(CornerNodesIdAndsubdomains, model);
 
             #region find embedded
             EmbeddedNodes = new List<Node>();

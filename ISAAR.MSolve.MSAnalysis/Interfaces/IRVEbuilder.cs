@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using ISAAR.MSolve.FEM.Entities;
-
+using ISAAR.MSolve.Solvers;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis.Interfaces
 {
@@ -14,5 +14,6 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.Interfaces
     {
         Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes();
         IRVEbuilder Clone(int a);
+        ISolver GetAppropriateSolver(Model model);
     }
 }

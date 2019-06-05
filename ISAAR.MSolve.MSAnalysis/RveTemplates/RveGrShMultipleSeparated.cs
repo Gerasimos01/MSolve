@@ -7,6 +7,7 @@ using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses;
 using ISAAR.MSolve.PreProcessor.Embedding;
+using ISAAR.MSolve.Solvers;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
@@ -164,6 +165,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             return new Tuple<Model, Dictionary<int, Node>,double>(model, boundaryNodes,volume);
 
+        }
+
+        public ISolver GetAppropriateSolver(Model model)
+        {
+            throw new NotImplementedException();
         }
 
         // PROSOXH DEN ARKEI MONO TO PARAKATW NA GINEI UNCOMMENT WSTE NA GINEI IMPLEMENT TO IDegenerateRVEBuilder 

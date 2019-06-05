@@ -4,6 +4,8 @@ using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
+using ISAAR.MSolve.Solvers;
+using ISAAR.MSolve.Solvers.Direct;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
@@ -31,7 +33,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
            return Reference2RVEExample10_000withRenumbering_mono_hexa();
         }
 
-        
+        public ISolver GetAppropriateSolver(Model model)
+        {
+            return (new SkylineSolver.Builder()).BuildSolver(model);
+        }
 
         public Tuple<Model, Dictionary<int, Node>,double> Reference2RVEExample10_000withRenumbering_mono_hexa()
         {

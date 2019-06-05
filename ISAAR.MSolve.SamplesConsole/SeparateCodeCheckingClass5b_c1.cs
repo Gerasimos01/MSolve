@@ -641,7 +641,7 @@ namespace ISAAR.MSolve.SamplesConsole
             IRVEbuilder homogeneousRveBuilder1 = new HomogeneousRVEBuilderNonLinear();
             Func<Model, ISolver> x = CreateSolver;
             IContinuumMaterial3DDefGrad material1 = new MicrostructureDefGrad3D(homogeneousRveBuilder1,
-                x, false, 1);
+                false, 1);
         }
 
         static ISolver CreateSolver(Model model)

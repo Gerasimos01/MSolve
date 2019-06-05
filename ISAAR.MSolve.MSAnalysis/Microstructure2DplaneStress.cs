@@ -60,10 +60,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         //Random properties 
         private int database_size;
 
-        public Microstructure2DplaneStress(IdegenerateRVEbuilder rveBuilder, Func<Model, ISolver> createSolver, bool EstimateOnlyLinearResponse, int database_size)
+        public Microstructure2DplaneStress(IdegenerateRVEbuilder rveBuilder, bool EstimateOnlyLinearResponse, int database_size)
         {
             this.rveBuilder = rveBuilder;
-            this.createSolver = createSolver;
+            this.createSolver = rveBuilder.GetAppropriateSolver;
             this.EstimateOnlyLinearResponse = EstimateOnlyLinearResponse;
             this.database_size = database_size;            
         }
@@ -108,7 +108,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public object Clone()
         {
             int new_rve_id = rnd1.Next(1, database_size + 1);
-            return new Microstructure2DplaneStress((IdegenerateRVEbuilder)rveBuilder.Clone(new_rve_id), createSolver, EstimateOnlyLinearResponse, database_size);
+            return new Microstructure2DplaneStress((IdegenerateRVEbuilder)rveBuilder.Clone(new_rve_id), EstimateOnlyLinearResponse, database_size);
         }
 
         public Dictionary<int, Node> BoundaryNodesDictionary
