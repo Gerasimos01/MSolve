@@ -202,7 +202,7 @@ namespace ISAAR.MSolve.FEM.Entities
         private void BuildInterconnectionData()//TODOMaria: maybe I have to generate the constraints dictionary for each subdomain here
         {
             BuildSubdomainOfEachElement();
-            DuplicateInterSubdomainEmbeddedElements();
+            //DuplicateInterSubdomainEmbeddedElements();
             BuildElementDictionaryOfEachNode();
             foreach (Node node in NodesDictionary.Values) node.BuildSubdomainDictionary();
 

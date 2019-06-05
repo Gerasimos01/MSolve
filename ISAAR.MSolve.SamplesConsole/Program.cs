@@ -46,8 +46,18 @@ namespace ISAAR.MSolve.SamplesConsole
             //OneRveExample.Check_Graphene_rve_parallel();
             //LinearRves.CheckShellScaleTransitionsAndMicrostructure();
             //SolveCantileverWithStochasticMaterial();
-            SeparateCodeCheckingClass5.StiffnessMatrixOutputWrite();
-//            SeparateCodeCheckingClass6.StiffnessMatrixOutputWrite();
+            //SeparateCodeCheckingClass5.StiffnessMatrixOutputWrite();
+            //SeparateCodeCheckingClass6.StiffnessMatrixOutputWrite();
+            //SeparateCodeCheckingClass5b.CheckSolution();
+            //SeparateCodeCheckingClass6b.RunExample();
+            //SeparateCodeCheckingClass5b.RunExample();
+            //ISAAR.MSolve.Tests.SeparateCodeCheckingClass5b.RunExampleSerial();
+            //SeparateCodeCheckingClass5b_b.StiffnessMatrixOutputWrite();
+            //SeparateCodeCheckingClass5b_b.RunExample();
+            //SeparateCodeCheckingClass5b_c.StiffnessMatrixOutputWrite();
+            //SeparateCodeCheckingClass5b_c.RunExample();
+            //SeparateCodeCheckingClass5b_c1.StiffnessMatrixOutputWrite();
+            SeparateCodeCheckingClass5b_c1.RunExample();
         }
 
         private static void SolveBuildingInNoSoilSmall()

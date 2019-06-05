@@ -23,7 +23,7 @@ using ISAAR.MSolve.Solvers.Ordering;
 using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Feti1;
-using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Feti1.Preconditioning;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Preconditioning;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Output;
@@ -48,7 +48,7 @@ namespace ISAAR.MSolve.SamplesConsole
             // Solver
             var solverBuilder = new Feti1Solver.Builder(1e-4); //factorizationTolerance
             solverBuilder.ProblemIsHomogeneous = false;
-            solverBuilder.PreconditionerFactory = new Feti1LumpedPreconditioner.Factory();
+            solverBuilder.PreconditionerFactory = new LumpedPreconditioner.Factory();
             solverBuilder.ProblemIsHomogeneous = true;
             Feti1Solver solver = solverBuilder.BuildSolver(model);
 

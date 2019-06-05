@@ -28,14 +28,17 @@ using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Output;
 using ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP;
+using ISAAR.MSolve.Analyzers;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    public class SeparateCodeCheckingClass5
+    public class SeparateCodeCheckingClass6b
     {
         public static double /*(double[], double[], double[], double[], IVector, IVector)*/ StiffnessMatrixOutputWrite()
         {
-            var rveBuilder = new RveGrShMultipleSeparatedDevelop(1);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopHexaOnly(1);
 
             var ModelAndNodes = rveBuilder.GetModelAndBoundaryNodes();
             Model model = ModelAndNodes.Item1;
@@ -64,32 +67,13 @@ namespace ISAAR.MSolve.SamplesConsole
                 CornerNodesIdAndGlobalDofs.Add(corrnerNodeID, new int[3] { model.GlobalDofOrdering.GlobalFreeDofs[CornerNode, StructuralDof.TranslationX],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[CornerNode, StructuralDof.TranslationY],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[CornerNode, StructuralDof.TranslationZ]});
-
-                bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(CornerNode, StructuralDof.RotationX, out int globalDofId);
-                if(check)
-                {
-                    string breakpoint = "here";
-                }
             }
             foreach (int boundaryNodeID in rveBuilder.subdFreeBRNodes.Keys)
             {
                 Node boundaryNode = model.NodesDictionary[boundaryNodeID];
-
-                bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(boundaryNode, StructuralDof.RotationX, out int globalDofId);
-                if (!check)
-                {
-                    subdBRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[3] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
+                subdBRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[3] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationY],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationZ]});
-                }
-                else
-                {
-                    subdBRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[5] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
-                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationY],
-                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationZ],
-                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.RotationX],
-                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.RotationY]});
-                }
             }
             DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndGlobalDofs, rveBuilder.subdomainOutputPath, @"\CornerNodesAndGlobalDofsIds.txt");
             DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdBRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\SubdBRNodesAndGlobalDofsIds.txt");
@@ -122,24 +106,20 @@ namespace ISAAR.MSolve.SamplesConsole
                 Node node = model.NodesDictionary[nodeID];
                 int[] subdIds = node.SubdomainsDictionary.Keys.ToArray();
 
-                StructuralDof[] dofs = new StructuralDof[5] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ,StructuralDof.RotationX,StructuralDof.RotationY };
+                StructuralDof[] dofs = new StructuralDof[3] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ };
 
                 foreach (StructuralDof doftype in dofs)
                 {
-                    bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(node, doftype, out int globalDofId);
-                    if (check)
+                    int globalDofId = model.GlobalDofOrdering.GlobalFreeDofs[node, doftype];
+                    int[] localIds = new int[subdIds.Length];
+
+                    for (int i1 = 0; i1 < subdIds.Length; i1++)
                     {
-                        int[] localIds = new int[subdIds.Length];
-
-                        for (int i1 = 0; i1 < subdIds.Length; i1++)
-                        {
-                            localIds[i1] = model.SubdomainsDictionary[subdIds[i1]].FreeDofOrdering.FreeDofs[node, doftype];
-                        }
-                        GlobalDofCoupledDataSubdIds.Add(globalDofId, subdIds);
-                        GlobalDofCoupledDataLocalDofsInSubdIds.Add(globalDofId, localIds);
+                        localIds[i1] = model.SubdomainsDictionary[subdIds[i1]].FreeDofOrdering.FreeDofs[node, doftype];
                     }
+                    GlobalDofCoupledDataSubdIds.Add(globalDofId, subdIds);
+                    GlobalDofCoupledDataLocalDofsInSubdIds.Add(globalDofId, localIds);
                 }
-
             }
 
             DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(GlobalDofCoupledDataSubdIds, rveBuilder.subdomainOutputPath, @"\GlobalDofCoupledDataSubdIds.txt");
@@ -212,6 +192,95 @@ namespace ISAAR.MSolve.SamplesConsole
             return new double() ;
         }
 
+        public static void RunExample()
+        {
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopHexaOnly(1);
+            var ModelAndNodes = rveBuilder.GetModelAndBoundaryNodes();
+            Model model = ModelAndNodes.Item1;
+            double load_value = 1;
+            Load load1;
+            load1 = new Load()
+            {
+                Node = model.NodesDictionary[rveBuilder.CornerNodesIds.ElementAt(0).Key],
+                DOF = StructuralDof.TranslationZ,
+                Amount = 1 * load_value
+            };
+            model.Loads.Add(load1);
+            var cornerNodesAndSubds = rveBuilder.CornerNodesIdAndsubdomains;
 
+            Dictionary<int, List<INode>> CornerNodes = new Dictionary<int, List<INode>>();
+
+            foreach (int nodeId in cornerNodesAndSubds.Keys)
+            {
+                var subdIDs = cornerNodesAndSubds[nodeId];
+                foreach (int subdId  in subdIDs)
+                {
+                    if(CornerNodes.ContainsKey(subdId))
+                    {
+                        if(!CornerNodes[subdId].Contains(model.NodesDictionary[nodeId]))
+                        {
+                            CornerNodes[subdId].Add(model.NodesDictionary[nodeId]);
+                        }
+                    }
+                    else
+                    {
+                        CornerNodes.Add(subdId, new List<INode>());
+                        CornerNodes[subdId].Add(model.NodesDictionary[nodeId]);
+                    }
+                }
+            }
+
+            Dictionary<int, INode[]> cornerNodes = new Dictionary<int, INode[]>();
+            foreach (int nodeId in CornerNodes.Keys)
+            {
+                cornerNodes[nodeId] = CornerNodes[nodeId].ToArray();
+            }
+
+            // Setup solver
+            var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
+            interfaceSolverBuilder.PcgConvergenceTolerance = 1E-7;
+            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodes);
+            fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
+            fetiSolverBuilder.ProblemIsHomogeneous = false;
+            fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
+            FetiDPSolver fetiSolver = fetiSolverBuilder.BuildSolver(model);
+
+            // Run the analysis
+            var problem = new ProblemStructural(model, fetiSolver);
+            var linearAnalyzer = new LinearAnalyzer(model, fetiSolver, problem);
+            var staticAnalyzer = new StaticAnalyzer(model, fetiSolver, problem, linearAnalyzer);
+            staticAnalyzer.Initialize();
+            staticAnalyzer.Solve();
+
+            // Gather the global displacements
+            var sudomainDisplacements = new Dictionary<int, IVectorView>();
+            foreach (var ls in fetiSolver.LinearSystems) sudomainDisplacements[ls.Key] = ls.Value.Solution;
+            Vector globalU = fetiSolver.GatherGlobalDisplacements(sudomainDisplacements);
+
+            Node monitoredNode = model.NodesDictionary[rveBuilder.CornerNodesIds.ElementAt(0).Key];
+            int globalDofId = model.GlobalDofOrdering.GlobalFreeDofs[monitoredNode, StructuralDof.TranslationZ];
+            double solution = globalU[globalDofId];
+
+            double[] uc = new double[3 * cornerNodesAndSubds.Count()];
+
+            int node_counter = 0;
+            foreach (int nodeId in cornerNodesAndSubds.Keys)
+            {
+                //StructuralDof[] dofs = new StructuralDof[5] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ, StructuralDof.RotationX, StructuralDof.RotationY };
+                StructuralDof[] dofs = new StructuralDof[3] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ };
+
+                Node node= model.NodesDictionary[nodeId];
+                for (int i1=0; i1<3;i1++)
+                {
+                    int globalDof = model.GlobalDofOrdering.GlobalFreeDofs[node, dofs[i1]];
+                    uc[3*node_counter+i1] = globalU[globalDof];
+
+                }
+                node_counter++;
+            }
+
+        }
     }
+
+    
 }

@@ -107,8 +107,16 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 
         public static void SeparateSubdomains(Model model, int[][] subdElementIds)
         {
+            foreach (Subdomain subdomain in model.Subdomains)
+            {
+                subdomain.Elements.Clear();
+            }
+            foreach (Subdomain subdomain in model.SubdomainsDictionary.Values)
+            {
+                subdomain.Elements.Clear();
+            }
             model.SubdomainsDictionary.Clear();
-
+            
             for (int subdID = 0; subdID < subdElementIds.GetLength(0); subdID++)
             {
                 model.SubdomainsDictionary.Add(subdID, new Subdomain(subdID));
@@ -689,6 +697,18 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
             return subdIdsAndElements;
         }
 
+        public static int[][] ConvertIntListToArray(Dictionary<int, List<int>> AssignedSubdomains, int totalSubdomains)
+        {            
+            int[][] subdIdsAndElements = new int[totalSubdomains][]; //todo:revisit this
+
+            foreach (int subdID in AssignedSubdomains.Keys)
+            {
+                subdIdsAndElements[subdID] = AssignedSubdomains[subdID].ToArray();
+            }
+
+            return subdIdsAndElements;
+        }
+
         //public static void MakeModelDictionariesZeroBasedForDecomposer(Model model)
         //{
         //    model.SubdomainsDictionary[1].ID = 0;
@@ -1127,7 +1147,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
             Dictionary<int, List<int>> AssignedSubdomains =
                DdmCalculationsPartb.FindEmbeddedElementsSubdomainsCorrectedSimple(model, totalSubdomains);
 
-            int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomains);
+            int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomains, totalSubdomains);
             return subdCohElementIdsDirect;
         }
 
