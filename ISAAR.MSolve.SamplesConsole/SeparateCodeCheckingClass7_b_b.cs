@@ -21,5 +21,19 @@ namespace ISAAR.MSolve.SamplesConsole
     {
         //origin: epilush paradeigmatwn antistoixwn ths SeparateCodeCheckingClass5b_b dld me RveGrShMultipleSeparatedDevelopb
         // OneRveExample.Check_Graphene_rve_serial() tha xrhsimopoiithei gia ton orismo tou provlhmatos
+
+        //edw xreiazetai rve apo ton builder xwris connectdata structures kai  xwris defineAppropriateConstraints
+        public static void NLRVEStrainParralelSolution()
+        {
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, true);
+            double[] uc;
+
+            var microstructure = new MicrostructureDefGrad3D(rveBuilder, false, 1);
+
+
+        }
+
+        
     }
 }
+

@@ -37,11 +37,11 @@ using ISAAR.MSolve.LinearAlgebra.Iterative.Termination;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    public class SeparateCodeCheckingClass5b_b
+    public class SeparateCodeCheckingClass5b_c_constraints
     {
         public static double /*(double[], double[], double[], double[], IVector, IVector)*/ StiffnessMatrixOutputWrite()
         {
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, true);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopc_constraints(1);
 
             var ModelAndNodes = rveBuilder.GetModelAndBoundaryNodes();
             Model model = ModelAndNodes.Item1;
@@ -62,9 +62,9 @@ namespace ISAAR.MSolve.SamplesConsole
 
             solver.OrderDofs(false);
 
-            Dictionary<int, int[]> CornerNodesIdAndGlobalDofs = new Dictionary<int, int[]>(rveBuilder.CornerNodesIds.Keys.Count());//nodeID, globalDofs
+            Dictionary<int, int[]> CornerNodesIdAndGlobalDofs = new Dictionary<int, int[]>( rveBuilder.CornerNodesIds.Keys.Count());//nodeID, globalDofs
             Dictionary<int, int[]> subdBRNodesAndGlobalDOfs = new Dictionary<int, int[]>(rveBuilder.subdFreeBRNodes.Keys.Count());//nodeID, globalDofs
-            foreach (int corrnerNodeID in rveBuilder.CornerNodesIds.Keys)
+            foreach(int corrnerNodeID in rveBuilder.CornerNodesIds.Keys )
             {
                 Node CornerNode = model.NodesDictionary[corrnerNodeID];
                 CornerNodesIdAndGlobalDofs.Add(corrnerNodeID, new int[3] { model.GlobalDofOrdering.GlobalFreeDofs[CornerNode, StructuralDof.TranslationX],
@@ -72,7 +72,7 @@ namespace ISAAR.MSolve.SamplesConsole
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[CornerNode, StructuralDof.TranslationZ]});
 
                 bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(CornerNode, StructuralDof.RotationX, out int globalDofId);
-                if (check)
+                if(check)
                 {
                     string breakpoint = "here";
                 }
@@ -121,14 +121,14 @@ namespace ISAAR.MSolve.SamplesConsole
                     }
                     GlobalDofCoupledDataSubdIds.Add(globalDofId, subdIds);
                     GlobalDofCoupledDataLocalDofsInSubdIds.Add(globalDofId, localIds);
-                }
+                }                
             }
             foreach (int nodeID in rveBuilder.subdFreeBRNodes.Keys)
             {
                 Node node = model.NodesDictionary[nodeID];
                 int[] subdIds = node.SubdomainsDictionary.Keys.ToArray();
 
-                StructuralDof[] dofs = new StructuralDof[5] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ, StructuralDof.RotationX, StructuralDof.RotationY };
+                StructuralDof[] dofs = new StructuralDof[5] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ,StructuralDof.RotationX,StructuralDof.RotationY };
 
                 foreach (StructuralDof doftype in dofs)
                 {
@@ -161,8 +161,8 @@ namespace ISAAR.MSolve.SamplesConsole
 
             solver.Initialize();
 
-            Dictionary<int, IMatrix> subdomainMatrixes = solver.BuildGlobalMatrices(elementProvider); // to kanei o provide mesa
-
+            Dictionary<int,IMatrix> subdomainMatrixes= solver.BuildGlobalMatrices(elementProvider); // to kanei o provide mesa
+            
 
             string print_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}Iter{1}Stiffness.txt";
 
@@ -178,8 +178,8 @@ namespace ISAAR.MSolve.SamplesConsole
                 string print_path = string.Format(print_path_gen, subdID, counter_data);
 
                 var writer = new MatlabWriter();
-                writer.WriteToFile((ISparseMatrix)subdMatrix, print_path, false);
-
+                writer.WriteToFile((ISparseMatrix)subdMatrix,print_path,false);
+                
 
             }
 
@@ -195,11 +195,11 @@ namespace ISAAR.MSolve.SamplesConsole
                     foreach (StructuralDof dof in dofs)
                     {
                         bool check = subdomain.FreeDofOrdering.FreeDofs.TryGetValue(node, dof, out int dofValue);
-                        if (check)
+                        if(check)
                         {
                             subdomainGlobalDofs[dofValue] = model.GlobalDofOrdering.GlobalFreeDofs[node, dof];
 
-                            if (model.GlobalDofOrdering.GlobalFreeDofs[node, dof] == 0)
+                            if (model.GlobalDofOrdering.GlobalFreeDofs[node, dof]==0)
                             {
                                 string breakpoint = "here";
                             }
@@ -210,15 +210,15 @@ namespace ISAAR.MSolve.SamplesConsole
                 string subdID = subdomain.ID.ToString();
                 string print_path = string.Format(print_path_gen2, subdID);
                 var writer = new MatlabWriter();
-                writer.WriteToFile(Vector.CreateFromArray(subdomainGlobalDofs), print_path, false);
+                writer.WriteToFile(Vector.CreateFromArray(subdomainGlobalDofs) , print_path, false);
             }
 
 
 
-            return new double();
+            return new double() ;
         }
 
-        //koitazoume edw poio rve tha trexei 
+        //change rve etc.
         public static void CheckSolution()
         {
             var rveBuilder = new RveGrShMultipleSeparatedDevelop(1);
@@ -238,7 +238,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 cornerNodesList.Add(subdomain.ID, new List<INode>());
             }
 
-            foreach (int CornerNodeID in rveBuilder.CornerNodesIdAndsubdomains.Keys)
+            foreach(int CornerNodeID in rveBuilder.CornerNodesIdAndsubdomains.Keys)
             {
                 Node node1 = model.NodesDictionary[CornerNodeID];
                 foreach (Subdomain subdomain in node1.SubdomainsDictionary.Values)
@@ -247,21 +247,21 @@ namespace ISAAR.MSolve.SamplesConsole
                 }
             }
 
-            foreach (Subdomain subdomain in model.Subdomains)
+            foreach(Subdomain subdomain in model.Subdomains)
             {
                 cornerNodes.Add(subdomain.ID, cornerNodesList[subdomain.ID].ToArray());
             }
 
             double load_value = 1;
-            Load load1;
+            Load load1;            
             load1 = new Load()
             {
-                Node = model.NodesDictionary[rveBuilder.CornerNodesIds.ElementAt(0).Key],
+                Node =model.NodesDictionary[rveBuilder.CornerNodesIds.ElementAt(0).Key],
                 DOF = StructuralDof.TranslationZ,
                 Amount = 1 * load_value
             };
             model.Loads.Add(load1);
-
+            
 
             // Setup solver
             var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
@@ -285,14 +285,11 @@ namespace ISAAR.MSolve.SamplesConsole
             Vector globalU = fetiSolver.GatherGlobalDisplacements(sudomainDisplacements);
         }
 
-        //prosthiki model.ConnectDataStructures entos rve gia na vrei to output node.Subdomains =/=0
-        public static (Model, double[]) RunExample()
+        public static void RunExample()
         {
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, true);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopc_constraints(1);
             var ModelAndNodes = rveBuilder.GetModelAndBoundaryNodes();
             Model model = ModelAndNodes.Item1;
-            //model.ConnectDataStructures();
-
             double load_value = 1;
             Load load1;
             load1 = new Load()
@@ -304,34 +301,33 @@ namespace ISAAR.MSolve.SamplesConsole
             model.Loads.Add(load1);
             var cornerNodesAndSubds = rveBuilder.CornerNodesIdAndsubdomains;
 
-            Dictionary<int, INode[]> cornerNodes = rveBuilder.cornerNodes;
-            //Dictionary<int, List<INode>> CornerNodes = new Dictionary<int, List<INode>>();
-            //foreach (int nodeId in cornerNodesAndSubds.Keys)
-            //{
-            //    var subdIDs = cornerNodesAndSubds[nodeId];
-            //    foreach (int subdId in subdIDs)
-            //    {
-            //        if (CornerNodes.ContainsKey(subdId))
-            //        {
-            //            if (!CornerNodes[subdId].Contains(model.NodesDictionary[nodeId]))
-            //            {
-            //                CornerNodes[subdId].Add(model.NodesDictionary[nodeId]);
-            //            }
-            //        }
-            //        else
-            //        {
-            //            CornerNodes.Add(subdId, new List<INode>());
-            //            CornerNodes[subdId].Add(model.NodesDictionary[nodeId]);
-            //        }
-            //    }
-            //}
-            //Dictionary<int, INode[]> cornerNodes = new Dictionary<int, INode[]>();
-            //foreach (int nodeId in CornerNodes.Keys)
-            //{
-            //    cornerNodes[nodeId] = CornerNodes[nodeId].ToArray();
-            //}
+            Dictionary<int, List<INode>> CornerNodes = new Dictionary<int, List<INode>>();
 
+            foreach (int nodeId in cornerNodesAndSubds.Keys)
+            {
+                var subdIDs = cornerNodesAndSubds[nodeId];
+                foreach (int subdId in subdIDs)
+                {
+                    if (CornerNodes.ContainsKey(subdId))
+                    {
+                        if (!CornerNodes[subdId].Contains(model.NodesDictionary[nodeId]))
+                        {
+                            CornerNodes[subdId].Add(model.NodesDictionary[nodeId]);
+                        }
+                    }
+                    else
+                    {
+                        CornerNodes.Add(subdId, new List<INode>());
+                        CornerNodes[subdId].Add(model.NodesDictionary[nodeId]);
+                    }
+                }
+            }
 
+            Dictionary<int, INode[]> cornerNodes = new Dictionary<int, INode[]>();
+            foreach (int nodeId in CornerNodes.Keys)
+            {
+                cornerNodes[nodeId] = CornerNodes[nodeId].ToArray();
+            }
 
             // Setup solver
             var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
@@ -343,7 +339,7 @@ namespace ISAAR.MSolve.SamplesConsole
             fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
             FetiDPSolver fetiSolver = fetiSolverBuilder.BuildSolver(model);
 
-
+            
 
             // Run the analysis
             var problem = new ProblemStructural(model, fetiSolver);
@@ -517,14 +513,12 @@ namespace ISAAR.MSolve.SamplesConsole
                 node_counter++;
             }
 
-            return (model, uc);
-
         }
 
-        //needs to be corrected rve_multiple -> b kai to path kai ta stoixeia diakritopoihshs pou einai afhmena exwterika
-        public static (Model, double[]) RunExampleSerial()
+        //needs to be corrected rve_multiple -> b
+        public static void RunExampleSerial()
         {
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, false);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopc_constraints(1);
 
             var ModelAndNodes = rveBuilder.GetModelAndBoundaryNodes();
             Model model = ModelAndNodes.Item1;
@@ -535,12 +529,12 @@ namespace ISAAR.MSolve.SamplesConsole
             var rve_id_data = RVE_id.ToString();
 
             //renumbering_vector_path = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\REF_new_total_numbering.txt";
-            var renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
+            var renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
             renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);
-            int subdiscr1 = 3;
+            int subdiscr1 = 2;
             int discr1 = 4;
             // int discr2 dn xrhsimopoieitai
-            int discr3 = 12;
+            int discr3 = 8;
             int subdiscr1_shell = 6;
             int discr1_shell = 1;
             var mpgp = FEMMeshBuilder.GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
@@ -554,23 +548,21 @@ namespace ISAAR.MSolve.SamplesConsole
             int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
             Dictionary<int, double[]> CornerNodesIds;
             Dictionary<int, int[]> CornerNodesIdAndsubdomains;
-
-
-            int[][] CornerNodesData = new int[8][]; //arithmos corner nodes,  h1 h2 h3 data (afairoume 1 apo ta pragmatika)
+            int[][] CornerNodesData = new int[7][]; //arithmos corner nodes,  h1 h2 h3 data (afairoume 1 apo ta pragmatika)
             CornerNodesData[0] = new int[3] { 5 - 1, 5 - 1, 5 - 1 };
-            CornerNodesData[1] = new int[3] { 9 - 1, 5 - 1, 5 - 1 };
-            CornerNodesData[2] = new int[3] { 5 - 1, 9 - 1, 5 - 1 };
-            CornerNodesData[3] = new int[3] { 9 - 1, 9 - 1, 5 - 1 };
-            CornerNodesData[4] = new int[3] { 5 - 1, 5 - 1, 9 - 1 };
-            CornerNodesData[5] = new int[3] { 9 - 1, 5 - 1, 9 - 1 };
-            CornerNodesData[6] = new int[3] { 5 - 1, 9 - 1, 9 - 1 };
-            CornerNodesData[7] = new int[3] { 9 - 1, 9 - 1, 9 - 1 };
 
+            // kai extra corner nodes
+            CornerNodesData[1] = new int[3] { 2 - 1, 5 - 1, 5 - 1 };
+            CornerNodesData[2] = new int[3] { 8 - 1, 5 - 1, 5 - 1 };
+            CornerNodesData[3] = new int[3] { 5 - 1, 2 - 1, 5 - 1 };
+            CornerNodesData[4] = new int[3] { 5 - 1, 8 - 1, 5 - 1 };
+            CornerNodesData[5] = new int[3] { 5 - 1, 5 - 1, 2 - 1 };
+            CornerNodesData[6] = new int[3] { 5 - 1, 5 - 1, 8 - 1 };
 
 
             CornerNodesIds = new Dictionary<int, double[]>(CornerNodesData.Length); //nodeID, coordinate data
             CornerNodesIdAndsubdomains = new Dictionary<int, int[]>(CornerNodesData.Length);//nodeID, subdIds            
-                                                                                            //var CornerNodesSubdomains = new Dictionary<int, int[]> (CornerNodesData.Length); //nodeID, subdomains opou anhkei
+            //var CornerNodesSubdomains = new Dictionary<int, int[]> (CornerNodesData.Length); //nodeID, subdomains opou anhkei
             for (int i1 = 0; i1 < CornerNodesData.Length; i1++)
             {
                 int h1 = CornerNodesData[i1][0]; int h2 = CornerNodesData[i1][1]; int h3 = CornerNodesData[i1][2];
@@ -612,19 +604,19 @@ namespace ISAAR.MSolve.SamplesConsole
             //NewmarkDynamicAnalyzer parentAnalyzer = new NewmarkDynamicAnalyzer(provider, childAnalyzer, linearSystems, 0.25, 0.5, 0.28, 3.36);
 
             // Request output
-            //int[] outputPositions = new int[model.SubdomainsDictionary[0].FreeDofOrdering.NumFreeDofs];
-            //for( int i1 = 0;  i1 < model.SubdomainsDictionary[0].FreeDofOrdering.NumFreeDofs ; i1++ )
-            //{
+            int[] outputPositions = new int[model.SubdomainsDictionary[0].FreeDofOrdering.NumFreeDofs];
+            for( int i1 = 0;  i1 < model.SubdomainsDictionary[0].FreeDofOrdering.NumFreeDofs ; i1++ )
+            {
 
-            //}
-            //childAnalyzer.LogFactories[0] = new LinearAnalyzerLogFactory(new int[] { 0 });
+            }
+            childAnalyzer.LogFactories[0] = new LinearAnalyzerLogFactory(new int[] { 0 });
 
             // Run the anlaysis 
             parentAnalyzer.Initialize();
             parentAnalyzer.Solve();
             #endregion
 
-            var globalU = solver.LinearSystems[1].Solution.CopyToArray();// fetiSolver.GatherGlobalDisplacements(sudomainDisplacements);
+            var globalU = solver.LinearSystems[0].Solution.CopyToArray();// fetiSolver.GatherGlobalDisplacements(sudomainDisplacements);
             double[] uc = new double[3 * CornerNodesIds.Count()];
 
             int node_counter = 0;
@@ -642,8 +634,6 @@ namespace ISAAR.MSolve.SamplesConsole
                 }
                 node_counter++;
             }
-
-            return (model, uc);
         }
 
 
