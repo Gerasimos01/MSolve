@@ -6,6 +6,7 @@ using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Output;
+using ISAAR.MSolve.MSAnalysis.SupportiveClasses;
 
 namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 {
@@ -1146,6 +1147,29 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
         {
             Dictionary<int, List<int>> AssignedSubdomains =
                DdmCalculationsPartb.FindEmbeddedElementsSubdomainsCorrectedSimple(model, totalSubdomains);
+
+            int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomains, totalSubdomains);
+            return subdCohElementIdsDirect;
+        }
+
+        public static int[][] DetermineCoheiveELementsSubdomainsSimple_Alte(Model model, int totalSubdomains)
+        {
+            Dictionary<int, List<int>> AssignedSubdomains =
+               DdmCalculationsAlterna.FindEmbeddedElementsSubdomainsCorrectedSimple(model, totalSubdomains);
+
+            int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomains, totalSubdomains);
+            return subdCohElementIdsDirect;
+        }
+
+        public static int[][] DetermineCoheiveELementsSubdomainsSimple_Alte2(Model model, int totalSubdomains,
+            int[] lowerCohesiveBound, int[] upperCohesiveBound, int[] grShElementssnumber)
+        {
+            Dictionary<int, List<int>> AssignedSubdomainsFirstLevelOfCohesive =
+               DdmCalculationsAlterna.FindEmbeddedElementsSubdomainsCorrectedSimpleFirstLevel(model, totalSubdomains,
+               lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
+            Dictionary<int, List<int>> AssignedSubdomains =
+                DdmCalculationsAlterna.FindEmbeddedElementsSubdomainsCorrectedSimpleSecondLevel(model, totalSubdomains,
+               lowerCohesiveBound, upperCohesiveBound, grShElementssnumber, AssignedSubdomainsFirstLevelOfCohesive);
 
             int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomains, totalSubdomains);
             return subdCohElementIdsDirect;
