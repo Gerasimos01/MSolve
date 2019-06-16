@@ -515,9 +515,9 @@ namespace ISAAR.MSolve.SamplesConsole
         }
 
         //needs to be corrected rve_multiple -> b
-        public static void RunExampleSerial()
+        public static (Model, double[]) RunExampleSerial()
         {
-            var rveBuilder = new RveGrShMultiple(1);
+            var rveBuilder = new RveGrShMultipleSeparated_c_alte(1, false);
 
             var ModelAndNodes = rveBuilder.GetModelAndBoundaryNodes();
             Model model = ModelAndNodes.Item1;
@@ -528,12 +528,12 @@ namespace ISAAR.MSolve.SamplesConsole
             var rve_id_data = RVE_id.ToString();
 
             //renumbering_vector_path = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\REF_new_total_numbering.txt";
-            var renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
+            var renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2c_alte\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
             renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);
-            int subdiscr1 = 2;
+            int subdiscr1 = 4;
             int discr1 = 4;
             // int discr2 dn xrhsimopoieitai
-            int discr3 = 8;
+            int discr3 = 16;
             int subdiscr1_shell = 6;
             int discr1_shell = 1;
             var mpgp = FEMMeshBuilder.GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
@@ -547,21 +547,27 @@ namespace ISAAR.MSolve.SamplesConsole
             int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
             Dictionary<int, double[]> CornerNodesIds;
             Dictionary<int, int[]> CornerNodesIdAndsubdomains;
-            int[][] CornerNodesData = new int[7][]; //arithmos corner nodes,  h1 h2 h3 data (afairoume 1 apo ta pragmatika)
-            CornerNodesData[0] = new int[3] { 5 - 1, 5 - 1, 5 - 1 };
 
-            // kai extra corner nodes
-            CornerNodesData[1] = new int[3] { 2 - 1, 5 - 1, 5 - 1 };
-            CornerNodesData[2] = new int[3] { 8 - 1, 5 - 1, 5 - 1 };
-            CornerNodesData[3] = new int[3] { 5 - 1, 2 - 1, 5 - 1 };
-            CornerNodesData[4] = new int[3] { 5 - 1, 8 - 1, 5 - 1 };
-            CornerNodesData[5] = new int[3] { 5 - 1, 5 - 1, 2 - 1 };
-            CornerNodesData[6] = new int[3] { 5 - 1, 5 - 1, 8 - 1 };
+
+            int[][] CornerNodesData = new int[27][]; //arithmos corner nodes,  h1 h2 h3 data (afairoume 1 apo ta pragmatika)
+            int thesi = 0;
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    for (int i3 = 0; i3 < 3; i3++)
+                    {
+                        CornerNodesData[thesi] = new int[3] { (5 - 1) + i1 * 4, (5 - 1) + i2 * 4, (5 - 1) + i3 * 4 };
+                        thesi++;
+                    }
+                }
+            }
+
 
 
             CornerNodesIds = new Dictionary<int, double[]>(CornerNodesData.Length); //nodeID, coordinate data
             CornerNodesIdAndsubdomains = new Dictionary<int, int[]>(CornerNodesData.Length);//nodeID, subdIds            
-            //var CornerNodesSubdomains = new Dictionary<int, int[]> (CornerNodesData.Length); //nodeID, subdomains opou anhkei
+                                                                                            //var CornerNodesSubdomains = new Dictionary<int, int[]> (CornerNodesData.Length); //nodeID, subdomains opou anhkei
             for (int i1 = 0; i1 < CornerNodesData.Length; i1++)
             {
                 int h1 = CornerNodesData[i1][0]; int h2 = CornerNodesData[i1][1]; int h3 = CornerNodesData[i1][2];
@@ -603,19 +609,19 @@ namespace ISAAR.MSolve.SamplesConsole
             //NewmarkDynamicAnalyzer parentAnalyzer = new NewmarkDynamicAnalyzer(provider, childAnalyzer, linearSystems, 0.25, 0.5, 0.28, 3.36);
 
             // Request output
-            int[] outputPositions = new int[model.SubdomainsDictionary[0].FreeDofOrdering.NumFreeDofs];
-            for( int i1 = 0;  i1 < model.SubdomainsDictionary[0].FreeDofOrdering.NumFreeDofs ; i1++ )
-            {
+            //int[] outputPositions = new int[model.SubdomainsDictionary[0].FreeDofOrdering.NumFreeDofs];
+            //for( int i1 = 0;  i1 < model.SubdomainsDictionary[0].FreeDofOrdering.NumFreeDofs ; i1++ )
+            //{
 
-            }
-            childAnalyzer.LogFactories[0] = new LinearAnalyzerLogFactory(new int[] { 0 });
+            //}
+            //childAnalyzer.LogFactories[0] = new LinearAnalyzerLogFactory(new int[] { 0 });
 
             // Run the anlaysis 
             parentAnalyzer.Initialize();
             parentAnalyzer.Solve();
             #endregion
 
-            var globalU = solver.LinearSystems[0].Solution.CopyToArray();// fetiSolver.GatherGlobalDisplacements(sudomainDisplacements);
+            var globalU = solver.LinearSystems[1].Solution.CopyToArray();// fetiSolver.GatherGlobalDisplacements(sudomainDisplacements);
             double[] uc = new double[3 * CornerNodesIds.Count()];
 
             int node_counter = 0;
@@ -633,8 +639,30 @@ namespace ISAAR.MSolve.SamplesConsole
                 }
                 node_counter++;
             }
-        }
 
+            double expected = -2.3358765051300345e-05;
+
+            (double min_ratio, int closest_value) = Compare(uc, expected);
+
+            return (model, uc);
+        }
+        private static (double, int ) Compare(double[]uc, double expected)
+        {
+            double min_ratio = 1;
+            int closest_value = 0;
+            for (int i1 = 0; i1 < uc.Length; i1++)
+            {
+                double value = uc[i1];
+                double ration = Math.Abs((value - expected) / expected);
+                if (ration < min_ratio)
+                {
+                    min_ratio = ration;
+                    closest_value = i1;
+                }
+            }
+
+            return (min_ratio, closest_value);
+        }
 
         private static void DefineAppropriateConstraintsForBoundaryNodes(Model model, Dictionary<int, Node> boundaryNodes)
         {
