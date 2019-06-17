@@ -15,7 +15,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.Interfaces
         Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes();
         IRVEbuilderDevelop Clone(int a);
         ISolver GetAppropriateSolver(Model model);
-        void ReassignModel(Model model);
+        void ReassignModel(Model model,bool decomposeModel);
         ISolver GetParallelSolver(Model model);
         ISolver GetSerialSolver(Model model);
 

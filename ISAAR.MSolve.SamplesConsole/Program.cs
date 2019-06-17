@@ -58,13 +58,15 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass5b_c.StiffnessMatrixOutputWrite();
             SeparateCodeCheckingClass5b_c.RunExample();
             ///SeparateCodeCheckingClass5b_c.RunExampleSerial();
-            (Model model, double[] uc) = SeparateCodeCheckingClass5b_c.RunExampleSerial();
+            // //(Model model, double[] uc) = SeparateCodeCheckingClass5b_c.RunExampleSerial();
             //SeparateCodeCheckingClass5b_c1.StiffnessMatrixOutputWrite();
             //SeparateCodeCheckingClass5b_c1.RunExample();
 
             //SeparateCodeCheckingClass7_b_b.Check(); //nonlinear strains example etc.
 
             //SeparateCodeCheckingClass5b_c_constraints.RunExample();
+
+            SeparateCodeCheckingClass_c_alte_develop.NLRVEStrainParralelSolution();
         }
 
         private static void SolveBuildingInNoSoilSmall()
