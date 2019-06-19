@@ -4,6 +4,7 @@ using ISAAR.MSolve.Analyzers.Dynamic;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.Logging;
+using ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses;
 using ISAAR.MSolve.Problems;
 using ISAAR.MSolve.Solvers;
 using ISAAR.MSolve.Solvers.Direct;
@@ -53,10 +54,14 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass5b.RunExample();
             //ISAAR.MSolve.Tests.SeparateCodeCheckingClass5b.RunExampleSerial();
             //SeparateCodeCheckingClass5b_b.StiffnessMatrixOutputWrite();
-            // //(Model model1, double[] uc1) = SeparateCodeCheckingClass5b_b.RunExample();
-            //(Model model2, double[] uc2) = SeparateCodeCheckingClass5b_b.RunExampleSerial();
+
+            (Model model1, double[] uc1) = SeparateCodeCheckingClass5b_b.RunExample();
+            (Model model2, double[] uc2) = SeparateCodeCheckingClass5b_b.RunExampleSerial();
+            //PrintReorderingModel1ToModel2(model1, model2);
+            (int num1, int num2) = CountElements(model1, model2);
+
             //SeparateCodeCheckingClass5b_c.StiffnessMatrixOutputWrite();
-            SeparateCodeCheckingClass5b_c.RunExample();
+            // //SeparateCodeCheckingClass5b_c.RunExample();
             ///SeparateCodeCheckingClass5b_c.RunExampleSerial();
             // //(Model model, double[] uc) = SeparateCodeCheckingClass5b_c.RunExampleSerial();
             //SeparateCodeCheckingClass5b_c1.StiffnessMatrixOutputWrite();
@@ -67,6 +72,38 @@ namespace ISAAR.MSolve.SamplesConsole
             //SeparateCodeCheckingClass5b_c_constraints.RunExample();
 
             SeparateCodeCheckingClass_c_alte_develop.NLRVEStrainParralelSolution();
+        }
+
+        private static (int num1, int num2) CountElements(Model model1, Model model2)
+        {
+            int num1 = 0;
+            foreach(Subdomain subdomain in model1.Subdomains)
+            {
+                num1 += subdomain.Elements.Count;
+            }
+
+            int num2 = 0;
+            foreach (Subdomain subdomain in model2.Subdomains)
+            {
+                num2 += subdomain.Elements.Count;
+            }
+            return (num1, num2);
+        }
+
+        private static void PrintReorderingModel1ToModel2(Model model1, Model model2)
+        {
+            var destinationNumbers = new int[model1.GlobalDofOrdering.NumGlobalFreeDofs];
+            foreach (Node node in model1.GlobalDofOrdering.GlobalFreeDofs.GetRows())
+            {
+                foreach(IDofType doftype in model1.GlobalDofOrdering.GlobalFreeDofs.GetColumnsOfRow(node))
+                {
+                    destinationNumbers[model1.GlobalDofOrdering.GlobalFreeDofs[node, doftype]] = model2.GlobalDofOrdering.GlobalFreeDofs[model2.NodesDictionary[node.ID], doftype];
+                }
+            }
+
+            var path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\destinationNumbering.txt";
+            DdmCalculationsGeneral.WriteToFileVector(destinationNumbers, path);
+
         }
 
         private static void SolveBuildingInNoSoilSmall()

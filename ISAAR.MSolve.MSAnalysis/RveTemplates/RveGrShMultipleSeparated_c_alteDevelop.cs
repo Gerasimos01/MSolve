@@ -198,7 +198,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             var CohesiveGroupping = new EmbeddedCohesiveSubGrouping(model, hostSubGroups, embdeddedGroup);
 
             //ds4
-            int[][] subdCohElementIds = DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple(model, totalSubdomains);
+            int[][] subdCohElementIds = null;
+            if (path == 1) subdCohElementIds = DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple(model, totalSubdomains);
+            if (path == 2) subdCohElementIds = DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple_Alte2(model, totalSubdomains,
+                lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
             int[][] subdShellElementIds = DdmCalculationsGeneral.DetermineShellELementsSubdomains(model, totalSubdomains, subdCohElementIds,
             lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
             int[][] subdElementIds1 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdHexaIds, subdCohElementIds);

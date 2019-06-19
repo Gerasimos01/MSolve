@@ -48,7 +48,7 @@ namespace ISAAR.MSolve.SamplesConsole
             var rveBuilder2 = new RveGrShMultipleSeparated_c_alteDevelop(1, true);
             
             var microstructure2 = new MicrostructureDefGrad3Ddevelop(rveBuilder2, false, 1);
-            double[] DGvec2 = new double[9] { 1.00000000001, 1, 1, 0, 0, 0, 0, 0, 0 };
+            double[] DGvec2 = new double[9] { 1.01, 1, 1, 0, 0, 0, 0, 0, 0 };
 
             microstructure2.UpdateMaterialDevelop(DGvec2);
 
@@ -76,11 +76,11 @@ namespace ISAAR.MSolve.SamplesConsole
             var rveBuilder = new RveGrShMultipleSeparated_c_alteDevelop(1, false);
 
             var microstructure = new MicrostructureDefGrad3Ddevelop(rveBuilder, false, 1);
-            double[] DGvec = new double[9] { 1.00000000001, 1, 1, 0, 0, 0, 0, 0, 0 };
+            double[] DGvec = new double[9] { 1.01, 1, 1, 0, 0, 0, 0, 0, 0 };
 
             microstructure.UpdateMaterialDevelop(DGvec);
 
-            var solution = microstructure.iterSolutions[0][1].CopyToArray();
+            var solution = microstructure.iterSolutions[0][0].CopyToArray();
 
             double[] cornerNodeSolution = new double[3 * cornerNodesIds.Keys.Count];
             thesi = 0;

@@ -291,7 +291,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             #endregion
 
             #region Creation of nessesary analyzers for NRNLAnalyzer and Creation of Microstructure analyzer (NRNLdevelop temporarilly) and solution ;
-            int increments = 1; int MaxIterations = 100; int IterationsForMatrixRebuild = 1;
+            int increments = 1; int MaxIterations = 1; int IterationsForMatrixRebuild = 1;
             (MicrostructureBvpNRNLAnalyzerDevelop microAnalyzer, ProblemStructural provider, ElementStructuralStiffnessProvider elementProvider) =
                 AnalyzeMicrostructure(model, solver, increments, MaxIterations, IterationsForMatrixRebuild,
                 totalPrescribedBoundaryDisplacements, initialConvergedBoundaryDisplacements, boundaryNodes, uInitialFreeDOFDisplacementsPerSubdomain);

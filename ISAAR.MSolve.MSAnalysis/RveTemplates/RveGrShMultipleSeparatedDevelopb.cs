@@ -196,7 +196,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 DdmCalculationsGeneral.UndoModelInterconnectionDataBuild(model);
                 DdmCalculations.SeparateSubdomains(model, subdElementIds2);
 
-                //model.ConnectDataStructures();
+                model.ConnectDataStructures();
 
                 #region print extra data 
 
@@ -272,6 +272,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 }
 
                 #endregion
+
+                DdmCalculationsGeneral.UndoModelInterconnectionDataBuild(model);
 
 
                 bool print_subdomain_data = true;
