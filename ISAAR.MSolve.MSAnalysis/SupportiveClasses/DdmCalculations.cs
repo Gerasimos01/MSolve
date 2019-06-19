@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
+using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Output;
@@ -1508,6 +1509,52 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
             }
             writer2.Flush();
 
+        }
+
+        internal static Dictionary<ISubdomain, List<Node>> DetermineRveSubdomainsInnerNodesFromModel(Model model)
+        {
+            Dictionary<ISubdomain, List<Node>> RveSubdomainsInnerNodes = new Dictionary<ISubdomain, List<Node>>();
+
+            foreach(Node node in model.NodesDictionary.Values)
+            {
+                if(node.SubdomainsDictionary.Values.Count==1)
+                {
+                    ISubdomain singleSubdomain = node.SubdomainsDictionary.ElementAt(0).Value;
+                    if(RveSubdomainsInnerNodes.Keys.Contains(singleSubdomain))
+                    {
+                        RveSubdomainsInnerNodes[singleSubdomain].Add(node);
+                    }
+                    else
+                    {
+                        List<Node> subdomainnodes = new List<Node>();
+                        subdomainnodes.Add(node);
+                        RveSubdomainsInnerNodes.Add(singleSubdomain, subdomainnodes);
+                    }
+                }
+
+            }
+
+            return RveSubdomainsInnerNodes;
+        }
+
+        internal static bool CheckSubdomainsEmbeddingHostNodes(Model model, Dictionary<ISubdomain, List<Node>> rveMatrixSubdomainInnerNodes)
+        {
+            bool isTrue = false;
+            foreach(ISubdomain subdomain in model.Subdomains)
+            {
+                foreach(Node node in subdomain .Nodes)
+                {
+                    foreach(ISubdomain adjacentSubdoiamin in rveMatrixSubdomainInnerNodes.Keys)
+                    {
+                        if((!(subdomain.ID== adjacentSubdoiamin.ID)) &&rveMatrixSubdomainInnerNodes[adjacentSubdoiamin].Contains(node))
+                        {
+                            isTrue = true;
+                        }
+                    }
+                }
+            }
+
+            return isTrue;
         }
     }
 

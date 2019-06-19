@@ -41,6 +41,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public Dictionary<int, int[]> subdFreeBRNodes { get; private set; }
         public string subdomainOutputPath { get; private set; }
         public IList<Node> EmbeddedNodes { get; private set; }
+        public Dictionary<ISubdomain, List<Node>> RveMatrixSubdomainInnerNodes { get; private set; }
 
         private bool decomposeModel;
         public Dictionary<int, INode[]> cornerNodes;
@@ -138,6 +139,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             var decomposer = new AutomaticDomainDecomposer2(model, totalSubdomains);
             if(decomposeModel) decomposer.UpdateModel();
             var subdHexaIds = DdmCalculationsGeneral.DetermineHexaElementsSubdomainsFromModel(model);
+            RveMatrixSubdomainInnerNodes = DdmCalculationsGeneral.DetermineRveSubdomainsInnerNodesFromModel(model);
 
             double volume = mp.L01 * mp.L02 * mp.L03;
             int hexaElementsNumber = model.ElementsDictionary.Count();
@@ -197,6 +199,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 DdmCalculations.SeparateSubdomains(model, subdElementIds2);
 
                 model.ConnectDataStructures();
+                bool isTrue = DdmCalculationsGeneral.CheckSubdomainsEmbeddingHostNodes(model, RveMatrixSubdomainInnerNodes);
 
                 #region print extra data 
 
