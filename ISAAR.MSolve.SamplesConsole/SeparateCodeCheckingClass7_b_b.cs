@@ -102,6 +102,66 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
+        public static void NLRVEStrainParralelSolution_FETI1()
+        {
+            //parallel
+            var rveBuilder2 = new RveGrShMultipleSeparated_c_alteDevelop_FETI1(1, true);
+
+            var microstructure2 = new MicrostructureDefGrad3Ddevelop(rveBuilder2, false, 1);
+            double[] DGvec2 = new double[9] { 1.01, 1, 1, 0, 0, 0, 0, 0, 0 };
+
+            microstructure2.UpdateMaterialDevelop(DGvec2);
+
+            double[] solution2 = microstructure2.iterSolutionGathered[0].CopyToArray();
+            var solutions2 = microstructure2.iterSolutions[0][0].CopyToArray();
+
+            var cornerNodesIds = rveBuilder2.CornerNodesIds;
+            double[] cornerNodeSolution2 = new double[3 * cornerNodesIds.Keys.Count];
+            int thesi = 0;
+            foreach (int cornerNodeID in cornerNodesIds.Keys)
+            {
+                var cornerNode = microstructure2.model.NodesDictionary[cornerNodeID];
+                var dofs = new StructuralDof[3] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ };
+                foreach (StructuralDof dof in dofs)
+                {
+                    int globalDof = microstructure2.model.GlobalDofOrdering.GlobalFreeDofs[cornerNode, dof];
+                    double u = solution2[globalDof];
+                    cornerNodeSolution2[thesi] = u;
+                    thesi++;
+                }
+
+            }
+
+            // serial 
+            var rveBuilder = new RveGrShMultipleSeparated_c_alteDevelop(1, false);
+
+            var microstructure = new MicrostructureDefGrad3Ddevelop(rveBuilder, false, 1);
+            double[] DGvec = new double[9] { 1.01, 1, 1, 0, 0, 0, 0, 0, 0 };
+
+            microstructure.UpdateMaterialDevelop(DGvec);
+
+            var solution = microstructure.iterSolutions[0][0].CopyToArray();
+
+            double[] cornerNodeSolution = new double[3 * cornerNodesIds.Keys.Count];
+            thesi = 0;
+            foreach (int cornerNodeID in cornerNodesIds.Keys)
+            {
+                var cornerNode = microstructure.model.NodesDictionary[cornerNodeID];
+                var dofs = new StructuralDof[3] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ };
+                foreach (StructuralDof dof in dofs)
+                {
+                    int globalDof = microstructure.model.GlobalDofOrdering.GlobalFreeDofs[cornerNode, dof];
+                    double u = solution[globalDof];
+                    cornerNodeSolution[thesi] = u;
+                    thesi++;
+                }
+
+            }
+
+            //microstructure.UpdateMaterialDevelop(new double[9] { 1, 1, 1, 0, 0, 0, 0, 0, 0 });
+
+        }
+
         public static void NLRVEStrainParralelSolution2()
         {
             var rveBuilder = new RveGrShMultipleSeparated_c_alteDevelop(1, false);

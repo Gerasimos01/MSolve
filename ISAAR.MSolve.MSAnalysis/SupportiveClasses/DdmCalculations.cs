@@ -1556,6 +1556,63 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 
             return isTrue;
         }
+
+        internal static (int[][] subdCohElementIds, Dictionary<int, List<int>> reassignedHexas, Dictionary<int, int> hexaOriginalSubdomains)
+            DetermineCoheiveELementsSubdomainsSimple_Alte3(Model model, int totalSubdomains, int[] lowerCohesiveBound, int[] upperCohesiveBound, int[] grShElementssnumber)
+        {
+            (Dictionary<int, List<int>> AssignedSubdomainsFirstLevelOfCohesive, Dictionary<int, List<int>> reassignedHexas, Dictionary<int, int> hexaOriginalSubdomains) =
+               DdmCalculationsAlterna.FindEmbeddedElementsSubdomainsCorrectedSimpleFirstLevel2(model, totalSubdomains,
+               lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
+            Dictionary<int, List<int>> AssignedSubdomains =
+                DdmCalculationsAlterna.FindEmbeddedElementsSubdomainsCorrectedSimpleSecondLevel(model, totalSubdomains,
+               lowerCohesiveBound, upperCohesiveBound, grShElementssnumber, AssignedSubdomainsFirstLevelOfCohesive);
+
+            int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomains, totalSubdomains);
+            return (subdCohElementIdsDirect, reassignedHexas, hexaOriginalSubdomains);
+        }
+
+        internal static int[][] ReassignHexas(int[][] subdHexaIds, Dictionary<int, List<int>> reassignedHexas, Dictionary<int, int> hexaOriginalSubdomains)
+        {
+            List<int>[] subdHexaIDsNew = new List<int>[subdHexaIds.Length];
+
+            for(int originalSubdId = 0; originalSubdId<subdHexaIds.Length; originalSubdId++)
+            {
+                for (int hexaThesi = 0; hexaThesi < subdHexaIds[originalSubdId].Length; hexaThesi++)
+                {
+                    int hexaID = subdHexaIds[originalSubdId][hexaThesi];
+
+                    if (!hexaOriginalSubdomains.Keys.Contains(hexaID))
+                    {
+                        if(!(subdHexaIDsNew[originalSubdId] ==null))
+                        {
+                            subdHexaIDsNew[originalSubdId].Add(hexaID);
+                        }
+                        else
+                        {
+                            List<int> hexas = new List<int>() { hexaID };
+                            subdHexaIDsNew[originalSubdId] = hexas;
+                        }
+                    }                    
+                }
+            }
+
+            foreach(int newSubdId in reassignedHexas.Keys)
+            {
+                foreach(int reassignedHxaID in reassignedHexas[newSubdId])
+                {
+                    subdHexaIDsNew[newSubdId].Add(reassignedHxaID);
+                }
+            }
+
+            //change form
+            int[][] subdHexaIDsNewArrays = new int[subdHexaIDsNew.Length][];
+            for(int subdid =0; subdid< subdHexaIds.Length; subdid++)
+            {
+                subdHexaIDsNewArrays[subdid] = subdHexaIDsNew[subdid].ToArray();
+            }
+
+            return subdHexaIDsNewArrays;
+        }
     }
 
 }

@@ -83,6 +83,7 @@ namespace ISAAR.MSolve.FEM.Entities
             var nodeSet = new SortedSet<Node>(nodeComparer);
             foreach (Element element in Elements)
             {
+                foreach (Node node in element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element)) nodeSet.Add(node);
                 foreach (Node node in element.Nodes) nodeSet.Add(node);
             }
             nodes.AddRange(nodeSet);

@@ -10,6 +10,7 @@ using ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses;
 using ISAAR.MSolve.PreProcessor.Embedding;
 using ISAAR.MSolve.Solvers;
 using ISAAR.MSolve.Solvers.Direct;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Feti1;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Preconditioning;
@@ -24,7 +25,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
     /// Use of model separation methods is made.
     /// Authors Gerasimos Sotiropoulos
     /// </summary>
-    public class RveGrShMultipleSeparated_c_alteDevelop : IRVEbuilderDevelop //IdegenerateRVEbuilder
+    public class RveGrShMultipleSeparated_c_alteDevelop_FETI1 : IRVEbuilderDevelop //IdegenerateRVEbuilder
     {
         //origin: RveGrShMultipleSeparatedDevelopb
         //changes: stoixeia discretization kai subdomains tou paradeigmatos c_alte 
@@ -52,15 +53,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             if (decomposeModel)
             {
                 //Setup solver
-                var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
-                interfaceSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1);
-                interfaceSolverBuilder.PcgConvergenceTolerance = 1E-10;
-                var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodes);
-                fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
-                fetiSolverBuilder.ProblemIsHomogeneous = false;
-                fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
-                FetiDPSolver fetiSolver = fetiSolverBuilder.BuildSolver(model);
-                return fetiSolver;
+                var solverBuilder = new Feti1Solver.Builder(1e-4); //factorizationTolerance
+                solverBuilder.ProblemIsHomogeneous = false;
+                solverBuilder.PreconditionerFactory = new LumpedPreconditioner.Factory();
+                solverBuilder.ProblemIsHomogeneous = true;
+                Feti1Solver solver = solverBuilder.BuildSolver(model);
+                return solver;
             }
             else
             {
@@ -74,13 +72,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         string renumbering_vector_path;
         int RVE_id;
 
-        public RveGrShMultipleSeparated_c_alteDevelop(int RVE_id, bool decomposeModel)
+        public RveGrShMultipleSeparated_c_alteDevelop_FETI1(int RVE_id, bool decomposeModel)
         {
             this.RVE_id = RVE_id;
             this.decomposeModel = decomposeModel;
         }
 
-        public IRVEbuilderDevelop Clone(int a) => new RveGrShMultipleSeparated_c_alteDevelop(a, decomposeModel);
+        public IRVEbuilderDevelop Clone(int a) => new RveGrShMultipleSeparated_c_alteDevelop_FETI1(a, decomposeModel);
     
         public Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
         {
@@ -201,22 +199,22 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             int[][] subdCohElementIds = null;
             if (path == 1) subdCohElementIds = DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple(model, totalSubdomains);
 
-            //if (path == 2) subdCohElementIds = DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple_Alte2(model, totalSubdomains,
-            //    lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
-            Dictionary<int, List<int>> reassignedHexas = null;
-            Dictionary<int, int> hexaOriginalSubdomains = null;
-            if (path == 2)
-            {
-                (subdCohElementIds, reassignedHexas, hexaOriginalSubdomains) =
-                    DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple_Alte3(model, totalSubdomains, lowerCohesiveBound,
-                    upperCohesiveBound, grShElementssnumber);
-            }
-            int[][] subdHexaIdsNew = DdmCalculationsGeneral.ReassignHexas(subdHexaIds, reassignedHexas, hexaOriginalSubdomains);
+            if (path == 2) subdCohElementIds = DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple_Alte2(model, totalSubdomains,
+                lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
+            //Dictionary<int, List<int>> reassignedHexas = null;
+            //Dictionary<int, int> hexaOriginalSubdomains = null;
+            //if (path == 2)
+            //{
+            //    (subdCohElementIds, reassignedHexas, hexaOriginalSubdomains) =
+            //        DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple_Alte3(model, totalSubdomains, lowerCohesiveBound,
+            //        upperCohesiveBound, grShElementssnumber);
+            //}
+            //int[][] subdHexaIdsNew = DdmCalculationsGeneral.ReassignHexas(subdHexaIds, reassignedHexas, hexaOriginalSubdomains);
 
 
             int[][] subdShellElementIds = DdmCalculationsGeneral.DetermineShellELementsSubdomains(model, totalSubdomains, subdCohElementIds,
             lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
-            int[][] subdElementIds1 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdHexaIdsNew, subdCohElementIds);
+            int[][] subdElementIds1 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdHexaIds, subdCohElementIds);
             int[][] subdElementIds2 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdElementIds1, subdShellElementIds);
            
             separateSubdomainsIds = subdElementIds2;
@@ -314,7 +312,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             bool print_subdomain_data = true;
             if (print_subdomain_data)
             {
-                DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIdsNew, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
+                DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
                 DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdFreeBRNodes, subdomainOutputPath, @"\subdomainBRNodesAndSubd.txt");
                 DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndsubdomains, subdomainOutputPath, @"\CornerNodesAndSubdIds.txt");
             }

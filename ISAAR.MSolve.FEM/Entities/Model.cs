@@ -195,7 +195,7 @@ namespace ISAAR.MSolve.FEM.Entities
         {
             foreach (Element element in ElementsDictionary.Values)
             {
-                foreach (Node node in element.Nodes) node.ElementsDictionary[element.ID] = element;
+                foreach (Node node in element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element)) node.ElementsDictionary[element.ID] = element;
             }
         }
 

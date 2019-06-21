@@ -27,6 +27,16 @@ namespace ISAAR.MSolve.Solvers.Ordering
             Dictionary<int, List<IDofType>> nodalDOFTypesDictionary = new Dictionary<int, List<IDofType>>(); //TODO: use Set instead of List
             foreach (IElement element in elements)
             {
+                var elementNodes = element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element);
+                for (int i = 0; i < elementNodes.Count; i++)
+                {
+                    if (!nodalDOFTypesDictionary.ContainsKey(elementNodes[i].ID))
+                        nodalDOFTypesDictionary.Add(elementNodes[i].ID, new List<IDofType>());
+                    nodalDOFTypesDictionary[elementNodes[i].ID].AddRange(element.ElementType.DofEnumerator.GetDofTypesForMatrixAssembly(element)[i]);
+                }
+            }
+            foreach (IElement element in elements)
+            {
                 for (int i = 0; i < element.Nodes.Count; i++)
                 {
                     if (!nodalDOFTypesDictionary.ContainsKey(element.Nodes[i].ID))
