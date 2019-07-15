@@ -55,24 +55,32 @@ namespace ISAAR.MSolve.SamplesConsole
             //ISAAR.MSolve.Tests.SeparateCodeCheckingClass5b.RunExampleSerial();
             //SeparateCodeCheckingClass5b_b.StiffnessMatrixOutputWrite();
 
-            //(Model model1, double[] uc1) = SeparateCodeCheckingClass5b_b.RunExample();
-            //(Model model2, double[] uc2) = SeparateCodeCheckingClass5b_b.RunExampleSerial();
+            (Model model3, double[] uc3) = SeparateCodeCheckingClass5b_bNEW.RunExample();
+            (Model model4, double[] uc4) = SeparateCodeCheckingClass5b_bNEW.RunExampleSerial();
+
+            (Model model1, double[] uc1) = SeparateCodeCheckingClass5b_b.RunExample();
+            (Model model2, double[] uc2) = SeparateCodeCheckingClass5b_b.RunExampleSerial();
+            //(Model model2, double[] uc2) = SeparateCodeCheckingClass5b_b_cantilever.RunExampleSerial();
             ////PrintReorderingModel1ToModel2(model1, model2);
             //(int num1, int num2) = CountElements(model1, model2);
 
             //SeparateCodeCheckingClass5b_c.StiffnessMatrixOutputWrite();
-            // //SeparateCodeCheckingClass5b_c.RunExample();
+            SeparateCodeCheckingClass5b_c.RunExample();  // // 
             ///SeparateCodeCheckingClass5b_c.RunExampleSerial();
-            // //(Model model, double[] uc) = SeparateCodeCheckingClass5b_c.RunExampleSerial();
-            //SeparateCodeCheckingClass5b_c1.StiffnessMatrixOutputWrite();
-            //SeparateCodeCheckingClass5b_c1.RunExample();
+            (Model model, double[] uc) = SeparateCodeCheckingClass5b_c.RunExampleSerial(); // // 
+
+            SeparateCodeCheckingClass5b_c1.StiffnessMatrixOutputWrite();
+            SeparateCodeCheckingClass5b_c1.RunExample();
 
             //SeparateCodeCheckingClass7_b_b.Check(); //nonlinear strains example etc.
 
-            //SeparateCodeCheckingClass5b_c_constraints.RunExample();
+            SeparateCodeCheckingClass5b_c_constraints.RunExample();
 
-            //SeparateCodeCheckingClass_c_alte_develop.NLRVEStrainParralelSolution();
-            SeparateCodeCheckingClass_c_alte_develop.NLRVEStrainParralelSolution_FETI1();
+            SeparateCodeCheckingClass_c_alte_develop.NLRVEStrainParralelSolution();
+            SeparateCodeCheckingClass_c_alte_develop.NLRVEStrainParralelSolution_FETI1(); //TWRINO
+
+
+
 
         }
 

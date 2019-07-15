@@ -24,7 +24,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
     /// Use of model separation methods is made.
     /// Authors Gerasimos Sotiropoulos
     /// </summary>
-    public class RveGrShMultipleSeparatedDevelopb : IRVEbuilder //IdegenerateRVEbuilder
+    public class RveGrShMultipleSeparatedDevelopbLARGE : IRVEbuilder //IdegenerateRVEbuilder
     {
         //origin: RveGrShMultipleSeparatedDevelop
         //changes: discretization 
@@ -66,20 +66,19 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             }
         }
 
-        public Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
-        public rveMatrixParameters mp;
-        public grapheneSheetParameters gp;
-        public string renumbering_vector_path;
+        Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
+        rveMatrixParameters mp;
+        grapheneSheetParameters gp;
+        string renumbering_vector_path;
         int RVE_id;
-        public int[][] CornerNodesData;
 
-        public RveGrShMultipleSeparatedDevelopb(int RVE_id, bool decomposeModel)
+        public RveGrShMultipleSeparatedDevelopbLARGE(int RVE_id, bool decomposeModel)
         {
             this.RVE_id = RVE_id;
             this.decomposeModel = decomposeModel;
         }
 
-        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopb(a, decomposeModel);
+        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbLARGE(a, decomposeModel);
     
         public Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
         {
@@ -101,32 +100,33 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             var rve_id_data = RVE_id.ToString();
 
             //renumbering_vector_path = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\REF_new_total_numbering.txt";
-            renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
+            renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2bLARGE\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
             renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);
 
             //string Fxk_p_komvoi_rve_path = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\Fxk_p_komvoi_rve.txt";
-            string Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b\RVE_database\rve_no_{0}\Fxk_p_komvoi_rve.txt";
+            string Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2bLARGE\RVE_database\rve_no_{0}\Fxk_p_komvoi_rve.txt";
             Fxk_p_komvoi_rve_path = string.Format(Fxk_p_komvoi_rve_path, rve_id_data);
 
 
             //string o_xsunol_input_path_gen = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\o_xsunol_gs_";
-            string o_xsunol_input_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b\RVE_database\rve_no_{0}\o_xsunol_gs_";
+            string o_xsunol_input_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2bLARGE\RVE_database\rve_no_{0}\o_xsunol_gs_";
             o_xsunol_input_path_gen = string.Format(o_xsunol_input_path_gen, rve_id_data);
             o_xsunol_input_path_gen = o_xsunol_input_path_gen + "{0}.txt";
-            string subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b\RVE_database\rve_no_{0}";
+            string subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2bLARGE\RVE_database\rve_no_{0}";
             subdomainOutputPath = string.Format(subdomainOutputPath_gen, rve_id_data);
             int subdiscr1 = 3;
-            int discr1 = 4;
+            int discr1 = 5;
             // int discr2 dn xrhsimopoieitai
-            int discr3 = 12;
+            int discr3 = 15;
             int subdiscr1_shell = 6;
             int discr1_shell = 1;
             mpgp = FEMMeshBuilder.GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
             mp = mpgp.Item1; //mp.hexa1 = 9; mp.hexa2 = 9; mp.hexa3 = 9;
+            mp.L01 = 120; mp.L02 = 120; mp.L03 = 120;
             gp = mpgp.Item2;
 
 
-            int graphene_sheets_number = 3;
+            int graphene_sheets_number = 7;
             o_x_parameters[] model_o_x_parameteroi = new o_x_parameters[graphene_sheets_number];
             double[][] ekk_xyz = new double[graphene_sheets_number][];
 

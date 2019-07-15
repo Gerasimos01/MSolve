@@ -4,6 +4,7 @@ using ISAAR.MSolve.FEM.Embedding;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Iterative.Termination;
+using ISAAR.MSolve.MSAnalysis.SupportiveClasses;
 using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses;
@@ -24,7 +25,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
     /// Use of model separation methods is made.
     /// Authors Gerasimos Sotiropoulos
     /// </summary>
-    public class RveGrShMultipleSeparatedDevelopb : IRVEbuilder //IdegenerateRVEbuilder
+    public class RveGrShMultipleSeparatedDevelopbDuplicate : IRVEbuilder //IdegenerateRVEbuilder
     {
         //origin: RveGrShMultipleSeparatedDevelop
         //changes: discretization 
@@ -73,13 +74,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         int RVE_id;
         public int[][] CornerNodesData;
 
-        public RveGrShMultipleSeparatedDevelopb(int RVE_id, bool decomposeModel)
+        public RveGrShMultipleSeparatedDevelopbDuplicate(int RVE_id, bool decomposeModel)
         {
             this.RVE_id = RVE_id;
             this.decomposeModel = decomposeModel;
         }
 
-        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopb(a, decomposeModel);
+        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate(a, decomposeModel);
     
         public Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
         {
@@ -192,15 +193,22 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             if (decomposeModel)
             {
                 //int[][] subdCohElementIds = DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple(model, totalSubdomains);
-                (int[][] subdCohElementIds, Dictionary<int, List<int>> reassignedHexas, Dictionary<int, int> hexaOriginalSubdomains) = 
-                    DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple_Alte3(model, totalSubdomains, lowerCohesiveBound, 
+                (int[][] subdCohElementIds, Dictionary<int, List<int>> reassignedHexas, Dictionary<int, int> hexaOriginalSubdomains,
+                    Dictionary<int, List<int>> SubdomainNeedsHexas) = 
+                    DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple_Alte4(model, totalSubdomains, lowerCohesiveBound, 
                     upperCohesiveBound, grShElementssnumber);
 
-                int[][] subdHexaIdsNew = DdmCalculationsGeneral.ReassignHexas(subdHexaIds, reassignedHexas, hexaOriginalSubdomains);
+                (Dictionary<int, List<int>> hexaAndTheirSharingSubdomains, Dictionary<int, int> DuplicateHexaOriginalSubdomain) =
+                   DdmCalculationsAlterna2.GetHexaSharingSubdomains(SubdomainNeedsHexas, subdHexaIds,false);
+
+                int[][] subdAdditionalHexaIds = DdmCalculationsAlterna2.ModelAddDuplicateHexas(model, mp, hexaAndTheirSharingSubdomains, totalSubdomains);
+
+                //int[][] subdHexaIdsNew = DdmCalculationsGeneral.ReassignHexas(subdHexaIds, reassignedHexas, hexaOriginalSubdomains);
                 int[][] subdShellElementIds = DdmCalculationsGeneral.DetermineShellELementsSubdomains(model, totalSubdomains, subdCohElementIds,
                 lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
-                int[][] subdElementIds1 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdHexaIdsNew, subdCohElementIds);
+                int[][] subdElementIds1 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdHexaIds, subdCohElementIds);
                 int[][] subdElementIds2 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdElementIds1, subdShellElementIds);
+                int[][] subdElementIds3 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdElementIds2, subdAdditionalHexaIds);
                 DdmCalculationsGeneral.UndoModelInterconnectionDataBuild(model);
                 DdmCalculations.SeparateSubdomains(model, subdElementIds2);
 
@@ -285,10 +293,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 DdmCalculationsGeneral.UndoModelInterconnectionDataBuild(model);
 
 
-                bool print_subdomain_data = true;
+                bool print_subdomain_data = false;
                 if (print_subdomain_data)
                 {
-                    DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIdsNew, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
+                    DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
                     DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdFreeBRNodes, subdomainOutputPath, @"\subdomainBRNodesAndSubd.txt");
                     DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndsubdomains, subdomainOutputPath, @"\CornerNodesAndSubdIds.txt");
                 }

@@ -1613,6 +1613,23 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 
             return subdHexaIDsNewArrays;
         }
+
+        internal static (int[][] subdCohElementIds, Dictionary<int, List<int>> reassignedHexas, Dictionary<int, int> hexaOriginalSubdomains, Dictionary<int, List<int>> SubdomainNeedsHexas)
+            DetermineCoheiveELementsSubdomainsSimple_Alte4(Model model, int totalSubdomains, int[] lowerCohesiveBound, int[] upperCohesiveBound, int[] grShElementssnumber)
+        {
+            //changes: gia na exoume duplicate elements metaxu subdoamins
+            //TODO: delete reassigned hexas if it is not nesessary anymore
+            (Dictionary<int, List<int>> AssignedSubdomainsFirstLevelOfCohesive, Dictionary<int, List<int>> reassignedHexas, Dictionary<int, int> hexaOriginalSubdomains, 
+                Dictionary<int, List<int>> SubdomainNeedsHexas) =
+               DdmCalculationsAlterna2.FindEmbeddedElementsSubdomainsCorrectedSimpleFirstLevel2(model, totalSubdomains,
+               lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
+            Dictionary<int, List<int>> AssignedSubdomains =
+                DdmCalculationsAlterna.FindEmbeddedElementsSubdomainsCorrectedSimpleSecondLevel(model, totalSubdomains,
+               lowerCohesiveBound, upperCohesiveBound, grShElementssnumber, AssignedSubdomainsFirstLevelOfCohesive);
+
+            int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomains, totalSubdomains);
+            return (subdCohElementIdsDirect, reassignedHexas, hexaOriginalSubdomains,SubdomainNeedsHexas);
+        }
     }
 
 }
