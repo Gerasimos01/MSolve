@@ -206,14 +206,14 @@ namespace ISAAR.MSolve.MSAnalysis.SupportiveClasses
                             }
 
                             //int ConnectorHexaID;
-                            //bool ConnectorHexaFound = false;
-                            bool ConnectionAlreadyExists = false;
+                            //bool ConnectorHexaFound = false;                            
                             if (!isRemoteHexaConnected)
                             {
                                 int[] chosenSubdomainAdjacentHexas = GetAdjacentHexaElementsIds(model, HostSubdomains[chosenSubdomainId].ToArray());
                                 var possibleSolutions = adjacentHexaIds.Intersect(chosenSubdomainAdjacentHexas);
                                 if (possibleSolutions.Count() > 0)
                                 {
+                                    bool ConnectionAlreadyExists = false;
                                     foreach (int possibleSolutionID in possibleSolutions)
                                     {
                                         if (!(SubdomainNeedsHexas[chosenSubdomainId] == null))
@@ -239,7 +239,57 @@ namespace ISAAR.MSolve.MSAnalysis.SupportiveClasses
                                 }
                                 else
                                 {
-                                    throw new NotImplementedException();
+                                    bool wereAdjacentElementsFound = false;
+                                    foreach(int adjacentHexaId in adjacentHexaIds)
+                                    {
+                                        int[] adjacentHexaIds2 = GetAdjacentHexaElementsIds(model, new int[1] { adjacentHexaId });
+                                        possibleSolutions = adjacentHexaIds2.Intersect(chosenSubdomainAdjacentHexas);
+                                        if(possibleSolutions.Count()>0)
+                                        {
+                                            
+                                            wereAdjacentElementsFound = true;
+                                            //ADD adjacent to chosenSubdomain elements
+                                            bool ConnectionAlreadyExists = false;
+                                            foreach (int possibleSolutionID in possibleSolutions)
+                                            {
+                                                if (!(SubdomainNeedsHexas[chosenSubdomainId] == null))
+                                                {
+                                                    if (SubdomainNeedsHexas[chosenSubdomainId].Contains(possibleSolutionID))
+                                                    {
+                                                        ConnectionAlreadyExists = true;
+                                                    }
+                                                }
+                                            }
+                                            if (!ConnectionAlreadyExists)
+                                            {
+                                                if (!(SubdomainNeedsHexas[chosenSubdomainId] == null))
+                                                {
+                                                    SubdomainNeedsHexas[chosenSubdomainId].Add(possibleSolutions.ElementAt(0));
+                                                }
+                                                else
+                                                {
+                                                    SubdomainNeedsHexas[chosenSubdomainId] = new List<int>() { possibleSolutions.ElementAt(0) };
+                                                }
+                                            }
+                                            //ADD adjacent to remote needed hexa element as well
+                                            if (!(SubdomainNeedsHexas[chosenSubdomainId] == null))
+                                            {
+                                                SubdomainNeedsHexas[chosenSubdomainId].Add(adjacentHexaId);
+                                            }
+                                            else
+                                            {
+                                                SubdomainNeedsHexas[chosenSubdomainId] = new List<int>() { adjacentHexaId };
+                                            }
+                                            break;
+
+                                        }
+                                        
+                                    }
+                                    if (!wereAdjacentElementsFound)
+                                    {
+                                        throw new NotImplementedException();
+                                    }
+                                    
                                 }
                             }
 

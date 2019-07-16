@@ -210,7 +210,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 int[][] subdElementIds2 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdElementIds1, subdShellElementIds);
                 int[][] subdElementIds3 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdElementIds2, subdAdditionalHexaIds);
                 DdmCalculationsGeneral.UndoModelInterconnectionDataBuild(model);
-                DdmCalculations.SeparateSubdomains(model, subdElementIds2);
+                DdmCalculations.SeparateSubdomains(model, subdElementIds3);
 
                 model.ConnectDataStructures();
                 bool isTrue = DdmCalculationsGeneral.CheckSubdomainsEmbeddingHostNodes(model, RveMatrixSubdomainInnerNodes);
