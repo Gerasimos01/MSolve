@@ -263,7 +263,8 @@ namespace ISAAR.MSolve.SamplesConsole
         //needs to be corrected rve_multiple -> b kai to path kai ta stoixeia diakritopoihshs pou einai afhmena exwterika (Genika elegxoume connectDataStructures kai defineAppropriateConstraintsForBoundaryNodes)
         public static (Model, double[]) RunExampleSerial()
         {
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, false);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate(1, false);
+            //var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, false);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbLARGE(1, false); // diorthose kai to parakatw path apla gia na mhn xtupaei.
             //var rveBuilder = new RveGrShMultipleSeparated_c_alteDevelop5elem(1, false); //A.1
 

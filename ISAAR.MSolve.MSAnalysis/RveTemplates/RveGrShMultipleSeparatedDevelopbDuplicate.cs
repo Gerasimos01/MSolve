@@ -189,6 +189,47 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             var CohesiveGroupping = new EmbeddedCohesiveSubGrouping(model, hostSubGroups, embdeddedGroup);
 
+            #region corner node data generation
+            renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path));
+            double L01 = mp.L01; double L02 = mp.L02; double L03 = mp.L03;
+            int hexa1 = mp.hexa1; int hexa2 = mp.hexa2; int hexa3 = mp.hexa3;
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+
+
+            int[][] CornerNodesData = new int[8][]; //arithmos corner nodes,  h1 h2 h3 data (afairoume 1 apo ta pragmatika)
+            CornerNodesData[0] = new int[3] { 5 - 1, 5 - 1, 5 - 1 };
+            CornerNodesData[1] = new int[3] { 9 - 1, 5 - 1, 5 - 1 };
+            CornerNodesData[2] = new int[3] { 5 - 1, 9 - 1, 5 - 1 };
+            CornerNodesData[3] = new int[3] { 9 - 1, 9 - 1, 5 - 1 };
+            CornerNodesData[4] = new int[3] { 5 - 1, 5 - 1, 9 - 1 };
+            CornerNodesData[5] = new int[3] { 9 - 1, 5 - 1, 9 - 1 };
+            CornerNodesData[6] = new int[3] { 5 - 1, 9 - 1, 9 - 1 };
+            CornerNodesData[7] = new int[3] { 9 - 1, 9 - 1, 9 - 1 };
+
+
+
+            CornerNodesIds = new Dictionary<int, double[]>(CornerNodesData.Length); //nodeID, coordinate data
+            CornerNodesIdAndsubdomains = new Dictionary<int, int[]>(CornerNodesData.Length);//nodeID, subdIds            
+                                                                                            //var CornerNodesSubdomains = new Dictionary<int, int[]> (CornerNodesData.Length); //nodeID, subdomains opou anhkei
+            for (int i1 = 0; i1 < CornerNodesData.Length; i1++)
+            {
+                int h1 = CornerNodesData[i1][0]; int h2 = CornerNodesData[i1][1]; int h3 = CornerNodesData[i1][2];
+                int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                double nodeCoordX = -0.5 * L01 + (h1 + 1 - 1) * (L01 / hexa1);  // h1+1 dioti h1 einai zero based
+                double nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
+                double nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
+
+                double[] coordinates = new double[3] { nodeCoordX, nodeCoordY, nodeCoordZ };
+                CornerNodesIds.Add(nodeID, coordinates);
+                CornerNodesIdAndsubdomains.Add(nodeID, model.NodesDictionary[nodeID].SubdomainsDictionary.Keys.ToArray());
+            }
+
+            cornerNodes = DefineCornerNodesPerSubdomainAndOtherwise(CornerNodesIdAndsubdomains, model);
+            #endregion
+
+
             //ds4
             if (decomposeModel)
             {
@@ -217,43 +258,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
                 #region print extra data 
 
-                renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path));
-                double L01 = mp.L01; double L02 = mp.L02; double L03 = mp.L03;
-                int hexa1 = mp.hexa1; int hexa2 = mp.hexa2; int hexa3 = mp.hexa3;
-                int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
-                int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
-                int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
-
-
-                int[][] CornerNodesData = new int[8][]; //arithmos corner nodes,  h1 h2 h3 data (afairoume 1 apo ta pragmatika)
-                CornerNodesData[0] = new int[3] { 5 - 1, 5 - 1, 5 - 1 };
-                CornerNodesData[1] = new int[3] { 9 - 1, 5 - 1, 5 - 1 };
-                CornerNodesData[2] = new int[3] { 5 - 1, 9 - 1, 5 - 1 };
-                CornerNodesData[3] = new int[3] { 9 - 1, 9 - 1, 5 - 1 };
-                CornerNodesData[4] = new int[3] { 5 - 1, 5 - 1, 9 - 1 };
-                CornerNodesData[5] = new int[3] { 9 - 1, 5 - 1, 9 - 1 };
-                CornerNodesData[6] = new int[3] { 5 - 1, 9 - 1, 9 - 1 };
-                CornerNodesData[7] = new int[3] { 9 - 1, 9 - 1, 9 - 1 };
-
-
-
-                CornerNodesIds = new Dictionary<int, double[]>(CornerNodesData.Length); //nodeID, coordinate data
-                CornerNodesIdAndsubdomains = new Dictionary<int, int[]>(CornerNodesData.Length);//nodeID, subdIds            
-                                                                                                //var CornerNodesSubdomains = new Dictionary<int, int[]> (CornerNodesData.Length); //nodeID, subdomains opou anhkei
-                for (int i1 = 0; i1 < CornerNodesData.Length; i1++)
-                {
-                    int h1 = CornerNodesData[i1][0]; int h2 = CornerNodesData[i1][1]; int h3 = CornerNodesData[i1][2];
-                    int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
-                    double nodeCoordX = -0.5 * L01 + (h1 + 1 - 1) * (L01 / hexa1);  // h1+1 dioti h1 einai zero based
-                    double nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
-                    double nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
-
-                    double[] coordinates = new double[3] { nodeCoordX, nodeCoordY, nodeCoordZ };
-                    CornerNodesIds.Add(nodeID, coordinates);
-                    CornerNodesIdAndsubdomains.Add(nodeID, model.NodesDictionary[nodeID].SubdomainsDictionary.Keys.ToArray());
-                }
-
-                cornerNodes = DefineCornerNodesPerSubdomainAndOtherwise(CornerNodesIdAndsubdomains, model);
+                
 
                 #region find embedded
                 EmbeddedNodes = new List<Node>();
