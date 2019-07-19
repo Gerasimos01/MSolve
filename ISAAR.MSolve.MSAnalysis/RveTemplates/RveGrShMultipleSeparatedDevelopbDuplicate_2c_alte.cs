@@ -233,8 +233,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
                 (Dictionary<int, List<int>> hexaAndTheirSharingSubdomains, Dictionary<int, int> DuplicateHexaOriginalSubdomain) =
                    DdmCalculationsAlterna2.GetHexaSharingSubdomains(SubdomainNeedsHexas, subdHexaIds, false);
-
-                int[][] subdAdditionalHexaIds = DdmCalculationsAlterna2.ModelAddDuplicateHexas(model, mp, hexaAndTheirSharingSubdomains, totalSubdomains);
+                int[][] SubdomainNeedsHexasIds = DdmCalculationsPartb.ConvertIntListToArray(SubdomainNeedsHexas, totalSubdomains);
+                
+                (int[][] subdAdditionalHexaIds, Dictionary<int, int> NewHexaIdsAndTheirOriginals) = DdmCalculationsAlterna2.ModelAddDuplicateHexas(model, mp, hexaAndTheirSharingSubdomains, totalSubdomains);
 
                 //int[][] subdHexaIdsNew = DdmCalculationsGeneral.ReassignHexas(subdHexaIds, reassignedHexas, hexaOriginalSubdomains);
                 int[][] subdShellElementIds = DdmCalculationsGeneral.DetermineShellELementsSubdomains(model, totalSubdomains, subdCohElementIds,
@@ -290,10 +291,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 DdmCalculationsGeneral.UndoModelInterconnectionDataBuild(model);
 
 
-                bool print_subdomain_data = false;
+                bool print_subdomain_data = true;
                 if (print_subdomain_data)
                 {
-                    DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
+                    //DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
+                    DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIds, SubdomainNeedsHexasIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
                     DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdFreeBRNodes, subdomainOutputPath, @"\subdomainBRNodesAndSubd.txt");
                     DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndsubdomains, subdomainOutputPath, @"\CornerNodesAndSubdIds.txt");
                 }

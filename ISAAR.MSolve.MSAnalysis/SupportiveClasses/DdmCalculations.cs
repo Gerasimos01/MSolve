@@ -1338,6 +1338,164 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 
         }
 
+        public static void PrintSubdomainDataForPostPro(int[][] subdHexaIds, int[][] subdNeedsHexaIds, int[][] subdCohElementIds, int[][] subdShellElementIds, string generalPath)
+        {
+            string hexaPath = generalPath + @"\subdomainHexas.txt";
+            string extraHexasPath = generalPath + @"\subdomainNeedsHexas.txt";
+            string cohPath = generalPath + @"\subdomainCohesiveElements.txt";
+            string shellPath = generalPath + @"\subdomainShellElements.txt";
+
+            #region hexa elements
+            int hexaPrintLength = 0;
+            for (int i1 = 0; i1 < subdHexaIds.Length; i1++)
+            {
+                if (subdHexaIds[i1] == null)
+                {
+                    hexaPrintLength += 1;
+                }
+                else
+                {
+                    hexaPrintLength += 1 + subdHexaIds[i1].Length;
+                }
+            }
+
+            var hexaPrint = new int[hexaPrintLength];
+            int hexaPrintCounter = 0;
+            for (int i1 = 0; i1 < subdHexaIds.Length; i1++)
+            {
+                if (subdHexaIds[i1] == null)
+                {
+                    hexaPrint[hexaPrintCounter] = 0;
+                    hexaPrintCounter += 1;
+                }
+                else
+                {
+                    hexaPrint[hexaPrintCounter] = subdHexaIds[i1].Length;
+                    hexaPrintCounter += 1;
+                    for (int i2 = 0; i2 < subdHexaIds[i1].Length; i2++)
+                    {
+                        hexaPrint[hexaPrintCounter] = subdHexaIds[i1][i2];
+                        hexaPrintCounter += 1;
+                    }
+                }
+            }
+            WriteToFileVector(hexaPrint, hexaPath);
+            #endregion
+
+            #region extra hexa elements
+            int extrahexaPrintLength = 0;
+            for (int i1 = 0; i1 < subdNeedsHexaIds.Length; i1++)
+            {
+                if (subdNeedsHexaIds[i1] == null)
+                {
+                    extrahexaPrintLength += 1;
+                }
+                else
+                {
+                    extrahexaPrintLength += 1 + subdNeedsHexaIds[i1].Length;
+                }
+            }
+
+            var extrahexaPrint = new int[extrahexaPrintLength];
+            int extrahexaPrintCounter = 0;
+            for (int i1 = 0; i1 < subdNeedsHexaIds.Length; i1++)
+            {
+                if (subdNeedsHexaIds[i1] == null)
+                {
+                    extrahexaPrint[extrahexaPrintCounter] = 0;
+                    extrahexaPrintCounter += 1;
+                }
+                else
+                {
+                    extrahexaPrint[extrahexaPrintCounter] = subdNeedsHexaIds[i1].Length;
+                    extrahexaPrintCounter += 1;
+                    for (int i2 = 0; i2 < subdNeedsHexaIds[i1].Length; i2++)
+                    {
+                        extrahexaPrint[extrahexaPrintCounter] = subdNeedsHexaIds[i1][i2];
+                        extrahexaPrintCounter += 1;
+                    }
+                }
+            }
+            WriteToFileVector(extrahexaPrint, extraHexasPath);
+            #endregion
+
+            #region cohesive elements
+            int cohePrintLength = 0;
+            for (int i1 = 0; i1 < subdCohElementIds.Length; i1++)
+            {
+                if (subdCohElementIds[i1] == null)
+                {
+                    cohePrintLength += 1;
+                }
+                else
+                {
+                    cohePrintLength += 1 + subdCohElementIds[i1].Length;
+                }
+            }
+
+            var cohePrint = new int[cohePrintLength];
+            int cohePrintCounter = 0;
+            for (int i1 = 0; i1 < subdCohElementIds.Length; i1++)
+            {
+                if (subdCohElementIds[i1] == null)
+                {
+                    cohePrint[cohePrintCounter] = 0;
+                    cohePrintCounter += 1;
+                }
+                else
+                {
+                    cohePrint[cohePrintCounter] = subdCohElementIds[i1].Length;
+                    cohePrintCounter += 1;
+                    for (int i2 = 0; i2 < subdCohElementIds[i1].Length; i2++)
+                    {
+                        cohePrint[cohePrintCounter] = subdCohElementIds[i1][i2];
+                        cohePrintCounter += 1;
+                    }
+                }
+            }
+            WriteToFileVector(cohePrint, cohPath);
+            #endregion
+
+            #region shell elements
+            int shellPrintLength = 0;
+            for (int i1 = 0; i1 < subdShellElementIds.Length; i1++)
+            {
+                if (subdShellElementIds[i1] == null)
+                {
+                    shellPrintLength += 1;
+                }
+                else
+                {
+                    shellPrintLength += 1 + subdShellElementIds[i1].Length;
+                }
+            }
+
+            var shellPrint = new int[shellPrintLength];
+            int shellPrintCounter = 0;
+            for (int i1 = 0; i1 < subdShellElementIds.Length; i1++)
+            {
+                if (subdShellElementIds[i1] == null)
+                {
+                    shellPrint[shellPrintCounter] = 0;
+                    shellPrintCounter += 1;
+                }
+                else
+                {
+                    shellPrint[shellPrintCounter] = subdShellElementIds[i1].Length;
+                    shellPrintCounter += 1;
+                    for (int i2 = 0; i2 < subdShellElementIds[i1].Length; i2++)
+                    {
+                        shellPrint[shellPrintCounter] = subdShellElementIds[i1][i2];
+                        shellPrintCounter += 1;
+                    }
+                }
+            }
+            WriteToFileVector(shellPrint, shellPath);
+            #endregion
+
+
+        }
+
         public static void PrintSubdomainDataForPostPro2(Dictionary<int, int[]> subdBoundariesNodes, string generalPath, string fileAddedPath)
         {            
             string boundNodesPath = generalPath + fileAddedPath;
