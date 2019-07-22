@@ -1,5 +1,6 @@
 ﻿using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.FEM;
+using ISAAR.MSolve.FEM.Elements;
 using ISAAR.MSolve.FEM.Embedding;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
@@ -249,6 +250,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 model.ConnectDataStructures();
                 bool isTrue = DdmCalculationsGeneral.CheckSubdomainsEmbeddingHostNodes(model, RveMatrixSubdomainInnerNodes);
 
+                
+                PerfmormNesessaryChecksSubdomains(model);
+
                 #region print extra data 
 
                 (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model);
@@ -312,7 +316,111 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         }
 
+        private void PerfmormNesessaryChecksSubdomains(Model model)
+        {
+            int subdToCheck = 41;
 
+            List<Node> TotalNodes = new List<Node>();
+            List<Node> TotalNodes2 = new List<Node>();
+            List<Node> Hexa8Nodes = new List<Node>();
+            List<Node> Hexa8Nodes2 = new List<Node>();
+
+            foreach (Element element in model.SubdomainsDictionary[subdToCheck].Elements)
+            {
+                foreach (Node node in element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element))
+                {
+                    TotalNodes.Add(node);
+                }
+            }
+            TotalNodes = TotalNodes.Union(TotalNodes2).ToList();
+            int ch01 = TotalNodes.Count();
+
+
+            foreach (Element element in model.SubdomainsDictionary[subdToCheck].Elements)
+            {
+                if (element.ElementType is Hexa8NonLinear)
+                {
+                    foreach (Node node in element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element))
+                    {
+                        Hexa8Nodes.Add(node);
+                    }
+                }
+            }
+            foreach (Element element in model.SubdomainsDictionary[subdToCheck].Elements)
+            {
+                if (element.ElementType is Shell8NonLinear)
+                {
+                    foreach (Node node in element.ElementType.DofEnumerator.GetNodesForMatrixAssembly(element))
+                    {
+                        Hexa8Nodes2.Add(node);
+                    }
+                }
+            }
+            Hexa8Nodes = Hexa8Nodes.Union(Hexa8Nodes2).ToList();
+            int ch020 = Hexa8Nodes.Count();
+
+            var unconnected = TotalNodes.RemoveAll(x => Hexa8Nodes.Contains(x));
+
+            var elements1 = TotalNodes[0].ElementsDictionary.Values.ToList();
+            elements1.RemoveAll(x => (!(x.Subdomain.ID == 41)));
+            elements1.RemoveAll(x => (!(x.ElementType is Hexa8NonLinear)));
+            var elements2 = TotalNodes[1].ElementsDictionary.Values.ToList();
+            elements2.RemoveAll(x => (!(x.Subdomain.ID == 41)));
+            elements2.RemoveAll(x => (!(x.ElementType is Hexa8NonLinear)));
+
+            var elemtns = model.ElementsDictionary.Values.ToList();
+            elemtns.RemoveAll(x => (!CheckElementSameNodes(x, model.ElementsDictionary[4182])));
+
+            var embElement2 = elemtns[2].ElementType as IEmbeddedElement;
+            int[] subdIds2 = new int[embElement2.EmbeddedNodes.Count()];
+            int[] nodesIDs2 = new int[embElement2.EmbeddedNodes.Count()];
+            int[] elmntsIDs2 = new int[embElement2.EmbeddedNodes.Count()];
+            for (int i1 = 0; i1 < embElement2.EmbeddedNodes.Count(); i1++)
+            {
+                subdIds2[i1] = model.ElementsDictionary[embElement2.EmbeddedNodes.ElementAt(i1).EmbeddedInElement.ID].Subdomain.ID;
+                //embElement2.EmbeddedNodes.ElementAt(0).EmbeddedInElement.Subdomain.ID dinei null apotelesma ara bug
+                nodesIDs2[i1] = embElement2.EmbeddedNodes.ElementAt(i1).Node.ID;
+                elmntsIDs2[i1] = embElement2.EmbeddedNodes.ElementAt(i1).EmbeddedInElement.ID;
+            }
+
+            var embElement1 = elemtns[1].ElementType as IEmbeddedElement;
+            int[] subdIds1 = new int[embElement1.EmbeddedNodes.Count()];
+            int[] nodesIDs1 = new int[embElement1.EmbeddedNodes.Count()];
+            int[] elmntsIDs1 = new int[embElement1.EmbeddedNodes.Count()];
+            for (int i1 = 0; i1 < embElement1.EmbeddedNodes.Count(); i1++)
+            {
+                subdIds1[i1] = model.ElementsDictionary[embElement1.EmbeddedNodes.ElementAt(i1).EmbeddedInElement.ID].Subdomain.ID;
+                nodesIDs1[i1] = embElement1.EmbeddedNodes.ElementAt(i1).Node.ID;
+                elmntsIDs1[i1] = embElement1.EmbeddedNodes.ElementAt(i1).EmbeddedInElement.ID;
+            }
+
+            List<int> elmnt1AssemblyNodes = elemtns[1].ElementType.DofEnumerator.GetNodesForMatrixAssembly(elemtns[1]).ToList().ConvertAll(x => x.ID);
+            List<int> elmnt2AssemblyNodes = elemtns[2].ElementType.DofEnumerator.GetNodesForMatrixAssembly(elemtns[2]).ToList().ConvertAll(x => x.ID);
+
+            bool ch03 = elmnt1AssemblyNodes.Contains(2643);
+            //false
+            bool ch04 = elmnt1AssemblyNodes.Contains(2666);
+            //false
+            bool ch05 = elmnt2AssemblyNodes.Contains(2666);
+            //true
+            bool ch06 = elmnt2AssemblyNodes.Contains(2643);
+            //true
+
+
+        }
+
+        public bool CheckElementSameNodes(Element element1, Element element2 )
+        {
+            bool have8FirstSameNodes = true;
+            for(int i1=0; i1<8;i1++)
+            {
+                if (!(element1.Nodes.ElementAt(i1).ID == element2.Nodes.ElementAt(i1).ID))
+                {
+                    have8FirstSameNodes = false;
+                }
+            }
+            return have8FirstSameNodes;
+        }
 
         // PROSOXH DEN ARKEI MONO TO PARAKATW NA GINEI UNCOMMENT WSTE NA GINEI IMPLEMENT TO IDegenerateRVEBuilder 
         //xreiazetai kai na xrhsimopoithei h katallhlh methodos tou femmeshbuilder gia to model and boundary nodes na dinei mono ta peripheral

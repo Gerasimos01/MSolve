@@ -392,8 +392,8 @@ namespace ISAAR.MSolve.MSAnalysis.SupportiveClasses
             {
                 if (SubdomainNeedsHexas.ContainsKey(chosenSubdomainId))
                 {
-                    if(!SubdomainNeedsHexas[chosenSubdomainId].Contains(connectorID))
-                    SubdomainNeedsHexas[chosenSubdomainId].Add(connectorID);
+                    if (!SubdomainNeedsHexas[chosenSubdomainId].Contains(connectorID))
+                    { SubdomainNeedsHexas[chosenSubdomainId].Add(connectorID); }
                 }
                 else
                 {
@@ -483,26 +483,30 @@ namespace ISAAR.MSolve.MSAnalysis.SupportiveClasses
                         {
                             hexaAndTheirSharingSubdomains[hexaID].Add(subdomainID);
                         }
+                        else
+                        {
+
+                        }
                     }
                 }
                 
             }
 
 
-            for(int i1=0; i1<hexaIds.Length; i1++)
-            {
-                if(!(hexaIds[i1]==null))
-                {
-                    for (int i2 = 0; i2 < hexaIds[i1].Length; i2++)
-                    {
-                        if (withOriginal)
-                        {
-                            hexaAndTheirSharingSubdomains[hexaIds[i1][i2]].Add(i1);
-                        }
-                        DuplicateHexaOriginalSubdomain[hexaIds[i1][i2]] = i1;
-                    }
-                }
-            }
+            //for(int i1=0; i1<hexaIds.Length; i1++)
+            //{
+            //    if(!(hexaIds[i1]==null))
+            //    {
+            //        for (int i2 = 0; i2 < hexaIds[i1].Length; i2++)
+            //        {
+            //            if (withOriginal)
+            //            {
+            //                hexaAndTheirSharingSubdomains[hexaIds[i1][i2]].Add(i1);
+            //            }
+            //            DuplicateHexaOriginalSubdomain[hexaIds[i1][i2]] = i1;
+            //        }
+            //    }
+            //}
 
             return (hexaAndTheirSharingSubdomains,DuplicateHexaOriginalSubdomain);
         }
@@ -577,5 +581,30 @@ namespace ISAAR.MSolve.MSAnalysis.SupportiveClasses
             int[][] subdAdditionalHexasArray = DdmCalculationsPartb.ConvertIntListToArray(subdAdditionalHexas, totalSubdomains);
             return (subdAdditionalHexasArray, NewHexaIdsAndTheirOriginals);
         }
+
+        public static int CountElements(Dictionary<int, List<int>> hexaAndTheirSharingSubdomains)
+        {
+            int elementCount = 0;
+            foreach(List<int> sharingSubdomains in hexaAndTheirSharingSubdomains.Values)
+            {
+                elementCount += sharingSubdomains.Count();
+            }
+            return elementCount;
+        }
+
+        public static int CountElements(int[][] subdAdditionalHexasArray)
+        {
+            int elementCount = 0;
+            for(int i1=0; i1<subdAdditionalHexasArray.Length; i1++)
+            {
+                if(!(subdAdditionalHexasArray[i1]==null))
+                {
+                    elementCount += subdAdditionalHexasArray[i1].Length;
+                }
+            }
+            return elementCount;
+        }
+
     }
+
 }
