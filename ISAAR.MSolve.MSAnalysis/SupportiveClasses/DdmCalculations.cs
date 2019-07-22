@@ -1781,13 +1781,16 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
                 Dictionary<int, List<int>> SubdomainNeedsHexas) =
                DdmCalculationsAlterna2.FindEmbeddedElementsSubdomainsCorrectedSimpleFirstLevel2(model, totalSubdomains,
                lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
-            Dictionary<int, List<int>> AssignedSubdomains =
-                DdmCalculationsAlterna.FindEmbeddedElementsSubdomainsCorrectedSimpleSecondLevel(model, totalSubdomains,
-               lowerCohesiveBound, upperCohesiveBound, grShElementssnumber, AssignedSubdomainsFirstLevelOfCohesive);
 
-            int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomains, totalSubdomains);
-            return (subdCohElementIdsDirect, reassignedHexas, hexaOriginalSubdomains,SubdomainNeedsHexas);
-        }
+            //EPOMENES 5 GRAMMES (anti twn 2 pou vriskontai pio katw) doulevoun me to DdmCalculationsAlterna2.FindEmbeddedElementsSubdomainsCorrectedSimpleFirstLevel2
+            //Dictionary<int, List<int>> AssignedSubdomains =
+            //    DdmCalculationsAlterna.FindEmbeddedElementsSubdomainsCorrectedSimpleSecondLevel(model, totalSubdomains,
+            //   lowerCohesiveBound, upperCohesiveBound, grShElementssnumber, AssignedSubdomainsFirstLevelOfCohesive);
+            //int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomains, totalSubdomains);
+            //return (subdCohElementIdsDirect, reassignedHexas, hexaOriginalSubdomains,SubdomainNeedsHexas);
+
+            int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomainsFirstLevelOfCohesive, totalSubdomains);
+            return (subdCohElementIdsDirect, reassignedHexas, hexaOriginalSubdomains,SubdomainNeedsHexas);}
     }
 
 }

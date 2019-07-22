@@ -251,7 +251,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 bool isTrue = DdmCalculationsGeneral.CheckSubdomainsEmbeddingHostNodes(model, RveMatrixSubdomainInnerNodes);
 
                 
-                PerfmormNesessaryChecksSubdomains(model);
+                //PerfmormNesessaryChecksSubdomains(model);
 
                 #region print extra data 
 

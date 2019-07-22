@@ -16,7 +16,7 @@ using ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses;
 
 namespace ISAAR.MSolve.MSAnalysis.SupportiveClasses
 {
-    public static class DdmCalculationsAlterna2
+    public static class DdmCalculationsAlterna2Copy
     {
         internal static (Dictionary<int, List<int>> AssignedSubdomainsFirstLevelOfCohesive, Dictionary<int, List<int>> reassignedHexas,
             Dictionary<int, int> hexaOriginalSubdomains, Dictionary<int, List<int>> SubdomainNeedsHexas) FindEmbeddedElementsSubdomainsCorrectedSimpleFirstLevel2(Model model, int totalSubdomains,
@@ -56,13 +56,11 @@ namespace ISAAR.MSolve.MSAnalysis.SupportiveClasses
                 {
                     int cohID = element.ID;
                     bool isFirstLevelCoheive = false;
-                    int secondLevelCohesiveID=0;
                     for (int i3 = 0; i3 < lowerCohesiveBound.Length; i3++)
                     {
                         if ((lowerCohesiveBound[i3] <= cohID) & (upperCohesiveBound[i3] >= cohID))
                         {
                             isFirstLevelCoheive = true;
-                            secondLevelCohesiveID = cohID + grShElementssnumber[i3]; //copy apo to second level cohesive
                         }
                     }
                     if (isFirstLevelCoheive)
@@ -111,10 +109,9 @@ namespace ISAAR.MSolve.MSAnalysis.SupportiveClasses
                             //    hexaConnectsShellsLocal.Add(hostELement.ID, connectionElementsData1);
                             //}
                         }
-                        int chosenSubdomainId = 0;
                         if (HostSubdomains.Count > 1) // gia =1 den exoume dilhma gia to se poia subdomain tha entaxthei
                         {
-                            chosenSubdomainId = 0;
+                            int chosenSubdomainId = 0;
                             int hexaListlength = 0;
                             foreach (int subdId in HostSubdomains.Keys)
                             {
@@ -169,7 +166,6 @@ namespace ISAAR.MSolve.MSAnalysis.SupportiveClasses
                         }
                         if (HostSubdomains.Count == 1)
                         {
-                            chosenSubdomainId = HostSubdomains.ElementAt(0).Key;
                             if (AssignedSubdomains.ContainsKey(HostSubdomains.ElementAt(0).Key))
                             {
                                 AssignedSubdomains[HostSubdomains.ElementAt(0).Key].Add(element.ID);
@@ -181,121 +177,6 @@ namespace ISAAR.MSolve.MSAnalysis.SupportiveClasses
                                 AssignedSubdomains.Add(HostSubdomains.ElementAt(0).Key, subdElementsIds);
                             }
                         }
-
-                        var secondLevelCoh = model.ElementsDictionary[secondLevelCohesiveID].ElementType as IEmbeddedElement;
-                        Dictionary<int, IList<int>> HostSubdomains2 = new Dictionary<int, IList<int>>();
-                        Dictionary<Subdomain, List<EmbeddedNode>> elementHostSubdomains2AndNodesInThem = new Dictionary<Subdomain, List<EmbeddedNode>>();//alte
-                        foreach (var embeddedNode in (secondLevelCoh).EmbeddedNodes)
-                        {
-                            //1
-                            Element hostELement = embeddedNode.EmbeddedInElement;
-                            if (HostSubdomains2.ContainsKey(hostELement.Subdomain.ID))
-                            {
-                                if (!HostSubdomains2[hostELement.Subdomain.ID].Contains(hostELement.ID))
-                                {
-                                    HostSubdomains2[hostELement.Subdomain.ID].Add(hostELement.ID);
-                                    //alte
-                                    elementHostSubdomains2AndNodesInThem[hostELement.Subdomain].Add(embeddedNode);
-                                }
-                            }
-                            else
-                            {
-                                List<int> specificElementsIDs = new List<int>();
-                                specificElementsIDs.Add(hostELement.ID);
-                                HostSubdomains2.Add(hostELement.Subdomain.ID, specificElementsIDs);
-
-                                //alte
-                                List<EmbeddedNode> specificNodesIds = new List<EmbeddedNode>();
-                                specificNodesIds.Add(embeddedNode);
-                                elementHostSubdomains2AndNodesInThem.Add(hostELement.Subdomain, specificNodesIds);
-                            }
-                            //2
-                            //if (hexaConnectsShellsLocal.ContainsKey(hostELement.ID))
-                            //{
-                            //    if (!hexaConnectsShellsLocal[hostELement.ID].Contains(element.ID))
-                            //    {
-                            //        hexaConnectsShellsLocal[hostELement.ID].Add(element.ID);
-                            //    }
-                            //}
-                            //else
-                            //{
-                            //    List<int> connectionElementsData1 = new List<int>();
-                            //    connectionElementsData1.Add(element.ID);
-                            //    hexaConnectsShellsLocal.Add(hostELement.ID, connectionElementsData1);
-                            //}
-                        }
-                        var element2 = model.ElementsDictionary[secondLevelCohesiveID];
-                        {
-                            //GNWSTH PLEON H SUBDOMAIN
-                            //chosenSubdomainId = 0;
-                            //int hexaListlength = 0;
-                            //foreach (int subdId in HostSubdomains2.Keys)
-                            //{
-                            //    if (HostSubdomains2[subdId].Count > hexaListlength)
-                            //    {
-                            //        chosenSubdomainId = subdId;
-                            //        hexaListlength = HostSubdomains2[subdId].Count;
-                            //    }
-                            //}
-                            if (AssignedSubdomains.ContainsKey(chosenSubdomainId))
-                            {
-                                AssignedSubdomains[chosenSubdomainId].Add(element2.ID);
-                            }
-                            else
-                            {
-                                List<int> subdElementsIds = new List<int>();
-                                subdElementsIds.Add(element2.ID);
-                                AssignedSubdomains.Add(chosenSubdomainId, subdElementsIds);
-                            }
-
-                            foreach (int subdomainID in HostSubdomains2.Keys)
-                            {
-                                if (!(subdomainID == chosenSubdomainId))
-                                {
-                                    foreach (var remoteHexa in HostSubdomains2[subdomainID])
-                                    {
-                                        if (SubdomainNeedsHexas.ContainsKey(chosenSubdomainId))
-                                        { SubdomainNeedsHexas[chosenSubdomainId].Add(remoteHexa); }
-                                        else
-                                        {
-                                            List<int> neededHexasIds = new List<int>();
-                                            neededHexasIds.Add(remoteHexa);
-                                            SubdomainNeedsHexas.Add(chosenSubdomainId, neededHexasIds);
-                                        }
-
-                                        //optionally: mporei kai na mhn xreiazetai 
-                                        if (hexaOriginalSubdomains.ContainsKey(remoteHexa))
-                                        { }
-                                        else
-                                        {
-                                            int originalSubdID = model.ElementsDictionary[remoteHexa].Subdomain.ID;
-                                            hexaOriginalSubdomains.Add(remoteHexa, originalSubdID);
-                                        }
-                                    }
-                                }
-                            }
-
-                            ElementStored_HostSubdomains.Add(element2, HostSubdomains2);
-                            ElementStored_elementHostSubdomainsAndNodesInThem.Add(element2, elementHostSubdomains2AndNodesInThem);
-                            ElementStored_chosenSubdomainID.Add(element2, chosenSubdomainId);
-
-                        }
-                        if (HostSubdomains2.Count == 1)
-                        {
-                            //chosenSubdomainId = HostSubdomains2.ElementAt(0).Key;
-                            //if (AssignedSubdomains.ContainsKey(HostSubdomains2.ElementAt(0).Key))
-                            //{
-                            //    AssignedSubdomains[HostSubdomains2.ElementAt(0).Key].Add(element2.ID);
-                            //}
-                            //else
-                            //{
-                            //    List<int> subdElementsIds = new List<int>();
-                            //    subdElementsIds.Add(element2.ID);
-                            //    AssignedSubdomains.Add(HostSubdomains2.ElementAt(0).Key, subdElementsIds);
-                            //}
-                        }
-
-
                     }
 
                 }
