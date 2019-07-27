@@ -11,8 +11,11 @@ using ISAAR.MSolve.PreProcessor.Embedding;
 using ISAAR.MSolve.Solvers;
 using ISAAR.MSolve.Solvers.Direct;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Feti1;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Feti1.Matrices;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.CornerNodes;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.Matrices;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Preconditioning;
 using System;
 using System.Collections.Generic;
@@ -47,13 +50,16 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public IList<Node> EmbeddedNodes { get; private set; }
 
         private bool decomposeModel;
-        public Dictionary<int, INode[]> cornerNodes;
+        public Dictionary<int, HashSet<INode>> cornerNodes;
         public ISolver GetAppropriateSolver(Model model)
         {
             if (decomposeModel)
             {
                 //Setup solver
-                var solverBuilder = new Feti1Solver.Builder(1e-4); //factorizationTolerance
+                var fetiMatrices = new SkylineFeti1SubdomainMatrixManager.Factory();
+                var factorizationTolerances = new Dictionary<int, double>();
+                foreach (Subdomain s in model.Subdomains) factorizationTolerances[s.ID] = 1e-4;
+                var solverBuilder = new Feti1Solver.Builder(fetiMatrices, factorizationTolerances); //factorizationTolerance
                 solverBuilder.ProblemIsHomogeneous = false;
                 solverBuilder.PreconditionerFactory = new LumpedPreconditioner.Factory();
                 solverBuilder.ProblemIsHomogeneous = true;
@@ -348,14 +354,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             }
         }
 
-        private Dictionary<int, INode[]> DefineCornerNodesPerSubdomainAndOtherwise(Dictionary<int, int[]> CornerNodesIdAndsubdomains, Model model)
+        private Dictionary<int, HashSet<INode>> DefineCornerNodesPerSubdomainAndOtherwise(Dictionary<int, int[]> CornerNodesIdAndsubdomains, Model model)
         {
-            Dictionary<int, List<INode>> cornerNodesList = new Dictionary<int, List<INode>>(model.Subdomains.Count());
-            Dictionary<int, INode[]> cornerNodes = new Dictionary<int, INode[]>(model.Subdomains.Count());
+            Dictionary<int, HashSet<INode>> cornerNodesList = new Dictionary<int, HashSet<INode>>(model.Subdomains.Count());
+            Dictionary<int, HashSet<INode>> cornerNodes = new Dictionary<int, HashSet<INode>>(model.Subdomains.Count());
 
             foreach (Subdomain subdomain in model.Subdomains)
             {
-                cornerNodesList.Add(subdomain.ID, new List<INode>());
+                cornerNodesList.Add(subdomain.ID, new HashSet<INode>());
             }
 
             foreach (int CornerNodeID in CornerNodesIdAndsubdomains.Keys)
@@ -367,12 +373,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 }
             }
 
-            foreach (Subdomain subdomain in model.Subdomains)
-            {
-                cornerNodes.Add(subdomain.ID, cornerNodesList[subdomain.ID].ToArray());
-            }
+            //foreach (Subdomain subdomain in model.Subdomains)
+            //{
+            //    cornerNodes.Add(subdomain.ID, cornerNodesList[subdomain.ID]);
+            //}
 
-            return cornerNodes;
+            return cornerNodesList;
         }
 
         public void ReassignModel(Model model, bool decomposemodel)
@@ -388,7 +394,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
             interfaceSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1);
             interfaceSolverBuilder.PcgConvergenceTolerance = 1E-10;
-            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodes);
+            var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new DenseFetiDPSubdomainMatrixManager.Factory();
+            var cornerNodeSelection = new UsedDefinedCornerNodes(cornerNodes);
+            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodeSelection, fetiMatrices);
             fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
             fetiSolverBuilder.ProblemIsHomogeneous = false;
             fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();

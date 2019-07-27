@@ -13,7 +13,9 @@ using ISAAR.MSolve.PreProcessor.Embedding;
 using ISAAR.MSolve.Solvers;
 using ISAAR.MSolve.Solvers.Direct;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.CornerNodes;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.Matrices;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Preconditioning;
 using System;
 using System.Collections.Generic;
@@ -46,7 +48,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public Dictionary<ISubdomain, List<Node>> RveMatrixSubdomainInnerNodes { get; private set; }
 
         private bool decomposeModel;
-        public Dictionary<int, INode[]> cornerNodes;
+        public Dictionary<int, HashSet<INode>> cornerNodes;
         public ISolver GetAppropriateSolver(Model model)
         {
             if (decomposeModel)
@@ -55,7 +57,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
                 interfaceSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1);
                 interfaceSolverBuilder.PcgConvergenceTolerance = 1E-10;
-                var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodes);
+                var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+                //var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+                //var fetiMatrices = new DenseFetiDPSubdomainMatrixManager.Factory();
+                var cornerNodeSelection = new UsedDefinedCornerNodes(cornerNodes);
+                var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodeSelection, fetiMatrices);
                 fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
                 fetiSolverBuilder.ProblemIsHomogeneous = false;
                 fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
@@ -438,14 +444,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             }
         }
 
-        private Dictionary<int, INode[]> DefineCornerNodesPerSubdomainAndOtherwise(Dictionary<int, int[]> CornerNodesIdAndsubdomains, Model model)
+        private Dictionary<int, HashSet<INode>> DefineCornerNodesPerSubdomainAndOtherwise(Dictionary<int, int[]> CornerNodesIdAndsubdomains, Model model)
         {
-            Dictionary<int, List<INode>> cornerNodesList = new Dictionary<int, List<INode>>(model.Subdomains.Count());
-            Dictionary<int, INode[]> cornerNodes = new Dictionary<int, INode[]>(model.Subdomains.Count());
+            Dictionary<int, HashSet<INode>> cornerNodesList = new Dictionary<int, HashSet<INode>>(model.Subdomains.Count());
+            Dictionary<int, HashSet<INode>> cornerNodes = new Dictionary<int, HashSet<INode>>(model.Subdomains.Count());
 
             foreach (Subdomain subdomain in model.Subdomains)
             {
-                cornerNodesList.Add(subdomain.ID, new List<INode>());
+                cornerNodesList.Add(subdomain.ID, new HashSet<INode>());
             }
 
             foreach (int CornerNodeID in CornerNodesIdAndsubdomains.Keys)
@@ -457,15 +463,15 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 }
             }
 
-            foreach (Subdomain subdomain in model.Subdomains)
-            {
-                cornerNodes.Add(subdomain.ID, cornerNodesList[subdomain.ID].ToArray());
-            }
+            //foreach (Subdomain subdomain in model.Subdomains)
+            //{
+            //    cornerNodes.Add(subdomain.ID, cornerNodesList[subdomain.ID]);
+            //}
 
-            return cornerNodes;
+            return cornerNodesList;
         }
 
-        private (Dictionary<int, double[]> CornerNodesIds, Dictionary<int, int[]> CornerNodesIdAndsubdomains, Dictionary<int, INode[]> cornerNodes)
+        private (Dictionary<int, double[]> CornerNodesIds, Dictionary<int, int[]> CornerNodesIdAndsubdomains, Dictionary<int, HashSet<INode>> cornerNodes)
             DefineCornerNodesFromCornerNodeData(int[][] CornerNodesData, Model model)
         {
             renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path));

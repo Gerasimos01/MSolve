@@ -14,7 +14,9 @@ using ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses;
 using ISAAR.MSolve.PreProcessor.Embedding;
 using ISAAR.MSolve.Solvers;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.CornerNodes;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.Matrices;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Preconditioning;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
@@ -39,7 +41,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public string subdomainOutputPath { get; private set; }
         public IList<Node> EmbeddedNodes { get; private set; }
 
-        private Dictionary<int, INode[]> cornerNodes;
+        public Dictionary<int, HashSet<INode>> cornerNodes;
 
         public ISolver GetAppropriateSolver(Model model)
         {
@@ -47,7 +49,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
             interfaceSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1);
             interfaceSolverBuilder.PcgConvergenceTolerance = 1E-10;
-            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodes);
+            var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new DenseFetiDPSubdomainMatrixManager.Factory();
+            var cornerNodeSelection = new UsedDefinedCornerNodes(cornerNodes);
+            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodeSelection, fetiMatrices);
             fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
             fetiSolverBuilder.ProblemIsHomogeneous = false;
             fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
