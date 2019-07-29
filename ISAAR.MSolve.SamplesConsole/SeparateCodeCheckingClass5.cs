@@ -28,6 +28,7 @@ using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Output;
 using ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Feti1.Matrices;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
@@ -46,7 +47,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
             ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
             // Solver
-            var solverBuilder = new Feti1Solver.Builder(1e-4); //factorizationTolerance
+            var fetiMatrices = new SkylineFeti1SubdomainMatrixManager.Factory();
+            var factorizationTolerances = new Dictionary<int, double>();
+            foreach (Subdomain s in model.Subdomains) factorizationTolerances[s.ID] = 1e-4;
+            var solverBuilder = new Feti1Solver.Builder(fetiMatrices, factorizationTolerances);  //factorizationTolerance
             solverBuilder.ProblemIsHomogeneous = false;
             solverBuilder.PreconditionerFactory = new LumpedPreconditioner.Factory();
             solverBuilder.ProblemIsHomogeneous = true;

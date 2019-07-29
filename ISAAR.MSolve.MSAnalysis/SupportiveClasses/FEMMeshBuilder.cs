@@ -13,7 +13,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
     /// Mesh and model creation supportive class, that can be used for 3d or 2d rve problems or structured meshing of parts in general
     /// Authors: Gerasimos Sotiropoulos
     /// </summary>
-    public static class FEMMeshBuilder   
+    public static class FEMMeshBuilder
     {
         public static int[,] topologia_shell_coh(int elements, int elem1, int elem2, object komvoi_8)
         {
@@ -242,10 +242,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                     {
                         nodeID = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
                         nodeCoordX = -0.5 * L01 + (h1 + 1 - 1) * (L01 / hexa1);  // h1+1 dioti h1 einai zero based
-                        nodeCoordY =-0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
+                        nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
                         nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-                        model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ ));
+                        model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
                         nodeCounter++;
                     }
                 }
@@ -384,7 +384,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 nodeCoordY = o_xsunol[6 * nNode + 1];
                 nodeCoordZ = o_xsunol[6 * nNode + 2];
 
-                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ));
+                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
                 eswterikosNodeCounter++;
             }
             int arithmosShmeiwnShellMidsurface = eswterikosNodeCounter;
@@ -464,10 +464,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             {
                 NodeID = renumbering.GetNewNodeNumbering(eswterikosNodeCounter + PreviousNodesNumberValue + 1);
                 nodeCoordX = o_xsunol[6 * nNode + 0] - 0.5 * tk * o_xsunol[6 * nNode + 3];
-                nodeCoordY =o_xsunol[6 * nNode + 1] - 0.5 * tk * o_xsunol[6 * nNode + 4];
+                nodeCoordY = o_xsunol[6 * nNode + 1] - 0.5 * tk * o_xsunol[6 * nNode + 4];
                 nodeCoordZ = o_xsunol[6 * nNode + 2] - 0.5 * tk * o_xsunol[6 * nNode + 5];
 
-                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ));
+                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
                 eswterikosNodeCounter++;
             }
             //
@@ -525,7 +525,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add(e2);
                 eswterikosElementCounter++;
             }
             // orismos elements katw strwshs ews edw
@@ -535,10 +535,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             {
                 NodeID = renumbering.GetNewNodeNumbering(eswterikosNodeCounter + PreviousNodesNumberValue + 1);
                 nodeCoordX = o_xsunol[6 * nNode + 0] + 0.5 * tk * o_xsunol[6 * nNode + 3];
-                nodeCoordY =o_xsunol[6 * nNode + 1] + 0.5 * tk * o_xsunol[6 * nNode + 4];
+                nodeCoordY = o_xsunol[6 * nNode + 1] + 0.5 * tk * o_xsunol[6 * nNode + 4];
                 nodeCoordZ = o_xsunol[6 * nNode + 2] + 0.5 * tk * o_xsunol[6 * nNode + 5];
 
-                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ ));
+                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
                 eswterikosNodeCounter++;
             }
             //
@@ -583,7 +583,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add(e2);
                 eswterikosElementCounter++;
             }
             // orismos elements anw strwshs ews edw
@@ -676,10 +676,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             {
                 NodeID = renumbering.GetNewNodeNumbering(eswterikosNodeCounter + PreviousNodesNumberValue + 1);
                 nodeCoordX = o_xsunol[6 * nNode + 0];
-                nodeCoordY =o_xsunol[6 * nNode + 1];
+                nodeCoordY = o_xsunol[6 * nNode + 1];
                 nodeCoordZ = o_xsunol[6 * nNode + 2];
 
-                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ ));
+                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
                 eswterikosNodeCounter++;
             }
             int arithmosShmeiwnShellMidsurface = eswterikosNodeCounter;
@@ -748,7 +748,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                     e2.NodesDictionary.Add(renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue), model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalShellNode_i[j1] + PreviousNodesNumberValue)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add(e2);
                 eswterikosElementCounter++;
             }
             int arithmosShellElements = eswterikosElementCounter;
@@ -762,13 +762,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 nodeCoordY = o_xsunol[6 * nNode + 1] - 0.5 * tk * o_xsunol[6 * nNode + 4];
                 nodeCoordZ = o_xsunol[6 * nNode + 2] - 0.5 * tk * o_xsunol[6 * nNode + 5];
 
-                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ ));
+                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
                 eswterikosNodeCounter++;
             }
             //
 
             //orismos elements katw strwshs
-            BondSlipCohMat material3 = new Materials.BondSlipCohMat(T_o_1,D_o_1,0.1,T_o_3,D_o_3,new double[2],new double[2],1e-10);            
+            BondSlipCohMat material3 = new Materials.BondSlipCohMat(T_o_1, D_o_1, 0.1, T_o_3, D_o_3, new double[2], new double[2], 1e-10);
 
             int[] midsurfaceNodeIDforlocalCohesiveNode_i = new int[8];
             for (int nElement = 0; nElement < elements; nElement++)
@@ -811,7 +811,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + arithmosShmeiwnShellMidsurface)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add(e2);
                 eswterikosElementCounter++;
             }
             // orismos elements katw strwshs ews edw
@@ -824,7 +824,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 nodeCoordY = o_xsunol[6 * nNode + 1] + 0.5 * tk * o_xsunol[6 * nNode + 4];
                 nodeCoordZ = o_xsunol[6 * nNode + 2] + 0.5 * tk * o_xsunol[6 * nNode + 5];
 
-                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ ));
+                model.NodesDictionary.Add(NodeID, new Node(id: NodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
                 eswterikosNodeCounter++;
             }
             //
@@ -870,7 +870,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         model.NodesDictionary[renumbering.GetNewNodeNumbering(midsurfaceNodeIDforlocalCohesiveNode_i[j1] + PreviousNodesNumberValue + 2 * arithmosShmeiwnShellMidsurface)]);
                 }
                 model.ElementsDictionary.Add(e2.ID, e2);
-                model.SubdomainsDictionary[subdomainID].Elements.Add( e2);
+                model.SubdomainsDictionary[subdomainID].Elements.Add(e2);
                 eswterikosElementCounter++;
             }
 
@@ -921,7 +921,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
                         nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-                        model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ ));
+                        model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
                         nodeCounter++;
                     }
                 }
@@ -1048,7 +1048,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
                         nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-                        model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y:  nodeCoordY, z: nodeCoordZ ));
+                        model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
                         nodeCounter++;
                     }
                 }
@@ -1132,16 +1132,6 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             //}
 
             int i_2 = 1;
-            for (int i1=1; i1<hexa1+2;i1++)
-            {
-                for (int i3 = 1; i3 < hexa3 + 2; i3++)
-                {
-                    int komvos = renumbering.GetNewNodeNumbering(Topol_rve(i1, i_2, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
-                    boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
-                }
-            }
-
-            i_2 = hexa2+1;
             for (int i1 = 1; i1 < hexa1 + 2; i1++)
             {
                 for (int i3 = 1; i3 < hexa3 + 2; i3++)
@@ -1151,7 +1141,17 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 }
             }
 
-            int i_1 =  1;
+            i_2 = hexa2 + 1;
+            for (int i1 = 1; i1 < hexa1 + 2; i1++)
+            {
+                for (int i3 = 1; i3 < hexa3 + 2; i3++)
+                {
+                    int komvos = renumbering.GetNewNodeNumbering(Topol_rve(i1, i_2, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                    boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
+                }
+            }
+
+            int i_1 = 1;
             for (int i2 = 2; i2 < hexa2 + 1; i2++)
             {
                 for (int i3 = 1; i3 < hexa3 + 2; i3++)
@@ -1161,7 +1161,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 }
             }
 
-            i_1 = hexa1+1;
+            i_1 = hexa1 + 1;
             for (int i2 = 2; i2 < hexa2 + 1; i2++)
             {
                 for (int i3 = 1; i3 < hexa3 + 2; i3++)
@@ -1173,7 +1173,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
         }
 
         public static IEnumerable<Element> GetHostGroupForCohesiveElement(Element cohesive, rveMatrixParameters mp, Model model, string renumberingVectorPath)
-        {            
+        {
 
             int hexa1 = mp.hexa1;// diakritopoihsh
             int hexa2 = mp.hexa2;
@@ -1267,13 +1267,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 //Correction
                 //nhexa_i[0] = new int[3] { (int)x_div , (int)x_div + 1,(int)x_div + 2 }; nhexa_i[1] = new int[3] { (int)y_div  , (int)y_div + 1,(int)y_div + 2 }; nhexa_i[2] = new int[3] { (int)z_div , (int)z_div + 1,(int)z_div+ 2 };
 
-                for (int j1=0; j1<nhexa_i[0].GetLength(0);j1++)
+                for (int j1 = 0; j1 < nhexa_i[0].GetLength(0); j1++)
                 {
                     for (int j2 = 0; j2 < nhexa_i[1].GetLength(0); j2++)
                     {
                         for (int j3 = 0; j3 < nhexa_i[2].GetLength(0); j3++)
                         {
-                            int possibleHostId= nhexa_i[0][j1] + (nhexa_i[1][j2] - 1) * hexa1 + (nhexa_i[2][j3] - 1) * (hexa1) * hexa2;
+                            int possibleHostId = nhexa_i[0][j1] + (nhexa_i[1][j2] - 1) * hexa1 + (nhexa_i[2][j3] - 1) * (hexa1) * hexa2;
 
                             if (!possibleHosts.Contains(model.ElementsDictionary[possibleHostId]))
                             {
@@ -1297,7 +1297,309 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 possibleHosts.Add(model.ElementsDictionary[possibleHostIds[k1]]);
             }
             return possibleHosts;
-        
+
         }
+
+        public static double[][] Build_o_x_rve_Coordinates(rveMatrixParameters mp)
+        {
+            double L01 = mp.L01; // diastaseis
+            double L02 = mp.L02;
+            double L03 = mp.L03;
+            int hexa1 = mp.hexa1;// diakritopoihsh
+            int hexa2 = mp.hexa2;
+            int hexa3 = mp.hexa3;
+
+            int nodeCounter = 0;
+
+            int nodeID;
+            double nodeCoordX;
+            double nodeCoordY;
+            double nodeCoordZ;
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+
+            int komvoi_rve = (hexa1 + 1) * (hexa2 + 1) * (hexa3 + 1);
+
+            double[][] o_x_rve = new double[komvoi_rve][];
+
+            for (int h1 = 0; h1 < hexa1 + 1; h1++)
+            {
+                for (int h2 = 0; h2 < hexa2 + 1; h2++)
+                {
+                    for (int h3 = 0; h3 < hexa3 + 1; h3++)
+                    {
+                        nodeID = Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka); // h1+1 dioti h1 einai zero based
+
+                        nodeCoordX = -0.5 * L01 + (h1 + 1 - 1) * (L01 / hexa1);  // h1+1 dioti h1 einai zero based
+                        nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
+                        nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
+
+                        o_x_rve[nodeID] = new double[3] { nodeCoordX, nodeCoordY, nodeCoordZ };
+                    }
+                }
+            }
+
+            return o_x_rve;
+
+        }
+
+        public static (int[], int[]) GetTotalModelRenumbering(double[][] o_x_rve, double[][] o_x_sunol_gs, rveMatrixParameters mp)
+        {
+            //origin: proren_modification_total_nodes_version
+
+            int komvoi_rve = o_x_rve.Length;
+
+            int total_nodes_number = o_x_rve.Length;
+            for (int i1 = 0; i1 < o_x_sunol_gs.Length; i1++)
+            {
+                total_nodes_number += o_x_sunol_gs[i1].Length;
+            }
+
+            double[][] free_nodes_coordinates = new double[total_nodes_number][];
+
+            for (int i1 = 0; i1 < o_x_rve.Length; i1++)
+            {
+                free_nodes_coordinates[i1] = new double[3] { o_x_rve[i1][0], o_x_rve[i1][1], o_x_rve[i1][2] };
+            }
+
+            int current_node = o_x_rve.Length;
+
+            for (int i1 = 0; i1 < o_x_sunol_gs.Length; i1++)
+            {
+                for (int i2 = 0; i2 < o_x_sunol_gs[i1].Length / 6; i2++)
+                {
+                    free_nodes_coordinates[current_node] = new double[3] { o_x_sunol_gs[i1][6 * i2 + 0], o_x_sunol_gs[i1][6 * i2 + 1], o_x_sunol_gs[i1][6 * i2 + 2] };
+                    current_node++;
+                }
+            }
+
+            int[] x_discr = new int[free_nodes_coordinates.Length];
+            int[] y_discr = new int[free_nodes_coordinates.Length];
+            int[] z_discr = new int[free_nodes_coordinates.Length];
+            #region nesessary variables
+            int hexa1 = mp.hexa1;// diakritopoihsh
+            int hexa2 = mp.hexa2;
+            int hexa3 = mp.hexa3;
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+            double L_1 = mp.L01 / ((double)mp.hexa1);
+            double L_2 = mp.L02 / ((double)mp.hexa2);
+            double L_3 = mp.L03 / ((double)mp.hexa3);
+            #endregion
+
+            for (int i1 = 0; i1 < free_nodes_coordinates.Length; i1++)
+            {
+                double x_ek = free_nodes_coordinates[i1][0] + 0.5 * mp.L01;
+                double y_ek = free_nodes_coordinates[i1][1] + 0.5 * mp.L02;
+                double z_ek = free_nodes_coordinates[i1][2] + 0.5 * mp.L03;
+
+                var x_div = Math.Truncate(x_ek / L_1); // calculates the integral part of a specified number
+                if (x_div < hexa1 + 1)
+                {
+                    x_discr[i1] = (int)x_div;
+                }
+                if (x_div == hexa1 + 1)
+                {
+                    x_discr[i1] = (int)x_div - 1;
+                }
+
+                var y_div = Math.Truncate(y_ek / L_2); // calculates the integral part of a specified number
+                if (y_div < hexa2 + 1)
+                {
+                    y_discr[i1] = (int)y_div;
+                }
+                if (y_div == hexa2 + 1)
+                {
+                    y_discr[i1] = (int)y_div - 1;
+                }
+
+                var z_div = Math.Truncate(z_ek / L_3); // calculates the integral part of a specified number
+                if (z_div < hexa3 + 1)
+                {
+                    z_discr[i1] = (int)z_div;
+                }
+                if (z_div == hexa3 + 1)
+                {
+                    z_discr[i1] = (int)z_div - 1;
+                }
+            }
+            int number_of_cells = hexa1 * hexa2 * hexa3;
+            int[] nodes_per_cell = new int[number_of_cells];
+            int[] free_nodes_cell = new int[free_nodes_coordinates.Length];
+            int[] free_nodes_order_in_cell = new int[free_nodes_coordinates.Length];
+
+            for (int i1 = 0; i1 < free_nodes_coordinates.Length; i1++)
+            {
+                int n1 = x_discr[i1];
+                int n2 = y_discr[i1];
+                int n3 = z_discr[i1];
+
+                int num_cell = n1 + (n2 - 1) * (hexa1) + (n3 - 1) * (hexa1) * (hexa2);
+                free_nodes_cell[i1] = num_cell;
+                nodes_per_cell[num_cell-1] += 1; //diorthosi zero based egine (num_cell)
+                free_nodes_order_in_cell[i1] = nodes_per_cell[num_cell-1]; //diorthosi zero based egine (num_cell)
+            }
+
+            int[] previous_cells_nodes_number = new int[number_of_cells];
+            for (int i1 = 1; i1 < number_of_cells; i1++)
+            {
+                previous_cells_nodes_number[i1] = previous_cells_nodes_number[i1 - 1] + nodes_per_cell[i1 - 1];
+            }
+
+            int[] t_K_sunol_proren_vec = new int[free_nodes_coordinates.Length];
+
+            for (int i1 = 0; i1 < free_nodes_coordinates.Length; i1++)
+            {
+                int n1 = x_discr[i1];
+                int n2 = y_discr[i1];
+                int n3 = z_discr[i1];
+
+                int num_cell = n1 + (n2 - 1) * (hexa1) + (n3 - 1) * (hexa1) * (hexa2);
+
+                t_K_sunol_proren_vec[i1]= previous_cells_nodes_number[num_cell-1] + free_nodes_order_in_cell[i1]; // num cell egine h zero based diorthosi
+            }
+
+            //origin: create_renumbering_with_proren_develop
+
+            int[] free_nodes_numbering = t_K_sunol_proren_vec;
+
+            int graphene_nodes_number = 0;
+            for (int i1 = 0; i1 < o_x_sunol_gs.Length; i1++)
+            {
+                graphene_nodes_number += o_x_sunol_gs[i1].Length / 6;
+            }
+            int graphene_and_coh_1_2_nodes_number = 3 * graphene_nodes_number;
+
+            int[] sunol_nodes_numbering = new int[komvoi_rve + graphene_and_coh_1_2_nodes_number];
+            for (int i1 = 0; i1 < komvoi_rve; i1++)
+            {
+                sunol_nodes_numbering[i1] = free_nodes_numbering[i1];
+            }
+
+            int previous_free_nodes_counter = komvoi_rve;
+            int previous_nodes_counter = komvoi_rve;
+            int previous_coh_node = free_nodes_numbering.Length;
+
+            for (int i1 = 0; i1 < o_x_sunol_gs.Length; i1++)
+            {
+                int grShNodes = o_x_sunol_gs[i1].Length / 6;
+
+                for(int i2=0; i2<grShNodes;i2++ )
+                {
+                    sunol_nodes_numbering[(previous_nodes_counter - 1) + 1 + i2] = free_nodes_numbering[(previous_free_nodes_counter - 1) + 1 + i2];
+                    // zero based access twn dianusmatwn
+                }
+
+                for (int i2 = 0; i2 < 2*grShNodes; i2++)
+                {
+                    sunol_nodes_numbering[(previous_nodes_counter - 1) + 1 + i2 + grShNodes] = previous_coh_node + 1 + i2;
+                    //zero based mono sto access twn dianusmatwn
+                }
+
+                previous_nodes_counter += 3 * grShNodes;
+                previous_free_nodes_counter += 1 * grShNodes;
+                previous_coh_node += 2 * grShNodes;
+            }
+
+            // return sunol_nodes_numbering ("Print_int_vector( sunol_nodes_numbering,'REF_new_total_numbering.txt' )")
+
+            // "save('REF_o_xsunol_gs_MATLAB.mat','o_xsunol_gs');"
+
+            #region origin: create_reverse_renumbering_fe2_bounded_nodes
+            int[] dofs_per_node = new int[total_nodes_number];
+            for(int i1=0; i1<komvoi_rve;i1++)
+            {
+                dofs_per_node[i1] = 3;
+            }
+            for (int i1 = komvoi_rve; i1 < total_nodes_number; i1++)
+            {
+                dofs_per_node[i1] = 5;
+            }
+
+            int[] dofs_per_node_in_the_new_numbering = reorderArrayValues(free_nodes_numbering, dofs_per_node);
+            int[] thesi_prohg_dof_sto_renumbered_dof_vec = new int[dofs_per_node_in_the_new_numbering.Length];
+
+            for (int i1 = 1; i1 < thesi_prohg_dof_sto_renumbered_dof_vec.Length; i1++)
+            {
+                thesi_prohg_dof_sto_renumbered_dof_vec[i1]= thesi_prohg_dof_sto_renumbered_dof_vec[i1-1]+
+                    dofs_per_node_in_the_new_numbering[i1 - 1];
+            }
+
+            int total_dofs = 5 * graphene_nodes_number + 3 * komvoi_rve;
+            int[] dofs_renumbering = new int[total_dofs];
+            int dof_counter = 0;
+
+            for(int i1=0; i1<dofs_per_node.Length; i1++)
+            {
+                int target_node = free_nodes_numbering[i1];
+                int target_prohg_dof= thesi_prohg_dof_sto_renumbered_dof_vec[target_node-1];//zero based
+
+                for (int i2 = 0; i2 < dofs_per_node[i1]; i2++)
+                {
+                    dofs_renumbering[(dof_counter - 1) + 1 + i2] = target_prohg_dof + 1 + i2;
+                }
+
+                dof_counter += dofs_per_node[i1];
+            }
+
+            int f_komvoi_rve = kuvos;
+            int p_komvoi_rve = komvoi_rve - f_komvoi_rve;
+            int[] constrained_dofs_in_3komvoi_rve = new int[3 * p_komvoi_rve];
+
+            for(int i1=0;i1<p_komvoi_rve;i1++ )
+            {
+                int boundary_node = f_komvoi_rve + i1+1;
+                constrained_dofs_in_3komvoi_rve[3 * i1  + 0]= 3 * (boundary_node - 1) + 1;
+                constrained_dofs_in_3komvoi_rve[3 * i1 + 1] = 3 * (boundary_node - 1) + 2;
+                constrained_dofs_in_3komvoi_rve[3 * i1 + 2] = 3 * (boundary_node - 1) + 3;
+            }
+
+            Array.Sort(constrained_dofs_in_3komvoi_rve);
+
+            int[] dofs_numbering_for_constraining= new int[dofs_renumbering.Length];
+            Array.Copy(dofs_renumbering, dofs_numbering_for_constraining, dofs_renumbering.Length);
+
+            for(int i1=0; i1<constrained_dofs_in_3komvoi_rve.Length;i1++)
+            {
+                int moved_target = dofs_numbering_for_constraining[constrained_dofs_in_3komvoi_rve[i1] - 1];//zero based access vector
+
+                for(int i2=0; i2<dofs_numbering_for_constraining.Length;i2++)
+                {
+                    if(dofs_numbering_for_constraining[i2]>moved_target)
+                    {
+                        dofs_numbering_for_constraining[i2]= dofs_numbering_for_constraining[i2] - 1;
+                    }
+                }
+
+                dofs_numbering_for_constraining[constrained_dofs_in_3komvoi_rve[i1] - 1] = dofs_numbering_for_constraining.Length;//zero based access taken into account
+
+            }
+
+            int[] arith_proodos = new int[dofs_numbering_for_constraining.Length];
+            for(int i1=0;i1<dofs_numbering_for_constraining.Length;i1++)
+            {
+                arith_proodos[i1] = i1 + 1; //access einai ok hdh ginetai zero based ara diiorthothike to value
+            }
+
+            int[] kanonas_renumbering_2 = reorderArrayValues(dofs_numbering_for_constraining, arith_proodos);
+            #endregion
+
+            return (sunol_nodes_numbering, kanonas_renumbering_2);
+        }
+
+        public static int[] reorderArrayValues(int[] free_nodes_numbering, int[] values )
+        {
+            int[] newArray = new int[free_nodes_numbering.Length];
+            for (int i1 = 0; i1 < free_nodes_numbering.Length; i1++)
+            {
+                newArray[free_nodes_numbering[i1]-1] = values[i1]; //zero based upopsin sth thesi
+            }
+
+            return newArray;
+        }
+
     }
 }
+

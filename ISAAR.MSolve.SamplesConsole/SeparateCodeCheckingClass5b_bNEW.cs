@@ -34,6 +34,8 @@ using ISAAR.MSolve.Analyzers;
 using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using ISAAR.MSolve.Logging;
 using ISAAR.MSolve.LinearAlgebra.Iterative.Termination;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.Matrices;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.CornerNodes;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
@@ -44,9 +46,9 @@ namespace ISAAR.MSolve.SamplesConsole
         public static (Model, double[]) RunExample()
         {
             // EPILOGH RVE
-            //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate(1, true);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicateLARGE(1, true);
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2c_alte(1, true);
+            //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2c_alte(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbLARGE(1, true);
             //var rveBuilder = new RveGrShMultipleSeparated_c_alteDevelop5elem(1, true);
@@ -69,8 +71,8 @@ namespace ISAAR.MSolve.SamplesConsole
             model.Loads.Add(load1);
             var cornerNodesAndSubds = rveBuilder.CornerNodesIdAndsubdomains;
 
-            Dictionary<int, INode[]> cornerNodes = rveBuilder.cornerNodes;
-            
+            Dictionary<int, HashSet<INode>> cornerNodes = rveBuilder.cornerNodes;
+
 
 
 
@@ -78,7 +80,11 @@ namespace ISAAR.MSolve.SamplesConsole
             var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
             interfaceSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1);
             interfaceSolverBuilder.PcgConvergenceTolerance = 1E-10;
-            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodes);
+            var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new DenseFetiDPSubdomainMatrixManager.Factory();
+            var cornerNodeSelection = new UsedDefinedCornerNodes(cornerNodes);
+            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodeSelection, fetiMatrices);
             fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
             fetiSolverBuilder.ProblemIsHomogeneous = false;
             fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
@@ -265,9 +271,9 @@ namespace ISAAR.MSolve.SamplesConsole
         //needs to be corrected rve_multiple -> b kai to path kai ta stoixeia diakritopoihshs pou einai afhmena exwterika (Genika elegxoume connectDataStructures kai defineAppropriateConstraintsForBoundaryNodes)
         public static (Model, double[]) RunExampleSerial()
         {
-            //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate(1, false);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate(1, false);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicateLARGE(1, false);
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2c_alte(1, false);
+            //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2c_alte(1, false);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, false);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbLARGE(1, false); // diorthose kai to parakatw path apla gia na mhn xtupaei.
             //var rveBuilder = new RveGrShMultipleSeparated_c_alteDevelop5elem(1, false); //A.1

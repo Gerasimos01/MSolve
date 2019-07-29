@@ -34,6 +34,9 @@ using ISAAR.MSolve.Analyzers;
 using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 using ISAAR.MSolve.Logging;
 using ISAAR.MSolve.LinearAlgebra.Iterative.Termination;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Feti1.Matrices;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.Matrices;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.CornerNodes;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
@@ -52,7 +55,10 @@ namespace ISAAR.MSolve.SamplesConsole
 
             ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
             // Solver
-            var solverBuilder = new Feti1Solver.Builder(1e-4); //factorizationTolerance
+            var fetiMatrices = new SkylineFeti1SubdomainMatrixManager.Factory();
+            var factorizationTolerances = new Dictionary<int, double>();
+            foreach (Subdomain s in model.Subdomains) factorizationTolerances[s.ID] = 1e-4;
+            var solverBuilder = new Feti1Solver.Builder(fetiMatrices, factorizationTolerances);
             solverBuilder.ProblemIsHomogeneous = false;
             solverBuilder.PreconditionerFactory = new LumpedPreconditioner.Factory();
             solverBuilder.ProblemIsHomogeneous = true;
@@ -230,12 +236,12 @@ namespace ISAAR.MSolve.SamplesConsole
             int[] shellPrint = rveBuilder.shellPrint;
             ElementStructuralStiffnessProvider elementProvider = new ElementStructuralStiffnessProvider();
 
-            Dictionary<int, List<INode>> cornerNodesList = new Dictionary<int, List<INode>>(model.Subdomains.Count());
-            Dictionary<int, INode[]> cornerNodes = new Dictionary<int, INode[]>(model.Subdomains.Count());
+            Dictionary<int, HashSet<INode>> cornerNodesList = new Dictionary<int, HashSet<INode>>(model.Subdomains.Count());
+            Dictionary<int, HashSet<INode>> cornerNodes = new Dictionary<int, HashSet<INode>>(model.Subdomains.Count());
 
             foreach (Subdomain subdomain in model.Subdomains)
             {
-                cornerNodesList.Add(subdomain.ID, new List<INode>());
+                cornerNodesList.Add(subdomain.ID, new HashSet<INode>());
             }
 
             foreach (int CornerNodeID in rveBuilder.CornerNodesIdAndsubdomains.Keys)
@@ -246,11 +252,7 @@ namespace ISAAR.MSolve.SamplesConsole
                     cornerNodesList[subdomain.ID].Add(node1);
                 }
             }
-
-            foreach (Subdomain subdomain in model.Subdomains)
-            {
-                cornerNodes.Add(subdomain.ID, cornerNodesList[subdomain.ID].ToArray());
-            }
+            cornerNodes = cornerNodesList;
 
             double load_value = 1;
             Load load1;
@@ -265,8 +267,13 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // Setup solver
             var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
-            interfaceSolverBuilder.PcgConvergenceTolerance = 1E-7;
-            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodes);
+            interfaceSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1);
+            interfaceSolverBuilder.PcgConvergenceTolerance = 1E-10;
+            var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new DenseFetiDPSubdomainMatrixManager.Factory();
+            var cornerNodeSelection = new UsedDefinedCornerNodes(cornerNodes);
+            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodeSelection, fetiMatrices);
             fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
             fetiSolverBuilder.ProblemIsHomogeneous = false;
             fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
@@ -311,7 +318,7 @@ namespace ISAAR.MSolve.SamplesConsole
             model.Loads.Add(load1);
             var cornerNodesAndSubds = rveBuilder.CornerNodesIdAndsubdomains;
 
-            Dictionary<int, INode[]> cornerNodes = rveBuilder.cornerNodes;
+            Dictionary<int, HashSet<INode>> cornerNodes = rveBuilder.cornerNodes;
             //Dictionary<int, List<INode>> CornerNodes = new Dictionary<int, List<INode>>();
             //foreach (int nodeId in cornerNodesAndSubds.Keys)
             //{
@@ -344,7 +351,11 @@ namespace ISAAR.MSolve.SamplesConsole
             var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
             interfaceSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1);
             interfaceSolverBuilder.PcgConvergenceTolerance = 1E-10;
-            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodes);
+            var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new DenseFetiDPSubdomainMatrixManager.Factory();
+            var cornerNodeSelection = new UsedDefinedCornerNodes(cornerNodes);
+            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodeSelection, fetiMatrices);
             fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
             fetiSolverBuilder.ProblemIsHomogeneous = false;
             fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
