@@ -6,8 +6,8 @@ namespace ISAAR.MSolve.FEM.Interfaces
 {
     public interface IStochasticCoefficientsProvider2D //: IStochasticCoefficientsProvider
     {
-        //new double[] RandomVariables { get; set; }
-        //double GetCoefficient(double meanValue, double[] coordinates);
+        double[] RandomVariables { get; set; }
+        double GetCoefficient(double meanValue, double[] coordinates);
         double[] GetDerivative(double[] coordinates);
     }
 }

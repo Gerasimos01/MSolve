@@ -40,5 +40,15 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             }
             return product;
         }
+
+        public static double dot_product(double[] vec1, double[] vec2)
+        {
+            double dot_product = 0;
+            for (int i1 = 0; i1 < vec1.GetLength(0); i1++)
+            {
+                dot_product += vec1[i1] * vec2[i1];
+            }
+            return dot_product;
+        }
     }
 }
