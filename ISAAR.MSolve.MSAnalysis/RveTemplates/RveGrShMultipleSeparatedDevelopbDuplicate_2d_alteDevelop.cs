@@ -133,18 +133,18 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             #endregion
 
             #region model parameters
-            int subdiscr1 = 4;
-            int discr1 = 5;
+            int subdiscr1 = 6;
+            int discr1 = 4;
             // int discr2 dn xrhsimopoieitai
-            int discr3 = 20;
-            int subdiscr1_shell = 6;
+            int discr3 = 23;
+            int subdiscr1_shell = 14;
             int discr1_shell = 1;
             mpgp = FEMMeshBuilder.GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
             mp = mpgp.Item1; //mp.hexa1 = 9; mp.hexa2 = 9; mp.hexa3 = 9;
             gp = mpgp.Item2;
 
 
-            int graphene_sheets_number = 3;
+            int graphene_sheets_number = 10;
             o_x_parameters[] model_o_x_parameteroi = new o_x_parameters[graphene_sheets_number];//TODO delete this
             double[][] ekk_xyz = new double[graphene_sheets_number][]; for(int i1 = 0; i1 < ekk_xyz.Length; i1++) { ekk_xyz[i1] = new double[3] { 0, 0, 0 }; };
             #endregion
@@ -171,9 +171,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             double b1 = 10; double b2 = 10; double sigma_f = 0.2;
             IList<IStochasticCoefficientsProvider2D> coefficientsProviders =
-                new List<IStochasticCoefficientsProvider2D> { new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01) };
+                new List<IStochasticCoefficientsProvider2D> { new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01,2*Math.PI/((double)20), 20) };
             for (int j = 0; j < graphene_sheets_number - 1; j++)
-            { coefficientsProviders.Add(new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01)); }
+            { coefficientsProviders.Add(new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01, 2 * Math.PI / ((double)20), 20)); }
 
 
             double[][] o_xsunol_vectors = new double[graphene_sheets_number][];//mporei na xrhsimpopoiithei kai to ox_sunol_BUilder tou RveExamples builder tou pio prosfatou input commit
@@ -223,7 +223,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
 
             //domain separation ds1
-            int totalSubdomains = 125;
+            int totalSubdomains = 64; //discr1*discr1* discr1
             if (decomposeModel) DdmCalculationsGeneral.BuildModelInterconnectionData(model);
             var decomposer = new AutomaticDomainDecomposer2(model, totalSubdomains);
             if (decomposeModel) decomposer.UpdateModel();

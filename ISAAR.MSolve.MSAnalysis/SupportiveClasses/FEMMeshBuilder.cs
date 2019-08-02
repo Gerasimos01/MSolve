@@ -1714,7 +1714,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                         nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
                         nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
 
-                        o_x_rve[nodeID] = new double[3] { nodeCoordX, nodeCoordY, nodeCoordZ };
+                        o_x_rve[nodeID-1] = new double[3] { nodeCoordX, nodeCoordY, nodeCoordZ };
                     }
                 }
             }
@@ -1732,7 +1732,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             int total_nodes_number = o_x_rve.Length;
             for (int i1 = 0; i1 < o_x_sunol_gs.Length; i1++)
             {
-                total_nodes_number += o_x_sunol_gs[i1].Length;
+                total_nodes_number += o_x_sunol_gs[i1].Length/6;
             }
 
             double[][] free_nodes_coordinates = new double[total_nodes_number][];
@@ -1774,34 +1774,67 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 double y_ek = free_nodes_coordinates[i1][1] + 0.5 * mp.L02;
                 double z_ek = free_nodes_coordinates[i1][2] + 0.5 * mp.L03;
 
-                var x_div = Math.Truncate(x_ek / L_1); // calculates the integral part of a specified number
-                if (x_div < hexa1 + 1)
+                double round_of_tolerance = 1e-15; //toulaxiston 1e-15
+                int x_div;
+                double val = x_ek / L_1;
+                double rem = val - Math.Truncate(val);
+                if((1-rem)<round_of_tolerance)
                 {
-                    x_discr[i1] = (int)x_div;
+                    x_div = (int)Math.Truncate(x_ek / L_1) + 1;
                 }
-                if (x_div == hexa1 + 1)
+                else
                 {
-                    x_discr[i1] = (int)x_div - 1;
+                    x_div = (int)Math.Truncate(x_ek / L_1);
+                }
+                if (x_div < hexa1 )
+                {
+                    x_discr[i1] = (int)x_div+1;
+                }
+                if (x_div == hexa1 )
+                {
+                    x_discr[i1] = (int)x_div ;
                 }
 
-                var y_div = Math.Truncate(y_ek / L_2); // calculates the integral part of a specified number
-                if (y_div < hexa2 + 1)
+                int y_div;
+                val = y_ek / L_2;
+                rem = val - Math.Truncate(val);
+                if ((1 - rem) < round_of_tolerance)
                 {
-                    y_discr[i1] = (int)y_div;
+                    y_div = (int)Math.Truncate(y_ek / L_2) + 1;
                 }
-                if (y_div == hexa2 + 1)
+                else
                 {
-                    y_discr[i1] = (int)y_div - 1;
+                    y_div = (int)Math.Truncate(y_ek / L_2);
+                }
+                //y_div = Math.Truncate(y_ek / L_2); // calculates the integral part of a specified number
+                if (y_div < hexa2 )
+                {
+                    y_discr[i1] = (int)y_div+1;
+                }
+                if (y_div == hexa2 )
+                {
+                    y_discr[i1] = (int)y_div ;
                 }
 
-                var z_div = Math.Truncate(z_ek / L_3); // calculates the integral part of a specified number
-                if (z_div < hexa3 + 1)
+                int z_div;
+                val = z_ek / L_3;
+                rem = val - Math.Truncate(val);
+                if ((1 - rem) < round_of_tolerance)
+                {
+                    z_div = (int)Math.Truncate(z_ek / L_3) + 1;
+                }
+                else
+                {
+                    z_div = (int)Math.Truncate(z_ek / L_3);
+                }
+                // calculates the integral part of a specified number
+                if (z_div < hexa3 )
+                {
+                    z_discr[i1] = (int)z_div+1;
+                }
+                if (z_div == hexa3 )
                 {
                     z_discr[i1] = (int)z_div;
-                }
-                if (z_div == hexa3 + 1)
-                {
-                    z_discr[i1] = (int)z_div - 1;
                 }
             }
             int number_of_cells = hexa1 * hexa2 * hexa3;
