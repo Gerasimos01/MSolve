@@ -8,6 +8,7 @@ using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Output;
 using ISAAR.MSolve.MSAnalysis.SupportiveClasses;
+using ISAAR.MSolve.LinearAlgebra.Vectors;
 
 namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 {
@@ -1667,6 +1668,35 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
             }
             writer2.Flush();
 
+        }
+
+        public static void WriteToFileVectorsWithCounter(double[][] array, string print_path, string file_name )
+        {
+            string print_path_gen2 = print_path + file_name;
+            //string print_path_gen2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}GlobalDofs.txt";
+
+            for(int i1 =0; i1<array.Length+0; i1++)
+            {
+                string extentionCounter = (i1+1).ToString();
+                string output_path = string.Format(print_path_gen2, extentionCounter);
+                var writer = new MatlabWriter();
+                writer.WriteToFile(Vector.CreateFromArray(array[i1]), output_path, false);
+            }
+
+        }
+
+        public static void WriteToFileStringArray(string[] array, string path)
+        {
+            var writer = new StreamWriter(path);
+            for (int i = 0; i < array.GetLength(0); ++i)
+            {
+
+                writer.Write(array[i]);
+                //writer.Write(' ');
+
+                writer.WriteLine();
+            }
+            writer.Flush();
         }
 
         internal static Dictionary<ISubdomain, List<Node>> DetermineRveSubdomainsInnerNodesFromModel(Model model)
