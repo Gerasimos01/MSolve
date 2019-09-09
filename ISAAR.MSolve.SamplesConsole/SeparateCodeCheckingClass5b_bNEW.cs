@@ -46,15 +46,15 @@ namespace ISAAR.MSolve.SamplesConsole
         public static (Model, double[]) RunExample()
         {
             // EPILOGH RVE
-            //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate(1, true);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicateLARGE(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2c_alte(1, true);
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop(1, true);
+            //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbLARGE(1, true);
             //var rveBuilder = new RveGrShMultipleSeparated_c_alteDevelop5elem(1, true);
 
-            bool WRITESTIFFNESSES = false;
+            bool WRITESTIFFNESSES = true;
 
 
             var ModelAndNodes = rveBuilder.GetModelAndBoundaryNodes();
@@ -98,7 +98,8 @@ namespace ISAAR.MSolve.SamplesConsole
             var linearAnalyzer = new LinearAnalyzer(model, fetiSolver, problem);
             var staticAnalyzer = new StaticAnalyzer(model, fetiSolver, problem, linearAnalyzer);
             staticAnalyzer.Initialize();
-            string print_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}Iter{1}Stiffness.txt";
+            // @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}Iter{1}Stiffness.txt";
+            string print_path_gen = rveBuilder.subdomainOutputPath + @"\mat\Subdomain{0}Iter{1}Stiffness.txt";
             foreach (ISubdomain subdomain in model.Subdomains)
             {
                 //var subdMatrix= provider.CalculateMatrix(subdomain);
@@ -112,7 +113,8 @@ namespace ISAAR.MSolve.SamplesConsole
                 var writer = new MatlabWriter();
                 if(WRITESTIFFNESSES) writer.WriteToFile((ISparseMatrix)subdMatrix, print_path, false);
             }
-            string print_path_gen2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}GlobalDofs.txt";
+            //string print_path_gen2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}GlobalDofs.txt";
+            string print_path_gen2 = rveBuilder.subdomainOutputPath + @"\mat\Subdomain{0}GlobalDofs.txt";
             foreach (ISubdomain subdomain in model.Subdomains)
             {
                 double[] subdomainGlobalDofs = new double[subdomain.FreeDofOrdering.NumFreeDofs];
@@ -272,10 +274,10 @@ namespace ISAAR.MSolve.SamplesConsole
         //needs to be corrected rve_multiple -> b kai to path kai ta stoixeia diakritopoihshs pou einai afhmena exwterika (Genika elegxoume connectDataStructures kai defineAppropriateConstraintsForBoundaryNodes)
         public static (Model, double[]) RunExampleSerial()
         {
-            //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate(1, false);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate(1, false);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicateLARGE(1, false);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2c_alte(1, false);
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop(1, false);
+            //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop(1, false);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, false);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbLARGE(1, false); // diorthose kai to parakatw path apla gia na mhn xtupaei.
             //var rveBuilder = new RveGrShMultipleSeparated_c_alteDevelop5elem(1, false); //A.1
