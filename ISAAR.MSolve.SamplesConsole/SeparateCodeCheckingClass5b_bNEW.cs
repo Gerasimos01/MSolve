@@ -46,7 +46,7 @@ namespace ISAAR.MSolve.SamplesConsole
         public static (Model, double[]) RunExample()
         {
             // EPILOGH RVE
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate(1, true);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicateDevelop(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicateLARGE(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2c_alte(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop(1, true);
@@ -184,6 +184,11 @@ namespace ISAAR.MSolve.SamplesConsole
             if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndGlobalDofs, rveBuilder.subdomainOutputPath, @"\CornerNodesAndGlobalDofsIds.txt");
             if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdBRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\SubdBRNodesAndGlobalDofsIds.txt");
 
+            List<List<int>> extraConstraintsNoeds = rveBuilder.extraConstraintsNoeds;
+            Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesTheseis = GetExtraConstrNodesPositions(subdBRNodesAndGlobalDOfs, extraConstraintsNoeds, model);
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBRNodesTheseis.txt");
+
+
             #region coupled data arrays
             Dictionary<int, int[]> GlobalDofCoupledDataSubdIds = new Dictionary<int, int[]>(3 * (CornerNodesIdAndGlobalDofs.Count() + subdBRNodesAndGlobalDOfs.Count));
             Dictionary<int, int[]> GlobalDofCoupledDataLocalDofsInSubdIds = new Dictionary<int, int[]>(3 * (CornerNodesIdAndGlobalDofs.Count() + subdBRNodesAndGlobalDOfs.Count));
@@ -269,6 +274,32 @@ namespace ISAAR.MSolve.SamplesConsole
 
             return (model, uc);
 
+        }
+
+        private static Dictionary<int, int[]> GetExtraConstrNodesPositions(Dictionary<int, int[]> subdBRNodesAndGlobalDOfs, List<List<int>> extraConstraintsNoedsIds, Model model)
+        {
+            int[] positionsOfBRNodes = new int[subdBRNodesAndGlobalDOfs.Keys.Max()];
+
+            for (int i1 = 0; i1 < subdBRNodesAndGlobalDOfs.Keys.Count(); i1++)
+            {
+                int BRnodeID = subdBRNodesAndGlobalDOfs.ElementAt(i1).Key;
+                positionsOfBRNodes[BRnodeID - 1] = i1 + 1;
+            }
+
+            Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesTheseis = new Dictionary<int, int[]>();
+
+            for (int i1 = 0; i1 < extraConstraintsNoedsIds.Count(); i1++)
+            {
+                int[] BRnodesTheseis = new int[extraConstraintsNoedsIds.ElementAt(i1).Count()];
+                for (int i2 = 0; i2 < extraConstraintsNoedsIds.ElementAt(i1).Count(); i2++)
+                {
+                    BRnodesTheseis[i2] = positionsOfBRNodes[extraConstraintsNoedsIds.ElementAt(i1).ElementAt(i2) - 1];
+                }
+
+                ExtraConstrIdAndTheirBRNodesTheseis.Add(i1 + 1, BRnodesTheseis);
+            }
+
+            return ExtraConstrIdAndTheirBRNodesTheseis;
         }
 
         //needs to be corrected rve_multiple -> b kai to path kai ta stoixeia diakritopoihshs pou einai afhmena exwterika (Genika elegxoume connectDataStructures kai defineAppropriateConstraintsForBoundaryNodes)
