@@ -46,10 +46,12 @@ namespace ISAAR.MSolve.SamplesConsole
         public static (Model, double[]) RunExample()
         {
             // EPILOGH RVE
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicateDevelop(1, true);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicateDevelop(1, true); //edw ginetai develop h feti dp gia provlhmata 3d
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicateLARGE(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2c_alte(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop(1, true);
+
+            //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelopHSTAM(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopb(1, true);
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbLARGE(1, true);
             //var rveBuilder = new RveGrShMultipleSeparated_c_alteDevelop5elem(1, true);

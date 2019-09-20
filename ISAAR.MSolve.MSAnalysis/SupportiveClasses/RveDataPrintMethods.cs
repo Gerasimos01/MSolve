@@ -23,9 +23,9 @@ using ISAAR.MSolve.Analyzers;
 using System.IO;
 using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 
-namespace ISAAR.MSolve.SamplesConsole
+namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
 {
-    public static class SeparateCodeCheckingClass8Output
+    public static class RveDataPrintMethods
     {
         public static void CheckOutputWriteFile()
         {

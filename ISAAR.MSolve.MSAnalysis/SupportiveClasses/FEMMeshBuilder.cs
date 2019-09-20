@@ -1679,6 +1679,134 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
 
         }
 
+        public static IEnumerable<Element> GetHostGroupForCohesiveElement(Element cohesive, rveMatrixParameters mp, Model model)
+        {
+
+            int hexa1 = mp.hexa1;// diakritopoihsh
+            int hexa2 = mp.hexa2;
+            int hexa3 = mp.hexa3;
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+
+            IList<Element> possibleHosts = new List<Element>(8);
+
+            double tol = 3e-10; //apo hexa8.GetNaturalCoordinates
+
+            //RVE data
+            double L_1 = mp.L01 / ((double)mp.hexa1);
+            double L_2 = mp.L02 / ((double)mp.hexa2);
+            double L_3 = mp.L03 / ((double)mp.hexa3);
+
+            var cohNodes = cohesive.NodesDictionary.Values.ToList();
+            for (int i1 = 8; i1 < 16; i1++)
+            {
+                Node embNode = cohNodes[i1];
+
+                // kata to dhmiourgia_sundesmologias_embed_t.m
+                double x_ek = embNode.X + 0.5 * mp.L01;
+                double y_ek = embNode.Y + 0.5 * mp.L02;
+                double z_ek = embNode.Z + 0.5 * mp.L03;
+
+                var nhexa_i = new int[3][];
+
+                var x_div = Math.Truncate(x_ek / L_1); // 'div gia double'                
+                var x_pres1 = x_ek - (double)x_div * L_1;
+                var x_pres2 = -x_ek + ((double)x_div + 1) * L_1;
+
+                if (x_pres1 < tol)
+                {
+                    nhexa_i[0] = new int[2] { (int)x_div + 1, (int)x_div };
+                }
+                else
+                {
+                    if (x_pres2 < tol)
+                    {
+                        nhexa_i[0] = new int[2] { (int)x_div + 1, (int)x_div + 2 };
+                    }
+                    else
+                    {
+                        nhexa_i[0] = new int[1] { (int)x_div + 1 };
+                    }
+                }
+
+                var y_div = Math.Truncate(y_ek / L_2); // 'div gia double'                
+                var y_pres1 = y_ek - (double)y_div * L_2;
+                var y_pres2 = -y_ek + ((double)y_div + 1) * L_2;
+
+                if (y_pres1 < tol)
+                {
+                    nhexa_i[1] = new int[2] { (int)y_div + 1, (int)y_div };
+                }
+                else
+                {
+                    if (y_pres2 < tol)
+                    {
+                        nhexa_i[1] = new int[2] { (int)y_div + 1, (int)y_div + 2 };
+                    }
+                    else
+                    {
+                        nhexa_i[1] = new int[1] { (int)y_div + 1 };
+                    }
+                }
+
+
+                var z_div = Math.Truncate(z_ek / L_3); // 'div gia double'                
+                var z_pres1 = z_ek - (double)z_div * L_3;
+                var z_pres2 = -z_ek + ((double)z_div + 1) * L_3;
+
+                if (z_pres1 < tol)
+                {
+                    nhexa_i[2] = new int[2] { (int)z_div + 1, (int)z_div };
+                }
+                else
+                {
+                    if (z_pres2 < tol)
+                    {
+                        nhexa_i[2] = new int[2] { (int)z_div + 1, (int)z_div + 2 };
+                    }
+                    else
+                    {
+                        nhexa_i[2] = new int[1] { (int)z_div + 1 };
+                    }
+                }
+
+                //Correction
+                //nhexa_i[0] = new int[3] { (int)x_div , (int)x_div + 1,(int)x_div + 2 }; nhexa_i[1] = new int[3] { (int)y_div  , (int)y_div + 1,(int)y_div + 2 }; nhexa_i[2] = new int[3] { (int)z_div , (int)z_div + 1,(int)z_div+ 2 };
+
+                for (int j1 = 0; j1 < nhexa_i[0].GetLength(0); j1++)
+                {
+                    for (int j2 = 0; j2 < nhexa_i[1].GetLength(0); j2++)
+                    {
+                        for (int j3 = 0; j3 < nhexa_i[2].GetLength(0); j3++)
+                        {
+                            int possibleHostId = nhexa_i[0][j1] + (nhexa_i[1][j2] - 1) * hexa1 + (nhexa_i[2][j3] - 1) * (hexa1) * hexa2;
+
+                            if (!possibleHosts.Contains(model.ElementsDictionary[possibleHostId]))
+                            {
+                                possibleHosts.Add(model.ElementsDictionary[possibleHostId]);
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            List<int> possibleHostIds = new List<int>(possibleHosts.Count());
+            for (int i1 = 0; i1 < possibleHosts.Count; i1++)
+            {
+                possibleHostIds.Add(possibleHosts.ElementAt(i1).ID);
+            }
+            possibleHostIds.Sort();
+            possibleHosts = new List<Element>(possibleHosts.Count());
+            for (int k1 = 0; k1 < possibleHostIds.Count; k1++)
+            {
+                possibleHosts.Add(model.ElementsDictionary[possibleHostIds[k1]]);
+            }
+            return possibleHosts;
+
+        }
+
         public static double[][] Build_o_x_rve_Coordinates(rveMatrixParameters mp)
         {
             double L01 = mp.L01; // diastaseis

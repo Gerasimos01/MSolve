@@ -55,6 +55,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //ISAAR.MSolve.Tests.SeparateCodeCheckingClass5b.RunExampleSerial();
             //SeparateCodeCheckingClass5b_b.StiffnessMatrixOutputWrite();
 
+            SeperateIntegrationClassCheck.RunExample();
             SeparateCodeCheckingClass8Output.CheckOutputWriteFile();
 
             (Model model3, double[] uc3) = SeparateCodeCheckingClass5b_bNEW.RunExample();

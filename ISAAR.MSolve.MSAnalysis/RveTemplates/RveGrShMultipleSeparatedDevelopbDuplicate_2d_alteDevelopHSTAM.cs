@@ -48,6 +48,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public string subdomainOutputPath { get; private set; }
         public IList<Node> EmbeddedNodes { get; private set; }
         public Dictionary<ISubdomain, List<Node>> RveMatrixSubdomainInnerNodes { get; private set; }
+        public List<List<int>> extraConstraintsNoeds { get; private set; }
 
         private bool decomposeModel;
         public Dictionary<int, HashSet<INode>> cornerNodes;
@@ -77,19 +78,36 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         }
 
         public Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
+        int subdiscr1;
+        int discr1;
+        // int discr2 dn xrhsimopoieitai
+        int discr3;
+        int subdiscr1_shell;
+        int discr1_shell;
+        int graphene_sheets_number;
         public rveMatrixParameters mp;
         public grapheneSheetParameters gp;
         public string renumbering_vector_path;
         int RVE_id;
         public int[][] CornerNodesData;
 
-        public RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelopHSTAM(int RVE_id, bool decomposeModel)
+        public RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelopHSTAM(int RVE_id, bool decomposeModel,Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp,
+            int subdiscr1, int discr1, int discr3, int subdiscr1_shell, int discr1_shell, int graphene_sheets_number)
         {
             this.RVE_id = RVE_id;
             this.decomposeModel = decomposeModel;
+            this.mpgp = mpgp;
+            this.subdiscr1 = subdiscr1;
+            this.discr1 = discr1;
+            // int discr2 dn xrhsimopoieitai
+            this.discr3 = discr3;
+            this.subdiscr1_shell = subdiscr1_shell;
+            this.discr1_shell = discr1_shell;
+            this.graphene_sheets_number = graphene_sheets_number;
+
         }
 
-        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelopHSTAM(a, decomposeModel);
+        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelopHSTAM(a, decomposeModel,mpgp,subdiscr1,discr1,discr3,subdiscr1_shell,discr1_shell,graphene_sheets_number);
 
         public Tuple<Model, Dictionary<int, Node>, double> GetModelAndBoundaryNodes()
         {
@@ -133,18 +151,18 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             #endregion
 
             #region model parameters
-            int subdiscr1 = 6;
-            int discr1 = 4;
-            // int discr2 dn xrhsimopoieitai
-            int discr3 = 23;
-            int subdiscr1_shell = 14;
-            int discr1_shell = 1;
-            mpgp = FEMMeshBuilder.GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
+            //int subdiscr1 = 6;
+            //int discr1 = 4;
+            //// int discr2 dn xrhsimopoieitai
+            //int discr3 = 23;
+            //int subdiscr1_shell = 14;
+            //int discr1_shell = 1;
+            //mpgp = FEMMeshBuilder.GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
             mp = mpgp.Item1; //mp.hexa1 = 9; mp.hexa2 = 9; mp.hexa3 = 9;
             gp = mpgp.Item2;
 
 
-            int graphene_sheets_number = 10;
+            //int graphene_sheets_number = 10;
             o_x_parameters[] model_o_x_parameteroi = new o_x_parameters[graphene_sheets_number];//TODO delete this
             double[][] ekk_xyz = new double[graphene_sheets_number][]; for(int i1 = 0; i1 < ekk_xyz.Length; i1++) { ekk_xyz[i1] = new double[3] { 0, 0, 0 }; };
             #endregion
@@ -167,9 +185,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             #endregion
 
             #region model geometry
+            bool run_debug = false;
             double[][] o_x_rve = FEMMeshBuilder.Build_o_x_rve_Coordinates(mp);
 
             double b1 = 10; double b2 = 10; double sigma_f = 0.2;
+            if(run_debug)
+            { b1 = 0; b2 = 0; }
+            
             IList<IStochasticCoefficientsProvider2D> coefficientsProviders =
                 new List<IStochasticCoefficientsProvider2D> { new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01,2*Math.PI/((double)20), 20) };
             for (int j = 0; j < graphene_sheets_number - 1; j++)
@@ -191,7 +213,6 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             sigma_f = 0.2; // apo to arxeio create_random_data_for_geom_programing_in_C tou fakelou tou parakatw rand data vec path
             string rand_data_vec_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\rand_data.txt";
             savedRandomDataClass a = new savedRandomDataClass(PrintUtilities.ReadVector(rand_data_vec_path));
-            bool run_debug = true;
             Tuple<double[], double[], double[][]> RandomDataForGeomGiaSugkekrimenoRand;
 
             if (run_debug) { RandomDataForGeomGiaSugkekrimenoRand = RandomOrientations.CreateRandomDataForGeom(graphene_sheets_number, gp, mp, sigma_f, a); }
@@ -214,6 +235,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             //TODo create renumbering and use it.
             #endregion
 
+            #region write output
+            string modelOutputPath_gen;
+            if (!run_debug) modelOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alteHSTAM";
+            else modelOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\generated\";
+            RveDataPrintMethods.WriteModelDataOutput(modelOutputPath_gen, subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, mp, gp, kanonas_renumbering_2,
+                o_xsunol_vectors);
+            #endregion
+
             //TODO delete unesessary double arrays (Dq)
             Dq = new double[9, 3 * (((mp.hexa1 + 1) * (mp.hexa2 + 1) * (mp.hexa3 + 1)) - ((mp.hexa1 - 1) * (mp.hexa2 - 1) * (mp.hexa3 - 1)))];
 
@@ -223,7 +252,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
 
             //domain separation ds1
-            int totalSubdomains = 64; //discr1*discr1* discr1
+            int totalSubdomains = discr1 * discr1 * discr1;
             if (decomposeModel) DdmCalculationsGeneral.BuildModelInterconnectionData(model);
             var decomposer = new AutomaticDomainDecomposer2(model, totalSubdomains);
             if (decomposeModel) decomposer.UpdateModel();
@@ -276,7 +305,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             var hostSubGroups = new Dictionary<int, IEnumerable<Element>>();
             for (int i1 = 0; i1 < EmbElementsIds.GetLength(0); i1++)
             {
-                hostSubGroups.Add(EmbElementsIds[i1], FEMMeshBuilder.GetHostGroupForCohesiveElement(model.ElementsDictionary[EmbElementsIds[i1]], mp, model, renumbering_vector_path));
+                if (useInput) { hostSubGroups.Add(EmbElementsIds[i1], FEMMeshBuilder.GetHostGroupForCohesiveElement(model.ElementsDictionary[EmbElementsIds[i1]], mp, model, renumbering_vector_path)); }
+                else { hostSubGroups.Add(EmbElementsIds[i1], FEMMeshBuilder.GetHostGroupForCohesiveElement(model.ElementsDictionary[EmbElementsIds[i1]], mp, model)); }
+                //hostSubGroups.Add(EmbElementsIds[i1], FEMMeshBuilder.GetHostGroupForCohesiveElement(model.ElementsDictionary[EmbElementsIds[i1]], mp, model, renumbering_vector_path));
+
                 //var embeddedGroup_i1 = new List<Element>(1) { model.ElementsDictionary[EmbElementsIds[i1]] };
                 //CohesiveGroupings[i1] = new EmbeddedCohesiveGrouping(model, hostGroup_i1, embeddedGroup_i1);
             }
@@ -288,7 +320,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             if (!decomposeModel)
             {
-                (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model);
+                if (useInput) { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model); }
+                else { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model,renumbering); }
             }
 
 
@@ -322,12 +355,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 model.ConnectDataStructures();
                 bool isTrue = DdmCalculationsGeneral.CheckSubdomainsEmbeddingHostNodes(model, RveMatrixSubdomainInnerNodes);
 
-                
+
                 //PerfmormNesessaryChecksSubdomains(model);
 
                 #region print extra data 
 
-                (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model);
+                if (useInput) { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model); }
+                else { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model, renumbering); }
 
                 #region find embedded
                 EmbeddedNodes = new List<Node>();
@@ -541,6 +575,37 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             DefineCornerNodesFromCornerNodeData(int[][] CornerNodesData, Model model)
         {
             renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path));
+            double L01 = mp.L01; double L02 = mp.L02; double L03 = mp.L03;
+            int hexa1 = mp.hexa1; int hexa2 = mp.hexa2; int hexa3 = mp.hexa3;
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+
+            CornerNodesIds = new Dictionary<int, double[]>(CornerNodesData.Length); //nodeID, coordinate data
+            CornerNodesIdAndsubdomains = new Dictionary<int, int[]>(CornerNodesData.Length);//nodeID, subdIds            
+                                                                                            //var CornerNodesSubdomains = new Dictionary<int, int[]> (CornerNodesData.Length); //nodeID, subdomains opou anhkei
+            for (int i1 = 0; i1 < CornerNodesData.Length; i1++)
+            {
+                int h1 = CornerNodesData[i1][0]; int h2 = CornerNodesData[i1][1]; int h3 = CornerNodesData[i1][2];
+                int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                double nodeCoordX = -0.5 * L01 + (h1 + 1 - 1) * (L01 / hexa1);  // h1+1 dioti h1 einai zero based
+                double nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
+                double nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
+
+                double[] coordinates = new double[3] { nodeCoordX, nodeCoordY, nodeCoordZ };
+                CornerNodesIds.Add(nodeID, coordinates);
+                CornerNodesIdAndsubdomains.Add(nodeID, model.NodesDictionary[nodeID].SubdomainsDictionary.Keys.ToArray());
+            }
+
+            cornerNodes = DefineCornerNodesPerSubdomainAndOtherwise(CornerNodesIdAndsubdomains, model);
+
+            return (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes);
+        }
+
+        private (Dictionary<int, double[]> CornerNodesIds, Dictionary<int, int[]> CornerNodesIdAndsubdomains, Dictionary<int, HashSet<INode>> cornerNodes)
+            DefineCornerNodesFromCornerNodeData(int[][] CornerNodesData, Model model, renumbering renumbering)
+        {
+            //renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path));
             double L01 = mp.L01; double L02 = mp.L02; double L03 = mp.L03;
             int hexa1 = mp.hexa1; int hexa2 = mp.hexa2; int hexa3 = mp.hexa3;
             int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
