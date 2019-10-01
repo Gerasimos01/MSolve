@@ -297,9 +297,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
 
             int[] EmbElementsIds = EmbeddedElementsIDs.ToArray();
-            IEnumerable<Element> embdeddedGroup = model.ElementsDictionary.Where(x => (Array.IndexOf(EmbElementsIds, x.Key) > -1)).Select(kv => kv.Value); // dld einai null afth th stigmh
-            //var embeddedGrouping = new EmbeddedCohesiveGrouping(model, hostGroup, embdeddedGroup);
+            IEnumerable<Element> embdeddedGroup = (EmbElementsIds).Select(x => model.ElementsDictionary[x]);
+            //IEnumerable<Element> embdeddedGroup = model.ElementsDictionary.Where(x => (Array.IndexOf(EmbElementsIds, x.Key) > -1)).Select(kv => kv.Value); // dld einai null afth th stigmh
 
+
+            //var embeddedGrouping = new EmbeddedCohesiveGrouping(model, hostGroup, embdeddedGroup);
             //var CohesiveGroupings = new EmbeddedCohesiveGrouping[EmbElementsIds.GetLength(0)];
 
             var hostSubGroups = new Dictionary<int, IEnumerable<Element>>();

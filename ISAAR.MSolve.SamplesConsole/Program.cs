@@ -55,9 +55,17 @@ namespace ISAAR.MSolve.SamplesConsole
             //ISAAR.MSolve.Tests.SeparateCodeCheckingClass5b.RunExampleSerial();
             //SeparateCodeCheckingClass5b_b.StiffnessMatrixOutputWrite();
 
-            SeperateIntegrationClassCheck.RunExample();
-            SeparateCodeCheckingClass8Output.CheckOutputWriteFile();
+            //Random geometry and integration of constitutive
+            //SeperateIntegrationClassCheck.RunExample();
 
+            //Random geometry and solution of one rhs
+            //(Model model3, double[] uc3) = SeparateCodeCheckingClass5b_bNEWhstam.RunExample();
+            //(Model model4, double[] uc4) = SeparateCodeCheckingClass5b_bNEW.RunExampleSerial();
+
+            //Check model data output
+            ///SeparateCodeCheckingClass8Output.CheckOutputWriteFile();
+
+            //dokimi olwn px develop extraConstraints(devvelopbDuplicateDevelop) klp.
             (Model model3, double[] uc3) = SeparateCodeCheckingClass5b_bNEW.RunExample();
             (Model model4, double[] uc4) = SeparateCodeCheckingClass5b_bNEW.RunExampleSerial();
 

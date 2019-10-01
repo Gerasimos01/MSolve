@@ -41,20 +41,21 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 
 
             double[][] ekk_xyz = new double[n_graphene_sheets][];
+            var rand = new Random();
             for (int j = 0; j < n_graphene_sheets; j++)
             {
                 ekk_xyz[j] = new double[3];
-                ekk_xyz[j][0] = -0.5 * L01 + 0.03 * L01 + ((L01 - 0.06 * L01) * rand());
-                ekk_xyz[j][1] = -0.5 * L02 + 0.03 * L02 + ((L02 - 0.06 * L02) * rand());
-                ekk_xyz[j][2] = -0.5 * L03 + 0.03 * L03 + ((L03 - 0.06 * L03) * rand());
+                ekk_xyz[j][0] = -0.5 * L01 + 0.03 * L01 + ((L01 - 0.06 * L01) * rand.NextDouble());
+                ekk_xyz[j][1] = -0.5 * L02 + 0.03 * L02 + ((L02 - 0.06 * L02) * rand.NextDouble());
+                ekk_xyz[j][2] = -0.5 * L03 + 0.03 * L03 + ((L03 - 0.06 * L03) * rand.NextDouble());
             }
 
             double[] rot_phi_1 = new double[n_graphene_sheets];
             double[] rot_phi_2 = new double[n_graphene_sheets];
             for (int j = 0; j < n_graphene_sheets; j++)
             {
-                rot_phi_1[j] = Math.PI * rand();
-                rot_phi_2[j] = 0.5 * Math.PI * rand();
+                rot_phi_1[j] = Math.PI * rand.NextDouble();
+                rot_phi_2[j] = 0.5 * Math.PI * rand.NextDouble();
             }
 
             // create boxes
@@ -135,11 +136,11 @@ namespace ISAAR.MSolve.SamplesConsole.SupportiveClasses
 
 
                 // "afairesh" tou epilegmenou kai topothetisi neou
-                rot_phi_1[chosen_GrSh] = Math.PI * rand();
-                rot_phi_2[chosen_GrSh] = 0.5 * Math.PI * rand();
-                ekk_xyz[chosen_GrSh][0] = -0.5 * L01 + 0.03 * L01 + ((L01 - 0.06 * L01) * rand());
-                ekk_xyz[chosen_GrSh][1] = -0.5 * L02 + 0.03 * L02 + ((L02 - 0.06 * L02) * rand());
-                ekk_xyz[chosen_GrSh][2] = -0.5 * L03 + 0.03 * L03 + ((L03 - 0.06 * L03) * rand());
+                rot_phi_1[chosen_GrSh] = Math.PI * rand.NextDouble();
+                rot_phi_2[chosen_GrSh] = 0.5 * Math.PI * rand.NextDouble();
+                ekk_xyz[chosen_GrSh][0] = -0.5 * L01 + 0.03 * L01 + ((L01 - 0.06 * L01) * rand.NextDouble());
+                ekk_xyz[chosen_GrSh][1] = -0.5 * L02 + 0.03 * L02 + ((L02 - 0.06 * L02) * rand.NextDouble());
+                ekk_xyz[chosen_GrSh][2] = -0.5 * L03 + 0.03 * L03 + ((L03 - 0.06 * L03) * rand.NextDouble());
                 createGrShBoxSurroundingPlanes(L1[chosen_GrSh], L2[chosen_GrSh], sigma_f, rot_phi_1[chosen_GrSh], rot_phi_2[chosen_GrSh], ekk_xyz[chosen_GrSh], line_points[chosen_GrSh], line_segments[chosen_GrSh], pl_points[chosen_GrSh], vec1s[chosen_GrSh], vec2s[chosen_GrSh], perp_vec3s[chosen_GrSh]);
 
 

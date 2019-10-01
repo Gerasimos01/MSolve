@@ -47,15 +47,25 @@ namespace ISAAR.MSolve.SamplesConsole
             IContinuumMaterial3DDefGrad material1 = new ElasticMaterial3DDefGrad() { PoissonRatio = 0.4, YoungModulus = 3.5 };
             double[,] consMatrix1 = material1.ConstitutiveMatrix.CopytoArray2D();
 
-            int subdiscr1 = 3;// 6;
+            int subdiscr1 = 4;// 6;
             int discr1 = 3;//4;
             // int discr2 dn xrhsimopoieitai
-            int discr3 = 9;// 23;
+            int discr3 = discr1*subdiscr1;// 23;
             int subdiscr1_shell = 6;//14;
             int discr1_shell = 1;
-            int graphene_sheets_number = 1;
+            int graphene_sheets_number = 3; //periektikothta 0.525% 
+
+            double scale_factor = 2;
+            //tvra ginontai scale input tou mpgp = getRe... methodou
+            graphene_sheets_number = (int)Math.Floor(scale_factor * scale_factor * scale_factor * graphene_sheets_number);
+            subdiscr1 = (int)Math.Floor(scale_factor * subdiscr1);
+
+
             Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp = GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
-            mpgp.Item2.E_shell = 0.0000001;
+            //mpgp.Item2.E_shell = 0.0000001;
+            mpgp.Item1.L01 = scale_factor * mpgp.Item1.L01; mpgp.Item1.L02 = scale_factor * mpgp.Item1.L02; mpgp.Item1.L03 = scale_factor * mpgp.Item1.L03;
+            
+
             var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelopHSTAM(1, true, mpgp,
             subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, graphene_sheets_number);
             IContinuumMaterial3DDefGrad microstructure2 = new MicrostructureDefGrad3D(rveBuilder, true, 1);
@@ -76,7 +86,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 L03 = 95, //40,
                 hexa1 = discr1 * subdiscr1,// diakritopoihsh
                 hexa2 = discr1 * subdiscr1,
-                hexa3 = discr3
+                hexa3 = discr1 * subdiscr1,
             };
 
             grapheneSheetParameters gp;
