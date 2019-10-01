@@ -148,7 +148,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             CornerNodesData[6] = new int[3] { 5 - 1, 9 - 1, 9 - 1 };
             CornerNodesData[7] = new int[3] { 9 - 1, 9 - 1, 9 - 1 };
 
-            extraConstraintsNoeds = GetExtraConstraintNodes(discr1, subdiscr1);
+            extraConstraintsNoeds = GetExtraConstraintNodes2(discr1, subdiscr1);
 
             Dq = new double[9, 3 * (((mp.hexa1 + 1) * (mp.hexa2 + 1) * (mp.hexa3 + 1)) - ((mp.hexa1 - 1) * (mp.hexa2 - 1) * (mp.hexa3 - 1)))];
             FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering_vector_path, boundaryNodes);
@@ -371,6 +371,108 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                             int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, k2 + 1, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
                             oneEdgeNodes.Add(nodeID);
                         }
+                        extraConstraintsNoeds.Add(oneEdgeNodes);
+                    }
+                }
+            }
+
+            return extraConstraintsNoeds;
+        }
+
+        private List<List<int>> GetExtraConstraintNodes2(int discr1, int subdiscr1)
+        {
+            List<List<int>> extraConstraintsNoeds = new List<List<int>>();
+            renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path));
+            double L01 = mp.L01; double L02 = mp.L02; double L03 = mp.L03;
+            int hexa1 = mp.hexa1; int hexa2 = mp.hexa2; int hexa3 = mp.hexa3;
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+
+            for (int i2 = 0; i2 < discr1 - 1; i2++)
+            {
+                for (int i3 = 0; i3 < discr1 - 1; i3++)
+                {
+                    int k2 = (subdiscr1) + i2 * subdiscr1;
+                    int k3 = (subdiscr1) + i3 * subdiscr1;
+
+                    for (int j1 = 0; j1 < discr1; j1++)
+                    {
+                        List<int> oneEdgeNodes = new List<int>();
+
+                        int akri1 = 2 + j1 * subdiscr1;
+                        int akri2 = 1 + (1 + j1) * subdiscr1+ ((-1));
+                        int delta = akri2 - akri1;
+                        int miso_delta = (int)Math.Truncate((double)(delta / 2));
+
+                        int i1 = akri1 + miso_delta;
+                        int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(i1, k2 + 1, k3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        oneEdgeNodes.Add(nodeID);
+                        //for (int i1 = 2 + j1 * subdiscr1; i1 < 1 + (1 + j1) * subdiscr1; i1++)
+                        //{
+                        //    int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(i1, k2 + 1, k3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        //    oneEdgeNodes.Add(nodeID);
+                        //}
+
+
+                        extraConstraintsNoeds.Add(oneEdgeNodes);
+                    }
+                }
+            }
+
+            for (int i1 = 0; i1 < discr1 - 1; i1++)
+            {
+                for (int i3 = 0; i3 < discr1 - 1; i3++)
+                {
+                    int k1 = (subdiscr1) + i1 * subdiscr1;
+                    int k3 = (subdiscr1) + i3 * subdiscr1;
+
+                    for (int j2 = 0; j2 < discr1; j2++)
+                    {
+                        List<int> oneEdgeNodes = new List<int>();
+
+                        int akri1 = 2 + j2 * subdiscr1;
+                        int akri2 = 1 + (1 + j2) * subdiscr1 + ((-1));
+                        int delta = akri2 - akri1;
+                        int miso_delta = (int)Math.Truncate((double)(delta / 2));
+
+                        int i2 = akri1 + miso_delta;
+                        int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, i2, k3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        oneEdgeNodes.Add(nodeID);
+                        //for (int i2 = 2 + j2 * subdiscr1; i2 < 1 + (1 + j2) * subdiscr1; i2++)
+                        //{
+                        //    int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, i2, k3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        //    oneEdgeNodes.Add(nodeID);
+                        //}
+                        extraConstraintsNoeds.Add(oneEdgeNodes);
+                    }
+                }
+            }
+
+            for (int i1 = 0; i1 < discr1 - 1; i1++)
+            {
+                for (int i2 = 0; i2 < discr1 - 1; i2++)
+                {
+                    int k1 = (subdiscr1) + i1 * subdiscr1;
+                    int k2 = (subdiscr1) + i2 * subdiscr1;
+
+                    for (int j3 = 0; j3 < discr1; j3++)
+                    {
+                        List<int> oneEdgeNodes = new List<int>();
+
+                        int akri1 = 2 + j3 * subdiscr1;
+                        int akri2 = 1 + (1 + j3) * subdiscr1 + ((-1));
+                        int delta = akri2 - akri1;
+                        int miso_delta = (int)Math.Truncate((double)(delta / 2));
+
+                        int i3 = akri1 + miso_delta;
+                        int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, k2 + 1, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        oneEdgeNodes.Add(nodeID);
+                        //for (int i3 = 2 + j3 * subdiscr1; i3 < 1 + (1 + j3) * subdiscr1; i3++)
+                        //{
+                        //    int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, k2 + 1, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        //    oneEdgeNodes.Add(nodeID);
+                        //}
                         extraConstraintsNoeds.Add(oneEdgeNodes);
                     }
                 }
