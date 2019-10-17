@@ -33,12 +33,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
     public class RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3D : IRVEbuilder //IdegenerateRVEbuilder
     {
         //origin: RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelopHSTAM
-        //changes: debug developd random orientations
+        //changes:  debug 3D FETI DP
 
-        //GrapheneReinforcedRVEBuilderExample35fe2boundstiffHostTestPostDataDdm
-        //Origin branch: example/ms_development_nl_elements_merge (xwris sto telos )
-        // modifications update se v2
-
+        
         public int[] hexaPrint { get; private set; }
         public int[] cohePrint { get; private set; }
         public int[] shellPrint { get; private set; }
@@ -145,8 +142,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             o_xsunol_input_path_gen = string.Format(o_xsunol_input_path_gen, rve_id_data);
             o_xsunol_input_path_gen = o_xsunol_input_path_gen + "{0}.txt";
             string subdomainOutputPath_gen = null;
-            if (path == 1) subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}";
-            if (path == 2) subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}";
+            //if (path == 1) subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}";
+            //if (path == 2) subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}";
+            subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug\RVE_database\rve_no_{0}";
             subdomainOutputPath = string.Format(subdomainOutputPath_gen, rve_id_data);
             #endregion
 
@@ -182,6 +180,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                     }
                 }
             }
+
+            
             #endregion
 
             #region model geometry
@@ -232,6 +232,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             #region create renumbering
             (int[] sunol_nodes_numbering, int[] kanonas_renumbering_2) = FEMMeshBuilder.GetTotalModelRenumbering(o_x_rve, o_xsunol_vectors, mp);
             renumbering renumbering = new renumbering(sunol_nodes_numbering);
+            extraConstraintsNoeds = GetExtraConstraintNodes2renumberingRandomData(discr1, subdiscr1, renumbering);
             //TODo create renumbering and use it.
             #endregion
 
@@ -528,6 +529,108 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 }
             }
             return have8FirstSameNodes;
+        }
+
+        private List<List<int>> GetExtraConstraintNodes2renumberingRandomData(int discr1, int subdiscr1, renumbering renumbering)
+        {
+            List<List<int>> extraConstraintsNoeds = new List<List<int>>();
+            //renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path));
+            double L01 = mp.L01; double L02 = mp.L02; double L03 = mp.L03;
+            int hexa1 = mp.hexa1; int hexa2 = mp.hexa2; int hexa3 = mp.hexa3;
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+
+            for (int i2 = 0; i2 < discr1 - 1; i2++)
+            {
+                for (int i3 = 0; i3 < discr1 - 1; i3++)
+                {
+                    int k2 = (subdiscr1) + i2 * subdiscr1;
+                    int k3 = (subdiscr1) + i3 * subdiscr1;
+
+                    for (int j1 = 0; j1 < discr1; j1++)
+                    {
+                        List<int> oneEdgeNodes = new List<int>();
+
+                        int akri1 = 1 + j1 * subdiscr1;
+                        int akri2 = 1 + (1 + j1) * subdiscr1 ;
+                        int delta = akri2 - akri1;
+                        int miso_delta = (int)Math.Truncate((double)(delta / 2));
+
+                        int i1 = akri1 + miso_delta;
+                        int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(i1, k2 + 1, k3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        oneEdgeNodes.Add(nodeID);
+                        //for (int i1 = 2 + j1 * subdiscr1; i1 < 1 + (1 + j1) * subdiscr1; i1++)
+                        //{
+                        //    int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(i1, k2 + 1, k3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        //    oneEdgeNodes.Add(nodeID);
+                        //}
+
+
+                        extraConstraintsNoeds.Add(oneEdgeNodes);
+                    }
+                }
+            }
+
+            for (int i1 = 0; i1 < discr1 - 1; i1++)
+            {
+                for (int i3 = 0; i3 < discr1 - 1; i3++)
+                {
+                    int k1 = (subdiscr1) + i1 * subdiscr1;
+                    int k3 = (subdiscr1) + i3 * subdiscr1;
+
+                    for (int j2 = 0; j2 < discr1; j2++)
+                    {
+                        List<int> oneEdgeNodes = new List<int>();
+
+                        int akri1 = 1 + j2 * subdiscr1;
+                        int akri2 = 1 + (1 + j2) * subdiscr1 ;
+                        int delta = akri2 - akri1;
+                        int miso_delta = (int)Math.Truncate((double)(delta / 2));
+
+                        int i2 = akri1 + miso_delta;
+                        int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, i2, k3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        oneEdgeNodes.Add(nodeID);
+                        //for (int i2 = 2 + j2 * subdiscr1; i2 < 1 + (1 + j2) * subdiscr1; i2++)
+                        //{
+                        //    int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, i2, k3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        //    oneEdgeNodes.Add(nodeID);
+                        //}
+                        extraConstraintsNoeds.Add(oneEdgeNodes);
+                    }
+                }
+            }
+
+            for (int i1 = 0; i1 < discr1 - 1; i1++)
+            {
+                for (int i2 = 0; i2 < discr1 - 1; i2++)
+                {
+                    int k1 = (subdiscr1) + i1 * subdiscr1;
+                    int k2 = (subdiscr1) + i2 * subdiscr1;
+
+                    for (int j3 = 0; j3 < discr1; j3++)
+                    {
+                        List<int> oneEdgeNodes = new List<int>();
+
+                        int akri1 = 1 + j3 * subdiscr1;
+                        int akri2 = 1 + (1 + j3) * subdiscr1 ;
+                        int delta = akri2 - akri1;
+                        int miso_delta = (int)Math.Truncate((double)(delta / 2));
+
+                        int i3 = akri1 + miso_delta;
+                        int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, k2 + 1, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        oneEdgeNodes.Add(nodeID);
+                        //for (int i3 = 2 + j3 * subdiscr1; i3 < 1 + (1 + j3) * subdiscr1; i3++)
+                        //{
+                        //    int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, k2 + 1, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        //    oneEdgeNodes.Add(nodeID);
+                        //}
+                        extraConstraintsNoeds.Add(oneEdgeNodes);
+                    }
+                }
+            }
+
+            return extraConstraintsNoeds;
         }
 
         // PROSOXH DEN ARKEI MONO TO PARAKATW NA GINEI UNCOMMENT WSTE NA GINEI IMPLEMENT TO IDegenerateRVEBuilder 

@@ -66,8 +66,10 @@ namespace ISAAR.MSolve.SamplesConsole
             ///SeparateCodeCheckingClass8Output.CheckOutputWriteFile();
 
             //dokimi olwn px develop extraConstraints(devvelopbDuplicateDevelop) klp.
-            (Model model3, double[] uc3) = SeparateCodeCheckingClass5b_bNEW.RunExample();
-            (Model model4, double[] uc4) = SeparateCodeCheckingClass5b_bNEW.RunExampleSerial();
+            //(Model model3, double[] uc3) = SeparateCodeCheckingClass5b_bNEW.RunExample();
+            //(Model model4, double[] uc4) = SeparateCodeCheckingClass5b_bNEW.RunExampleSerial();
+            (Model model3, double[] uc3) = SeparateCodeCheckingClass5b_bNEW_debug.RunExample();
+            (Model model4, double[] uc4) = SeparateCodeCheckingClass5b_bNEW_debug.RunExampleSerial();
 
             (Model model1, double[] uc1) = SeparateCodeCheckingClass5b_b.RunExample();
             (Model model2, double[] uc2) = SeparateCodeCheckingClass5b_b.RunExampleSerial();
