@@ -21,7 +21,4 @@
     <ProjectReference Include="..\MGroup.Stochastic.Structural\MGroup.Stochastic.Structural.csproj" />
     <ProjectReference Include="..\MGroup.Stochastic\MGroup.Stochastic.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="SupportiveClasses\" />
-  </ItemGroup>
 </Project>

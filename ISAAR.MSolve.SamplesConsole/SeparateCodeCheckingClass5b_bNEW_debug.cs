@@ -36,11 +36,12 @@ using ISAAR.MSolve.Logging;
 using ISAAR.MSolve.LinearAlgebra.Iterative.Termination;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.Matrices;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.CornerNodes;
+using ISAAR.MSolve.SamplesConsole.SupportiveClasses;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
     public class SeparateCodeCheckingClass5b_bNEW_debug
-    {        
+    {
 
         //prosthiki model.ConnectDataStructures entos rve gia na vrei to output node.Subdomains =/=0
         public static (Model, double[]) RunExample()
@@ -62,7 +63,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp = SeperateIntegrationClassCheck.GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
             //mpgp.Item2.E_shell = 0.0000001;
-            mpgp.Item1.L01 = scale_factor * 90; mpgp.Item1.L02 = scale_factor *90; mpgp.Item1.L03 = scale_factor * 90;
+            mpgp.Item1.L01 = scale_factor * 90; mpgp.Item1.L02 = scale_factor * 90; mpgp.Item1.L03 = scale_factor * 90;
             mpgp.Item1.L01 = scale_factor * mpgp.Item1.L01; mpgp.Item1.L02 = scale_factor * mpgp.Item1.L02; mpgp.Item1.L03 = scale_factor * mpgp.Item1.L03;
 
 
@@ -137,7 +138,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 string print_path = string.Format(print_path_gen, subdID, counter_data);
 
                 var writer = new MatlabWriter();
-                if(WRITESTIFFNESSES) writer.WriteToFile((ISparseMatrix)subdMatrix, print_path, false);
+                if (WRITESTIFFNESSES) writer.WriteToFile((ISparseMatrix)subdMatrix, print_path, false);
             }
             //string print_path_gen2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}GlobalDofs.txt";
             string print_path_gen2 = rveBuilder.subdomainOutputPath + @"\mat\Subdomain{0}GlobalDofs.txt";
@@ -167,7 +168,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 string subdID = subdomain.ID.ToString();
                 string print_path = string.Format(print_path_gen2, subdID);
                 var writer = new MatlabWriter();
-                if(WRITESTIFFNESSES)writer.WriteToFile(Vector.CreateFromArray(subdomainGlobalDofs), print_path, false);
+                if (WRITESTIFFNESSES) writer.WriteToFile(Vector.CreateFromArray(subdomainGlobalDofs), print_path, false);
             }
             #region print 
 
@@ -211,10 +212,60 @@ namespace ISAAR.MSolve.SamplesConsole
             if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdBRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\SubdBRNodesAndGlobalDofsIds.txt");
 
             List<List<int>> extraConstraintsNoeds = rveBuilder.extraConstraintsNoeds;
+            bool changeOrder = true;
+            if (changeOrder)
+            {
+                extraConstraintsNoeds[0] = new List<int>() { 38 };
+                extraConstraintsNoeds[1] = new List<int>() { 58 };
+                extraConstraintsNoeds[2] = new List<int>() { 62 };
+                extraConstraintsNoeds[3] = new List<int>() { 64 };
+                extraConstraintsNoeds[4] = new List<int>() { 70 };
+                extraConstraintsNoeds[5] = new List<int>() { 100 };
+            }
             Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesTheseis = GetExtraConstrNodesPositions(subdBRNodesAndGlobalDOfs, extraConstraintsNoeds, model);
+
+            #region  overwrite data model region
+
+            PrintHexaModelData(model, rveBuilder.subdomainOutputPath);
+
+            Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesIds = GetExtraConstrNodesIds(subdBRNodesAndGlobalDOfs, extraConstraintsNoeds, model);
+            int[] brNodesMsolveWise = ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.ReadIntVector(rveBuilder.subdomainOutputPath + @"\RB_Nodes_IDs_MSOLVE_wise" + ".txt");
+            Dictionary<int, int[]> subdBRNodesMsolveWiseAndGlobalDOfs = new Dictionary<int, int[]>();
+            for (int i1 = 0; i1 < brNodesMsolveWise.Length; i1++) subdBRNodesMsolveWiseAndGlobalDOfs.Add(brNodesMsolveWise[i1], new int[1]);
+            Dictionary<int, int[]> ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis = GetExtraConstrNodesPositions(subdBRNodesMsolveWiseAndGlobalDOfs, extraConstraintsNoeds, model);
+
+
+            Dictionary<int, int[]> subd_msolve_BRNodesAndGlobalDOfs = new Dictionary<int, int[]>(rveBuilder.subdFreeBRNodes.Keys.Count());
+            foreach (int boundaryNodeID in subdBRNodesMsolveWiseAndGlobalDOfs.Keys)
+            {
+                Node boundaryNode = model.NodesDictionary[boundaryNodeID];
+
+                bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(boundaryNode, StructuralDof.RotationX, out int globalDofId4);
+                if (!check)
+                {
+                    subd_msolve_BRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[3] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
+                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationY],
+                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationZ]});
+                }
+                else
+                {
+                    subd_msolve_BRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[5] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
+                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationY],
+                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationZ],
+                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.RotationX],
+                                                                           model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.RotationY]});
+                }
+            }
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subd_msolve_BRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\subd_msolve_BRNodesAndGlobalDOfs.txt");
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesIds, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBRNodesIds.txt");
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis.txt");
+
+            #endregion
+
+
+
             if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBRNodesTheseis.txt");
-
-
+            
             #region coupled data arrays
             Dictionary<int, int[]> GlobalDofCoupledDataSubdIds = new Dictionary<int, int[]>(3 * (CornerNodesIdAndGlobalDofs.Count() + subdBRNodesAndGlobalDOfs.Count));
             Dictionary<int, int[]> GlobalDofCoupledDataLocalDofsInSubdIds = new Dictionary<int, int[]>(3 * (CornerNodesIdAndGlobalDofs.Count() + subdBRNodesAndGlobalDOfs.Count));
@@ -302,6 +353,82 @@ namespace ISAAR.MSolve.SamplesConsole
 
         }
 
+        private static void PrintHexaModelData(Model model, string subdomainOutputPath)
+        {
+            Dictionary<int, List<int>> ElementIdsAndModelIds = new Dictionary<int, List<int>>();
+            foreach (var element in model.Elements)
+            {
+                List<int> ElementNodesIds = element.Nodes.Select(x => x.ID).ToList();
+                ElementIdsAndModelIds.Add(element.ID, ElementNodesIds);
+            }
+
+            int[] ElementIds = model.Elements.Select(x => x.ID).ToArray();
+            int[] subdomainIds = model.Subdomains.Select(x => x.ID).ToArray();
+            int[] NodeIds = model.Nodes.Select(x => x.ID).ToArray();
+
+            int[,] ElementNodes = new int[ElementIds.GetLength(0), 8];
+            int thesi = 0;
+            foreach (var elementID in ElementIds)
+            {
+                int thesi2 = 0;
+                foreach(Node node in model.ElementsDictionary[elementID].Nodes)
+                {
+                    ElementNodes[thesi, thesi2] = node.ID;
+                    thesi2++;
+                }
+                thesi++;
+            }
+
+            double[,] NodeCoordinates = new double[model.Nodes.Count, 3];
+            thesi = 0;
+            foreach (var nodeID in NodeIds)
+            {
+                NodeCoordinates[thesi, 0] = model.NodesDictionary[nodeID].X1;
+                NodeCoordinates[thesi, 1] = model.NodesDictionary[nodeID].X2;
+                NodeCoordinates[thesi, 2] = model.NodesDictionary[nodeID].X3;
+                thesi++;
+            }
+
+            int[,] SubdElements = new int[model.Subdomains.Count, model.Subdomains.ElementAt(0).Elements.Count];
+            thesi = 0;
+            foreach (var SubdId in subdomainIds)
+            {
+                int thesi2 = 0;
+                foreach (var element in model.SubdomainsDictionary[SubdId].Elements)
+                {
+                    var elementID = element.ID;
+                    SubdElements[thesi,thesi2]=elementID;
+                    thesi2++;
+                }
+                thesi++;
+
+            }
+
+            List<int> constrainedNodes = new List<int>();
+            foreach (var constraint in model.Constraints)
+            {
+                if (!(constrainedNodes.Contains(constraint.row.ID)))
+                { constrainedNodes.Add(constraint.row.ID); }
+            }
+            var constraintIds = constrainedNodes.ToArray();
+
+            //print model reconstruction data 
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(ElementIds,  subdomainOutputPath +@"\MsolveModel\"+ @"\ElementIds.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(subdomainIds, subdomainOutputPath + @"\MsolveModel\" + @"\subdomainIds.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(NodeIds, subdomainOutputPath + @"\MsolveModel\" + @"\NodeIds.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(constraintIds, subdomainOutputPath + @"\MsolveModel\" + @"\constraintIds.txt");
+
+
+
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileMsolveInput(ElementNodes, subdomainOutputPath + @"\MsolveModel\" + @"\ElementNodes.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileMsolveInput(NodeCoordinates, subdomainOutputPath + @"\MsolveModel\" + @"\NodeCoordinates.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileMsolveInput(SubdElements, subdomainOutputPath + @"\MsolveModel\" + @"\SubdElements.txt");
+
+        }
+
+        
+    
+
         private static Dictionary<int, int[]> GetExtraConstrNodesPositions(Dictionary<int, int[]> subdBRNodesAndGlobalDOfs, List<List<int>> extraConstraintsNoedsIds, Model model)
         {
             int[] positionsOfBRNodes = new int[subdBRNodesAndGlobalDOfs.Keys.Max()];
@@ -328,6 +455,31 @@ namespace ISAAR.MSolve.SamplesConsole
             return ExtraConstrIdAndTheirBRNodesTheseis;
         }
 
+        private static Dictionary<int, int[]> GetExtraConstrNodesIds(Dictionary<int, int[]> subdBRNodesAndGlobalDOfs, List<List<int>> extraConstraintsNoedsIds, Model model)
+        {
+            int[] positionsOfBRNodes = new int[subdBRNodesAndGlobalDOfs.Keys.Max()];
+
+            for (int i1 = 0; i1 < subdBRNodesAndGlobalDOfs.Keys.Count(); i1++)
+            {
+                int BRnodeID = subdBRNodesAndGlobalDOfs.ElementAt(i1).Key;
+                positionsOfBRNodes[BRnodeID - 1] = i1 + 1;
+            }
+
+            Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesTheseis = new Dictionary<int, int[]>();
+
+            for (int i1 = 0; i1 < extraConstraintsNoedsIds.Count(); i1++)
+            {
+                int[] BRnodesTheseis = new int[extraConstraintsNoedsIds.ElementAt(i1).Count()];
+                for (int i2 = 0; i2 < extraConstraintsNoedsIds.ElementAt(i1).Count(); i2++)
+                {
+                    BRnodesTheseis[i2] = extraConstraintsNoedsIds.ElementAt(i1).ElementAt(i2);
+                }
+
+                ExtraConstrIdAndTheirBRNodesTheseis.Add(i1 + 1, BRnodesTheseis);
+            }
+
+            return ExtraConstrIdAndTheirBRNodesTheseis;
+        }
         //needs to be corrected rve_multiple -> b kai to path kai ta stoixeia diakritopoihshs pou einai afhmena exwterika (Genika elegxoume connectDataStructures kai defineAppropriateConstraintsForBoundaryNodes)
         public static (Model, double[]) RunExampleSerial()
         {
@@ -373,7 +525,7 @@ namespace ISAAR.MSolve.SamplesConsole
             //var mpgp = rveBuilder.mpgp; 
             var mp = mpgp.Item1; 
             var gp = mpgp.Item2;
-            renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path));
+            renumbering renumbering = new renumbering(ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.ReadIntVector(renumbering_vector_path));
             double L01 = mp.L01; double L02 = mp.L02; double L03 = mp.L03;
             int hexa1 = mp.hexa1; int hexa2 = mp.hexa2; int hexa3 = mp.hexa3;
             int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
