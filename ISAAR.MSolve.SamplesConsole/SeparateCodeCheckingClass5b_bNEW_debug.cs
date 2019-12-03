@@ -112,11 +112,11 @@ namespace ISAAR.MSolve.SamplesConsole
             //var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
             //var fetiMatrices = new DenseFetiDPSubdomainMatrixManager.Factory();
             var cornerNodeSelection = new UsedDefinedCornerNodes(cornerNodes);
-            var fetiSolverBuilder = new FetiDPSolver.Builder(cornerNodeSelection, fetiMatrices);
+            var fetiSolverBuilder = new FetiDPSolverPrint.Builder(cornerNodeSelection, fetiMatrices);
             fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
             fetiSolverBuilder.ProblemIsHomogeneous = false;
             fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
-            FetiDPSolver fetiSolver = fetiSolverBuilder.BuildSolver(model);
+            FetiDPSolverPrint fetiSolver = fetiSolverBuilder.BuildSolver(model);
 
 
 

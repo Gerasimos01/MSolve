@@ -637,7 +637,7 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP
             public bool ProblemIsHomogeneous { get; set; } = true;
 
             public FetiDPSolverPrint BuildSolver(IStructuralModel model)
-                => new FetiDPSolver(model, cornerNodeSelection, matrixManagerFactory, DofOrderer, PreconditionerFactory,
+                => new FetiDPSolverPrint(model, cornerNodeSelection, matrixManagerFactory, DofOrderer, PreconditionerFactory,
                         ProblemIsHomogeneous, InterfaceProblemSolver);            
         }
     }
