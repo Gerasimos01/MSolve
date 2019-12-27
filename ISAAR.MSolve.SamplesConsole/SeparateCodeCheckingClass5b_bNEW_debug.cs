@@ -41,7 +41,7 @@ using ISAAR.MSolve.SamplesConsole.SupportiveClasses;
 namespace ISAAR.MSolve.SamplesConsole
 {
     public class SeparateCodeCheckingClass5b_bNEW_debug
-    {
+    {//check unpushed changes commit
 
         //prosthiki model.ConnectDataStructures entos rve gia na vrei to output node.Subdomains =/=0
         public static (Model, double[]) RunExample()
