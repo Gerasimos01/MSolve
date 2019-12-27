@@ -379,6 +379,11 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP
                 watch.Restart();
                 flexibility = new FetiDPFlexibilityMatrix(dofSeparator, lagrangeEnumerator, matrixManagers);
 
+#if DEBUG
+                Matrix FIrr = MultiplyWithIdentity(lagrangeEnumerator.NumLagrangeMultipliers, lagrangeEnumerator.NumLagrangeMultipliers, flexibility.MultiplyFIrr);
+
+#endif
+
                 // Static condensation of remainder dofs (Schur complement).
                 coarseProblemSolver.CreateAndInvertCoarseProblemMatrix(CornerNodesOfSubdomains, dofSeparator, matrixManagers);
                 watch.Stop();
@@ -470,8 +475,9 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP
 
 
 
-            string subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug\RVE_database\rve_no_1";
-            
+            //string subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug\RVE_database\rve_no_1";
+            string subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_1";
+
 
             for (int i1 = 0; i1 < model.Subdomains.Count(); i1++)
             {
@@ -513,7 +519,8 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP
                 }
             }
 
-            string subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug\RVE_database\rve_no_1";
+            //string subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug\RVE_database\rve_no_1";
+            string subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_1";
 
 
             for (int i1 = 0; i1 < model.Subdomains.Count(); i1++)
@@ -541,6 +548,20 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP
 
             writer2.Dispose();
 
+        }
+
+        private static Matrix MultiplyWithIdentity(int numRows, int numCols, Action<Vector, Vector> matrixVectorMultiplication)
+        {
+            var result = Matrix.CreateZero(numRows, numCols);
+            for (int j = 0; j < numCols; ++j)
+            {
+                var lhs = Vector.CreateZero(numCols);
+                lhs[j] = 1.0;
+                var rhs = Vector.CreateZero(numRows);
+                matrixVectorMultiplication(lhs, rhs);
+                result.SetSubcolumn(j, rhs);
+            }
+            return result;
         }
 
         /// <summary>

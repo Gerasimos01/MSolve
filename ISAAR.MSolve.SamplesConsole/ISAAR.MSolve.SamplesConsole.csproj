@@ -9,6 +9,9 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="DebugMethods.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\ISAAR.MSolve.Materials\ISAAR.MSolve.Materials.csproj" />
     <ProjectReference Include="..\ISAAR.MSolve.Optimization.Structural\ISAAR.MSolve.Optimization.Structural.csproj" />
     <ProjectReference Include="..\ISAAR.MSolve.Optimization\ISAAR.MSolve.Optimization.csproj" />

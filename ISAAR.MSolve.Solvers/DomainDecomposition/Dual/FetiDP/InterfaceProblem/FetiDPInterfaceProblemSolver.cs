@@ -47,6 +47,11 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem
             var pcgPreconditioner = new InterfaceProblemPreconditioner(preconditioner);
             Vector pcgRhs = CreateInterfaceProblemRhs(flexibility, coarseProblemSolver, globalFcStar, dr);
 
+            #region debug only
+            Matrix pcgMatrixExplicit = MultiplyWithIdentity(flexibility.Order, flexibility.Order, pcgMatrix.Multiply);
+            LinearAlgebra.Triangulation.CholeskyFull llFactorization = pcgMatrixExplicit.FactorCholesky(false);
+            #endregion
+
             // Solve the interface problem using PCG algorithm
             var pcgBuilder = new PcgAlgorithm.Builder();
             pcgBuilder.MaxIterationsProvider = maxIterationsProvider;
@@ -83,6 +88,23 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem
             rhs = dr - rhs;
             return rhs;
         }
+
+        #region debug only
+
+        public static Matrix MultiplyWithIdentity(int numRows, int numCols, Action<Vector, Vector> matrixVectorMultiplication)
+        {
+            var result = Matrix.CreateZero(numRows, numCols);
+            for (int j = 0; j < numCols; ++j)
+            {
+                var lhs = Vector.CreateZero(numCols);
+                lhs[j] = 1.0;
+                var rhs = Vector.CreateZero(numRows);
+                matrixVectorMultiplication(lhs, rhs);
+                result.SetSubcolumn(j, rhs);
+            }
+            return result;
+        }
+        #endregion
 
         public class Builder
         {
@@ -125,6 +147,8 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem
                 temp = flexibility.MultiplyFIrc(temp);
                 rhs.AddIntoThis(temp);
             }
+
+           
         }
 
         internal class InterfaceProblemPreconditioner : IPreconditioner

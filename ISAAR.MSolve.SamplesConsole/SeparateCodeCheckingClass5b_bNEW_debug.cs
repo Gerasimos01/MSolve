@@ -47,7 +47,7 @@ namespace ISAAR.MSolve.SamplesConsole
         public static (Model, double[]) RunExample()
         {
             // EPILOGH RVE
-            int subdiscr1 = 2;// 4;// 6;
+            int subdiscr1 = 4;// 4;// 6;
             int discr1 = 2;// 3;//4;
             // int discr2 dn xrhsimopoieitai
             int discr3 = discr1 * subdiscr1;// 23;
@@ -66,8 +66,10 @@ namespace ISAAR.MSolve.SamplesConsole
             mpgp.Item1.L01 = scale_factor * 90; mpgp.Item1.L02 = scale_factor * 90; mpgp.Item1.L03 = scale_factor * 90;
             mpgp.Item1.L01 = scale_factor * mpgp.Item1.L01; mpgp.Item1.L02 = scale_factor * mpgp.Item1.L02; mpgp.Item1.L03 = scale_factor * mpgp.Item1.L03;
 
-
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3D(1, true, mpgp,
+            bool run_new_corner = true;
+            //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3D(1, true, mpgp,
+            //subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, graphene_sheets_number);
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3Dcorner(1, true, mpgp,
             subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, graphene_sheets_number);
 
             // EPILOGH RVE
@@ -212,7 +214,7 @@ namespace ISAAR.MSolve.SamplesConsole
             if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdBRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\SubdBRNodesAndGlobalDofsIds.txt");
 
             List<List<int>> extraConstraintsNoeds = rveBuilder.extraConstraintsNoeds;
-            bool changeOrder = true;
+            bool changeOrder = false;
             if (changeOrder)
             {
                 extraConstraintsNoeds[0] = new List<int>() { 38 };
@@ -225,41 +227,43 @@ namespace ISAAR.MSolve.SamplesConsole
             Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesTheseis = GetExtraConstrNodesPositions(subdBRNodesAndGlobalDOfs, extraConstraintsNoeds, model);
 
             #region  overwrite data model region
-
-            PrintHexaModelData(model, rveBuilder.subdomainOutputPath);
-
-            Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesIds = GetExtraConstrNodesIds(subdBRNodesAndGlobalDOfs, extraConstraintsNoeds, model);
-            int[] brNodesMsolveWise = ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.ReadIntVector(rveBuilder.subdomainOutputPath + @"\RB_Nodes_IDs_MSOLVE_wise" + ".txt");
-            Dictionary<int, int[]> subdBRNodesMsolveWiseAndGlobalDOfs = new Dictionary<int, int[]>();
-            for (int i1 = 0; i1 < brNodesMsolveWise.Length; i1++) subdBRNodesMsolveWiseAndGlobalDOfs.Add(brNodesMsolveWise[i1], new int[1]);
-            Dictionary<int, int[]> ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis = GetExtraConstrNodesPositions(subdBRNodesMsolveWiseAndGlobalDOfs, extraConstraintsNoeds, model);
-
-
-            Dictionary<int, int[]> subd_msolve_BRNodesAndGlobalDOfs = new Dictionary<int, int[]>(rveBuilder.subdFreeBRNodes.Keys.Count());
-            foreach (int boundaryNodeID in subdBRNodesMsolveWiseAndGlobalDOfs.Keys)
+            bool run_overwrite_data_region = false;
+            if (run_overwrite_data_region)
             {
-                Node boundaryNode = model.NodesDictionary[boundaryNodeID];
+                PrintHexaModelData(model, rveBuilder.subdomainOutputPath);
 
-                bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(boundaryNode, StructuralDof.RotationX, out int globalDofId4);
-                if (!check)
+                Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesIds = GetExtraConstrNodesIds(subdBRNodesAndGlobalDOfs, extraConstraintsNoeds, model);
+                int[] brNodesMsolveWise = ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.ReadIntVector(rveBuilder.subdomainOutputPath + @"\RB_Nodes_IDs_MSOLVE_wise" + ".txt");
+                Dictionary<int, int[]> subdBRNodesMsolveWiseAndGlobalDOfs = new Dictionary<int, int[]>();
+                for (int i1 = 0; i1 < brNodesMsolveWise.Length; i1++) subdBRNodesMsolveWiseAndGlobalDOfs.Add(brNodesMsolveWise[i1], new int[1]);
+                Dictionary<int, int[]> ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis = GetExtraConstrNodesPositions(subdBRNodesMsolveWiseAndGlobalDOfs, extraConstraintsNoeds, model);
+
+
+                Dictionary<int, int[]> subd_msolve_BRNodesAndGlobalDOfs = new Dictionary<int, int[]>(rveBuilder.subdFreeBRNodes.Keys.Count());
+                foreach (int boundaryNodeID in subdBRNodesMsolveWiseAndGlobalDOfs.Keys)
                 {
-                    subd_msolve_BRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[3] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
+                    Node boundaryNode = model.NodesDictionary[boundaryNodeID];
+
+                    bool check = model.GlobalDofOrdering.GlobalFreeDofs.TryGetValue(boundaryNode, StructuralDof.RotationX, out int globalDofId4);
+                    if (!check)
+                    {
+                        subd_msolve_BRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[3] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationY],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationZ]});
-                }
-                else
-                {
-                    subd_msolve_BRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[5] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
+                    }
+                    else
+                    {
+                        subd_msolve_BRNodesAndGlobalDOfs.Add(boundaryNodeID, new int[5] { model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationX],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationY],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.TranslationZ],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.RotationX],
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.RotationY]});
+                    }
                 }
+                if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subd_msolve_BRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\subd_msolve_BRNodesAndGlobalDOfs.txt");
+                if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesIds, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBRNodesIds.txt");
+                if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis.txt");
             }
-            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subd_msolve_BRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\subd_msolve_BRNodesAndGlobalDOfs.txt");
-            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesIds, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBRNodesIds.txt");
-            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis.txt");
-
             #endregion
 
 
