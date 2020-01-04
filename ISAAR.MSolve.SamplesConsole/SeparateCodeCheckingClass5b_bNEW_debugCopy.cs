@@ -40,7 +40,7 @@ using ISAAR.MSolve.SamplesConsole.SupportiveClasses;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    public class SeparateCodeCheckingClass5b_bNEW_debug
+    public class SeparateCodeCheckingClass5b_bNEW_debugCopy
     {//check unpushed changes commit
 
         //prosthiki model.ConnectDataStructures entos rve gia na vrei to output node.Subdomains =/=0
@@ -85,7 +85,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             bool WRITESTIFFNESSES = true;
 
-            #region model nodes and load
+
             var ModelAndNodes = rveBuilder.GetModelAndBoundaryNodes();
             Model model = ModelAndNodes.Item1;
             //model.ConnectDataStructures();
@@ -102,11 +102,11 @@ namespace ISAAR.MSolve.SamplesConsole
             var cornerNodesAndSubds = rveBuilder.CornerNodesIdAndsubdomains;
 
             Dictionary<int, HashSet<INode>> cornerNodes = rveBuilder.cornerNodes;
-            #endregion
 
 
 
-            #region setup solver problem and initialize
+
+            // Setup solver
             var interfaceSolverBuilder = new FetiDPInterfaceProblemSolver.Builder();
             interfaceSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1);
             interfaceSolverBuilder.PcgConvergenceTolerance = 1E-10;
@@ -119,16 +119,14 @@ namespace ISAAR.MSolve.SamplesConsole
             fetiSolverBuilder.ProblemIsHomogeneous = false;
             fetiSolverBuilder.PreconditionerFactory = new DirichletPreconditioner.Factory();
             FetiDPSolverPrint fetiSolver = fetiSolverBuilder.BuildSolver(model);
-            
+
+
+
             // Run the analysis
             var problem = new ProblemStructural(model, fetiSolver);
             var linearAnalyzer = new LinearAnalyzer(model, fetiSolver, problem);
             var staticAnalyzer = new StaticAnalyzer(model, fetiSolver, problem, linearAnalyzer);
             staticAnalyzer.Initialize();
-            #endregion
-
-
-            #region print subdomain stiffness matrix and global dofs
             // @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}Iter{1}Stiffness.txt";
             string print_path_gen = rveBuilder.subdomainOutputPath + @"\mat\Subdomain{0}Iter{1}Stiffness.txt";
             foreach (ISubdomain subdomain in model.Subdomains)
@@ -174,9 +172,9 @@ namespace ISAAR.MSolve.SamplesConsole
                 var writer = new MatlabWriter();
                 if (WRITESTIFFNESSES) writer.WriteToFile(Vector.CreateFromArray(subdomainGlobalDofs), print_path, false);
             }
-            #endregion
+            #region print 
 
-            #region print: corner nodes and dofIds BR nodes and dofIds
+
             Dictionary<int, int[]> CornerNodesIdAndGlobalDofs = new Dictionary<int, int[]>(rveBuilder.CornerNodesIds.Keys.Count());//nodeID, globalDofs
             Dictionary<int, int[]> subdBRNodesAndGlobalDOfs = new Dictionary<int, int[]>(rveBuilder.subdFreeBRNodes.Keys.Count());//nodeID, globalDofs
             foreach (int corrnerNodeID in rveBuilder.CornerNodesIds.Keys)
@@ -214,9 +212,7 @@ namespace ISAAR.MSolve.SamplesConsole
             }
             if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndGlobalDofs, rveBuilder.subdomainOutputPath, @"\CornerNodesAndGlobalDofsIds.txt");
             if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdBRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\SubdBRNodesAndGlobalDofsIds.txt");
-            #endregion
 
-            #region overwrite extra constraint nodes order and print them
             List<List<int>> extraConstraintsNoeds = rveBuilder.extraConstraintsNoeds;
             bool changeOrder = false;
             if (changeOrder)
@@ -228,10 +224,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 extraConstraintsNoeds[4] = new List<int>() { 70 };
                 extraConstraintsNoeds[5] = new List<int>() { 100 };
             }
-
             Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesTheseis = GetExtraConstrNodesPositions(subdBRNodesAndGlobalDOfs, extraConstraintsNoeds, model);
-            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBRNodesTheseis.txt");
-            #endregion
 
             #region  overwrite data model region
             bool run_overwrite_data_region = false;
@@ -272,7 +265,10 @@ namespace ISAAR.MSolve.SamplesConsole
                 if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis.txt");
             }
             #endregion
-            
+
+
+
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBRNodesTheseis.txt");
             
             #region coupled data arrays
             Dictionary<int, int[]> GlobalDofCoupledDataSubdIds = new Dictionary<int, int[]>(3 * (CornerNodesIdAndGlobalDofs.Count() + subdBRNodesAndGlobalDOfs.Count));
@@ -325,7 +321,7 @@ namespace ISAAR.MSolve.SamplesConsole
             if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(GlobalDofCoupledDataSubdIds, rveBuilder.subdomainOutputPath, @"\GlobalDofCoupledDataSubdIds.txt");
             if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(GlobalDofCoupledDataLocalDofsInSubdIds, rveBuilder.subdomainOutputPath, @"\GlobalDofCoupledDataLocalDofsInSubdIds.txt");
             #endregion
-            
+            #endregion
 
             staticAnalyzer.Solve();
 
