@@ -1821,6 +1821,41 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 
             int[][] subdCohElementIdsDirect = DdmCalculationsPartb.ConvertIntListToArray(AssignedSubdomainsFirstLevelOfCohesive, totalSubdomains);
             return (subdCohElementIdsDirect, reassignedHexas, hexaOriginalSubdomains,SubdomainNeedsHexas);}
+
+
+        public static void printNodeData(Model model, List<List<int>> extraConstraintsNoeds, Dictionary<int, int[]> cornerNodesIdsAndSubdomains, string subdomainOutputPath, string extraNodespath, string cornerNodesPath)
+        {
+            string extraNodesFilePath = subdomainOutputPath + extraNodespath;
+            string cornerNodesFilePath = subdomainOutputPath + cornerNodesPath;
+
+            double[,] extranodesCoordinates = new double[extraConstraintsNoeds.Count(), 3];
+            for (int i1 = 0; i1 < extraConstraintsNoeds.Count(); i1++)
+            {
+                extranodesCoordinates[i1, 0] = model.NodesDictionary[extraConstraintsNoeds.ElementAt(i1).ElementAt(0)].X;
+                extranodesCoordinates[i1, 1] = model.NodesDictionary[extraConstraintsNoeds.ElementAt(i1).ElementAt(0)].Y;
+                extranodesCoordinates[i1, 2] = model.NodesDictionary[extraConstraintsNoeds.ElementAt(i1).ElementAt(0)].Z;
+            }
+
+            //double[,] extranodesCoordinates = new double[ExtraConstrIdAndTheirBRNodesTheseis.Count(), 3];
+            //for (int i1 = 0; i1 < ExtraConstrIdAndTheirBRNodesTheseis.Count(); i1++)
+            //{
+            //    extranodesCoordinates[i1, 0] = model.NodesDictionary[ExtraConstrIdAndTheirBRNodesTheseis.ElementAt(i1).Value[0]].X;
+            //    extranodesCoordinates[i1, 1] = model.NodesDictionary[ExtraConstrIdAndTheirBRNodesTheseis.ElementAt(i1).Value[0]].Y;
+            //    extranodesCoordinates[i1, 2] = model.NodesDictionary[ExtraConstrIdAndTheirBRNodesTheseis.ElementAt(i1).Value[0]].Z;
+            //}
+            double[,] cornerNodeCoordinates = new double[cornerNodesIdsAndSubdomains.Count(), 3];
+            for (int i1 = 0; i1 < cornerNodesIdsAndSubdomains.Count(); i1++)
+            {
+                cornerNodeCoordinates[i1, 0] = model.NodesDictionary[cornerNodesIdsAndSubdomains.ElementAt(i1).Key].X;
+                cornerNodeCoordinates[i1, 1] = model.NodesDictionary[cornerNodesIdsAndSubdomains.ElementAt(i1).Key].Y;
+                cornerNodeCoordinates[i1, 2] = model.NodesDictionary[cornerNodesIdsAndSubdomains.ElementAt(i1).Key].Z;
+            }
+
+            var writer = new Array2DWriter();
+            writer.WriteToFile(extranodesCoordinates, extraNodesFilePath, false);
+            writer.WriteToFile(cornerNodeCoordinates, cornerNodesFilePath, false);
+
+        }
     }
 
 }

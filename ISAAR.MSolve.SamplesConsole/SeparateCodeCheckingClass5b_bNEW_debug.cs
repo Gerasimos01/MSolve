@@ -228,13 +228,19 @@ namespace ISAAR.MSolve.SamplesConsole
                 extraConstraintsNoeds[4] = new List<int>() { 70 };
                 extraConstraintsNoeds[5] = new List<int>() { 100 };
             }
+            
 
             Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesTheseis = GetExtraConstrNodesPositions(subdBRNodesAndGlobalDOfs, extraConstraintsNoeds, model);
+
+            bool ommitZeros = true;
+            if (ommitZeros) { ExtraConstrIdAndTheirBRNodesTheseis = OmmitZeros(ExtraConstrIdAndTheirBRNodesTheseis); }
+            
             if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBRNodesTheseis.txt");
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.printNodeData(model, extraConstraintsNoeds, rveBuilder.CornerNodesIdAndsubdomains, rveBuilder.subdomainOutputPath, @"\ExtraNodeCoordinates.txt", @"\CornerNodeCoordinates.txt");
             #endregion
 
             #region  overwrite data model region
-            bool run_overwrite_data_region = false;
+            bool run_overwrite_data_region = true;
             if (run_overwrite_data_region)
             {
                 PrintHexaModelData(model, rveBuilder.subdomainOutputPath);
@@ -359,6 +365,21 @@ namespace ISAAR.MSolve.SamplesConsole
 
             return (model, uc);
 
+        }
+
+        private static Dictionary<int, int[]> OmmitZeros(Dictionary<int, int[]> extraConstrIdAndTheirBRNodesTheseis)
+        {
+            Dictionary<int, int[]> updaatedList = new Dictionary<int, int[]>();
+            int counter = 0;
+            foreach(KeyValuePair<int,int[]> extraNodesData in extraConstrIdAndTheirBRNodesTheseis)
+            {
+                int id = extraNodesData.Key;
+                var initialTheseis = extraNodesData.Value.ToList();
+                initialTheseis.RemoveAll(x => x == 0);
+                var updated = initialTheseis.ToArray();
+                updaatedList[id] = updated;
+            }
+            return updaatedList;
         }
 
         private static void PrintHexaModelData(Model model, string subdomainOutputPath)

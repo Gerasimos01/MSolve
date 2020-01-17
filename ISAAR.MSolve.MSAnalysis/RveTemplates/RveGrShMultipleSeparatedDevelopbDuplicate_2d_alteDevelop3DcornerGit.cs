@@ -30,7 +30,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
     /// Use of model separation methods is made.
     /// Authors Gerasimos Sotiropoulos
     /// </summary>
-    public class RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3Dcorner : IRVEbuilder //IdegenerateRVEbuilder
+    public class RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit : IRVEbuilder //IdegenerateRVEbuilder
     {
         //origin: RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3D opou ginetai debug h 3D FETI me Ser
         //changes:  epiprostheta merika corner nodes
@@ -88,7 +88,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         int RVE_id;
         public int[][] CornerNodesData;
 
-        public RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3Dcorner(int RVE_id, bool decomposeModel,Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp,
+        public RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit(int RVE_id, bool decomposeModel,Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp,
             int subdiscr1, int discr1, int discr3, int subdiscr1_shell, int discr1_shell, int graphene_sheets_number)
         {
             this.RVE_id = RVE_id;
@@ -104,7 +104,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         }
 
-        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3Dcorner(a, decomposeModel,mpgp,subdiscr1,discr1,discr3,subdiscr1_shell,discr1_shell,graphene_sheets_number);
+        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit(a, decomposeModel,mpgp,subdiscr1,discr1,discr3,subdiscr1_shell,discr1_shell,graphene_sheets_number);
 
         public Tuple<Model, Dictionary<int, Node>, double> GetModelAndBoundaryNodes()
         {
