@@ -1670,6 +1670,19 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 
         }
 
+        public static void WriteToFileVector(double[] array, string path2)
+        {
+            var writer2 = new StreamWriter(path2);
+            for (int i = 0; i < array.GetLength(0); ++i)
+            {
+                writer2.Write(array[i]);
+                writer2.Write(' ');
+                writer2.WriteLine(); // allagh seiras (dld grafei oti exei mesa h parenths=esh edw keno kai allazei seira)
+            }
+            writer2.Flush();
+
+        }
+
         public static void WriteToFileVectorsWithCounter(double[][] array, string print_path, string file_name )
         {
             string print_path_gen2 = print_path + file_name;
