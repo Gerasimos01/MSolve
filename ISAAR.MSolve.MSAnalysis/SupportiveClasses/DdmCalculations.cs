@@ -1221,9 +1221,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 
         public static void PrintSubdomainDataForPostPro(int[][] subdHexaIds, int[][] subdCohElementIds, int[][] subdShellElementIds, string generalPath)
         {
-            string hexaPath = generalPath + @"\subdomainHexas.txt";
-            string cohPath = generalPath + @"\subdomainCohesiveElements.txt";
-            string shellPath = generalPath + @"\subdomainShellElements.txt";
+            string hexaPath = generalPath + @"\subdomain_elements\subdomainHexas.txt";
+            string cohPath = generalPath + @"\subdomain_elements\subdomainCohesiveElements.txt";
+            string shellPath = generalPath + @"\subdomain_elements\subdomainShellElements.txt";
 
             #region hexa elements
             int hexaPrintLength = 0;
@@ -1341,10 +1341,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 
         public static void PrintSubdomainDataForPostPro(int[][] subdHexaIds, int[][] subdNeedsHexaIds, int[][] subdCohElementIds, int[][] subdShellElementIds, string generalPath)
         {
-            string hexaPath = generalPath + @"\subdomainHexas.txt";
-            string extraHexasPath = generalPath + @"\subdomainNeedsHexas.txt";
-            string cohPath = generalPath + @"\subdomainCohesiveElements.txt";
-            string shellPath = generalPath + @"\subdomainShellElements.txt";
+            string hexaPath = generalPath + @"\subdomain_elements\subdomainHexas.txt";
+            string extraHexasPath = generalPath + @"\subdomain_elements\subdomainNeedsHexas.txt";
+            string cohPath = generalPath + @"\subdomain_elements\subdomainCohesiveElements.txt";
+            string shellPath = generalPath + @"\subdomain_elements\subdomainShellElements.txt";
 
             #region hexa elements
             int hexaPrintLength = 0;
@@ -1539,9 +1539,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 
         public static (int[], int[], int[]) GetSubdomainDataForPostPro(int[][] subdHexaIds, int[][] subdCohElementIds, int[][] subdShellElementIds, string generalPath)
         {
-            string hexaPath = generalPath + @"\subdomainHexas.txt";
-            string cohPath = generalPath + @"\subdomainCohesiveElements.txt";
-            string shellPath = generalPath + @"\subdomainShellElements.txt";
+            string hexaPath = generalPath + @"\subdomain_elements\subdomainHexas.txt";
+            string cohPath = generalPath + @"\subdomain_elements\subdomainCohesiveElements.txt";
+            string shellPath = generalPath + @"\subdomain_elements\subdomainShellElements.txt";
 
             #region hexa elements
             int hexaPrintLength = 0;

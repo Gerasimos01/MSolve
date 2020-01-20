@@ -146,10 +146,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             //if (path == 2) subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}";
             var run_new_corner = false;
             if (run_new_corner)
-            { subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_{0}"; }
+            {subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example1\input_matlab"; }
+            //{ subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_{0}"; }
             else
-            { subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_{0}"; }
-            subdomainOutputPath = string.Format(subdomainOutputPath_gen, rve_id_data);
+            {  subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example1\input_matlab";  }
+            //{ subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_{0}"; }
+            subdomainOutputPath = subdomainOutputPath_gen;
+            //subdomainOutputPath = string.Format(subdomainOutputPath_gen, rve_id_data);
             #endregion
 
             #region model parameters
@@ -235,7 +238,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             #region write output
             string modelOutputPath_gen;
-            if (!run_debug) modelOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_1\generated_ox_sunol_vecs";
+            if (!run_debug) modelOutputPath_gen = subdomainOutputPath_gen + @"\geometry_model\generated_ox_sunol_vecs";
             else modelOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\generated\";
             RveDataPrintMethods.WriteModelDataOutput(modelOutputPath_gen, subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, mp, gp, kanonas_renumbering_2,
                 o_xsunol_vectors);
@@ -406,8 +409,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 {
                     //DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
                     DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIds, SubdomainNeedsHexasIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
-                    DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdFreeBRNodes, subdomainOutputPath, @"\subdomainBRNodesAndSubd.txt");
-                    DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndsubdomains, subdomainOutputPath, @"\CornerNodesAndSubdIds.txt");
+                    DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdFreeBRNodes, subdomainOutputPath, @"\subdomain_matrices_and_data\subdomainBRNodesAndSubd.txt");
+                    DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndsubdomains, subdomainOutputPath, @"\subdomain_matrices_and_data\CornerNodesAndSubdIds.txt");
                 }
 
                 bool get_subdomain_data = true;

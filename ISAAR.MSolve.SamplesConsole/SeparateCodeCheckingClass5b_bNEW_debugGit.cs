@@ -53,7 +53,7 @@ namespace ISAAR.MSolve.SamplesConsole
             int discr3 = discr1 * subdiscr1;// 23;
             int subdiscr1_shell = 6;//14;
             int discr1_shell = 1;
-            int graphene_sheets_number = 0; //periektikothta 0.525% 
+            int graphene_sheets_number = 2; //periektikothta 0.525% 
 
             double scale_factor = 1; //PROSOXH
             //tvra ginontai scale input tou mpgp = getRe... methodou
@@ -69,7 +69,7 @@ namespace ISAAR.MSolve.SamplesConsole
             bool run_new_corner = true;
             //var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3D(1, true, mpgp,
             //subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, graphene_sheets_number);
-            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3Dcorner(1, true, mpgp,
+            var rveBuilder = new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit(1, true, mpgp,
             subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, graphene_sheets_number);
 
             // EPILOGH RVE
@@ -130,7 +130,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             #region print subdomain stiffness matrix and global dofs
             // @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}Iter{1}Stiffness.txt";
-            string print_path_gen = rveBuilder.subdomainOutputPath + @"\mat\Subdomain{0}Iter{1}Stiffness.txt";
+            string print_path_gen = rveBuilder.subdomainOutputPath + @"\subdomain_matrices_and_data\Subdomain{0}Iter{1}Stiffness.txt";
             foreach (ISubdomain subdomain in model.Subdomains)
             {
                 //var subdMatrix= provider.CalculateMatrix(subdomain);
@@ -145,7 +145,7 @@ namespace ISAAR.MSolve.SamplesConsole
                 if (WRITESTIFFNESSES) writer.WriteToFile((ISparseMatrix)subdMatrix, print_path, false);
             }
             //string print_path_gen2 = @"C:\Users\turbo-x\Desktop\notes_elegxoi\MSOLVE_output_2\Subdomain{0}GlobalDofs.txt";
-            string print_path_gen2 = rveBuilder.subdomainOutputPath + @"\mat\Subdomain{0}GlobalDofs.txt";
+            string print_path_gen2 = rveBuilder.subdomainOutputPath + @"\subdomain_matrices_and_data\Subdomain{0}GlobalDofs.txt";
             foreach (ISubdomain subdomain in model.Subdomains)
             {
                 double[] subdomainGlobalDofs = new double[subdomain.FreeDofOrdering.NumFreeDofs];
@@ -212,8 +212,8 @@ namespace ISAAR.MSolve.SamplesConsole
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.RotationY]});
                 }
             }
-            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndGlobalDofs, rveBuilder.subdomainOutputPath, @"\CornerNodesAndGlobalDofsIds.txt");
-            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdBRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\SubdBRNodesAndGlobalDofsIds.txt");
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndGlobalDofs, rveBuilder.subdomainOutputPath, @"\subdomain_matrices_and_data\CornerNodesAndGlobalDofsIds.txt");
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdBRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\subdomain_matrices_and_data\SubdBRNodesAndGlobalDofsIds.txt");
             #endregion
 
             #region overwrite extra constraint nodes order and print them
@@ -235,18 +235,20 @@ namespace ISAAR.MSolve.SamplesConsole
             bool ommitZeros = true;
             if (ommitZeros) { ExtraConstrIdAndTheirBRNodesTheseis = OmmitZeros(ExtraConstrIdAndTheirBRNodesTheseis); }
             
-            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBRNodesTheseis.txt");
-            if (WRITESTIFFNESSES) DdmCalculationsGeneral.printNodeData(model, extraConstraintsNoeds, rveBuilder.CornerNodesIdAndsubdomains, rveBuilder.subdomainOutputPath, @"\ExtraNodeCoordinates.txt", @"\CornerNodeCoordinates.txt");
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesTheseis, rveBuilder.subdomainOutputPath, @"\subdomain_matrices_and_data\ExtraConstrIdAndTheirBRNodesTheseis.txt");
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.printNodeData(model, extraConstraintsNoeds, rveBuilder.CornerNodesIdAndsubdomains, rveBuilder.subdomainOutputPath, @"\subdomain_matrices_and_data\ExtraNodeCoordinates.txt", @"\subdomain_matrices_and_data\CornerNodeCoordinates.txt");
             #endregion
 
             #region  overwrite data model region
-            bool run_overwrite_data_region = true;
+            bool run_overwrite_data_region = false;
+            bool print_hexa_model = false;
             if (run_overwrite_data_region)
             {
-                PrintHexaModelData(model, rveBuilder.subdomainOutputPath);
+                if (print_hexa_model)
+                { PrintHexaModelData(model, rveBuilder.subdomainOutputPath); }
 
                 Dictionary<int, int[]> ExtraConstrIdAndTheirBRNodesIds = GetExtraConstrNodesIds(subdBRNodesAndGlobalDOfs, extraConstraintsNoeds, model);
-                int[] brNodesMsolveWise = ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.ReadIntVector(rveBuilder.subdomainOutputPath + @"\RB_Nodes_IDs_MSOLVE_wise" + ".txt");
+                int[] brNodesMsolveWise = ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.ReadIntVector(rveBuilder.subdomainOutputPath + @"\model_overwrite\subdomain_data_solver\RB_Nodes_IDs_MSOLVE_wise" + ".txt");
                 Dictionary<int, int[]> subdBRNodesMsolveWiseAndGlobalDOfs = new Dictionary<int, int[]>();
                 for (int i1 = 0; i1 < brNodesMsolveWise.Length; i1++) subdBRNodesMsolveWiseAndGlobalDOfs.Add(brNodesMsolveWise[i1], new int[1]);
                 Dictionary<int, int[]> ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis = GetExtraConstrNodesPositions(subdBRNodesMsolveWiseAndGlobalDOfs, extraConstraintsNoeds, model);
@@ -273,9 +275,9 @@ namespace ISAAR.MSolve.SamplesConsole
                                                                            model.GlobalDofOrdering.GlobalFreeDofs[boundaryNode, StructuralDof.RotationY]});
                     }
                 }
-                if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subd_msolve_BRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\subd_msolve_BRNodesAndGlobalDOfs.txt");
-                if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesIds, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBRNodesIds.txt");
-                if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis, rveBuilder.subdomainOutputPath, @"\ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis.txt");
+                if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subd_msolve_BRNodesAndGlobalDOfs, rveBuilder.subdomainOutputPath, @"\model_overwrite\subd_msolve_BRNodesAndGlobalDOfs.txt");
+                if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBRNodesIds, rveBuilder.subdomainOutputPath, @"\model_overwrite\ExtraConstrIdAndTheirBRNodesIds.txt");
+                if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis, rveBuilder.subdomainOutputPath, @"\model_overwrite\ExtraConstrIdAndTheirBR_msolveWise_NodesTheseis.txt");
             }
             #endregion
             
@@ -328,8 +330,8 @@ namespace ISAAR.MSolve.SamplesConsole
 
             }
 
-            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(GlobalDofCoupledDataSubdIds, rveBuilder.subdomainOutputPath, @"\GlobalDofCoupledDataSubdIds.txt");
-            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(GlobalDofCoupledDataLocalDofsInSubdIds, rveBuilder.subdomainOutputPath, @"\GlobalDofCoupledDataLocalDofsInSubdIds.txt");
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(GlobalDofCoupledDataSubdIds, rveBuilder.subdomainOutputPath, @"\subdomain_matrices_and_data\GlobalDofCoupledDataSubdIds.txt");
+            if (WRITESTIFFNESSES) DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(GlobalDofCoupledDataLocalDofsInSubdIds, rveBuilder.subdomainOutputPath, @"\subdomain_matrices_and_data\GlobalDofCoupledDataLocalDofsInSubdIds.txt");
             #endregion
             
 
@@ -442,16 +444,16 @@ namespace ISAAR.MSolve.SamplesConsole
             var constraintIds = constrainedNodes.ToArray();
 
             //print model reconstruction data 
-            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(ElementIds,  subdomainOutputPath +@"\MsolveModel\"+ @"\ElementIds.txt");
-            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(subdomainIds, subdomainOutputPath + @"\MsolveModel\" + @"\subdomainIds.txt");
-            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(NodeIds, subdomainOutputPath + @"\MsolveModel\" + @"\NodeIds.txt");
-            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(constraintIds, subdomainOutputPath + @"\MsolveModel\" + @"\constraintIds.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(ElementIds,  subdomainOutputPath + @"\model_overwrite\MsolveModel\" + @"\ElementIds.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(subdomainIds, subdomainOutputPath + @"\model_overwrite\MsolveModel\" + @"\subdomainIds.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(NodeIds, subdomainOutputPath + @"\model_overwrite\MsolveModel\" + @"\NodeIds.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileVectorMsolveInput(constraintIds, subdomainOutputPath + @"\model_overwrite\MsolveModel\" + @"\constraintIds.txt");
 
 
 
-            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileMsolveInput(ElementNodes, subdomainOutputPath + @"\MsolveModel\" + @"\ElementNodes.txt");
-            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileMsolveInput(NodeCoordinates, subdomainOutputPath + @"\MsolveModel\" + @"\NodeCoordinates.txt");
-            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileMsolveInput(SubdElements, subdomainOutputPath + @"\MsolveModel\" + @"\SubdElements.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileMsolveInput(ElementNodes, subdomainOutputPath + @"\model_overwrite\MsolveModel\" + @"\ElementNodes.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileMsolveInput(NodeCoordinates, subdomainOutputPath + @"\model_overwrite\MsolveModel\" + @"\NodeCoordinates.txt");
+            ISAAR.MSolve.SamplesConsole.SupportiveClasses.PrintUtilities.WriteToFileMsolveInput(SubdElements, subdomainOutputPath + @"\model_overwrite\MsolveModel\" + @"\SubdElements.txt");
 
         }
 
