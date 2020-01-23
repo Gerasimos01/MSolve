@@ -44,12 +44,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
         }
 
         public static void WriteModelDataOutput(string modelOutputPath_gen, int subdiscr1, int discr1, int discr3, int subdiscr1_shell, int discr1_shell,
-            rveMatrixParameters mp,  grapheneSheetParameters gp, int[] kanonas_renumnering_2, double[][] o_xsunol_vectors)
+            rveMatrixParameters mp,  grapheneSheetParameters gp, int[] kanonas_renumnering_2, double[][] o_xsunol_vectors, int[] sunol_nodes_numbering=null)
         {
             string modelDataOutputPath = modelOutputPath_gen + @"\montelo_graphene_generated.m";
 
             string[] matlabLines = new string[51] {"cycles="+1.ToString()+';',
-            "fileID = fopen('extracted_data2.txt');",
+            "%fileID = fopen('extracted_data2.txt');",
             "extr_data=textscan(fileID,'%f %f %f');",
             "fclose(fileID);",
             "a = size(extr_data{ 1,1},1);",
@@ -109,6 +109,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             string file_name = @"\o_xsunol_generated_gs_{0}.txt";
 
             DdmCalculationsGeneral.WriteToFileVectorsWithCounter(o_xsunol_vectors, modelOutputPath_gen, file_name);
+
+            if(sunol_nodes_numbering!=null)
+            {
+                string renumbering_path = modelOutputPath_gen + @"\sunol_nodes_numbering.txt";
+                DdmCalculationsGeneral.WriteToFileVector(sunol_nodes_numbering, renumbering_path);
+            }
+            
         }
 
         public static void WriteToFile(string[] array, string path)

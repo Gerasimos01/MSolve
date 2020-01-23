@@ -328,7 +328,7 @@ namespace ISAAR.MSolve.SamplesConsole
             #endregion
 
             #region  overwrite data model region
-            bool run_overwrite_data_region = false;
+            bool run_overwrite_data_region = true;
             bool print_hexa_model = false;
             if (run_overwrite_data_region)
             {

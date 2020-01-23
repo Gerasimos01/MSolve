@@ -121,26 +121,30 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             double[,] Dq;
 
             var rve_id_data = RVE_id.ToString();
-            int path = 2;
+            int path = 3;
 
             //renumbering_vector_path = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\REF_new_total_numbering.txt";
-            if (path == 1) renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
-            if (path == 2) renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
-            renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);
-
-            //string Fxk_p_komvoi_rve_path = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\Fxk_p_komvoi_rve.txt";
-            string Fxk_p_komvoi_rve_path = null;
-            if (path == 1) Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}\Fxk_p_komvoi_rve.txt";
-            if (path == 2) Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}\Fxk_p_komvoi_rve.txt";
-            Fxk_p_komvoi_rve_path = string.Format(Fxk_p_komvoi_rve_path, rve_id_data);
+            if (path == 1){renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
+            renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);}
+            if (path == 2){renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
+                renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);}
 
 
-            //string o_xsunol_input_path_gen = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\o_xsunol_gs_";
-            string o_xsunol_input_path_gen = null;
+                //string Fxk_p_komvoi_rve_path = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\Fxk_p_komvoi_rve.txt";
+                string Fxk_p_komvoi_rve_path = null;
+            if (path == 1){Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}\Fxk_p_komvoi_rve.txt";
+                Fxk_p_komvoi_rve_path = string.Format(Fxk_p_komvoi_rve_path, rve_id_data);}
+            if (path == 2){Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}\Fxk_p_komvoi_rve.txt";
+                Fxk_p_komvoi_rve_path = string.Format(Fxk_p_komvoi_rve_path, rve_id_data);}
+
+
+
+                //string o_xsunol_input_path_gen = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\o_xsunol_gs_";
+                string o_xsunol_input_path_gen = null;
             if (path == 1) o_xsunol_input_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}\o_xsunol_gs_";
             if (path == 2) o_xsunol_input_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}\o_xsunol_gs_";
-            o_xsunol_input_path_gen = string.Format(o_xsunol_input_path_gen, rve_id_data);
-            o_xsunol_input_path_gen = o_xsunol_input_path_gen + "{0}.txt";
+            if (path == 1 | path == 2){ o_xsunol_input_path_gen = string.Format(o_xsunol_input_path_gen, rve_id_data);
+                o_xsunol_input_path_gen = o_xsunol_input_path_gen + "{0}.txt";}
             string subdomainOutputPath_gen = null;
             //if (path == 1) subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}";
             //if (path == 2) subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}";
@@ -152,6 +156,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             {  subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example1\input_matlab";  }
             //{ subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_{0}"; }
             subdomainOutputPath = subdomainOutputPath_gen;
+            if (path == 3) renumbering_vector_path = subdomainOutputPath_gen + @"\geometry_model\generated_ox_sunol_vecs\sunol_nodes_numbering.txt";
+            if (path == 3) o_xsunol_input_path_gen = subdomainOutputPath_gen + @"\geometry_model\generated_ox_sunol_vecs\o_xsunol_generated_gs_{0}.txt";
             //subdomainOutputPath = string.Format(subdomainOutputPath_gen, rve_id_data);
             #endregion
 
@@ -172,7 +178,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             double[][] ekk_xyz = new double[graphene_sheets_number][]; for(int i1 = 0; i1 < ekk_xyz.Length; i1++) { ekk_xyz[i1] = new double[3] { 0, 0, 0 }; };
             #endregion
 
-            #region corner nodes
+            #region corner nodes data choose
             int[][] CornerNodesData;
             if (run_new_corner)
             { CornerNodesData = GetCornerNodesDataMoreCornerNodes(discr1, subdiscr1); }
@@ -231,7 +237,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             #region create renumbering
             (int[] sunol_nodes_numbering, int[] kanonas_renumbering_2) = FEMMeshBuilder.GetTotalModelRenumbering(o_x_rve, o_xsunol_vectors, mp);
-            renumbering renumbering = new renumbering(sunol_nodes_numbering);
+            renumbering renumbering;
+            bool useInput = true; 
+            if (useInput){ renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path)); }
+            else{ renumbering = new renumbering(sunol_nodes_numbering);}
             extraConstraintsNoeds = GetExtraConstraintNodes2renumberingRandomDataOriginal(discr1, subdiscr1, renumbering);
             //TODo create renumbering and use it.
             #endregion
@@ -241,13 +250,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             if (!run_debug) modelOutputPath_gen = subdomainOutputPath_gen + @"\geometry_model\generated_ox_sunol_vecs";
             else modelOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\generated\";
             RveDataPrintMethods.WriteModelDataOutput(modelOutputPath_gen, subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, mp, gp, kanonas_renumbering_2,
-                o_xsunol_vectors);
+                o_xsunol_vectors,sunol_nodes_numbering);
             #endregion
 
             //TODO delete unesessary double arrays (Dq)
             Dq = new double[9, 3 * (((mp.hexa1 + 1) * (mp.hexa2 + 1) * (mp.hexa3 + 1)) - ((mp.hexa1 - 1) * (mp.hexa2 - 1) * (mp.hexa3 - 1)))];
 
-            bool useInput = false;
+            
             if (useInput) { FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering_vector_path, boundaryNodes); }
             else { FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering, boundaryNodes); }
 
