@@ -88,7 +88,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         int RVE_id;
         public int[][] CornerNodesData;
 
-        public RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit(int RVE_id, bool decomposeModel,Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp,
+        public RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit(int RVE_id, bool decomposeModel, Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp,
             int subdiscr1, int discr1, int discr3, int subdiscr1_shell, int discr1_shell, int graphene_sheets_number)
         {
             this.RVE_id = RVE_id;
@@ -104,7 +104,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         }
 
-        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit(a, decomposeModel,mpgp,subdiscr1,discr1,discr3,subdiscr1_shell,discr1_shell,graphene_sheets_number);
+        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit(a, decomposeModel, mpgp, subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, graphene_sheets_number);
 
         public Tuple<Model, Dictionary<int, Node>, double> GetModelAndBoundaryNodes()
         {
@@ -124,36 +124,51 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             int path = 3;
 
             //renumbering_vector_path = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\REF_new_total_numbering.txt";
-            if (path == 1){renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
-            renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);}
-            if (path == 2){renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
-                renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);}
+            if (path == 1)
+            {
+                renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
+                renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);
+            }
+            if (path == 2)
+            {
+                renumbering_vector_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}\REF_new_total_numbering.txt";
+                renumbering_vector_path = string.Format(renumbering_vector_path, rve_id_data);
+            }
 
 
-                //string Fxk_p_komvoi_rve_path = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\Fxk_p_komvoi_rve.txt";
-                string Fxk_p_komvoi_rve_path = null;
-            if (path == 1){Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}\Fxk_p_komvoi_rve.txt";
-                Fxk_p_komvoi_rve_path = string.Format(Fxk_p_komvoi_rve_path, rve_id_data);}
-            if (path == 2){Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}\Fxk_p_komvoi_rve.txt";
-                Fxk_p_komvoi_rve_path = string.Format(Fxk_p_komvoi_rve_path, rve_id_data);}
+            //string Fxk_p_komvoi_rve_path = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\Fxk_p_komvoi_rve.txt";
+            string Fxk_p_komvoi_rve_path = null;
+            if (path == 1)
+            {
+                Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}\Fxk_p_komvoi_rve.txt";
+                Fxk_p_komvoi_rve_path = string.Format(Fxk_p_komvoi_rve_path, rve_id_data);
+            }
+            if (path == 2)
+            {
+                Fxk_p_komvoi_rve_path = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}\Fxk_p_komvoi_rve.txt";
+                Fxk_p_komvoi_rve_path = string.Format(Fxk_p_komvoi_rve_path, rve_id_data);
+            }
 
 
 
-                //string o_xsunol_input_path_gen = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\o_xsunol_gs_";
-                string o_xsunol_input_path_gen = null;
+            //string o_xsunol_input_path_gen = "..\\..\\..\\RveTemplates\\Input\\RveGrShMultiple\\rve_no_{0}\\o_xsunol_gs_";
+            string o_xsunol_input_path_gen = null;
             if (path == 1) o_xsunol_input_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}\o_xsunol_gs_";
             if (path == 2) o_xsunol_input_path_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}\o_xsunol_gs_";
-            if (path == 1 | path == 2){ o_xsunol_input_path_gen = string.Format(o_xsunol_input_path_gen, rve_id_data);
-                o_xsunol_input_path_gen = o_xsunol_input_path_gen + "{0}.txt";}
+            if (path == 1 | path == 2)
+            {
+                o_xsunol_input_path_gen = string.Format(o_xsunol_input_path_gen, rve_id_data);
+                o_xsunol_input_path_gen = o_xsunol_input_path_gen + "{0}.txt";
+            }
             string subdomainOutputPath_gen = null;
             //if (path == 1) subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2c\RVE_database\rve_no_{0}";
             //if (path == 2) subdomainOutputPath_gen = @"C:\Users\turbo-x\Desktop\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\2d_alte\RVE_database\rve_no_{0}";
             var run_new_corner = false;
             if (run_new_corner)
-            {subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example1\input_matlab"; }
+            { subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example1\input_matlab"; }
             //{ subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_{0}"; }
             else
-            {  subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example1\input_matlab";  }
+            { subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example1\input_matlab"; }
             //{ subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_{0}"; }
             subdomainOutputPath = subdomainOutputPath_gen;
             if (path == 3) renumbering_vector_path = subdomainOutputPath_gen + @"\geometry_model\generated_ox_sunol_vecs\sunol_nodes_numbering.txt";
@@ -175,7 +190,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             //int graphene_sheets_number = 10;
             o_x_parameters[] model_o_x_parameteroi = new o_x_parameters[graphene_sheets_number];//TODO delete this
-            double[][] ekk_xyz = new double[graphene_sheets_number][]; for(int i1 = 0; i1 < ekk_xyz.Length; i1++) { ekk_xyz[i1] = new double[3] { 0, 0, 0 }; };
+            double[][] ekk_xyz = new double[graphene_sheets_number][]; for (int i1 = 0; i1 < ekk_xyz.Length; i1++) { ekk_xyz[i1] = new double[3] { 0, 0, 0 }; };
             #endregion
 
             #region corner nodes data choose
@@ -184,79 +199,46 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             { CornerNodesData = GetCornerNodesDataMoreCornerNodes(discr1, subdiscr1); }
             else
             { CornerNodesData = GetCornerNodesData(discr1, subdiscr1); }
-
-            
-
-            
             #endregion
 
             #region model geometry
+            bool useInput = true;
             bool run_debug = false;
-            double[][] o_x_rve = FEMMeshBuilder.Build_o_x_rve_Coordinates(mp);
-
             double b1 = 10; double b2 = 10; double sigma_f = 0.2;
-            if(run_debug)
+            if (run_debug)
             { b1 = 0; b2 = 0; }
-            
-            IList<IStochasticCoefficientsProvider2D> coefficientsProviders =
-                new List<IStochasticCoefficientsProvider2D> { new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01,2*Math.PI/((double)20), 20) };
-            for (int j = 0; j < graphene_sheets_number - 1; j++)
-            { coefficientsProviders.Add(new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01, 2 * Math.PI / ((double)20), 20)); }
+
+            double[][] o_xsunol_vectors = null;
+            int[] sunol_nodes_numbering = null;
+            int[] kanonas_renumbering_2 = null;
 
 
-            double[][] o_xsunol_vectors = new double[graphene_sheets_number][];//mporei na xrhsimpopoiithei kai to ox_sunol_BUilder tou RveExamples builder tou pio prosfatou input commit
-                                                                               //dld xwris to random 
-            for (int j = 0; j < graphene_sheets_number; j++)
+            if (!useInput)
             {
-                UpdateStochasticCoefficientsProvider(coefficientsProviders[j]); //origin: RandomGrapheneModelBuilder.FewElementsRVECheckExample2GrapheneSheets (Input 3 Ger Ody)
-                int new_rows = 2 * gp.elem1 + 1;
-                int new_lines = 2 * gp.elem2 + 1; //TODO taktopoihsh afta edw ta variables
-                o_xsunol_vectors[j] = FEMMeshBuilder.ox_sunol_Builder_ekk_with_o_x_parameters(new_rows, new_lines, gp.L1, gp.L2, gp.elem1, gp.elem2, gp.a1_shell, ekk_xyz[j],
-                model_o_x_parameteroi[j], coefficientsProviders[j]);// origin: RandomGrapheneModelBuilder.AddGrapheneSheet_with_o_x_parameters(......, IStochasticCoefficientsProvider2D coefficientsProvider)
+                //create geometry
+                (o_xsunol_vectors, sunol_nodes_numbering, kanonas_renumbering_2) = CreateRandomGrSh_o_xsunol_and_renumbering(b1, b2, sigma_f,
+                mp, ekk_xyz, model_o_x_parameteroi, run_debug);
+                //print geometry
+                string modelOutputPath_gen;
+                if (!run_debug) modelOutputPath_gen = subdomainOutputPath_gen + @"\geometry_model\generated_ox_sunol_vecs";
+                else modelOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\generated\";
+                RveDataPrintMethods.WriteModelDataOutput(modelOutputPath_gen, subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, mp, gp, kanonas_renumbering_2,
+                    o_xsunol_vectors, sunol_nodes_numbering);
             }
 
-            //create random data for geom (origin:RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInputFromMSOLVE() %637 apo input 4)
-            sigma_f = 0.2; // apo to arxeio create_random_data_for_geom_programing_in_C tou fakelou tou parakatw rand data vec path
-            string rand_data_vec_path = @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\rand_data.txt";
-            savedRandomDataClass a = new savedRandomDataClass(PrintUtilities.ReadVector(rand_data_vec_path));
-            Tuple<double[], double[], double[][]> RandomDataForGeomGiaSugkekrimenoRand;
 
-            if (run_debug) { RandomDataForGeomGiaSugkekrimenoRand = RandomOrientations.CreateRandomDataForGeom(graphene_sheets_number, gp, mp, sigma_f, a); }
-            else { RandomDataForGeomGiaSugkekrimenoRand = RandomOrientations.CreateRandomDataForGeom(graphene_sheets_number, gp, mp, sigma_f); }
-            //return new Tuple<double[], double[], double[][]>(rot_phi_1, rot_phi_2, ekk_xyz);
-            double[] rot_phi_1 = RandomDataForGeomGiaSugkekrimenoRand.Item1;
-            double[] rot_phi_2 = RandomDataForGeomGiaSugkekrimenoRand.Item2;
-            ekk_xyz = RandomDataForGeomGiaSugkekrimenoRand.Item3;
-
-            //update o_xsunol_vectors  for rotation and translation
-            for (int j = 0; j < graphene_sheets_number; j++)
-            {
-                o_xsunol_vectors[j] = RandomOrientations.modify_ox_sunol_forRotationAndTranslation(o_xsunol_vectors[j], rot_phi_1[j], rot_phi_2[j], ekk_xyz[j]);
-            }
-            #endregion
-
-            #region create renumbering
-            (int[] sunol_nodes_numbering, int[] kanonas_renumbering_2) = FEMMeshBuilder.GetTotalModelRenumbering(o_x_rve, o_xsunol_vectors, mp);
+            #region assignrenumbering
             renumbering renumbering;
-            bool useInput = true; 
-            if (useInput){ renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path)); }
-            else{ renumbering = new renumbering(sunol_nodes_numbering);}
-            extraConstraintsNoeds = GetExtraConstraintNodes2renumberingRandomDataOriginal(discr1, subdiscr1, renumbering);
-            //TODo create renumbering and use it.
+            if (useInput) { renumbering = new renumbering(PrintUtilities.ReadIntVector(renumbering_vector_path)); }
+            else { renumbering = new renumbering(sunol_nodes_numbering); }
             #endregion
 
-            #region write output
-            string modelOutputPath_gen;
-            if (!run_debug) modelOutputPath_gen = subdomainOutputPath_gen + @"\geometry_model\generated_ox_sunol_vecs";
-            else modelOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\generated\";
-            RveDataPrintMethods.WriteModelDataOutput(modelOutputPath_gen, subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, mp, gp, kanonas_renumbering_2,
-                o_xsunol_vectors,sunol_nodes_numbering);
-            #endregion
+            extraConstraintsNoeds = GetExtraConstraintNodes2renumberingRandomDataOriginal(discr1, subdiscr1, renumbering);
 
             //TODO delete unesessary double arrays (Dq)
             Dq = new double[9, 3 * (((mp.hexa1 + 1) * (mp.hexa2 + 1) * (mp.hexa3 + 1)) - ((mp.hexa1 - 1) * (mp.hexa2 - 1) * (mp.hexa3 - 1)))];
 
-            
+
             if (useInput) { FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering_vector_path, boundaryNodes); }
             else { FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering, boundaryNodes); }
 
@@ -328,12 +310,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             var CohesiveGroupping = new EmbeddedCohesiveSubGrouping(model, hostSubGroups, embdeddedGroup);
 
             #region corner node data generation
-                                         
+
 
             if (!decomposeModel)
             {
                 if (useInput) { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model); }
-                else { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model,renumbering); }
+                else { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model, renumbering); }
             }
 
 
@@ -352,7 +334,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 (Dictionary<int, List<int>> hexaAndTheirSharingSubdomains, Dictionary<int, int> DuplicateHexaOriginalSubdomain) =
                    DdmCalculationsAlterna2.GetHexaSharingSubdomains(SubdomainNeedsHexas, subdHexaIds, false);
                 int[][] SubdomainNeedsHexasIds = DdmCalculationsPartb.ConvertIntListToArray(SubdomainNeedsHexas, totalSubdomains);
-                
+
                 (int[][] subdAdditionalHexaIds, Dictionary<int, int> NewHexaIdsAndTheirOriginals) = DdmCalculationsAlterna2.ModelAddDuplicateHexas(model, mp, hexaAndTheirSharingSubdomains, totalSubdomains);
 
                 //int[][] subdHexaIdsNew = DdmCalculationsGeneral.ReassignHexas(subdHexaIds, reassignedHexas, hexaOriginalSubdomains);
@@ -663,10 +645,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         }
 
-        public bool CheckElementSameNodes(Element element1, Element element2 )
+        public bool CheckElementSameNodes(Element element1, Element element2)
         {
             bool have8FirstSameNodes = true;
-            for(int i1=0; i1<8;i1++)
+            for (int i1 = 0; i1 < 8; i1++)
             {
                 if (!(element1.Nodes.ElementAt(i1).ID == element2.Nodes.ElementAt(i1).ID))
                 {
@@ -696,7 +678,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                     for (int j1 = 0; j1 < discr1; j1++)
                     {
                         List<int> oneEdgeNodes = new List<int>();
-                        
+
                         for (int i1 = 2 + j1 * subdiscr1; i1 < 1 + (1 + j1) * subdiscr1; i1++)
                         {
                             int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(i1, k2 + 1, k3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
@@ -719,7 +701,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                     for (int j2 = 0; j2 < discr1; j2++)
                     {
                         List<int> oneEdgeNodes = new List<int>();
-                        
+
                         for (int i2 = 2 + j2 * subdiscr1; i2 < 1 + (1 + j2) * subdiscr1; i2++)
                         {
                             int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, i2, k3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
@@ -740,7 +722,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                     for (int j3 = 0; j3 < discr1; j3++)
                     {
                         List<int> oneEdgeNodes = new List<int>();
-                        
+
                         for (int i3 = 2 + j3 * subdiscr1; i3 < 1 + (1 + j3) * subdiscr1; i3++)
                         {
                             int nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(k1 + 1, k2 + 1, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
@@ -776,7 +758,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                         List<int> oneEdgeNodes = new List<int>();
 
                         int akri1 = 1 + j1 * subdiscr1;
-                        int akri2 = 1 + (1 + j1) * subdiscr1 ;
+                        int akri2 = 1 + (1 + j1) * subdiscr1;
                         int delta = akri2 - akri1;
                         int miso_delta = (int)Math.Truncate((double)(delta / 2));
 
@@ -789,7 +771,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                         //    oneEdgeNodes.Add(nodeID);
                         //}
 
-                        
+
                         extraConstraintsNoeds.Add(oneEdgeNodes);
                     }
                 }
@@ -807,7 +789,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                         List<int> oneEdgeNodes = new List<int>();
 
                         int akri1 = 1 + j2 * subdiscr1;
-                        int akri2 = 1 + (1 + j2) * subdiscr1 ;
+                        int akri2 = 1 + (1 + j2) * subdiscr1;
                         int delta = akri2 - akri1;
                         int miso_delta = (int)Math.Truncate((double)(delta / 2));
 
@@ -836,7 +818,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                         List<int> oneEdgeNodes = new List<int>();
 
                         int akri1 = 1 + j3 * subdiscr1;
-                        int akri2 = 1 + (1 + j3) * subdiscr1 ;
+                        int akri2 = 1 + (1 + j3) * subdiscr1;
                         int delta = akri2 - akri1;
                         int miso_delta = (int)Math.Truncate((double)(delta / 2));
 
@@ -909,7 +891,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             {
                 int k1 = (subdiscr1) + i1 * subdiscr1;
 
-                for (int j3 = 0; j3 < discr1 ; j3++)
+                for (int j3 = 0; j3 < discr1; j3++)
                 {
                     //int k3 = (subdiscr1) + i3 * subdiscr1;
                     int akri1_ = 1 + j3 * subdiscr1;
@@ -954,7 +936,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
                 for (int i2 = 0; i2 < discr1 - 1; i2++)
                 {
-                    
+
                     int k2 = (subdiscr1) + i2 * subdiscr1;
 
                     for (int j3 = 0; j3 < discr1; j3++)
@@ -1090,6 +1072,53 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         public void UpdateStochasticCoefficientsProvider(IStochasticCoefficientsProvider2D coefficientsProvider)
         {
             coefficientsProvider.RandomVariables = null;
+        }
+
+        public (double[][] o_xsunol_vectors, int[] sunol_nodes_numbering, int[] kanonas_renumbering_2) CreateRandomGrSh_o_xsunol_and_renumbering(double b1, double b2, double sigma_f,
+            rveMatrixParameters mp, double[][] ekk_xyz, o_x_parameters[] model_o_x_parameteroi, bool run_debug)
+        {
+            double[][] o_x_rve = FEMMeshBuilder.Build_o_x_rve_Coordinates(mp);
+            IList<IStochasticCoefficientsProvider2D> coefficientsProviders =
+                new List<IStochasticCoefficientsProvider2D> { new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01, 2 * Math.PI / ((double)20), 20) };
+            for (int j = 0; j < graphene_sheets_number - 1; j++)
+            { coefficientsProviders.Add(new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01, 2 * Math.PI / ((double)20), 20)); }
+
+            double[][] o_xsunol_vectors = new double[graphene_sheets_number][];//mporei na xrhsimpopoiithei kai to ox_sunol_BUilder tou RveExamples builder tou pio prosfatou input commit
+                                                                               //dld xwris to random 
+            for (int j = 0; j < graphene_sheets_number; j++)
+            {
+                UpdateStochasticCoefficientsProvider(coefficientsProviders[j]); //origin: RandomGrapheneModelBuilder.FewElementsRVECheckExample2GrapheneSheets (Input 3 Ger Ody)
+                int new_rows = 2 * gp.elem1 + 1;
+                int new_lines = 2 * gp.elem2 + 1; //TODO taktopoihsh afta edw ta variables
+                o_xsunol_vectors[j] = FEMMeshBuilder.ox_sunol_Builder_ekk_with_o_x_parameters(new_rows, new_lines, gp.L1, gp.L2, gp.elem1, gp.elem2, gp.a1_shell, ekk_xyz[j],
+                model_o_x_parameteroi[j], coefficientsProviders[j]);// origin: RandomGrapheneModelBuilder.AddGrapheneSheet_with_o_x_parameters(......, IStochasticCoefficientsProvider2D coefficientsProvider)
+            }
+
+            //create random data for geom (origin:RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInputFromMSOLVE() %637 apo input 4)
+            sigma_f = 0.2; // apo to arxeio create_random_data_for_geom_programing_in_C tou fakelou tou parakatw rand data vec path
+            string rand_data_vec_path = @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\rand_data.txt";
+            savedRandomDataClass a = new savedRandomDataClass(PrintUtilities.ReadVector(rand_data_vec_path));
+            Tuple<double[], double[], double[][]> RandomDataForGeomGiaSugkekrimenoRand;
+
+            if (run_debug) { RandomDataForGeomGiaSugkekrimenoRand = RandomOrientations.CreateRandomDataForGeom(graphene_sheets_number, gp, mp, sigma_f, a); }
+            else { RandomDataForGeomGiaSugkekrimenoRand = RandomOrientations.CreateRandomDataForGeom(graphene_sheets_number, gp, mp, sigma_f); }
+            //return new Tuple<double[], double[], double[][]>(rot_phi_1, rot_phi_2, ekk_xyz);
+            double[] rot_phi_1 = RandomDataForGeomGiaSugkekrimenoRand.Item1;
+            double[] rot_phi_2 = RandomDataForGeomGiaSugkekrimenoRand.Item2;
+            ekk_xyz = RandomDataForGeomGiaSugkekrimenoRand.Item3;
+
+            //update o_xsunol_vectors  for rotation and translation
+            for (int j = 0; j < graphene_sheets_number; j++)
+            {
+                o_xsunol_vectors[j] = RandomOrientations.modify_ox_sunol_forRotationAndTranslation(o_xsunol_vectors[j], rot_phi_1[j], rot_phi_2[j], ekk_xyz[j]);
+            }
+            #endregion
+
+            #region create renumbering
+            (int[] sunol_nodes_numbering, int[] kanonas_renumbering_2) = FEMMeshBuilder.GetTotalModelRenumbering(o_x_rve, o_xsunol_vectors, mp);
+            #endregion
+
+            return (o_xsunol_vectors, sunol_nodes_numbering, kanonas_renumbering_2);
         }
 
     }

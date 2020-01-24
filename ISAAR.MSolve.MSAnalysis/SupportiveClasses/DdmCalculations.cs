@@ -9,6 +9,8 @@ using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Output;
 using ISAAR.MSolve.MSAnalysis.SupportiveClasses;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
+using ISAAR.MSolve.LinearAlgebra.Output.Formatting;
+using ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses;
 
 namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
 {
@@ -1692,8 +1694,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
             {
                 string extentionCounter = (i1+1).ToString();
                 string output_path = string.Format(print_path_gen2, extentionCounter);
-                var writer = new MatlabWriter();
-                writer.WriteToFile(Vector.CreateFromArray(array[i1]), output_path, false);
+                var writer = new Array1DWriter(); // MatlabWriter();
+                //writer.WriteToFile(Vector.CreateFromArray(array[i1]), output_path, false);
+                writer.NumericFormat = new GeneralNumericFormat();
+                writer.ArrayFormat = Array1DFormat.PlainVertical;
+                writer.WriteToFile(array[i1], output_path, false);
+
             }
 
         }
@@ -1864,9 +1870,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysisMerge.SupportiveClasses
                 cornerNodeCoordinates[i1, 2] = model.NodesDictionary[cornerNodesIdsAndSubdomains.ElementAt(i1).Key].Z;
             }
 
-            var writer = new Array2DWriter();
-            writer.WriteToFile(extranodesCoordinates, extraNodesFilePath, false);
-            writer.WriteToFile(cornerNodeCoordinates, cornerNodesFilePath, false);
+            //var writer = new Array2DWriter();
+            //writer.WriteToFile(extranodesCoordinates, extraNodesFilePath, false);
+            //writer.WriteToFile(cornerNodeCoordinates, cornerNodesFilePath, false);
+
+            PrintUtilities.WriteToFile(extranodesCoordinates, extraNodesFilePath);
+            PrintUtilities.WriteToFile(cornerNodeCoordinates, cornerNodesFilePath);
 
         }
     }
