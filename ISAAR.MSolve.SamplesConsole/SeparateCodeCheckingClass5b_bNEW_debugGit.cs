@@ -53,7 +53,7 @@ namespace ISAAR.MSolve.SamplesConsole
             int discr3 = discr1 * subdiscr1;// 23;
             int subdiscr1_shell = 6;//14;
             int discr1_shell = 1;
-            int graphene_sheets_number = 2; //periektikothta 0.525% 
+            int graphene_sheets_number =2; //periektikothta 0.525% 
 
             double scale_factor = 1; //PROSOXH
             //tvra ginontai scale input tou mpgp = getRe... methodou

@@ -47,10 +47,10 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem
             var pcgPreconditioner = new InterfaceProblemPreconditioner(preconditioner);
             Vector pcgRhs = CreateInterfaceProblemRhs(flexibility, coarseProblemSolver, globalFcStar, dr);
 
-            #region debug only
-            Matrix pcgMatrixExplicit = MultiplyWithIdentity(flexibility.Order, flexibility.Order, pcgMatrix.Multiply);
-            LinearAlgebra.Triangulation.CholeskyFull llFactorization = pcgMatrixExplicit.FactorCholesky(false);
-            #endregion
+            //#region debug only
+            //Matrix pcgMatrixExplicit = MultiplyWithIdentity(flexibility.Order, flexibility.Order, pcgMatrix.Multiply);
+            //LinearAlgebra.Triangulation.CholeskyFull llFactorization = pcgMatrixExplicit.FactorCholesky(false);
+            //#endregion
 
             // Solve the interface problem using PCG algorithm
             var pcgBuilder = new PcgAlgorithm.Builder();
@@ -61,6 +61,9 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem
             var lagranges = Vector.CreateZero(systemOrder);
             IterativeStatistics stats = pcg.Solve(pcgMatrix, pcgPreconditioner, pcgRhs, lagranges, true,
                 () => Vector.CreateZero(systemOrder));
+
+            Debug.WriteLine(
+                        $"{this.GetType().Name}: The number of pcg iiterations for the interface problem is {stats.NumIterationsRequired}");
 
             // Log statistics about PCG execution
             if (!stats.HasConverged)
