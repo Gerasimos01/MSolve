@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using Xunit;
 using ISAAR.MSolve.Discretization.Interfaces;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.CornerNodes;
 
 namespace ISAAR.MSolve.Tests
 {
@@ -154,10 +155,14 @@ namespace ISAAR.MSolve.Tests
             model.ConnectDataStructures();
 
             List<Node> cornerNodeList = model.NodesDictionary.Values.Where(x => x.SubdomainsDictionary.Keys.Count == 4).ToList();
-            
 
+            var cornerNodes = DefineCornerNodesPerSubdomainAndOtherwise(cornerNodeList, model);
 
-            return model;
+            var cornerNodes_ = cornerNodes.Select(x => ((ISubdomain)model.SubdomainsDictionary[x.Key], x.Value)).ToDictionary(x => x.Item1, x => x.Value);
+
+            var cornerNodeSelection = new UsedDefinedCornerNodes(cornerNodes_);
+
+            return (model, cornerNodeSelection, midsideNodeSelection);
         }
 
         public static Tuple<rveMatrixParameters, grapheneSheetParameters> GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(int subdiscr1, int discr1, int discr3, int subdiscr1_shell, int discr1_shell)
