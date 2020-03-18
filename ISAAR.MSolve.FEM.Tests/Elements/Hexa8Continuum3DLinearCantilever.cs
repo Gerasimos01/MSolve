@@ -139,7 +139,7 @@ namespace ISAAR.MSolve.FEM.Tests.Elements
 
 
             //VonMisesMaterial3D material1 = new VonMisesMaterial3D(1353000, 0.30, 1353000, 0.15);
-            var material1 = new ElasticMaterial3DtotalStrain() { PoissonRatio = 0.3, YoungModulus = 1353000 };
+            var material1 = new ElasticMaterial3D() { PoissonRatio = 0.3, YoungModulus = 1353000 };
 
             double[,] nodeData = new double[,] { {-0.250000,-0.250000,-1.000000},
             {0.250000,-0.250000,-1.000000},
