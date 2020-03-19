@@ -36,6 +36,21 @@ namespace ISAAR.MSolve.FEM.Interpolation.Jacobians
             }
         }
 
+        public IsoparametricJacobian3D(double[][] deformedStateNodeCoordinates, Matrix naturalDerivatives, bool CalculateInverseAndDetereminant)
+        {
+            DirectMatrix = CalculateJacobianMatrix(deformedStateNodeCoordinates, naturalDerivatives);
+            if (CalculateInverseAndDetereminant)
+            {
+                (InverseMatrix, DirectDeterminant) = DirectMatrix.InvertAndDeterminant();
+                //(InverseMatrix, DirectDeterminant) = InvertAndDeterminant(DirectMatrix);
+                if (DirectDeterminant < determinantTolerance)
+                {
+                    throw new ArgumentException("Jacobian determinant is negative or under the allowed tolerance"
+                        + $" ({DirectDeterminant} < {determinantTolerance}). Check the order of nodes or the element geometry.");
+                }
+            }
+        }
+
         /// <summary>
         /// The determinant of the direct Jacobian matrix <see cref="DirectMatrix"/>.
         /// </summary>
@@ -103,6 +118,24 @@ namespace ISAAR.MSolve.FEM.Interpolation.Jacobians
 
             return jacobianMatrix;
             //return Matrix3by3.CreateFromArray(jacobianMatrix, false);
+        }
+
+        private Matrix CalculateJacobianMatrix(double[][] tx_i, Matrix naturalDerivatives)
+        {
+            var J_1 = Matrix.CreateZero(3, 3);
+
+            for (int m = 0; m < 3; m++)
+            {
+                for (int n = 0; n < 3; n++)
+                {
+                    for (int p = 0; p < 8; p++)
+                    {
+                        J_1[m, n] += naturalDerivatives[ p,m] * tx_i[p][n];
+                    }
+                }
+            }
+
+            return J_1;
         }
 
         //private static (Matrix inverse, double determinant) InvertAndDeterminant(Matrix directMatrix)
