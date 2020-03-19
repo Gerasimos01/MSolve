@@ -21,22 +21,89 @@ using System.Linq;
 using Xunit;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.CornerNodes;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP3d.Augmentation;
+using ISAAR.MSolve.Discretization.FreedomDegrees;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Pcg;
+using ISAAR.MSolve.LinearAlgebra.Iterative.Termination;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.StiffnessMatrices;
+using ISAAR.MSolve.LinearAlgebra.Reordering;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP3d.StiffnessMatrices;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP3d;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.StiffnessDistribution;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Preconditioning;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.LagrangeMultipliers;
+using ISAAR.MSolve.Solvers;
+using ISAAR.MSolve.Solvers.LinearSystems;
+using ISAAR.MSolve.Discretization.Providers;
+using ISAAR.MSolve.Analyzers.Loading;
+using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP;
 
 namespace ISAAR.MSolve.Tests
 {
     public static class ShellPlateFetiDPExample
     {
         [Fact]
-        public static void Solve()
+        public static void RunExample()
         {
-            var model = CreateModel();
+            CnstValues.preventOutputFileWrite();
+            int subdiscrShell = 1; int discrShell = 2;
+            (Model model, UsedDefinedCornerNodes cornerNodeSelection, UserDefinedMidsideNodes midSideNodeSelection) = CreateModel(subdiscrShell, discrShell);
+            Solve(model, cornerNodeSelection, midSideNodeSelection);
         }
-        public static Model CreateModel()
-        {
-            int subdiscrShell = 1;
-            int discrShell = 2;
 
-            
+        private static void Solve(Model model, UsedDefinedCornerNodes cornerNodeSelection, UserDefinedMidsideNodes midSideNodeSelection)
+        {
+            var pcgSettings = new PcgSettings()
+            {
+                ConvergenceTolerance = 1E-4,
+                MaxIterationsProvider = new FixedMaxIterationsProvider(1000)
+            };
+            var fetiMatrices = new FetiDPMatrixManagerFactorySkyline(new OrderingAmdSuiteSparse());
+            //var fetiMatrices = new SkylineFetiDPSubdomainMatrixManager.Factory();
+            //var fetiMatrices = new DenseFetiDPSubdomainMatrixManager.Factory();
+
+            var fetiSolverBuilder = new FetiDPSolverSerial.Builder(fetiMatrices);  //A.3
+            //var matrixManagerFactory = new FetiDP3dMatrixManagerFactoryDense();   //A.3.1
+            //var matrixManagerFactory = new FetiDP3dMatrixManagerFactorySkyline();   //A.3.1
+            //var matrixManagerFactory = new FetiDP3dMatrixManagerFactorySuiteSparse(new OrderingAmdSuiteSparse());   //A.3.1
+            //var fetiSolverBuilder = new FetiDP3dSolverSerial.Builder(matrixManagerFactory);  //A.3
+
+            //fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
+            fetiSolverBuilder.StiffnessDistribution = StiffnessDistributionType.HeterogeneousCondensed;
+            fetiSolverBuilder.Preconditioning = new DirichletPreconditioning();
+            fetiSolverBuilder.PcgSettings = pcgSettings;
+
+            ICrosspointStrategy crosspointStrategy = new FullyRedundantConstraints(); //A.2
+
+            fetiSolverBuilder.CrosspointStrategy = crosspointStrategy;
+
+            FetiDPSolverSerial fetiSolver = fetiSolverBuilder.Build(model, cornerNodeSelection); //A.1
+            //FetiDP3dSolverSerial fetiSolver = fetiSolverBuilder.Build(model, cornerNodeSelection, midSideNodeSelection); //A.1
+
+            RunAnalysis(model, fetiSolver);
+
+        }
+
+        internal static void RunAnalysis(IModel model, ISolverMpi solver)
+        {
+            // Run the analysis
+            solver.OrderDofs(false);
+            foreach (ISubdomain subdomain in model.EnumerateSubdomains())
+            {
+                ILinearSystemMpi linearSystem = solver.GetLinearSystem(subdomain);
+                linearSystem.Reset(); // Necessary to define the linear system's size 
+                linearSystem.Subdomain.Forces = Vector.CreateZero(linearSystem.Size);
+                linearSystem.RhsVector = linearSystem.Subdomain.Forces;
+            }
+            solver.BuildGlobalMatrix(new ElementStructuralStiffnessProvider());
+            model.ApplyLoads();
+            LoadingUtilities.ApplyNodalLoads(model, solver);
+            solver.Solve();
+        }
+
+        public static (Model model, UsedDefinedCornerNodes cornerNodeSelection, UserDefinedMidsideNodes midSideNodeSelection) CreateModel(int subdiscrShell, int discrShell)
+        {
+             
             int elem1 = subdiscrShell * discrShell;
             int elem2 = subdiscrShell * discrShell;
             var mpgp = GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(2, 2, 2, subdiscrShell, discrShell);
@@ -151,6 +218,7 @@ namespace ISAAR.MSolve.Tests
                 eswterikosElementCounter++;
             }
             #endregion
+            AddConstraintsAndLoads(model,gp.L1, gp.L2);
 
             model.ConnectDataStructures();
 
@@ -162,7 +230,45 @@ namespace ISAAR.MSolve.Tests
 
             var cornerNodeSelection = new UsedDefinedCornerNodes(cornerNodes_);
 
-            return (model, cornerNodeSelection, midsideNodeSelection);
+            List<List<int>> ExtraconstraintNodes = GetExtraConstraintsOfplate(discrShell, subdiscrShell, gp.L1, gp.L2, model);
+
+            Dictionary<ISubdomain, HashSet<INode>> extraConstrNodesofsubd = new Dictionary<ISubdomain, HashSet<INode>>();
+            foreach (Subdomain subd in model.EnumerateSubdomains()) extraConstrNodesofsubd.Add((ISubdomain)subd, new HashSet<INode>());
+            foreach (var extraConstrNodeList in ExtraconstraintNodes)
+            {
+                int extraNodeId = extraConstrNodeList[0];
+                foreach (var subd in model.NodesDictionary[extraNodeId].SubdomainsDictionary.Values)
+                {
+                    extraConstrNodesofsubd[subd].Add(model.NodesDictionary[extraNodeId]);
+                }
+            }
+
+            var midSideNodeSelection = new UserDefinedMidsideNodes(extraConstrNodesofsubd,
+                new IDofType[] { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ });
+
+            
+            return (model, cornerNodeSelection, midSideNodeSelection);
+        }
+
+        private static void AddConstraintsAndLoads(Model model, double L1, double L2)
+        {
+            double tol = 0.00001;
+            foreach (Node node in model.NodesDictionary.Values)
+            {
+                if(Math.Abs(node.X-0.5*L1)<tol| Math.Abs(node.X + 0.5 * L1) < tol | Math.Abs(node.Y + 0.5 * L1) < tol | Math.Abs(node.Y - 0.5 * L1) < tol)
+                {
+                    node.Constraints.Add(new Discretization.Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+                    node.Constraints.Add(new Discretization.Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+                    node.Constraints.Add(new Discretization.Constraint() { DOF = StructuralDof.TranslationZ, Amount = 0 });
+                }
+                if (Math.Abs(node.X - 0) < tol &&  Math.Abs(node.Y -0) < tol )
+                {
+                    model.Loads.Add(new Load() { Amount = 1, Node = node, DOF = StructuralDof.TranslationZ });
+                }
+
+            }
+
+
         }
 
         public static Tuple<rveMatrixParameters, grapheneSheetParameters> GetReferenceKanonikhGewmetriaRveExampleParametersStiffCase(int subdiscr1, int discr1, int discr3, int subdiscr1_shell, int discr1_shell)
@@ -271,5 +377,59 @@ namespace ISAAR.MSolve.Tests
 
             return cornerNodesList;
         }
+
+        private static List<List<int>> GetExtraConstraintsOfplate(int discrShell, int subdiscrShell, double l1, double l2, Model model)
+        {
+            if (!(l1 == l2)) { throw new NotImplementedException(); }
+            List<List<int>> extraconstraintNodes = new List<List<int>>();
+
+            double elem_length = l1 / (discrShell * subdiscrShell);
+            double subd_length = l1 / discrShell;
+            double subd_half_length = 0.5 * subd_length;
+            double tol = 1e-8;
+            double elem_half_length =0.5* l1 / (discrShell * subdiscrShell);
+
+
+            foreach (Node node in model.NodesDictionary.Values)
+            {
+                if(node.SubdomainsDictionary.Values.Count==2)
+                {
+                    var x_coord = node.X + 0.5 * l1 + 0.0001 * elem_length;
+                    bool isNotSubdBound = true;
+                    bool isSubdomainHalf_x = false;
+
+                    double x_round_subd = Math.Truncate(x_coord / subd_length) * subd_length;
+                    double x_round_half_sub = Math.Truncate(x_coord / subd_half_length) * subd_half_length;
+                    double x_elem_round = Math.Truncate(x_coord / elem_half_length) * elem_half_length;
+
+                    if(Math.Abs(x_round_subd - x_elem_round) <tol) { isNotSubdBound = false; }
+                    if (((x_round_half_sub - x_elem_round) < tol)&& isNotSubdBound) 
+                    {
+                        isSubdomainHalf_x = true; 
+                        List<int> extraNodes = new List<int>() { node.ID };
+                        extraconstraintNodes.Add(extraNodes);
+                        continue;
+                    }
+
+                    var y_coord = node.Y + 0.5 * l1 + 0.0001 * elem_length;
+                    bool isNotSubdBoundy = true;
+
+                    double y_round_subd = Math.Truncate(y_coord / subd_length) * subd_length;
+                    double y_round_half_sub = Math.Truncate(y_coord / subd_half_length) * subd_half_length;
+                    double y_elem_round = Math.Truncate(y_coord / elem_half_length) * elem_half_length;
+
+                    if (Math.Abs(y_round_subd - y_elem_round) < tol) { isNotSubdBoundy = false; }
+                    if (((y_round_half_sub - y_elem_round) < tol) && isNotSubdBoundy)
+                    {
+                        List<int> extraNodes = new List<int>() { node.ID };
+                        extraconstraintNodes.Add(extraNodes);
+                        continue;
+                    }
+                }
+            }
+
+            return extraconstraintNodes;
+        }
+
     }
 }
