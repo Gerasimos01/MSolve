@@ -46,6 +46,8 @@ namespace ISAAR.MSolve.Analyzers.NonLinear
 
                     if (iteration == 0) firstError = errorNorm;
 
+                    if (IncrementalDisplacementsLog != null) IncrementalDisplacementsLog.StoreDisplacements(uPlusdu);
+
                     if (TotalDisplacementsPerIterationLog != null) TotalDisplacementsPerIterationLog.StoreDisplacements(uPlusdu);
 
                     if (errorNorm < residualTolerance)

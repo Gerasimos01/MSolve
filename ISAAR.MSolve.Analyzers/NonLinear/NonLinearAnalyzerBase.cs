@@ -56,6 +56,8 @@ namespace ISAAR.MSolve.Analyzers.NonLinear
         public Dictionary<int, TotalLoadsDisplacementsPerIncrementLog> IncrementalLogs { get; }
             = new Dictionary<int, TotalLoadsDisplacementsPerIncrementLog>();
 
+        public IncrementalDisplacementsLog IncrementalDisplacementsLog { get; set; }
+        
         public IParentAnalyzer ParentAnalyzer
         {
             get => parentAnalyzer;

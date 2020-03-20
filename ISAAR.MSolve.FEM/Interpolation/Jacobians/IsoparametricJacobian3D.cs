@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.LinearAlgebra.Matrices;
 
@@ -24,7 +25,7 @@ namespace ISAAR.MSolve.FEM.Interpolation.Jacobians
         /// </summary>
         /// <param name="nodes">The nodes used for the interpolation.</param>
         /// <param name="naturalCoordinates">The shape function derivatives at a specific integration point.</param>
-        public IsoparametricJacobian3D(IReadOnlyList<Node> nodes, Matrix naturalDerivatives)
+        public IsoparametricJacobian3D(IReadOnlyList<INode> nodes, Matrix naturalDerivatives)
         {
             DirectMatrix = CalculateJacobianMatrix(nodes, naturalDerivatives);
             (InverseMatrix, DirectDeterminant) = DirectMatrix.InvertAndDeterminant();
@@ -96,7 +97,7 @@ namespace ISAAR.MSolve.FEM.Interpolation.Jacobians
             return result;
         }
 
-        private static Matrix CalculateJacobianMatrix(IReadOnlyList<Node> nodes, Matrix naturalDerivatives)
+        private static Matrix CalculateJacobianMatrix(IReadOnlyList<INode> nodes, Matrix naturalDerivatives)
         {
             var jacobianMatrix = Matrix.CreateZero(3, 3);
             //var jacobianMatrix = new double[3,3];
@@ -128,9 +129,9 @@ namespace ISAAR.MSolve.FEM.Interpolation.Jacobians
             {
                 for (int n = 0; n < 3; n++)
                 {
-                    for (int p = 0; p < 8; p++)
+                    for (int p = 0; p < naturalDerivatives.NumRows; p++)
                     {
-                        J_1[m, n] += naturalDerivatives[ p,m] * tx_i[p][n];
+                        J_1[m, n] += naturalDerivatives[p,m] * tx_i[p][n];
                     }
                 }
             }

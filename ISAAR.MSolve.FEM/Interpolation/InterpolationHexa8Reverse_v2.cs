@@ -59,7 +59,7 @@ namespace ISAAR.MSolve.FEM.Interpolation
 
         protected override Matrix EvaluateGradientsAt(double xi, double eta, double zeta)
         {
-            var naturalDerivatives = Matrix.CreateZero(3, 8);
+            var naturalDerivatives = Matrix.CreateZero(8,3);
 
             // Derivatives with respect to Xi
             naturalDerivatives[0,0] = +0.125 * (1 + eta) * (1 + zeta);
