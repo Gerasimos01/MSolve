@@ -27,6 +27,8 @@ using ISAAR.MSolve.LinearAlgebra.Reordering;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.Pcg;
 using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.StiffnessDistribution;
+using ISAAR.MSolve.Materials;
+using ISAAR.MSolve.Discretization.Integration.Quadratures;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
@@ -129,7 +131,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         private Tuple<Model, Dictionary<int, Node>, double> Reference2RVEExample10000withRenumberingwithInput_forMS()
         {
-            
+            Dictionary<int, Node> boundaryNodes = new Dictionary<int, Node>();
 
             #region initial input format paths
             double[,] Dq;
@@ -259,19 +261,26 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             Dq = new double[9, 3 * (((mp.hexa1 + 1) * (mp.hexa2 + 1) * (mp.hexa3 + 1)) - ((mp.hexa1 - 1) * (mp.hexa2 - 1) * (mp.hexa3 - 1)))];
 
             Model model = new Model();
-            model.SubdomainsDictionary.Add(1, new Subdomain(1));
-            Dictionary<int, Node> boundaryNodes = new Dictionary<int, Node>();
+
             if (useInput) { FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering_vector_path, boundaryNodes); }
-            else { FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering, boundaryNodes); }
+            else
+            {
+                if (decomposeModel) { HexaElementsOnlyOverlapping(model, mp, Dq, renumbering, boundaryNodes); }
+                else
+                {
+                    model.SubdomainsDictionary.Add(1, new Subdomain(1));
+                    FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering, boundaryNodes);
+                }
+            }
 
 
             //domain separation ds1
             int totalSubdomains = discr1 * discr1 * discr1;
-            if (decomposeModel) DdmCalculationsGeneral.BuildModelInterconnectionData(model);
-            var decomposer = new AutomaticDomainDecomposer2(model, totalSubdomains);
-            if (decomposeModel) decomposer.UpdateModel();
+            //if (decomposeModel) DdmCalculationsGeneral.BuildModelInterconnectionData(model);
+            //var decomposer = new AutomaticDomainDecomposer2(model, totalSubdomains);
+            //if (decomposeModel) decomposer.UpdateModel();
             var subdHexaIds = DdmCalculationsGeneral.DetermineHexaElementsSubdomainsFromModel(model);
-            RveMatrixSubdomainInnerNodes = DdmCalculationsGeneral.DetermineRveSubdomainsInnerNodesFromModel(model);
+            //RveMatrixSubdomainInnerNodes = DdmCalculationsGeneral.DetermineRveSubdomainsInnerNodesFromModel(model);
 
             double volume = mp.L01 * mp.L02 * mp.L03;
             int hexaElementsNumber = model.ElementsDictionary.Count();
@@ -365,11 +374,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 int[][] subdElementIds1 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdHexaIds, subdCohElementIds);
                 int[][] subdElementIds2 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdElementIds1, subdShellElementIds);
                 int[][] subdElementIds3 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdElementIds2, subdAdditionalHexaIds);
-                DdmCalculationsGeneral.UndoModelInterconnectionDataBuild(model);
-                DdmCalculations.SeparateSubdomains(model, subdElementIds3);
+                //DdmCalculationsGeneral.UndoModelInterconnectionDataBuild(model);
+                //DdmCalculations.SeparateSubdomains(model, subdElementIds3);
 
                 model.ConnectDataStructures();
-                bool isTrue = DdmCalculationsGeneral.CheckSubdomainsEmbeddingHostNodes(model, RveMatrixSubdomainInnerNodes);
+                //bool isTrue = DdmCalculationsGeneral.CheckSubdomainsEmbeddingHostNodes(model, RveMatrixSubdomainInnerNodes);
 
 
                 //PerfmormNesessaryChecksSubdomains(model);
@@ -436,6 +445,163 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             return new Tuple<Model, Dictionary<int, Node>, double>(model, boundaryNodes, volume);
 
+        }
+
+        private void HexaElementsOnlyOverlapping(Model model, rveMatrixParameters mp, double[,] dq, renumbering renumbering, Dictionary<int, Node> boundaryNodes)
+        {
+            // Perioxh renumbering initialization 
+            //renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
+            // perioxh renumbering initialization ews edw 
+
+            // Perioxh parametroi Rve Matrix
+            double E_disp = mp.E_disp; //Gpa
+            double ni_disp = mp.ni_disp; // stather Poisson
+            double L01 = mp.L01; // diastaseis
+            double L02 = mp.L02;
+            double L03 = mp.L03;
+            int hexa1 = mp.hexa1;// diakritopoihsh
+            int hexa2 = mp.hexa2;
+            int hexa3 = mp.hexa3;
+            // Perioxh parametroi Rve Matrix ews edw
+
+
+            // Perioxh Gewmetria shmeiwn
+            int nodeCounter = 0;
+
+            int nodeID;
+            double nodeCoordX;
+            double nodeCoordY;
+            double nodeCoordZ;
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+
+            for (int h1 = 0; h1 < hexa1 + 1; h1++)
+            {
+                for (int h2 = 0; h2 < hexa2 + 1; h2++)
+                {
+                    for (int h3 = 0; h3 < hexa3 + 1; h3++)
+                    {
+                        nodeID = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        nodeCoordX = -0.5 * L01 + (h1 + 1 - 1) * (L01 / hexa1);  // h1+1 dioti h1 einai zero based
+                        nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
+                        nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
+
+                        model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
+                        nodeCounter++;
+                    }
+                }
+            }
+            // Perioxh Gewmetria shmeiwn ews edw
+
+            //Perioxh Eisagwgh elements
+            int elementCounter = 0;
+            int subdomainID = 1;
+
+            for (int i1 = 1; i1 < discr1*discr1*discr1+1; i1++)
+            {
+                model.SubdomainsDictionary.Add(i1, new Subdomain(i1));
+
+            }
+
+
+            int ElementID = 0;
+            int[] globalNodeIDforlocalNode_i = new int[8];
+
+            for (int h1 = 0; h1 < hexa1; h1++)
+            {
+                for (int h2 = 0; h2 < hexa2; h2++)
+                {
+                    for (int h3 = 0; h3 < hexa3; h3++)
+                    {
+                        globalNodeIDforlocalNode_i[0] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[1] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[2] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[3] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[4] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[5] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[6] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[7] = renumbering.GetNewNodeNumbering(FEMMeshBuilder.Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+
+                        int nsubdx = (int)Math.Truncate((double)((h1 ) / subdiscr1)); //h1+1
+                        int nsubdy = (int)Math.Truncate((double)((h2 ) / subdiscr1));
+                        int nsubdz = (int)Math.Truncate((double)((h3 ) / subdiscr1));
+
+                        bool isoverlappx = ((h1 + 1) % subdiscr1 == 1);
+                        if (h1 == 0) isoverlappx = false;
+                        bool isoverlappy = ((h2 + 1) % subdiscr1 == 1);
+                        if (h2 == 0) isoverlappy = false;
+                        bool isoverlappz = ((h3 + 1) % subdiscr1 == 1);
+                        if (h3 == 0) isoverlappz = false;
+
+                        int originalSubdomain;
+                        int diplaSubdomain;
+
+                        double ratio = 0.5;
+                        double elementRatio;
+                        if (isoverlappx)
+                        {
+                            ElementID++;
+                            originalSubdomain = GetSubdIdForNsubdxyzdata(nsubdx, nsubdy, nsubdz, discr1);
+                            elementRatio =1- ratio;
+                            AddElement(model, ElementID, elementRatio, originalSubdomain, E_disp, ni_disp, globalNodeIDforlocalNode_i);
+
+                            ElementID++;
+                            diplaSubdomain = GetSubdIdForNsubdxyzdata(nsubdx-1, nsubdy, nsubdz, discr1);
+                            elementRatio = ratio;
+                            AddElement(model, ElementID, elementRatio, diplaSubdomain, E_disp, ni_disp, globalNodeIDforlocalNode_i);
+                        }
+                        else
+                        {
+                            ElementID++;
+                            originalSubdomain = GetSubdIdForNsubdxyzdata(nsubdx, nsubdy, nsubdz, discr1);
+                            elementRatio = 1;
+                            AddElement(model, ElementID, elementRatio, originalSubdomain, E_disp, ni_disp, globalNodeIDforlocalNode_i);
+                        }
+                        
+                    }
+                }
+            }
+            //Perioxh Eisagwgh elements
+
+            //Tuple<int, int> nodeElementCounters = new Tuple<int, int>(nodeCounter, elementCounter);
+            // change one tuple value
+            //nodeElementCounters = new Tuple<int, int>(nodeElementCounters.Item1, elementCounter);
+            // get one tuple value
+            //elementCounter = nodeElementCounters.Item2;            
+            //return nodeElementCounters;
+
+            int komvoi_rve = (hexa1 + 1) * (hexa2 + 1) * (hexa3 + 1);
+            int f_komvoi_rve = kuvos;
+            int p_komvoi_rve = komvoi_rve - f_komvoi_rve;
+            int komvos;
+           
+        }
+
+        private int GetSubdIdForNsubdxyzdata(int nsubdx, int nsubdy, int nsubdz, int discr1)
+        {
+            return nsubdz * discr1 * discr1 + nsubdy * discr1 + nsubdx + 1;
+        }
+
+        private void AddElement(Model model, int elementID, double ratio, int subdomainID, double e_disp, double ni_disp, int[] globalNodeIDforlocalNode_i)
+        {
+            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            {
+                YoungModulus = ratio*e_disp,
+                PoissonRatio = ni_disp,
+            };
+            Element e1 = new Element()
+            {
+                ID = elementID,
+                ElementType = new Hexa8NonLinear(material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+            };
+
+            for (int j = 0; j < 8; j++)
+            {
+                e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
+            }
+            model.ElementsDictionary.Add(e1.ID, e1);
+            model.SubdomainsDictionary[subdomainID].Elements.Add(e1.ID, e1);
         }
 
         private int[][] GetCornerNodesData(int discr1, int subdiscr1)
