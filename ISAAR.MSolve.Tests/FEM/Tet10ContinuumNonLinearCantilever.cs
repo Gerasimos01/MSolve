@@ -26,64 +26,34 @@ namespace ISAAR.MSolve.Tests.FEM
         [Fact]
         private static void RunTest()
         {
-            IReadOnlyList<Dictionary<int, double>> expectedDisplacements = GetExpectedDisplacements();
-            TotalDisplacementsPerIterationLog computedDisplacements = SolveModel();
+            double[] expectedDisplacements = GetExpectedDisplacements();
+            double[] computedDisplacements = SolveModel();
             Assert.True(AreDisplacementsSame(expectedDisplacements, computedDisplacements));
         }
 
-        private static bool AreDisplacementsSame(IReadOnlyList<Dictionary<int, double>> expectedDisplacements, 
-            TotalDisplacementsPerIterationLog computedDisplacements)
+        private static bool AreDisplacementsSame(double[] expectedDisplacements, 
+            double[] computedDisplacements)
         {
-            var comparer = new ValueComparer(1E-13);
-            for (int iter = 0; iter < expectedDisplacements.Count; ++iter)
+            var comparer = new ValueComparer(1E-3);
+
+            for (int i = 0; i < expectedDisplacements.Length; i++)
             {
-                foreach (int dof in expectedDisplacements[iter].Keys)
+                if (!comparer.AreEqual(expectedDisplacements[i], computedDisplacements[i]))
                 {
-                    if (!comparer.AreEqual(expectedDisplacements[iter][dof], computedDisplacements.GetTotalDisplacement(iter, subdomainID, dof)))
-                    {
-                        return false;
-                    }
+                    return false;
                 }
-            }
+            } 
+           
             return true;
         }
 
-        private static IReadOnlyList<Dictionary<int, double>> GetExpectedDisplacements()
+        private static double[]  GetExpectedDisplacements()
         {
-            var expectedDisplacements = new Dictionary<int, double>[11]; //TODO: this should be 11 EINAI ARRAY APO DICTIONARIES
-
-            expectedDisplacements[0] = new Dictionary<int, double> {
-                { 0, 0.039075524153873623}, {11, -0.032541895181220408}, {23, -0.057387148941853101}, {35, -0.071994381984550326}, {47, -0.077053554770404833}
-            };
-
-            expectedDisplacements[0] = new Dictionary<int, double> {
-    { 0,3.907552415387362300e-02 }, {11,-3.254189518122040800e-02 }, {23,-5.738714894185310100e-02 }, {35,-7.199438198455032600e-02 }, {47,-7.705355477040483300e-02 }};
-            expectedDisplacements[1] = new Dictionary<int, double> {
-    { 0,4.061313406968563400e-02 }, {11,-3.418876666892714500e-02 }, {23,-6.682708262609965400e-02 }, {35,-9.647418428408424700e-02 }, {47,-1.214556593711370000e-01 }};
-            expectedDisplacements[2] = new Dictionary<int, double> {
-    { 0,4.036171804663909300e-02 }, {11,-3.396515033613205900e-02 }, {23,-6.665084050819490600e-02 }, {35,-9.713633946904017000e-02 }, {47,-1.236631490430697600e-01 }};
-            expectedDisplacements[3] = new Dictionary<int, double> {
-    { 0,4.032905162001462800e-02 }, {11,-3.393260905426281900e-02 }, {23,-6.657423779424630200e-02 }, {35,-9.701032579889114200e-02 }, {47,-1.234941821043235900e-01 }};
-            expectedDisplacements[4] = new Dictionary<int, double> {
-    { 0,4.032900093364350700e-02 }, {11,-3.393255831972321500e-02 }, {23,-6.657411965268195100e-02 }, {35,-9.701012513482368300e-02 }, {47,-1.234939001150344400e-01 }};
-            expectedDisplacements[5] = new Dictionary<int, double> {
-    { 0,8.095088461395548400e-02 }, {11,-6.826589092291023000e-02 }, {23,-1.393261307096994000e-01 }, {35,-2.129883579558797000e-01 }, {47,-2.840192458274605800e-01 }};
-            expectedDisplacements[6] = new Dictionary<int, double> {
-    { 0,8.179065808895391600e-02 }, {11,-6.914910025670165100e-02 }, {23,-1.449912527358244700e-01 }, {35,-2.283048858573358000e-01 }, {47,-3.126785624370127000e-01 }};
-            expectedDisplacements[7] = new Dictionary<int, double> {
-    { 0,8.008398180684392400e-02 }, {11,-6.747544383562544000e-02 }, {23,-1.408463169597064000e-01 }, {35,-2.210877012127209200e-01 }, {47,-3.022981704019522300e-01 }};
-            expectedDisplacements[8] = new Dictionary<int, double> {
-    { 0,7.976397887674688300e-02 }, {11,-6.715673915988762400e-02 }, {23,-1.400151566610138300e-01 }, {35,-2.195056794855129700e-01 }, {47,-2.998365539162924900e-01 }};
-            expectedDisplacements[9] = new Dictionary<int, double> {
-    { 0,7.975945236918889600e-02 }, {11,-6.715223199537226400e-02 }, {23,-1.400036710136937400e-01 }, {35,-2.194845023343510200e-01 }, {47,-2.998046100841828000e-01 }};
-            expectedDisplacements[10] = new Dictionary<int, double> {
-    { 0,7.975944951878896600e-02 }, {11,-6.715222916021290600e-02 }, {23,-1.400036636464831200e-01 }, {35,-2.194844883932760600e-01 }, {47,-2.998045884933974200e-01 }};
-
-
-            return expectedDisplacements;
+            var expectedSolitionOfIters5And12 = new double[] { 0.56783 , 0.921567, 0.615967, 1.05899 };
+            return expectedSolitionOfIters5And12;
         }
 
-        private static TotalDisplacementsPerIterationLog SolveModel()
+        private static double[] SolveModel()
         {
             var model = new Model();
             model.SubdomainsDictionary.Add(subdomainID, new Subdomain(subdomainID));
@@ -107,17 +77,28 @@ namespace ISAAR.MSolve.Tests.FEM
             LoadControlAnalyzer childAnalyzer = childAnalyzerBuilder.Build();
             var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
+
+
+            // initialize the anlaysis 
+            parentAnalyzer.Initialize();
+
             // Output
+            int[] monitoredNodes = new int[] { 6, 8 };
+            int[] monitoredDofs = monitoredNodes.Select(x => model.GlobalDofOrdering.GlobalFreeDofs[model.NodesDictionary[x], StructuralDof.TranslationX]).ToArray();
             var watchDofs = new Dictionary<int, int[]>();
-            watchDofs.Add(subdomainID, new int[5] { 0, 11, 23, 35, 47 });
+            watchDofs.Add(subdomainID, monitoredDofs);
             var log1 = new TotalDisplacementsPerIterationLog(watchDofs);
             childAnalyzer.TotalDisplacementsPerIterationLog = log1;
-
-            // Run the anlaysis 
-            parentAnalyzer.Initialize();
+            
+            //run the analysis and give output
             parentAnalyzer.Solve();
 
-            return log1;
+
+
+            var solutionOfIters5And12 = new double[] { log1.GetTotalDisplacement(5, 0, 3), log1.GetTotalDisplacement(12, 0, 3),
+                log1.GetTotalDisplacement(5, 0, 9), log1.GetTotalDisplacement(12, 0, 9) };
+
+            return solutionOfIters5And12;
         }
 
         private static void BuildCantileverModel(Model model, double load_value)
@@ -253,7 +234,7 @@ namespace ISAAR.MSolve.Tests.FEM
                 {-0.1250000000000000,0.0000000000000000,0.5000000000000000},
                 {0.0000000000000000,0.0000000000000000,0.7500000000000000},};
 
-            int[] test = { 33, 2, 1, 88, 35, 13, 34, 90, 89, 97 };
+            int[] take_msolve_nodes_from_adina_tade_nodes = new int[] { 2, 1, 3, 0, 5, 7, 8, 6, 9, 4 };
 
             int[,] elementData = new int[,] {{33,2,1,88,35,13,34,90,89,97},
                 {33,3,2,88,36,14,35,91,90,97},
@@ -320,9 +301,10 @@ namespace ISAAR.MSolve.Tests.FEM
                 DynamicMaterial DynamicMaterial = new DynamicMaterial(1, 0, 0);
                 //Dictionary<int,Node3D >
                 List<Node> nodeSet = new List<Node>(8);
-                for (int j = 0; j < 8; j++)
+                for (int j = 0; j < 10; j++)
                 {
-                    int nodeID = elementData[nElement, j];
+                    int msolveNode = take_msolve_nodes_from_adina_tade_nodes[j];
+                    int nodeID = elementData[nElement, msolveNode];
                     nodeSet.Add((Node)model.NodesDictionary[nodeID]);
                 }
 
@@ -331,21 +313,22 @@ namespace ISAAR.MSolve.Tests.FEM
                 e1 = new Element()
                 {
                     ID = nElement + 1,
-                    ElementType = new Hexa8NonLinear_v2(nodeSet, material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3), InterpolationHexa8Reverse_v2.UniqueInstance)// dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8                    
+                    //ElementType = new Hexa8NonLinear_v2(nodeSet, material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3), InterpolationHexa8Reverse_v2.UniqueInstance)// dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8                    
+                    ElementType= factory.CreateNonLinearElement(CellType.Tet10,nodeSet,material1,DynamicMaterial)
                 };
-                for (int j = 0; j < 8; j++)
+                for (int j = 0; j < 10; j++)
                 {
-                    e1.NodesDictionary.Add(elementData[nElement, j + 1], model.NodesDictionary[elementData[nElement, j + 1]]);
+                    int msolveNode = take_msolve_nodes_from_adina_tade_nodes[j];
+
+                    e1.NodesDictionary.Add(elementData[nElement, msolveNode], model.NodesDictionary[elementData[nElement, msolveNode]]);
                 }
                 model.ElementsDictionary.Add(e1.ID, e1);
                 model.SubdomainsDictionary[subdomainID].Elements.Add(e1.ID, e1);
             }
 
             int[] constrainedIds = new int[] { 1,2,3,4,13, 14, 15, 16, 33, 34, 35, 36, 37 };
-
             
-            // constraint vashh opou z=-1
-            for (int k1 = 1; k1 < constrainedIds.Length; k1++)
+            for (int k1 = 0; k1 < constrainedIds.Length; k1++)
             {
                 int k = constrainedIds[k1];
                 model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationX });

@@ -142,7 +142,7 @@ namespace ISAAR.MSolve.FEM.Elements
 		}
 
 		public Hexa8NonLinear_v2 CreateNonLinearElement(CellType cellType, IReadOnlyList<Node> nodes,
-			IContinuumMaterial3D commonMaterial, DynamicMaterial commonDynamicProperties,int orderOfIntegration)
+			IContinuumMaterial3D commonMaterial, DynamicMaterial commonDynamicProperties)
 		{
 			return new Hexa8NonLinear_v2(nodes, commonMaterial, integrationsForStiffness[cellType], interpolations[cellType]);
 		}
