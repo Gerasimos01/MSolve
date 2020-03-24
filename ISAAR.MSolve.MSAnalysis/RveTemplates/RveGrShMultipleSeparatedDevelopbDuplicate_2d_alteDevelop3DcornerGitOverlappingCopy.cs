@@ -37,7 +37,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
     /// Use of model separation methods is made.
     /// Authors Gerasimos Sotiropoulos
     /// </summary>
-    public class RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGitOverlapping : IRVEbuilder //IdegenerateRVEbuilder
+    public class RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGitOverlappingCopy : IRVEbuilder //IdegenerateRVEbuilder
     {
         //origin: RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3D opou ginetai debug h 3D FETI me Ser
         //changes:  epiprostheta merika corner nodes
@@ -106,7 +106,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         int RVE_id;
         public int[][] CornerNodesData;
 
-        public RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGitOverlapping(int RVE_id, bool decomposeModel, Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp,
+        public RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGitOverlappingCopy(int RVE_id, bool decomposeModel, Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp,
             int subdiscr1, int discr1, int discr3, int subdiscr1_shell, int discr1_shell, int graphene_sheets_number)
         {
             this.RVE_id = RVE_id;
@@ -122,7 +122,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         }
 
-        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGitOverlapping(a, decomposeModel, mpgp, subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, graphene_sheets_number);
+        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGitOverlappingCopy(a, decomposeModel, mpgp, subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, graphene_sheets_number);
 
         public Tuple<Model, Dictionary<int, Node>, double> GetModelAndBoundaryNodes()
         {
@@ -182,7 +182,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             var run_new_corner = false;
             if (run_new_corner)
             { //subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example3\input_matlab";
-                subdomainOutputPath_gen = (new CnstValues()).exampleOutputPathGen;
+                subdomainOutputPath_gen = (new CnstValues()).exampleOutputPathGen ;
             }
             //{ subdomainOutputPath_gen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\REF2_10__000_renu_new_multiple_algorithms_check_develop_gia_fe2_3grsh_4182dofs_multiple2b_debug_corner\RVE_database\rve_no_{0}"; }
             else
@@ -265,10 +265,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             if (useInput) { FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS(model, mp, Dq, renumbering_vector_path, boundaryNodes); }
             else
             {
-                if (decomposeModel) {
-                    
-                    HexaElementsOnlyOverlapping(model, mp, Dq, renumbering, boundaryNodes);
-                }
+                if (decomposeModel) { HexaElementsOnlyOverlapping(model, mp, Dq, renumbering, boundaryNodes); }
                 else
                 {
                     model.SubdomainsDictionary.Add(1, new Subdomain(1));
@@ -282,12 +279,66 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             //if (decomposeModel) DdmCalculationsGeneral.BuildModelInterconnectionData(model);
             //var decomposer = new AutomaticDomainDecomposer2(model, totalSubdomains);
             //if (decomposeModel) decomposer.UpdateModel();
+            var subdHexaIds = DdmCalculationsGeneral.DetermineHexaElementsSubdomainsFromModel(model);
+            //RveMatrixSubdomainInnerNodes = DdmCalculationsGeneral.DetermineRveSubdomainsInnerNodesFromModel(model);
 
             double volume = mp.L01 * mp.L02 * mp.L03;
+            int hexaElementsNumber = model.ElementsDictionary.Count();
+
+            //IEnumerable<Element> hostGroup = model.ElementsDictionary.Where(x => (x.Key < hexaElementsNumber + 1)).Select(kv => kv.Value);
+            List<int> EmbeddedElementsIDs = new List<int>();
+            int element_counter_after_Adding_sheet;
+            element_counter_after_Adding_sheet = hexaElementsNumber; // initial value before adding first graphene sheet
+            int shellElementsNumber;
+
+            //ds2
+            int[] lowerCohesiveBound = new int[graphene_sheets_number]; int[] upperCohesiveBound = new int[graphene_sheets_number]; int[] grShElementssnumber = new int[graphene_sheets_number];
+            for (int j = 0; j < graphene_sheets_number; j++)
+            {
+                if (useInput)
+                {
+                    string file_no = (j + 1).ToString();
+                    string ox_sunol_input_path = string.Format(o_xsunol_input_path_gen, file_no);
+                    FEMMeshBuilder.AddGrapheneSheet_with_o_x_Input_withRenumberingBondSlip(model, gp, ekk_xyz[j], model_o_x_parameteroi[j], renumbering_vector_path, ox_sunol_input_path);
+                }
+                else
+                {
+                    FEMMeshBuilder.AddGrapheneSheet_with_o_x_Input_from_MSOLVE_withRenumbering_from_MSOLVE(model, gp, renumbering, o_xsunol_vectors[j]);
+                }
+                shellElementsNumber = (model.ElementsDictionary.Count() - element_counter_after_Adding_sheet) / 3; //tha xrhsimefsei
+                lowerCohesiveBound[j] = shellElementsNumber + element_counter_after_Adding_sheet + 1; //ds3
+                upperCohesiveBound[j] = 2 * shellElementsNumber + element_counter_after_Adding_sheet;
+                grShElementssnumber[j] = shellElementsNumber;
+                for (int k = shellElementsNumber + element_counter_after_Adding_sheet + 1; k < model.ElementsDictionary.Count() + 1; k++)
+                {
+                    EmbeddedElementsIDs.Add(model.ElementsDictionary[k].ID);
+                }
+                element_counter_after_Adding_sheet = model.ElementsDictionary.Count();
+
+            }
 
 
 
+            int[] EmbElementsIds = EmbeddedElementsIDs.ToArray();
+            IEnumerable<Element> embdeddedGroup = (EmbElementsIds).Select(x => model.ElementsDictionary[x]);
+            //IEnumerable<Element> embdeddedGroup = model.ElementsDictionary.Where(x => (Array.IndexOf(EmbElementsIds, x.Key) > -1)).Select(kv => kv.Value); // dld einai null afth th stigmh
 
+
+            //var embeddedGrouping = new EmbeddedCohesiveGrouping(model, hostGroup, embdeddedGroup);
+            //var CohesiveGroupings = new EmbeddedCohesiveGrouping[EmbElementsIds.GetLength(0)];
+
+            var hostSubGroups = new Dictionary<int, IEnumerable<Element>>();
+            for (int i1 = 0; i1 < EmbElementsIds.GetLength(0); i1++)
+            {
+                if (useInput) { hostSubGroups.Add(EmbElementsIds[i1], FEMMeshBuilder.GetHostGroupForCohesiveElement(model.ElementsDictionary[EmbElementsIds[i1]], mp, model, renumbering_vector_path)); }
+                else { hostSubGroups.Add(EmbElementsIds[i1], FEMMeshBuilder.GetHostGroupForCohesiveElement(model.ElementsDictionary[EmbElementsIds[i1]], mp, model)); }
+                //hostSubGroups.Add(EmbElementsIds[i1], FEMMeshBuilder.GetHostGroupForCohesiveElement(model.ElementsDictionary[EmbElementsIds[i1]], mp, model, renumbering_vector_path));
+
+                //var embeddedGroup_i1 = new List<Element>(1) { model.ElementsDictionary[EmbElementsIds[i1]] };
+                //CohesiveGroupings[i1] = new EmbeddedCohesiveGrouping(model, hostGroup_i1, embeddedGroup_i1);
+            }
+
+            var CohesiveGroupping = new EmbeddedCohesiveSubGrouping(model, hostSubGroups, embdeddedGroup);
 
             #region corner node data generation
 
@@ -301,14 +352,30 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
             #endregion
 
-            
-
 
             //ds4
             if (decomposeModel)
             {
                 //int[][] subdCohElementIds = DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple(model, totalSubdomains);
+                (int[][] subdCohElementIds, Dictionary<int, List<int>> reassignedHexas, Dictionary<int, int> hexaOriginalSubdomains,
+                    Dictionary<int, List<int>> SubdomainNeedsHexas) =
+                    DdmCalculationsGeneral.DetermineCoheiveELementsSubdomainsSimple_Alte4(model, totalSubdomains, lowerCohesiveBound,
+                    upperCohesiveBound, grShElementssnumber);
 
+                (Dictionary<int, List<int>> hexaAndTheirSharingSubdomains, Dictionary<int, int> DuplicateHexaOriginalSubdomain) =
+                   DdmCalculationsAlterna2.GetHexaSharingSubdomains(SubdomainNeedsHexas, subdHexaIds, false);
+                int[][] SubdomainNeedsHexasIds = DdmCalculationsPartb.ConvertIntListToArray(SubdomainNeedsHexas, totalSubdomains);
+
+                (int[][] subdAdditionalHexaIds, Dictionary<int, int> NewHexaIdsAndTheirOriginals) = DdmCalculationsAlterna2.ModelAddDuplicateHexas(model, mp, hexaAndTheirSharingSubdomains, totalSubdomains);
+
+                //int[][] subdHexaIdsNew = DdmCalculationsGeneral.ReassignHexas(subdHexaIds, reassignedHexas, hexaOriginalSubdomains);
+                int[][] subdShellElementIds = DdmCalculationsGeneral.DetermineShellELementsSubdomains(model, totalSubdomains, subdCohElementIds,
+                lowerCohesiveBound, upperCohesiveBound, grShElementssnumber);
+                int[][] subdElementIds1 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdHexaIds, subdCohElementIds);
+                int[][] subdElementIds2 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdElementIds1, subdShellElementIds);
+                int[][] subdElementIds3 = DdmCalculationsGeneral.CombineSubdomainElementsIdsArraysIntoOne(subdElementIds2, subdAdditionalHexaIds);
+                //DdmCalculationsGeneral.UndoModelInterconnectionDataBuild(model);
+                //DdmCalculations.SeparateSubdomains(model, subdElementIds3);
 
                 model.ConnectDataStructures();
                 //bool isTrue = DdmCalculationsGeneral.CheckSubdomainsEmbeddingHostNodes(model, RveMatrixSubdomainInnerNodes);
@@ -363,7 +430,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 if (print_subdomain_data)
                 {
                     //DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
-                    //DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIds, SubdomainNeedsHexasIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
+                    DdmCalculationsGeneral.PrintSubdomainDataForPostPro(subdHexaIds, SubdomainNeedsHexasIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
                     DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(subdFreeBRNodes, subdomainOutputPath, @"\subdomain_matrices_and_data\subdomainBRNodesAndSubd.txt");
                     DdmCalculationsGeneral.PrintSubdomainDataForPostPro2(CornerNodesIdAndsubdomains, subdomainOutputPath, @"\subdomain_matrices_and_data\CornerNodesAndSubdIds.txt");
                 }
@@ -371,7 +438,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 bool get_subdomain_data = true;
                 if (get_subdomain_data)
                 {
-                    //(hexaPrint, cohePrint, shellPrint) = DdmCalculationsGeneral.GetSubdomainDataForPostPro(subdHexaIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
+                    (hexaPrint, cohePrint, shellPrint) = DdmCalculationsGeneral.GetSubdomainDataForPostPro(subdHexaIds, subdCohElementIds, subdShellElementIds, subdomainOutputPath);
                 }
 
             }
@@ -476,11 +543,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                         {
                             ElementID++;
                             originalSubdomain = GetSubdIdForNsubdxyzdata(nsubdx, nsubdy, nsubdz, discr1);
-                            elementRatio =/* 1; // elementRatio =*/1- ratio;
+                            elementRatio =1- ratio;
                             AddElement(model, ElementID, elementRatio, originalSubdomain, E_disp, ni_disp, globalNodeIDforlocalNode_i);
 
                             ElementID++;
-                            diplaSubdomain = GetSubdIdForNsubdxyzdata(nsubdx - 1, nsubdy, nsubdz, discr1);
+                            diplaSubdomain = GetSubdIdForNsubdxyzdata(nsubdx-1, nsubdy, nsubdz, discr1);
                             elementRatio = ratio;
                             AddElement(model, ElementID, elementRatio, diplaSubdomain, E_disp, ni_disp, globalNodeIDforlocalNode_i);
                         }
@@ -504,26 +571,16 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             //elementCounter = nodeElementCounters.Item2;            
             //return nodeElementCounters;
 
-            #region boundary nodes
-            
             int komvoi_rve = (hexa1 + 1) * (hexa2 + 1) * (hexa3 + 1);
             int f_komvoi_rve = kuvos;
             int p_komvoi_rve = komvoi_rve - f_komvoi_rve;
             int komvos;
-            for (int j = 0; j < p_komvoi_rve; j++)
-            {
-                komvos = renumbering.GetNewNodeNumbering(f_komvoi_rve + j + 1);
-               
-                boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
-            }
-            #endregion
-
-
+           
         }
 
         private int GetSubdIdForNsubdxyzdata(int nsubdx, int nsubdy, int nsubdz, int discr1)
         {
-            return nsubdz * discr1 * discr1 + nsubdy * discr1 + nsubdx+ 1;
+            return nsubdz * discr1 * discr1 + nsubdy * discr1 + nsubdx + 1;
         }
 
         private void AddElement(Model model, int elementID, double ratio, int subdomainID, double e_disp, double ni_disp, int[] globalNodeIDforlocalNode_i)

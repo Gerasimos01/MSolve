@@ -27,10 +27,9 @@ namespace ISAAR.MSolve.SamplesConsole
             {
                 CnstValues.exampleNo = example;
                 CnstValues.runOnlyHexaModel = false;
-
+                CnstValues.preventOutputFileWrite();
                 //(Model model1, double[] uc1, Vector globalU1, bool IsFetiDpSolver3d) = SeparateCodeCheckingClass5b_bNEW_debugGit.RunExample();
                 //(Model model2, double[] uc2, Vector globalU2) = SeparateCodeCheckingClass5b_bNEW_debugGit.RunExampleSerial();
-                CnstValues.preventOutputFileWrite();
                 (Model model1, double[] uc1, Vector globalU1, bool IsFetiDpSolver3d) = SeparateCodeCheckingClass5b_bNEW_debugGitOverlap.RunExample();
                 (Model model2, double[] uc2, Vector globalU2) = SeparateCodeCheckingClass5b_bNEW_debugGitOverlap.RunExampleSerial();
                 Vector globalU1_2 = ReorderDirectSolverSolutionIn_globalU1_format(globalU1, globalU2, model1, model2);

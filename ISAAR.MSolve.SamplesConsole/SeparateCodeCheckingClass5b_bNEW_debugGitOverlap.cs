@@ -157,7 +157,7 @@ namespace ISAAR.MSolve.SamplesConsole
             var fetiSolverBuilder = new FetiDP3dSolverSerial.Builder(matrixManagerFactory);  //A.3
 
             //fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
-            fetiSolverBuilder.StiffnessDistribution = StiffnessDistributionType.HeterogeneousCondensed;
+            fetiSolverBuilder.StiffnessDistribution = StiffnessDistributionType.Homogeneous;
             fetiSolverBuilder.Preconditioning = new DirichletPreconditioning();
             fetiSolverBuilder.PcgSettings = pcgSettings;
 
@@ -398,7 +398,7 @@ namespace ISAAR.MSolve.SamplesConsole
             #endregion
 
             #region  overwrite data model region
-            bool run_overwrite_data_region = true;
+            bool run_overwrite_data_region = false;
             bool print_hexa_model = true;
             if (run_overwrite_data_region)
             {

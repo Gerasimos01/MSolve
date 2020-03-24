@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ISAAR.MSolve.LinearAlgebra.Matrices
 {
-    public class CnstValues
+    public class CnstValuesOriginal
     {
         public static int exampleNo { get; set; }
 
@@ -38,7 +38,7 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
                 else { return @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\rand_data.txt"; }
             }
         }
-        public CnstValues()
+        public CnstValuesOriginal()
         {
 
         }
@@ -53,7 +53,7 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
 
         public static bool printPcgMatRhsEtc_AndInterfaceProblemStats { get; set; } = false; // 
 
-        public static bool printPreconditoner { get; set; } = false;//true; // 
+        public static bool printPreconditoner { get; set; } = true; // 
 
         public void WriteToFileStringArray(string[] array, string path)
         {
