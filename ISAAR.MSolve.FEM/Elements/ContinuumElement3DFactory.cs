@@ -141,10 +141,10 @@ namespace ISAAR.MSolve.FEM.Elements
 			return CreateElement(cellType, nodes, materialsAtGaussPoints, commonDynamicProperties);
 		}
 
-		public Hexa8NonLinear_v2 CreateNonLinearElement(CellType cellType, IReadOnlyList<Node> nodes,
+		public ContinummElement3DNonLinear CreateNonLinearElement(CellType cellType, IReadOnlyList<Node> nodes,
 			IContinuumMaterial3D commonMaterial, DynamicMaterial commonDynamicProperties)
 		{
-			return new Hexa8NonLinear_v2(nodes, commonMaterial, integrationsForStiffness[cellType], interpolations[cellType]);
+			return new ContinummElement3DNonLinear(nodes, commonMaterial, integrationsForStiffness[cellType], interpolations[cellType]);
 		}
 
 		
