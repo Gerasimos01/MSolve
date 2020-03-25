@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using ISAAR.MSolve.LinearAlgebra.Iterative.ConjugateGradient;
 using ISAAR.MSolve.LinearAlgebra.Iterative.Termination;
+using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 
 //TODO: Needs Builder pattern
@@ -81,6 +82,8 @@ namespace ISAAR.MSolve.LinearAlgebra.Iterative.PreconditionedConjugateGradient
                 Debug.WriteLine($"PCG Iteration = {iteration}: residual norm ratio = {residualNormRatio}");
                 if (residualNormRatio <= residualTolerance)
                 {
+                    
+                    if (CnstValues.run_plate) { Debug.WriteLine($"discr = {CnstValues.diakritopoihsh_examples[CnstValues.current_example_no,0]}: subdiscr = {CnstValues.diakritopoihsh_examples[CnstValues.current_example_no, 1]}"); }
                     return new IterativeStatistics
                     {
                         AlgorithmName = name,

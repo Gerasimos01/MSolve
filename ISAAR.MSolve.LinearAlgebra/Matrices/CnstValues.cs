@@ -7,6 +7,15 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
 {
     public class CnstValues
     {
+        public static bool run_plate = false;
+
+        public static int[,] diakritopoihsh_examples = new int[,]
+        {{2,6,},{3,6},{4,6},{5,6},{5,6},{6,6},
+            {4,2 },{4,3},{4,4 },{4,5},
+            {3,3 },{5,5} };
+
+        public static int current_example_no;
+
         public static int exampleNo { get; set; }
 
         bool runCluster = false;
