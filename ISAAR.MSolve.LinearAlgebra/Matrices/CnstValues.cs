@@ -10,7 +10,7 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
         public static bool run_plate = false;
 
         public static int[,] diakritopoihsh_examples = new int[,]
-        {{2,6,},{3,6},{4,6},{5,6},{5,6},{6,6},
+        {{2,6},{3,6},{4,6},{5,6},{6,6},
             {4,2 },{4,3},{4,4 },{4,5},
             {3,3 },{5,5} };
 
