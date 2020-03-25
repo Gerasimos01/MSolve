@@ -54,7 +54,7 @@ namespace ISAAR.MSolve.FEM.Elements
 			extrapolations.Add(CellType.Hexa8, ExtrapolationGaussLegendre2x2x2.UniqueInstance);
 
 			// Hexa8rev
-			interpolations.Add(CellType.Hexa8inv, InterpolationHexa8Reverse_v2.UniqueInstance);
+			interpolations.Add(CellType.Hexa8inv, InterpolationHexa8Reversed.UniqueInstance);
 			integrationsForStiffness.Add(CellType.Hexa8inv, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2));
 			integrationsForMass.Add(CellType.Hexa8inv, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2));
 			extrapolations.Add(CellType.Hexa8inv, ExtrapolationGaussLegendre2x2x2.UniqueInstance);

@@ -7,11 +7,11 @@ using System.Collections.Generic;
 
 namespace ISAAR.MSolve.FEM.Interpolation
 {
-    public class InterpolationHexa8Reverse_v2: IsoparametricInterpolation3DBase
+    public class InterpolationHexa8Reversed: IsoparametricInterpolation3DBase
     {
-        private static readonly InterpolationHexa8Reverse_v2 uniqueInstance = new InterpolationHexa8Reverse_v2();
+        private static readonly InterpolationHexa8Reversed uniqueInstance = new InterpolationHexa8Reversed();
 
-        private InterpolationHexa8Reverse_v2() : base(Discretization.Mesh.CellType.Hexa8, 8)
+        private InterpolationHexa8Reversed() : base(Discretization.Mesh.CellType.Hexa8, 8)
         {
             NodalNaturalCoordinates = new NaturalPoint[]
             {
@@ -28,7 +28,7 @@ namespace ISAAR.MSolve.FEM.Interpolation
 
         public override IReadOnlyList<NaturalPoint> NodalNaturalCoordinates { get; }
 
-        public static InterpolationHexa8Reverse_v2 UniqueInstance => uniqueInstance;
+        public static InterpolationHexa8Reversed UniqueInstance => uniqueInstance;
 
         /// <summary>
         /// See <see cref="IIsoparametricInterpolation2D.CheckElementNodes(IReadOnlyList{Node})"/>
