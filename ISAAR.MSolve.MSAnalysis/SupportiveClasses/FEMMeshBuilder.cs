@@ -7,6 +7,7 @@ using ISAAR.MSolve.FEM.Elements;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Matrices;
+using ISAAR.MSolve.LinearAlgebra.Matrices.Builders;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Materials;
 
@@ -2183,8 +2184,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             }
 
             //grammes 71-72
-            double[,] V_epil = new double[6 * (2 * elem1 + 1) * (2 * elem2 + 1), 6 * (2 * elem1 + 1) * (2 * elem2 + 1)];
-            double[,] upomhtrwoV = new double[6 * (2 * elem2 + 1) + 6 * elem2 + 6, 6 * (2 * elem2 + 1) + 12 * elem2 + 6];
+            //bool[,] V_epil = new bool[6 * (2 * elem1 + 1) * (2 * elem2 + 1), 6 * (2 * elem1 + 1) * (2 * elem2 + 1)];
+            var V_epil_builder = DokRowMajor.CreateEmpty(6 * (2 * elem1 + 1) * (2 * elem2 + 1), 6 * (2 * elem1 + 1) * (2 * elem2 + 1));
+            var upomhtrwoV = new int[6 * (2 * elem2 + 1) + 6 * elem2 + 6, 6 * (2 * elem2 + 1) + 12 * elem2 + 6];
             // morfwsi upomhtrwouV           
             for (int j = 0; j < 6 * (2 * elem2 + 1); j++)
             {
@@ -2209,14 +2211,16 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
                 {
                     for (int j2 = 0; j2 < upomhtrwoV.GetLength(1); j2++)
                     {
-                        V_epil[i7 * (6 * (2 * elem2 + 1) + 6 * elem2 + 6) + j1, i7 * (6 * (2 * elem2 + 1) + 12 * elem2 + 6) + j2] = upomhtrwoV[j1, j2];
+                        V_epil_builder[i7 * (6 * (2 * elem2 + 1) + 6 * elem2 + 6) + j1, i7 * (6 * (2 * elem2 + 1) + 12 * elem2 + 6) + j2] = upomhtrwoV[j1, j2];
                     }
                 }
             }
             for (int j1 = 0; j1 < 6 * (2 * elem2 + 1); j1++)
             {
-                V_epil[elem1 * (6 * (2 * elem2 + 1) + 6 * elem2 + 6) + j1, elem1 * (6 * (2 * elem2 + 1) + 12 * elem2 + 6) + j1] = 1;
+                V_epil_builder[elem1 * (6 * (2 * elem2 + 1) + 6 * elem2 + 6) + j1, elem1 * (6 * (2 * elem2 + 1) + 12 * elem2 + 6) + j1] = 1;
             }
+
+            var V_epil = V_epil_builder.BuildCsrMatrix(true);
 
             // grammes 89-90
             double[] o_x_endiam = new double[o_xsunol.GetLength(0)];
@@ -2224,9 +2228,22 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             {
                 o_x_endiam[j1] = o_xsunol[j1];
             }
-            double[] o_x_endiam2;
-            Matrix V_epil_mat = Matrix.CreateFromArray(V_epil);
-            o_x_endiam2 = (V_epil_mat * Vector.CreateFromArray(o_x_endiam)).CopyToArray();
+            double[] o_x_endiam2= new double[V_epil.NumRows];
+            //Matrix V_epil_mat = Matrix.CreateFromArray(V_epil);
+            //o_x_endiam2 = (V_epil_mat * Vector.CreateFromArray(o_x_endiam)).CopyToArray();
+
+            o_x_endiam2 = (V_epil * Vector.CreateFromArray(o_x_endiam)).CopyToArray();
+
+            //for (int i1 = 0; i1 < V_epil.NumRows; i1++)
+            //{
+            //    for (int i2 = 0; i2 < V_epil.NumColumns; i2++)
+            //    {
+            //        if (V_epil[i1, i2])
+            //        {
+            //            o_x_endiam2[i1] +=  o_x_endiam[i2];
+            //        }
+            //    }
+            //}
 
             // grammh 91
             o_xsunol = new double[elem1 * (6 * (2 * elem2 + 1) + 6 * (elem2 + 1)) + 6 * (2 * elem2 + 1)];

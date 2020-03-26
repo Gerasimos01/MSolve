@@ -9,16 +9,26 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
     {
         public static bool run_plate = false;
 
+        //public static int[,] diakritopoihsh_examples = new int[,]
+        //{{2,6},{3,6},{4,6},{5,6},{6,6},
+        //    {4,2 },{4,3},{4,4 },{4,5},
+        //    {2,16 },{4,8 },{8,4 },{16,2 },
+        //    {2,8 },{3,6 }, {4,8 }, {5,10 } }; 
+
         public static int[,] diakritopoihsh_examples = new int[,]
-        {{2,6,},{3,6},{4,6},{5,6},{5,6},{6,6},
-            {4,2 },{4,3},{4,4 },{4,5},
-            {3,3 },{5,5} };
+    {{2,6},{3,6},{4,6},{5,6},{6,6},
+                {4,2 },{4,3},{4,4 },{4,5},
+                {2,16 },{4,8 },{8,4 },{16,2 },
+                {2,8 },{3,6 }, {4,8 }, {5,10 }, {2,4 }};
+
+        //public static int[,] diakritopoihsh_examples = new int[,]
+        //{{2,6},{4,12},{5,15}, };
 
         public static int current_example_no;
 
         public static int exampleNo { get; set; }
 
-        bool runCluster = false;
+        bool runCluster = true;
 
         public static bool runOnlyHexaModel { get; set; } = false;
         //public string exampleOutputPathGen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example1\input_matlab";
@@ -29,6 +39,15 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
             {
                 if (runCluster) { return @"C:\Users\cluster\Documents\Large_rves\examples\example" + exampleNo + @"\input_matlab"; }
                 else { return @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example" + exampleNo + @"\input_matlab"; }
+            }
+        }
+
+        public string plateexampleOutputPathGen
+        {
+            get
+            {
+                if (runCluster) { return @"C:\Users\cluster\Documents\Large_rves\examples\plate"; }
+                else { return @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\plate" ; }
             }
         }
         public string solverPath { get { return exampleOutputPathGen + @"\model_overwrite\subdomain_data_solver"; } }

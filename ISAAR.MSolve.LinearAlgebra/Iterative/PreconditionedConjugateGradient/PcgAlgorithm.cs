@@ -83,7 +83,13 @@ namespace ISAAR.MSolve.LinearAlgebra.Iterative.PreconditionedConjugateGradient
                 if (residualNormRatio <= residualTolerance)
                 {
                     
-                    if (CnstValues.run_plate) { Debug.WriteLine($"discr = {CnstValues.diakritopoihsh_examples[CnstValues.current_example_no,0]}: subdiscr = {CnstValues.diakritopoihsh_examples[CnstValues.current_example_no, 1]}"); }
+                    if (CnstValues.run_plate) { Debug.WriteLine($"PCG Iteration = {iteration}: residual norm ratio = {residualNormRatio}");
+                        Debug.WriteLine($"discr = {CnstValues.diakritopoihsh_examples[CnstValues.current_example_no,0]}: subdiscr = {CnstValues.diakritopoihsh_examples[CnstValues.current_example_no, 1]}");
+                        int discr = CnstValues.diakritopoihsh_examples[CnstValues.current_example_no, 0];
+                        int subdiscr = CnstValues.diakritopoihsh_examples[CnstValues.current_example_no, 1];
+
+                        PrintSolutionStats(residualNormRatio, discr, subdiscr, CnstValues.current_example_no);
+                    }
                     return new IterativeStatistics
                     {
                         AlgorithmName = name,
@@ -111,6 +117,22 @@ namespace ISAAR.MSolve.LinearAlgebra.Iterative.PreconditionedConjugateGradient
                 NumIterationsRequired = maxIterations,
                 ResidualNormRatioEstimation = residualNormRatio
             };
+        }
+
+        private void PrintSolutionStats(double residualNormRatio, int discr, int subdiscr, int example_no)
+        {
+            string[] statsLines = new string[] { $"PCG Iteration = {iteration} ,",
+            $"PCG Iteration = {iteration} ,",
+            $"discr = {discr},",
+            $"subdiscri = {subdiscr},",
+            
+
+            };
+
+            var cnstVal = new CnstValues();
+            var statsOutputPath = cnstVal.plateexampleOutputPathGen + @"\discr"+discr+@"subdiscr_"+subdiscr+@".txt"; 
+            cnstVal.WriteToFileStringArray(statsLines, statsOutputPath);
+
         }
 
         /// <summary>
