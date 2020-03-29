@@ -35,7 +35,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
     /// Use of model separation methods is made.
     /// Authors Gerasimos Sotiropoulos
     /// </summary>
-    public class RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit : IRVEbuilder //IdegenerateRVEbuilder
+    public class RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGitCopyBfreExpcteOrientations : IRVEbuilder //IdegenerateRVEbuilder
     {
         //origin: RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3D opou ginetai debug h 3D FETI me Ser
         //changes:  epiprostheta merika corner nodes
@@ -55,7 +55,6 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         private bool decomposeModel;
         public bool useInput = true;
-        public bool usePredifinedOrientations = false;
         
         public Dictionary<int, HashSet<INode>> cornerNodes;
         public ISolver GetAppropriateSolver(Model model)
@@ -105,7 +104,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         int RVE_id;
         public int[][] CornerNodesData;
 
-        public RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit(int RVE_id, bool decomposeModel, Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp,
+        public RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGitCopyBfreExpcteOrientations(int RVE_id, bool decomposeModel, Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp,
             int subdiscr1, int discr1, int discr3, int subdiscr1_shell, int discr1_shell, int graphene_sheets_number)
         {
             this.RVE_id = RVE_id;
@@ -121,7 +120,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         }
 
-        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGit(a, decomposeModel, mpgp, subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, graphene_sheets_number);
+        public IRVEbuilder Clone(int a) => new RveGrShMultipleSeparatedDevelopbDuplicate_2d_alteDevelop3DcornerGitCopyBfreExpcteOrientations(a, decomposeModel, mpgp, subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell, graphene_sheets_number);
 
         public Tuple<Model, Dictionary<int, Node>, double> GetModelAndBoundaryNodes()
         {
@@ -237,16 +236,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             if (!useInput)
             {
                 //create geometry
-                if (!usePredifinedOrientations)
-                {
-                    (o_xsunol_vectors, sunol_nodes_numbering, kanonas_renumbering_2) = CreateRandomGrSh_o_xsunol_and_renumbering(b1, b2, sigma_f,
-                    mp, ekk_xyz, model_o_x_parameteroi, run_debug);
-                }
-                else
-                {
-                    (o_xsunol_vectors, sunol_nodes_numbering, kanonas_renumbering_2) = CreateRandomGrSh_o_xsunol_and_renumberingPredefinedOrientations(b1, b2, sigma_f,
-                    mp, ekk_xyz, model_o_x_parameteroi, run_debug);
-                }
+                (o_xsunol_vectors, sunol_nodes_numbering, kanonas_renumbering_2) = CreateRandomGrSh_o_xsunol_and_renumbering(b1, b2, sigma_f,
+                mp, ekk_xyz, model_o_x_parameteroi, run_debug);
                 //print geometry
                 string modelOutputPath_gen;
                 if (!run_debug) modelOutputPath_gen = subdomainOutputPath_gen + @"\geometry_model\generated_ox_sunol_vecs";
@@ -446,8 +437,6 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             return new Tuple<Model, Dictionary<int, Node>, double>(model, boundaryNodes, volume);
 
         }
-
-        
 
         private int[][] GetCornerNodesData(int discr1, int subdiscr1)
         {
@@ -1149,57 +1138,6 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 o_xsunol_vectors[j] = RandomOrientations.modify_ox_sunol_forRotationAndTranslation(o_xsunol_vectors[j], rot_phi_1[j], rot_phi_2[j], ekk_xyz[j]);
             }
             #endregion
-
-            #region create renumbering
-            (int[] sunol_nodes_numbering, int[] kanonas_renumbering_2) = FEMMeshBuilder.GetTotalModelRenumbering(o_x_rve, o_xsunol_vectors, mp);
-            #endregion
-
-            return (o_xsunol_vectors, sunol_nodes_numbering, kanonas_renumbering_2);
-        }
-
-        private (double[][] o_xsunol_vectors, int[] sunol_nodes_numbering, int[] kanonas_renumbering_2) CreateRandomGrSh_o_xsunol_and_renumberingPredefinedOrientations(double b1, double b2, double sigma_f,
-            rveMatrixParameters mp, double[][] ekk_xyz, o_x_parameters[] model_o_x_parameteroi, bool run_debug)
-        {
-            double[][] o_x_rve = FEMMeshBuilder.Build_o_x_rve_Coordinates(mp);
-
-            sigma_f = 0;
-            IList<IStochasticCoefficientsProvider2D> coefficientsProviders =
-                new List<IStochasticCoefficientsProvider2D> { new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01, 2 * Math.PI / ((double)20), 20) };
-            for (int j = 0; j < graphene_sheets_number - 1; j++)
-            { coefficientsProviders.Add(new SpectralRepresentation2DRandomField(b1, b2, sigma_f, 0.01, 2 * Math.PI / ((double)20), 20)); }
-
-            double[][] o_xsunol_vectors = new double[graphene_sheets_number][];//mporei na xrhsimpopoiithei kai to ox_sunol_BUilder tou RveExamples builder tou pio prosfatou input commit
-                                                                               //dld xwris to random 
-            for (int j = 0; j < graphene_sheets_number; j++)
-            {
-                UpdateStochasticCoefficientsProvider(coefficientsProviders[j]); //origin: RandomGrapheneModelBuilder.FewElementsRVECheckExample2GrapheneSheets (Input 3 Ger Ody)
-                int new_rows = 2 * gp.elem1 + 1;
-                int new_lines = 2 * gp.elem2 + 1; //TODO taktopoihsh afta edw ta variables
-                o_xsunol_vectors[j] = FEMMeshBuilder.ox_sunol_Builder_ekk_with_o_x_parameters(new_rows, new_lines, gp.L1, gp.L2, gp.elem1, gp.elem2, gp.a1_shell, ekk_xyz[j],
-                model_o_x_parameteroi[j], coefficientsProviders[j]);// origin: RandomGrapheneModelBuilder.AddGrapheneSheet_with_o_x_parameters(......, IStochasticCoefficientsProvider2D coefficientsProvider)
-            }
-
-            //create random data for geom (origin:RVEkanoninkhsGewmetriasBuilder.Reference2RVEExample50_000withRenumberingwithInputFromMSOLVE() %637 apo input 4)
-            //sigma_f = 0.2; // apo to arxeio create_random_data_for_geom_programing_in_C tou fakelou tou parakatw rand data vec path
-            string rand_data_vec_path = (new CnstValues()).rand_data_vec_path;
-            savedRandomDataClass a = new savedRandomDataClass(PrintUtilities.ReadVector(rand_data_vec_path));
-            Tuple<double[], double[], double[][]> RandomDataForGeomGiaSugkekrimenoRand;
-
-            //if (run_debug) { RandomDataForGeomGiaSugkekrimenoRand = RandomOrientations.CreateRandomDataForGeom(graphene_sheets_number, gp, mp, sigma_f, a); }
-            //else { RandomDataForGeomGiaSugkekrimenoRand = RandomOrientations.CreateRandomDataForGeom(graphene_sheets_number, gp, mp, sigma_f); }
-            RandomDataForGeomGiaSugkekrimenoRand = PredefinedRandomOrientationsProvider.GetPredefinedOrienntationData();
-
-            //return new Tuple<double[], double[], double[][]>(rot_phi_1, rot_phi_2, ekk_xyz);
-            double[] rot_phi_1 = RandomDataForGeomGiaSugkekrimenoRand.Item1;
-            double[] rot_phi_2 = RandomDataForGeomGiaSugkekrimenoRand.Item2;
-            ekk_xyz = RandomDataForGeomGiaSugkekrimenoRand.Item3;
-
-            //update o_xsunol_vectors  for rotation and translation
-            for (int j = 0; j < graphene_sheets_number; j++)
-            {
-                o_xsunol_vectors[j] = RandomOrientations.modify_ox_sunol_forRotationAndTranslation(o_xsunol_vectors[j], rot_phi_1[j], rot_phi_2[j], ekk_xyz[j]);
-            }
-
 
             #region create renumbering
             (int[] sunol_nodes_numbering, int[] kanonas_renumbering_2) = FEMMeshBuilder.GetTotalModelRenumbering(o_x_rve, o_xsunol_vectors, mp);
