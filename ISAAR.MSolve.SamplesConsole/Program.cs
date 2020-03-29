@@ -14,6 +14,7 @@ using MGroup.Stochastic.Structural.Example;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using System.Linq;
 using ISAAR.MSolve.LinearAlgebra.Matrices;
+using ISAAR.MSolve.MSAnalysis.SupportiveClasses;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
@@ -23,8 +24,9 @@ namespace ISAAR.MSolve.SamplesConsole
 
         static void Main(string[] args)
         {
-            for (int example = 21; example < 31 ; example++)
+            for (int example = 47; example < 60 ; example++)
             {
+                PredefinedRandomOrientationsProvider.ExampleNo = example;
                 CnstValues.exampleNo = example;
                 CnstValues.runOnlyHexaModel = false;
 
@@ -39,12 +41,12 @@ namespace ISAAR.MSolve.SamplesConsole
 
 
 
-                //CnstValues.runOnlyHexaModel = true;
-                //CnstValues.preventOutputFileWrite(); 
+                CnstValues.runOnlyHexaModel = true;
+                CnstValues.preventOutputFileWrite();
 
-                //FetiDP3dSolverSerialTestsInput.TestSolutionGlobalDisplacements();
+                FetiDP3dSolverSerialTestsInput.TestSolutionGlobalDisplacements();
 
-                //CnstValues.RestoreDefaultBoolValues();
+                CnstValues.RestoreDefaultBoolValues();
             }
                                                                         
         }

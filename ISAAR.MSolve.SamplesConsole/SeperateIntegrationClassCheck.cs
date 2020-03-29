@@ -81,9 +81,9 @@ namespace ISAAR.MSolve.SamplesConsole
             {
                 E_disp = 3.5, //Gpa
                 ni_disp = 0.4, // stather Poisson
-                L01 = 95, //150, // diastaseis
-                L02 = 95, //150,
-                L03 = 95, //40,
+                L01 = 120, //95, //150, // diastaseis
+                L02 = 120, //95, //150,
+                L03 = 120, //95, //40,
                 hexa1 = discr1 * subdiscr1,// diakritopoihsh
                 hexa2 = discr1 * subdiscr1,
                 hexa3 = discr1 * subdiscr1,
@@ -97,8 +97,8 @@ namespace ISAAR.MSolve.SamplesConsole
                 ni_shell = 0.0607, // stathera poisson
                 elem1 = discr1_shell * subdiscr1_shell,
                 elem2 = discr1_shell * subdiscr1_shell,
-                L1 = 50,// nm  // DIORTHOSI 2 graphene sheets
-                L2 = 50,// nm
+                L1 = 38, //50,// nm  // DIORTHOSI 2 graphene sheets
+                L2 = 38, //.50,// nm
                 L3 = 112.5096153846, // nm
                 a1_shell = 0, // nm
                 tk = 0.0125016478913782,  // 0.0125016478913782nm //0.125*40,

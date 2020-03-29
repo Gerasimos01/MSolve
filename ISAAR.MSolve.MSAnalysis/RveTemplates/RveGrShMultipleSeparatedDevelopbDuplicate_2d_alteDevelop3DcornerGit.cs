@@ -55,7 +55,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         private bool decomposeModel;
         public bool useInput = true;
-        public bool usePredifinedOrientations = false;
+        public bool usePredifinedOrientations = true;
         
         public Dictionary<int, HashSet<INode>> cornerNodes;
         public ISolver GetAppropriateSolver(Model model)
