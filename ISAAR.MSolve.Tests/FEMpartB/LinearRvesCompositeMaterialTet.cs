@@ -116,8 +116,10 @@ namespace ISAAR.MSolve.Tests.FEMpartB
 
 
             double E_disp = 3.5e9; /*Gpa*/ double ni_disp = 0.4; // stather Poisson
-            var outterMaterial = new ElasticMaterial3DtotalStrain() { PoissonRatio = 0.4, YoungModulus = 3.5e9 }; //pascal
-            
+
+            //var outterMaterial = new ElasticMaterial3DtotalStrain() { PoissonRatio = 0.4, YoungModulus = 3.5e9 }; //pascal
+            var outterMaterial = new ElasticMaterial3D() { PoissonRatio = 0.4, YoungModulus = 3.5e9 };
+
             var Vec1 = Vector.CreateFromArray(new double[3] { 1, 0, 0 });
             var Vec2 = Vector.CreateFromArray(new double[3] { 0.5, 2, 0 });
             var strain = new double[3] { 0.01, 0, 0 };
@@ -161,7 +163,7 @@ namespace ISAAR.MSolve.Tests.FEMpartB
 		    expectedConsCheck2[2, 1]=	-132674231.51461455	;
             expectedConsCheck2[2, 2] = 386913800.001923;
 
-            double[] stressExpected5 = new double[] { 48802908.700278834, 4908545.9616696825, -5741518.6704506781 };
+            double[] stressExpected5 = new double[] { 97095419.756563067, 9765756.503912542, -11422990.559425306 };
 
 
             Assert.True(AreDisplacementsSame(stressExpected4, stressesCheck4));
