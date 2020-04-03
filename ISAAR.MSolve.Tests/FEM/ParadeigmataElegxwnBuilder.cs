@@ -1,0 +1,281 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using ISAAR.MSolve.Analyzers;
+using ISAAR.MSolve.Analyzers.NonLinear;
+using ISAAR.MSolve.Discretization;
+using ISAAR.MSolve.Discretization.Commons;
+using ISAAR.MSolve.Discretization.FreedomDegrees;
+using ISAAR.MSolve.Discretization.Integration.Quadratures;
+using ISAAR.MSolve.FEM.Elements;
+using ISAAR.MSolve.FEM.Embedding;
+using ISAAR.MSolve.FEM.Entities;
+using ISAAR.MSolve.FEM.Interpolation;
+using ISAAR.MSolve.Logging;
+using ISAAR.MSolve.Materials;
+using ISAAR.MSolve.Problems;
+using ISAAR.MSolve.Solvers;
+using ISAAR.MSolve.Solvers.Direct;
+using Xunit;
+
+namespace ISAAR.MSolve.SamplesConsole
+{
+    public static class ParadeigmataElegxwnBuilder
+    {
+        [Fact]
+        public static void SolveCantilever()
+        {
+            Model model = new Model();
+            model.SubdomainsDictionary.Add(1, new Subdomain(1));
+            Example_cohesive_hexa_orthi_constr_anw_benc1(model);
+
+            
+        }
+
+        public static TotalDisplacementsPerIterationLog RunAnalysis(Model model)
+        {
+            // Solver
+            var solverBuilder = new SkylineSolver.Builder();
+            ISolver solver = solverBuilder.BuildSolver(model);
+
+            // Problem type
+            var provider = new ProblemStructural(model, solver);
+
+            // Analyzers
+            int increments = 2;
+            var childAnalyzerBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, increments);
+            childAnalyzerBuilder.ResidualTolerance = 1E-8;
+            childAnalyzerBuilder.MaxIterationsPerIncrement = 100;
+            childAnalyzerBuilder.NumIterationsForMatrixRebuild = 1;
+            //childAnalyzerBuilder.SubdomainUpdaters = new[] { new NonLinearSubdomainUpdater(model.SubdomainsDictionary[subdomainID]) }; // This is the default
+            LoadControlAnalyzer childAnalyzer = childAnalyzerBuilder.Build();
+            var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
+
+            // Output
+            var watchDofs = new Dictionary<int, int[]>();
+            watchDofs.Add(1, new int[5] { 0, 11, 23, 35, 47 });
+            var log1 = new TotalDisplacementsPerIterationLog(watchDofs);
+            childAnalyzer.TotalDisplacementsPerIterationLog = log1;
+
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
+
+            return log1;
+        }
+
+        //original:C:\Users\acivi\Documents\notes_elegxoi_2\develop_cohesive_tet\MSolve-0f36677a620c9801e578ad6e2ff6fc5ff80b2992_apo_links_internet
+        //plhrofories: sto idio link apo panw
+        public static void Example_cohesive_hexa_mixed(Model model)
+        {
+            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8node(model); 
+            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeConstraintsMixed(model);
+            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsMIxed(model, 1);
+        }
+
+        public static void Example_cohesive_hexa_orthi_elastic(Model model)
+        {
+            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8node(model); // me 1353000
+            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeConstraintsOrthiElastic(model);
+            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsElasticOrthi(model, 3.47783);
+        }
+
+        public static void Example_cohesive_hexa_orthi_constr_anw_benc1(Model model)
+        {
+            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8node(model); // me 135300
+            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeConstraintsBenc1(model);
+            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsBenc1(model, 8);// gia elastiko klado 
+            //ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsBenc1(model, 13.75); // gia metelastiko
+        }
+
+        
+
+        public static void Example2Hexa8NL1Cohesive8node(Model model)
+        {
+            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            {
+                YoungModulus = 135300, // 1353000 gia to allo paradeigma
+                PoissonRatio = 0.3,
+            };
+            BenzeggaghKenaneCohesiveMaterial material2 = new BenzeggaghKenaneCohesiveMaterial()
+            {
+                T_o_3 = 57,// N / mm2
+                D_o_3 = 0.000057, // mm
+                D_f_3 = 0.0098245610,  // mm
+
+                T_o_1 = 57,// N / mm2
+                D_o_1 = 0.000057, // mm
+                D_f_1 = 0.0098245610,  // mm
+
+                n_curve = 1.4
+            };
+
+
+            double[,] nodeData = new double[,] {
+            {0.500000,0.000000,1.000000},
+            {0.500000,0.500000,1.000000},
+            {0.000000,0.000000,1.000000},
+            {0.000000,0.500000,1.000000},
+            {0.500000,0.000000,0.500000},
+            {0.500000,0.500000,0.500000},
+            {0.000000,0.000000,0.500000},
+            {0.000000,0.500000,0.500000},
+            {0.500000,0.000000,0.000000},
+            {0.500000,0.500000,0.000000},
+            {0.000000,0.000000,0.000000},
+            {0.000000,0.500000,0.000000},
+            {0.500000,0.000000,0.500000},
+            {0.500000,0.500000,0.500000},
+            {0.000000,0.000000,0.500000},
+            {0.000000,0.500000,0.500000} };
+
+            int[,] elementData = new int[,] {{1,1,2,4,3,5,6,8,7},{2,13,14,16,15,9,10,12,11},};
+
+            int[] cohesive8Nodes = new int[] { 5, 6, 8, 7, 13, 14, 16, 15, };
+
+            // orismos shmeiwn
+            for (int nNode = 0; nNode < nodeData.GetLength(0); nNode++)
+            {
+                model.NodesDictionary.Add(nNode+1, new Node(id:nNode+1, x: nodeData[nNode, 0], y: nodeData[nNode, 1], z: nodeData[nNode, 2] ));
+
+            }
+
+            // orismos elements 
+            Element e1;
+            int subdomainID = 1;
+            for (int nElement = 0; nElement < elementData.GetLength(0); nElement++)
+            {
+                List<Node> nodeSet = new List<Node>(8);
+                for (int j = 0; j < 8; j++)
+                {
+                    int nodeID = elementData[nElement, j];
+                    nodeSet.Add((Node)model.NodesDictionary[nodeID]);
+                }
+                e1 = new Element()
+                {
+                    ID = nElement+1,
+                    ElementType = new ContinummElement3DNonLinear(nodeSet, material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3), InterpolationHexa8Reversed.UniqueInstance) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+                };
+                for (int j = 0; j < 8; j++)
+                {
+                    e1.NodesDictionary.Add(elementData[nElement,j+1], model.NodesDictionary[elementData[nElement, j+1]]);
+                }
+                model.ElementsDictionary.Add(e1.ID, e1);
+                model.SubdomainsDictionary[subdomainID].Elements.Add(e1.ID, e1);
+            }
+
+            // kai to cohesive
+            e1 = new Element()
+            {
+                ID = 3,
+                ElementType = new cohesive8node(material2, 3, 3) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+            };
+            for (int j = 0; j < 8; j++)
+            {
+                e1.NodesDictionary.Add(cohesive8Nodes[j], model.NodesDictionary[cohesive8Nodes[j]]);
+            }
+            model.ElementsDictionary.Add(e1.ID, e1);
+            model.SubdomainsDictionary[subdomainID].Elements.Add(e1.ID, e1);
+        }
+
+        public static void Example2Hexa8NL1Cohesive8nodeConstraintsOrthiElastic(Model model)
+        {
+            for (int k = 13; k < 17; k++)
+            {
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationX });
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationY });
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationZ });
+            }
+        }
+
+        public static void Example2Hexa8NL1Cohesive8nodeConstraintsMixed(Model model)
+        {            
+            for (int k = 13; k < 17; k++)
+            {
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationX });
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationY });
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationZ });
+            }
+        }
+
+        public static void Example2Hexa8NL1Cohesive8nodeConstraintsBenc1(Model model)
+        {
+            for (int k = 1; k < 5; k++)
+            {
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationX });
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationY });
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationZ });
+            }
+            for (int k = 5; k < 9; k++)
+            {
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationX });
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationY });
+            }
+            for (int k = 9; k < 17; k++)
+            {
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationX });
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationY });
+                model.NodesDictionary[k].Constraints.Add(new Constraint { DOF = StructuralDof.TranslationZ });
+            }
+        }
+
+        public static void Example2Hexa8NL1Cohesive8nodeLoadsMIxed(Model model, double load_value)
+        {
+            Load load1;
+            for (int k = 5; k < 9; k++)
+            {
+                load1 = new Load()
+                {
+                    Node = model.NodesDictionary[k],
+                    DOF = StructuralDof.TranslationX,
+                    Amount = 1*load_value
+
+                };
+                model.Loads.Add(load1);
+                load1 = new Load()
+                {
+                    Node = model.NodesDictionary[k],
+                    DOF = StructuralDof.TranslationZ,
+                    Amount = 0.2*load_value
+
+                };
+                model.Loads.Add(load1);
+            }
+        }
+
+        public static void Example2Hexa8NL1Cohesive8nodeLoadsElasticOrthi(Model model, double load_value)
+        {
+            Load load1;
+            for (int k = 1; k < 5; k++)
+            {
+                load1 = new Load()
+                {
+                    Node = model.NodesDictionary[k],
+                    DOF = StructuralDof.TranslationZ,
+                    Amount = 1 * load_value
+
+                };
+                model.Loads.Add(load1);
+            }
+        }
+
+        public static void Example2Hexa8NL1Cohesive8nodeLoadsBenc1(Model model, double load_value)
+        {
+            Load load1;
+            for (int k = 5; k < 9; k++)
+            {
+                load1 = new Load()
+                {
+                    Node = model.NodesDictionary[k],
+                    DOF = StructuralDof.TranslationZ,
+                    Amount =1* load_value
+
+                };
+                model.Loads.Add(load1);
+            }
+        }
+
+
+        
+
+    }
+}
