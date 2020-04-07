@@ -25,11 +25,40 @@ namespace ISAAR.MSolve.SamplesConsole
         [Fact]
         public static void SolveCantilever()
         {
-            Model model = new Model();
-            model.SubdomainsDictionary.Add(1, new Subdomain(1));
-            Example_cohesive_hexa_orthi_constr_anw_benc1(model);
+            Model model1 = new Model();
+            model1.SubdomainsDictionary.Add(1, new Subdomain(1));
+            Example_cohesive_hexa_orthi_constr_anw_benc1(model1,8);
+            var log1 = RunAnalysis(model1);
 
-            
+            double[] displacements1 = new double[4] { 0.00019727473744350047, 0.00019727473744365822, 0.00019727473744356587, 0.0001972747374435206 };
+
+            double[] expected1 = new double[] { log1.GetTotalDisplacement(4, 1, 0), log1.GetTotalDisplacement(4, 1, 1), log1.GetTotalDisplacement(4, 1, 2), log1.GetTotalDisplacement(4, 1, 3) };
+            Model model2 = new Model();
+            model2.SubdomainsDictionary.Add(1, new Subdomain(1));
+            Example_cohesive_hexa_orthi_constr_anw_benc1(model2, 13.75);
+            var log2 = RunAnalysis(model2);
+
+
+            double[] displacements2 = new double[4] { 0.00045445796734459886, 0.00045445796734467687, 0.00045445796734467741, 0.00045445796734453625 };
+            double[] expected2 = new double[] { log2.GetTotalDisplacement(4, 1, 0), log2.GetTotalDisplacement(4, 1, 1), log2.GetTotalDisplacement(4, 1, 2), log2.GetTotalDisplacement(4, 1, 3) };
+
+
+            Assert.True(AreDisplacementsSame(expected1, displacements1));
+            Assert.True(AreDisplacementsSame(expected2, displacements2));
+
+        }
+
+        private static bool AreDisplacementsSame(double[] expectedDisplacements, double[] computedDisplacements)//.
+        {
+            var comparer = new ValueComparer(1E-13);
+            for (int i1 = 0; i1 < expectedDisplacements.Length; i1++)
+            {
+                if (!comparer.AreEqual(expectedDisplacements[i1], computedDisplacements[i1]))
+                {
+                    return false;
+                }
+            }//.
+            return true;
         }
 
         public static TotalDisplacementsPerIterationLog RunAnalysis(Model model)
@@ -53,7 +82,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
             // Output
             var watchDofs = new Dictionary<int, int[]>();
-            watchDofs.Add(1, new int[5] { 0, 11, 23, 35, 47 });
+            watchDofs.Add(1, new int[] { 0,1,2,3 });
             var log1 = new TotalDisplacementsPerIterationLog(watchDofs);
             childAnalyzer.TotalDisplacementsPerIterationLog = log1;
 
@@ -79,12 +108,13 @@ namespace ISAAR.MSolve.SamplesConsole
             ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsElasticOrthi(model, 3.47783);
         }
 
-        public static void Example_cohesive_hexa_orthi_constr_anw_benc1(Model model)
+        public static void Example_cohesive_hexa_orthi_constr_anw_benc1(Model model, double load_value)
         {
             ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8node(model); // me 135300
             ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeConstraintsBenc1(model);
-            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsBenc1(model, 8);// gia elastiko klado 
+            //ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsBenc1(model, 8);// gia elastiko klado 
             //ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsBenc1(model, 13.75); // gia metelastiko
+            ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsBenc1(model, load_value);// gia elastiko klado 
         }
 
         
