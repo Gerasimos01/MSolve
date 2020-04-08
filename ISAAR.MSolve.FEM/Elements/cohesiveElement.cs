@@ -27,8 +27,6 @@ namespace ISAAR.MSolve.FEM.Elements
         // ews edw
 
 
-        public int gp_d1_coh { get; set; } // den prepei na einai static--> shmainei idio gia ola taantikeimena afthw ths klashs
-        public int gp_d2_coh { get; set; }
         private int nGaussPoints; //TODO meta afto mporei na ginei readonly.
 
         public bool MatrixIsNotInitialized = true;
@@ -37,17 +35,13 @@ namespace ISAAR.MSolve.FEM.Elements
         {
         }
 
-        public cohesiveElement(ICohesiveZoneMaterial3D material, IQuadrature2D quadratureForStiffness,IIsoparametricInterpolation2D interpolation, int gp_d1c, int gp_d2c)
+        public cohesiveElement(ICohesiveZoneMaterial3D material, IQuadrature2D quadratureForStiffness,IIsoparametricInterpolation2D interpolation)
         {
             this.QuadratureForStiffness = quadratureForStiffness;
             this.interpolation = interpolation;
             this.nGaussPoints = quadratureForStiffness.IntegrationPoints.Count;
 
-            this.gp_d1_coh = gp_d1c; //TODO erase this 
-            this.gp_d2_coh = gp_d2c;
-
-
-            materialsAtGaussPoints = new ICohesiveZoneMaterial3D[nGaussPoints];
+           materialsAtGaussPoints = new ICohesiveZoneMaterial3D[nGaussPoints];
             for (int i = 0; i < nGaussPoints; i++)
                 materialsAtGaussPoints[i] = material.Clone();
 
@@ -69,110 +63,11 @@ namespace ISAAR.MSolve.FEM.Elements
 
 
         public int endeixiShapeFunctionAndGaussPointData = 1;
-        private double[] a_12g;
-        private double a_1g;
-        private double a_2g;
-        private double[][] N1;
-        private double[] N_i;
-        private double[] N_i_ksi;
-        private double[] N_i_heta;
+        
 
-        private double ksi;
-        private double heta;
-        private double zeta;
-        private int npoint;
+       
 
-        private void CalculateShapeFunctionAndGaussPointData()
-        {
-            nGaussPoints = gp_d1_coh * gp_d2_coh ;
-            a_12g = new double[nGaussPoints];
-            N_i = new double[4]; 
-            N_i_ksi = new double[4]; 
-            N_i_heta = new double[4]; 
-            N1 = new double[nGaussPoints][];
-            N3 = new double[nGaussPoints][,];
-           
-            for (int l = 0; l < nGaussPoints; l++)
-            {
-                N1[l] = new double[interpolation.NumFunctions];
-                N3[l] = new double[3,3*interpolation.NumFunctions];
-                
-            }
-            for (int j = 0; j < gp_d1_coh; j++) 
-            {
-                for (int k = 0; k < gp_d2_coh; k++)
-                {
-                    npoint = j * gp_d1_coh + k;
-                    if (gp_d1_coh == 3)
-                    {
-                        ksi = 0.5 * (j - 1) * (j - 2) * (-0.774596669241483) + (-1) * (j) * (j - 2) * (0) + 0.5 * (j) * (j - 1) * (0.774596669241483);
-                        a_1g = 0.5 * (j - 1) * (j - 2) * (0.555555555555555) + (-1) * (j) * (j - 2) * (0.888888888888888) + 0.5 * (j) * (j - 1) * (0.555555555555555);
-                    }
-                    if (gp_d1_coh == 2)
-                    {
-                        ksi = (-0.577350269189626) * (j - 1) * (-1) + (0.577350269189626) * (j) * (+1);
-                        a_1g = 1;
-                    }
-                    if (gp_d2_coh == 3)
-                    {
-                        heta = 0.5 * (k - 1) * (k - 2) * (-0.774596669241483) + (-1) * (k) * (k - 2) * (0) + 0.5 * (k) * (k - 1) * (0.774596669241483);
-                        a_2g = 0.5 * (k - 1) * (k - 2) * (0.555555555555555) + (-1) * (k) * (k - 2) * (0.888888888888888) + 0.5 * (k) * (k - 1) * (0.555555555555555);
-                    }
-                    if (gp_d2_coh == 2)
-                    {
-                        heta = (-0.577350269189626) * (k - 1) * (-1) + (0.577350269189626) * (k) * (+1);
-                        a_2g = 1;
-                    }
-
-                    a_12g[npoint] = a_1g * a_2g;
-
-                    N_i[0] = 0.25 * (1 + ksi) * (1 + heta);
-                    N_i[1] = 0.25 * (1 - ksi) * (1 + heta);
-                    N_i[2] = 0.25 * (1 - ksi) * (1 - heta);
-                    N_i[3] = 0.25 * (1 + ksi) * (1 - heta);
-
-                    N_i_ksi[0] = +0.25 * (1 + heta);
-                    N_i_ksi[1] = -0.25 * (1 + heta);
-                    N_i_ksi[2] = -0.25 * (1 - heta);
-                    N_i_ksi[3] = +0.25 * (1 - heta);
-
-                    N_i_heta[0] = +0.25 * (1 + ksi);
-                    N_i_heta[1] = +0.25 * (1 - ksi);
-                    N_i_heta[2] = -0.25 * (1 - ksi);
-                    N_i_heta[3] = -0.25 * (1 + ksi);
-
-                    for (int l = 0; l < 4; l++)  // to 8 ginetai 4 gia to cohesiveElement
-                    { N1[npoint][l] = N_i[l]; }
-
-                    for (int l = 0; l < 3; l++)  // arxika mhdenismos twn stoixweiwn tou pinaka
-                    {
-                        for (int m = 0; m < 12; m++)
-                        { N3[npoint][l, m] = 0; }
-                    }
-
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 4; m++)
-                        { N3[npoint][l, l + 3 * m] = N_i[m]; }
-                    }
-
-
-
-                }
-            }
-            endeixiShapeFunctionAndGaussPointData = 2;
-        }
-
-        private double[] Get_a_12g()
-        {
-            if (endeixiShapeFunctionAndGaussPointData == 1)
-            {
-                CalculateShapeFunctionAndGaussPointData();
-                return a_12g;
-            }
-            else
-            { return a_12g; }
-        }
+        
 
         
 
@@ -191,23 +86,23 @@ namespace ISAAR.MSolve.FEM.Elements
 
         private double[][] ox_i; //den einai apo afta pou orizei o xrhsths
         private double[] x_local; // to dianusma x ths matlab sunarthshs pou einai apo t_x_global_pr
-        private double[][,] R;
-        private double[][,] D_tan; // [nGausspoints][3,3]
-        private double[][] T_int;  //[nGausspoints][3]
-        private double[][] c_1; // [nGausspoints][3]
-        private double[] coh_det_J_t;
-        private double[] sunt_olokl;
-        private double[,] M; // 12 epi 12
-        private double[] r_int; // 24 epi 1
-        private double[] r_int_1; // to panw miso tou dianusmatos
+        //private double[][,] R;
+        //private double[][,] D_tan; // [nGausspoints][3,3]
+        //private double[][] T_int;  //[nGausspoints][3]
+        //private double[][] c_1; // [nGausspoints][3]
+        //private double[] coh_det_J_t;
+        //private double[] sunt_olokl;
+        //private double[,] M; // 12 epi 12
+        //private double[] r_int; // 24 epi 1
+        //private double[] r_int_1; // to panw miso tou dianusmatos
         // gia tous pollaplasiasmous
-        private double[][,] RN3;
-        private double[,] D_tan_sunt_ol;
-        private double[,] D_RN3_sunt_ol;
-        private double[] T_int_sunt_ol;
+        //private double[][,] RN3;
+        //private double[,] D_tan_sunt_ol;
+        //private double[,] D_RN3_sunt_ol;
+        //private double[] T_int_sunt_ol;
         //temporary
-        private int n_incr = 0;
-        private int n_iter = 0;
+        //private int n_incr = 0;
+        //private int n_iter = 0;
         private void GetInitialGeometricDataAndInitializeMatrices(IElement element)
         {
             ox_i = new double[8][];
@@ -216,35 +111,8 @@ namespace ISAAR.MSolve.FEM.Elements
                 ox_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
             }
 
-            x_local = new double[24];
-            nGaussPoints = gp_d1_coh * gp_d2_coh;
-            R = new double[nGaussPoints][,];
-            c_1 = new double[nGaussPoints][];
-            coh_det_J_t = new double[nGaussPoints];
-            sunt_olokl = new double[nGaussPoints];
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                R[j] = new double[3, 3];
-                c_1[j] = new double[3];
-            }
-            D_tan = new double[nGaussPoints][,];
-            T_int = new double[nGaussPoints][];
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                D_tan[j] = new double[3, 3];
-                T_int[j] = new double[3];
-            }
-            M = new double[12, 12];
-            r_int = new double[24];
-            r_int_1 = new double[12];
-            RN3 = new double[nGaussPoints][,];
-            D_tan_sunt_ol = new double[3, 3];
-            D_RN3_sunt_ol = new double[3, 12];
-            T_int_sunt_ol = new double[3];
-            for (int j = 0; j < nGaussPoints; j++)
-            {
-                RN3[j] = new double[3, 12];  //tha ginei [3,12] sto cohesive 8 node
-            }
+            x_local = new double[2*3*interpolation.NumFunctions];
+            
 
         }
 
@@ -273,6 +141,11 @@ namespace ISAAR.MSolve.FEM.Elements
             {
                 Delta[j] = new double[3];
                 c_1[j] = new double[3];
+            }
+            double[][,] R = new double[nGaussPoints][,]; //TODO: maybe cache R
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                R[j] = new double[3, 3];
             }
 
             for (int j = 0; j < 2*interpolation.NumFunctions; j++)
@@ -444,28 +317,7 @@ namespace ISAAR.MSolve.FEM.Elements
             C[2] = A[0] * B[1] - A[1] * B[0];
         }
 
-        private void InitializeRN3()
-        {
-
-            for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
-            {
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 12; m++)
-                        {
-                            RN3[npoint1][l, m] = 0;
-                        }
-                    }
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 12; m++)
-                        {
-                            for (int n = 0; n < 3; n++)
-                            { RN3[npoint1][l, m] += R[npoint1][l, n] * GetN3()[npoint1][n, m]; }
-                        }
-                    }
-            }
-        }
+        
 
         private double[] UpdateForces(Element element, Matrix[] RtN3, double[] integrationCoeffs)
         {

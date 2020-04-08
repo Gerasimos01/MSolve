@@ -197,7 +197,7 @@ namespace ISAAR.MSolve.SamplesConsole
             e1 = new Element()
             {
                 ID = 3,
-                ElementType = new cohesive8node(material2, 3, 3) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+                ElementType = new cohesiveElement(material2, GaussLegendre2D.GetQuadratureWithOrder(3,3), InterpolationQuad4.UniqueInstance) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
             };
             for (int j = 0; j < 8; j++)
             {
