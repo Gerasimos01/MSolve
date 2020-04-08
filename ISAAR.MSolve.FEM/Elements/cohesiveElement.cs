@@ -12,6 +12,7 @@ using ISAAR.MSolve.FEM.Interfaces;
 using ISAAR.MSolve.FEM.Interpolation;
 using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.Materials.Interfaces;
+using System.Linq;
 
 namespace ISAAR.MSolve.FEM.Elements
 {
@@ -29,6 +30,8 @@ namespace ISAAR.MSolve.FEM.Elements
         public int gp_d1_coh { get; set; } // den prepei na einai static--> shmainei idio gia ola taantikeimena afthw ths klashs
         public int gp_d2_coh { get; set; }
         private int nGaussPoints; //TODO meta afto mporei na ginei readonly.
+
+        public bool MatrixIsNotInitialized = true;
 
         protected cohesiveElement()//consztructor apo to hexa8
         {
@@ -70,9 +73,6 @@ namespace ISAAR.MSolve.FEM.Elements
         private double a_1g;
         private double a_2g;
         private double[][] N1;
-        private double[][,] N3;
-        private double[][] N1_ksi;
-        private double[][] N1_heta;
         private double[] N_i;
         private double[] N_i_ksi;
         private double[] N_i_heta;
@@ -91,19 +91,17 @@ namespace ISAAR.MSolve.FEM.Elements
             N_i_heta = new double[4]; 
             N1 = new double[nGaussPoints][];
             N3 = new double[nGaussPoints][,];
-            N1_ksi = new double[nGaussPoints][];
-            N1_heta = new double[nGaussPoints][];
+           
             for (int l = 0; l < nGaussPoints; l++)
             {
                 N1[l] = new double[interpolation.NumFunctions];
                 N3[l] = new double[3,3*interpolation.NumFunctions];
-                N1_ksi[l] = new double[interpolation.NumFunctions];
-                N1_heta[l] = new double[interpolation.NumFunctions];
+                
             }
             for (int j = 0; j < gp_d1_coh; j++) 
             {
-                    for (int k = 0; k < gp_d2_coh; k++)
-                    {
+                for (int k = 0; k < gp_d2_coh; k++)
+                {
                     npoint = j * gp_d1_coh + k;
                     if (gp_d1_coh == 3)
                     {
@@ -147,21 +145,18 @@ namespace ISAAR.MSolve.FEM.Elements
                     { N1[npoint][l] = N_i[l]; }
 
                     for (int l = 0; l < 3; l++)  // arxika mhdenismos twn stoixweiwn tou pinaka
-                    { for (int m = 0; m < 12; m++)
+                    {
+                        for (int m = 0; m < 12; m++)
                         { N3[npoint][l, m] = 0; }
                     }
 
                     for (int l = 0; l < 3; l++)
                     {
                         for (int m = 0; m < 4; m++)
-                        { N3[npoint][l, l+3*m] = N_i[m]; }
+                        { N3[npoint][l, l + 3 * m] = N_i[m]; }
                     }
 
-                    for (int l = 0; l < 4; l++)  
-                    { N1_ksi[npoint][l] = N_i_ksi[l]; }
 
-                    for (int l = 0; l < 4; l++)
-                    { N1_heta[npoint][l] = N_i_heta[l]; }
 
                 }
             }
@@ -179,68 +174,24 @@ namespace ISAAR.MSolve.FEM.Elements
             { return a_12g; }
         }
 
-        private double[][] GetN1()
-        {
-            if (endeixiShapeFunctionAndGaussPointData == 1)
-            {
-                CalculateShapeFunctionAndGaussPointData();
-                return N1;
-            }
-            else
-            { return N1; }
-        }
+        
 
-        private double[][,] GetN3()
-        {
-            if (endeixiShapeFunctionAndGaussPointData == 1)
-            {
-                CalculateShapeFunctionAndGaussPointData();
-                return N3;
-            }
-            else
-            { return N3; }
-        }
-
-        //private double[][] GetN1_ksi()
+        //private double[][,] GetN3()
         //{
         //    if (endeixiShapeFunctionAndGaussPointData == 1)
         //    {
         //        CalculateShapeFunctionAndGaussPointData();
-        //        return N1_ksi;
+        //        return N3;
         //    }
         //    else
-        //    { return N1_ksi; }
+        //    { return N3; }
         //}
 
-        //private double[][] GetN1_heta()
-        //{
-        //    if (endeixiShapeFunctionAndGaussPointData == 1)
-        //    {
-        //        CalculateShapeFunctionAndGaussPointData();
-        //        return N1_heta;
-        //    }
-        //    else
-        //    { return N1_heta; }
-        //}
+        
 
         private double[][] ox_i; //den einai apo afta pou orizei o xrhsths
-        private double[][] tx_i; //8 arrays twn 3 stoixeiwn
         private double[] x_local; // to dianusma x ths matlab sunarthshs pou einai apo t_x_global_pr
-        private double[,] u_prok;
-        private double[,] x_pavla;
-        private double[,] k_stoixeiou_coh;
-        private double[] fxk1_coh;
-        private double[] d_trial;
-        private double[] e_ksi;
-        private double e_ksi_norm;
-        private double[] e_heta;
-        private double[] e_1;
-        private double[] e_2;
-        private double[] e_3;
-        private double e_3_norm;
         private double[][,] R;
-        private double[] u; // 3 epi 1
-        private double[][] Delta; // [nGausspoints][3]
         private double[][,] D_tan; // [nGausspoints][3,3]
         private double[][] T_int;  //[nGausspoints][3]
         private double[][] c_1; // [nGausspoints][3]
@@ -260,34 +211,19 @@ namespace ISAAR.MSolve.FEM.Elements
         private void GetInitialGeometricDataAndInitializeMatrices(IElement element)
         {
             ox_i = new double[8][];
-            tx_i = new double[8][]; //mporei na mhn xreiasthei teilka!!!!
             for (int j = 0; j < 8; j++)
             {
                 ox_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
-                tx_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
             }
 
             x_local = new double[24];
-            u_prok = new double[3, 4];
-            x_pavla = new double[3, 4];
-            k_stoixeiou_coh = new double[24, 24]; //allazei sto cohesive 8 node
-            fxk1_coh = new double[24];
-            d_trial = new double[nGaussPoints];
-            e_ksi = new double[3];
-            e_heta = new double[3];
-            e_1 = new double[3];
-            e_2 = new double[3];
-            e_3 = new double[3];
-            u = new double[3];
             nGaussPoints = gp_d1_coh * gp_d2_coh;
-            Delta = new double[nGaussPoints][];
             R = new double[nGaussPoints][,];
             c_1 = new double[nGaussPoints][];
             coh_det_J_t = new double[nGaussPoints];
             sunt_olokl = new double[nGaussPoints];
             for (int j = 0; j < nGaussPoints; j++)
             {
-                Delta[j] = new double[3];
                 R[j] = new double[3, 3];
                 c_1[j] = new double[3];
             }
@@ -312,11 +248,34 @@ namespace ISAAR.MSolve.FEM.Elements
 
         }
 
-        private void UpdateCoordinateData(double[] localdisplacements) // sto shell8disp sto calculate forces kaleitai me this.UpdateCoordinateData(localTotalDisplacements);
+        private double[][] UpdateCoordinateData(double[] localdisplacements) // sto shell8disp sto calculate forces kaleitai me this.UpdateCoordinateData(localTotalDisplacements);
         {
             IReadOnlyList<Matrix> shapeFunctionDerivatives = interpolation.EvaluateNaturalGradientsAtGaussPoints(QuadratureForStiffness);
+            IReadOnlyList<double[]> N1 = interpolation.EvaluateFunctionsAtGaussPoints(QuadratureForStiffness);
 
-            for (int j = 0; j < 8; j++)
+            double[,] u_prok = new double[3, 2*interpolation.NumFunctions];
+            double[,] x_bar = new double[3, 2*interpolation.NumFunctions];
+
+            double[] e_ksi = new double[3];
+            double e_ksi_norm;
+            double[] e_heta = new double[3];
+            double[] e_1 = new double[3];
+            double[] e_2 = new double[3];
+            double[] e_3 = new double[3];
+            double e_3_norm;
+            double[] u = new double[3];
+
+            //double[] coh_det_J_t = new double[nGaussPoints];
+
+            double[][] Delta = new double[nGaussPoints][];
+            double[][] c_1 = new double[nGaussPoints][];
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                Delta[j] = new double[3];
+                c_1[j] = new double[3];
+            }
+
+            for (int j = 0; j < 2*interpolation.NumFunctions; j++)
             {
                 for (int k = 0; k < 3; k++)
                 {
@@ -324,75 +283,161 @@ namespace ISAAR.MSolve.FEM.Elements
                 }
             }
 
-            for (int j = 0; j < 4; j++)
+            for (int j = 0; j < interpolation.NumFunctions; j++)
             {
                 for (int k = 0; k < 3; k++)
                 {
-                    u_prok[k, j] = x_local[k + 3 * j] - x_local[12 + k + 3 * j];
-                    x_pavla[k, j] = x_local[k + 3 * j] + x_local[12 + k + 3 * j];
+                    u_prok[k, j] = x_local[k + 3 * j] - x_local[3*interpolation.NumFunctions + k + 3 * j];
+                    x_bar[k, j] = x_local[k + 3 * j] + x_local[3*interpolation.NumFunctions + k + 3 * j];
                 }
             }
             // sunexeia ews upologismou tou Delta gia ola ta gp
-            
-                for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
+
+            for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
+            {
+                for (int l = 0; l < 3; l++)
                 {
-                    for (int l = 0; l < 3; l++)
+                    e_ksi[l] = 0;
+                    e_heta[l] = 0;
+                    for (int m = 0; m < interpolation.NumFunctions; m++) // tha ginei 4 sto cohesive 8 node
                     {
-                        e_ksi[l] = 0;
-                        e_heta[l] = 0;
-                        for (int m = 0; m < 4; m++) // tha ginei 4 sto cohesive 8 node
-                        {
-                            e_ksi[l] += shapeFunctionDerivatives[npoint1][0,m] * x_pavla[l, m];
-                            e_heta[l] += shapeFunctionDerivatives[npoint1][1,m] * x_pavla[l, m];
-                        }
-                        e_ksi[l] = 0.5 * e_ksi[l];
-                        e_heta[l] = 0.5 * e_heta[l];
+                        e_ksi[l] += shapeFunctionDerivatives[npoint1][0, m] * x_bar[l, m];
+                        e_heta[l] += shapeFunctionDerivatives[npoint1][1, m] * x_bar[l, m];
                     }
-                    this.cross(e_ksi, e_heta, e_3);
-                    e_3_norm = Math.Sqrt(e_3[0] * e_3[0] + e_3[1] * e_3[1] + e_3[2] * e_3[2]);
-                    e_ksi_norm = Math.Sqrt(e_ksi[0] * e_ksi[0] + e_ksi[1] * e_ksi[1] + e_ksi[2] * e_ksi[2]);
-                    for (int l = 0; l < 3; l++)
-                    {
-                        e_3[l] = e_3[l] / e_3_norm;
-                        e_1[l] = e_ksi[l] / e_ksi_norm;
-                    }
-                    this.cross(e_1, e_3, e_2);
-                    for (int l = 0; l < 3; l++)
-                    {
-                        R[npoint1][l, 0] = e_1[l];
-                        R[npoint1][l, 1] = e_2[l];
-                        R[npoint1][l, 2] = e_3[l];
-
-                    }
-                    for (int l = 0; l < 3; l++)
-                    { u[l] = 0; }
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 4; m++)  // pithanws gia to cohesive 8 node na gineiews 4 to m
-                        {
-                            u[l] += u_prok[l, m] * GetN1()[npoint1][m];
-                        }
-                    }
-                    for (int l = 0; l < 3; l++)
-                    { Delta[npoint1][l] = 0; }
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 3; m++)
-                        {
-                            Delta[npoint1][l] += R[npoint1][m, l] * u[m];
-                        }
-                    }
-
-                    this.cross(e_ksi, e_heta, c_1[npoint1]);
-                    coh_det_J_t[npoint1] = Math.Sqrt(c_1[npoint1][0] * c_1[npoint1][0] + c_1[npoint1][1] * c_1[npoint1][1] + c_1[npoint1][2] * c_1[npoint1][2]);
-                    sunt_olokl[npoint1] = coh_det_J_t[npoint1] * Get_a_12g()[npoint1];
+                    e_ksi[l] = 0.5 * e_ksi[l];
+                    e_heta[l] = 0.5 * e_heta[l];
                 }
-            
+                this.Cross(e_ksi, e_heta, e_3);
+                e_3_norm = Math.Sqrt(e_3[0] * e_3[0] + e_3[1] * e_3[1] + e_3[2] * e_3[2]);
+                e_ksi_norm = Math.Sqrt(e_ksi[0] * e_ksi[0] + e_ksi[1] * e_ksi[1] + e_ksi[2] * e_ksi[2]);
+                for (int l = 0; l < 3; l++)
+                {
+                    e_3[l] = e_3[l] / e_3_norm;
+                    e_1[l] = e_ksi[l] / e_ksi_norm;
+                }
+                this.Cross(e_1, e_3, e_2);
+                for (int l = 0; l < 3; l++)
+                {
+                    R[npoint1][l, 0] = e_1[l];
+                    R[npoint1][l, 1] = e_2[l];
+                    R[npoint1][l, 2] = e_3[l];
 
+                }
+                for (int l = 0; l < 3; l++)
+                { u[l] = 0; }
+                for (int l = 0; l < 3; l++)
+                {
+                    for (int m = 0; m < interpolation.NumFunctions; m++)  // pithanws gia to cohesive 8 node na gineiews 4 to m
+                    {
+                        u[l] += u_prok[l, m] * N1[npoint1][m];
+                    }
+                }
+                for (int l = 0; l < 3; l++)
+                { Delta[npoint1][l] = 0; }
+                for (int l = 0; l < 3; l++)
+                {
+                    for (int m = 0; m < 3; m++)
+                    {
+                        Delta[npoint1][l] += R[npoint1][m, l] * u[m];
+                    }
+                }
+
+                this.Cross(e_ksi, e_heta, c_1[npoint1]);
+                //coh_det_J_t[npoint1] = Math.Sqrt(c_1[npoint1][0] * c_1[npoint1][0] + c_1[npoint1][1] * c_1[npoint1][1] + c_1[npoint1][2] * c_1[npoint1][2]);
+                //sunt_olokl[npoint1] = coh_det_J_t[npoint1] * Get_a_12g()[npoint1];
+            }
+
+            return Delta;
 
         }
 
-        private void cross(double[] A, double[] B, double[] C)
+        private double[,] ReShapeShapeFunctionDataMatrix(double[] N1)
+        {
+            var N3 = new double[3, 3 * interpolation.NumFunctions];
+            for (int l = 0; l < 3; l++)
+            {
+                for (int m = 0; m < interpolation.NumFunctions; m++)
+                { N3[l, l + 3 * m] = N1[m]; }
+            }
+            return N3;
+        }
+        private Tuple<Matrix[], double[]> CalculateNecessaryMatricesForStiffnessMatrixAndForcesVectorCalculations()
+        {
+            IReadOnlyList<double[]> N1 = interpolation.EvaluateFunctionsAtGaussPoints(QuadratureForStiffness);
+            IReadOnlyList<Matrix> N3 = N1.Select(x => Matrix.CreateFromArray(ReShapeShapeFunctionDataMatrix(x))).ToList();
+            IReadOnlyList<Matrix> shapeFunctionDerivatives = interpolation.EvaluateNaturalGradientsAtGaussPoints(QuadratureForStiffness);
+
+            double[] integrationsCoeffs = new double[nGaussPoints];
+            Matrix[] RtN3 = new Matrix[nGaussPoints];
+            double[,] x_bar = new double[3, 8];
+
+            double[] e_1 = new double[3];
+            double[] e_2 = new double[3];
+            double[] e_3 = new double[3];
+            double e_3_norm;
+
+            double[] coh_det_J_t = new double[nGaussPoints];
+
+            double[][] c_1 = new double[nGaussPoints][];
+            for (int j = 0; j < nGaussPoints; j++)
+            {
+                c_1[j] = new double[3];
+            }
+
+            Matrix[] R = new Matrix[nGaussPoints]; //TODO: perhaps cache matrices in InitializeMatrices() where RtN3 is calculated
+            for (int j = 0; j < nGaussPoints; j++)
+            { R[j] = Matrix.CreateZero(3, 3); }
+
+            for (int j = 0; j < interpolation.NumFunctions; j++)
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    x_bar[k, j] = x_local[k + 3 * j] + x_local[3*interpolation.NumFunctions + k + 3 * j];
+                }
+            }
+
+            // Calculate Delta for all GPs
+            for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
+            {
+                double[] e_ksi = new double[3];
+                double[] e_heta = new double[3];
+                for (int l = 0; l < 3; l++)
+                {
+                    for (int m = 0; m < interpolation.NumFunctions; m++) // must be 4 in cohesive 8-nodes
+                    {
+                        e_ksi[l] += shapeFunctionDerivatives[npoint1][0, m] * x_bar[l, m];
+                        e_heta[l] += shapeFunctionDerivatives[npoint1][1, m] * x_bar[l, m];
+                    }
+                    e_ksi[l] = 0.5 * e_ksi[l];
+                    e_heta[l] = 0.5 * e_heta[l];
+                }
+                this.Cross(e_ksi, e_heta, e_3);
+                e_3_norm = Math.Sqrt(e_3[0] * e_3[0] + e_3[1] * e_3[1] + e_3[2] * e_3[2]);
+                double e_ksi_norm = Math.Sqrt(e_ksi[0] * e_ksi[0] + e_ksi[1] * e_ksi[1] + e_ksi[2] * e_ksi[2]);
+                for (int l = 0; l < 3; l++)
+                {
+                    e_3[l] = e_3[l] / e_3_norm;
+                    e_1[l] = e_ksi[l] / e_ksi_norm;
+                }
+                this.Cross(e_1, e_3, e_2);
+                for (int l = 0; l < 3; l++)
+                {
+                    R[npoint1][l, 0] = e_1[l];
+                    R[npoint1][l, 1] = e_2[l];
+                    R[npoint1][l, 2] = e_3[l];
+
+                }
+
+                this.Cross(e_ksi, e_heta, c_1[npoint1]);
+                coh_det_J_t[npoint1] = Math.Sqrt(c_1[npoint1][0] * c_1[npoint1][0] + c_1[npoint1][1] * c_1[npoint1][1] + c_1[npoint1][2] * c_1[npoint1][2]);
+                integrationsCoeffs[npoint1] = coh_det_J_t[npoint1] * QuadratureForStiffness.IntegrationPoints[npoint1].Weight;
+
+                // Calculate RtN3 here instead of in InitializeRN3() and then in UpdateForces()
+                RtN3[npoint1] = R[npoint1].Transpose() * N3[npoint1];
+            }
+            return new Tuple<Matrix[], double[]>(RtN3, integrationsCoeffs);
+        }
+        private void Cross(double[] A, double[] B, double[] C)
         {
             C[0] = A[1] * B[2] - A[2] * B[1];
             C[1] = A[2] * B[0] - A[0] * B[2];
@@ -422,121 +467,71 @@ namespace ISAAR.MSolve.FEM.Elements
             }
         }
 
-        private void UpdateForces()
+        private double[] UpdateForces(Element element, Matrix[] RtN3, double[] integrationCoeffs)
         {
-            for (int j = 0; j < 24; j++) // allagh sto cohesive 8 node
-            {
-                fxk1_coh[j] = 0;
-            }
+            double[] fxk1_coh = new double[3*2*interpolation.NumFunctions]; // TODO: must be 24 in cohesive 8 node
 
             for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
             {
-                    
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 12; m++)
-                        {
-                            RN3[npoint1][l, m] = 0;
-                        }
-                    }
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 12; m++)
-                        {
-                            for (int n = 0; n < 3; n++)
-                            { RN3[npoint1][l, m] += R[npoint1][l, n] * GetN3()[npoint1][n, m]; }
-                        }
-                    }
-                    for (int l = 0; l < 3; l++)
-                    {
-                        T_int_sunt_ol[l] = T_int[npoint1][l] * sunt_olokl[npoint1];
-                    }
-                    for (int l = 0; l < 12; l++)
-                    { r_int_1[l] = 0; }
-                    for (int l = 0; l < 12; l++)
-                    {
-                        for (int m = 0; m < 3; m++)
-                        { r_int_1[l] += RN3[npoint1][m, l] * T_int_sunt_ol[m]; }
-                    }
-                    for (int l = 0; l < 12; l++)
-                    {
-                        fxk1_coh[l] += r_int_1[l];
-                        fxk1_coh[12 + l] += (-r_int_1[l]);
-                    }
+                double[] T_int_integration_coeffs = new double[3];
+                for (int l = 0; l < 3; l++)
+                {
+                    T_int_integration_coeffs[l] = materialsAtGaussPoints[npoint1].Tractions[l] * integrationCoeffs[npoint1];
                 }
+
+                double[] r_int_1 = new double[3*interpolation.NumFunctions];
+                for (int l = 0; l < 3 * interpolation.NumFunctions; l++)
+                {
+                    for (int m = 0; m < 3; m++)
+                    { r_int_1[l] += RtN3[npoint1][m, l] * T_int_integration_coeffs[m]; }
+                }
+                for (int l = 0; l < 3 * interpolation.NumFunctions; l++)
+                {
+                    fxk1_coh[l] += r_int_1[l];
+                    fxk1_coh[3 * interpolation.NumFunctions + l] += (-r_int_1[l]);
+                }
+            }
+
+            return fxk1_coh;
         }
 
-        private void UpdateKmatrices()
+        private double[,] UpdateKmatrices(IElement element, Matrix[] RtN3, double[] integrationCoeffs)
         {
-            for (int k = 0; k < 24; k++) // allagh sto cohesive 8 node
-            {
-                for (int j = 0; j < 24; j++)
-                {
-                    k_stoixeiou_coh[k, j] = 0;
-                }
-            }
+            double[,] k_stoixeiou_coh = new double[3 * 2 * interpolation.NumFunctions, 3 * 2 * interpolation.NumFunctions];
+
+
             for (int npoint1 = 0; npoint1 < nGaussPoints; npoint1++)
             {
-                    for (int l = 0; l < 3; l++)
+                Matrix D_tan_sunt_ol = Matrix.CreateZero(3, 3);
+                for (int l = 0; l < 3; l++)
+                {
+                    for (int m = 0; m < 3; m++)
                     {
-                        for (int m = 0; m < 3; m++)
-                        {
-                            D_tan_sunt_ol[l, m] = D_tan[npoint1][l, m] * sunt_olokl[npoint1];
-                        }
+                        D_tan_sunt_ol[l, m] = materialsAtGaussPoints[npoint1].ConstitutiveMatrix[l, m] * integrationCoeffs[npoint1];// D_tan[npoint1][l, m] * integrationCoeffs[npoint1];
                     }
-
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 12; m++)  // omoiws to 24 gia ta cohesive 8 node
-                        {
-                            D_RN3_sunt_ol[l, m] = 0;
-                        }
-                    }
-
-                    for (int l = 0; l < 3; l++)
-                    {
-                        for (int m = 0; m < 12; m++)
-                        {
-                            for (int n = 0; n < 3; n++)
-                            { D_RN3_sunt_ol[l, m] += D_tan_sunt_ol[l, n] * RN3[npoint1][n, m]; }
-                        }
-                    }
-                    for (int l = 0; l < 12; l++)
-                    {
-                        for (int m = 0; m < 12; m++)
-                        {
-                            M[l, m] = 0;
-                        }
-                    }
-                    for (int l = 0; l < 12; l++)
-                    {
-                        for (int m = 0; m < 12; m++)
-                        {
-                            for (int n = 0; n < 3; n++)
-                            {
-                                M[l, m] += RN3[npoint1][n, l] * D_RN3_sunt_ol[n, m];
-                            }
-                        }
-                    }
-                    for (int l = 0; l < 12; l++)
-                    {
-                        for (int m = 0; m < 12; m++)
-                        {
-                            k_stoixeiou_coh[l, m] += M[l, m];
-                            k_stoixeiou_coh[l, 12 + m] += -M[l, m];
-                            k_stoixeiou_coh[12 + l, m] += -M[l, m];
-                            k_stoixeiou_coh[12 + l, 12 + m] += M[l, m];
-                        }
-                    }
-
-
                 }
-            
+
+                Matrix D_RtN3_sunt_ol = D_tan_sunt_ol * RtN3[npoint1];
+                Matrix M = RtN3[npoint1].Transpose() * D_RtN3_sunt_ol;
+
+                for (int l = 0; l < 3 *  interpolation.NumFunctions; l++)
+                {
+                    for (int m = 0; m < 3 * interpolation.NumFunctions; m++)
+                    {
+                        k_stoixeiou_coh[l, m] += M[l, m];
+                        k_stoixeiou_coh[l, 3 * interpolation.NumFunctions + m] += -M[l, m];
+                        k_stoixeiou_coh[3 * interpolation.NumFunctions + l, m] += -M[l, m];
+                        k_stoixeiou_coh[3 * interpolation.NumFunctions + l, 3 * interpolation.NumFunctions + m] += M[l, m];
+                    }
+                }
+            }
+
+            return k_stoixeiou_coh;
         }
 
         public Tuple<double[], double[]> CalculateStresses(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
         {
-            this.UpdateCoordinateData(localTotalDisplacements);
+            double[][] Delta =UpdateCoordinateData(localTotalDisplacements);
             for (int i = 0; i < materialsAtGaussPoints.Length; i++)
             {
                 materialsAtGaussPoints[i].UpdateMaterial(Delta[i]);
@@ -547,18 +542,15 @@ namespace ISAAR.MSolve.FEM.Elements
 
         public double[] CalculateForces(Element element, double[] localTotalDisplacements, double[] localdDisplacements)
         {
-            for (int i = 0; i < materialsAtGaussPoints.Length; i++)
-            {
-                for (int j = 0; j < 3; j++)
-                { T_int[i][j] = materialsAtGaussPoints[i].Tractions[j]; }
-            }
-            this.UpdateForces();
-            //temporary
-            n_iter += 1;
-            if (n_iter == 1)
-            { n_iter += 0; }
+            Tuple<Matrix[], double[]> RtN3AndIntegrationCoeffs;
+            RtN3AndIntegrationCoeffs = CalculateNecessaryMatricesForStiffnessMatrixAndForcesVectorCalculations();
+            Matrix[] RtN3;
+            RtN3 = RtN3AndIntegrationCoeffs.Item1;
+            double[] integrationCoeffs;
+            integrationCoeffs = RtN3AndIntegrationCoeffs.Item2;
 
-            return fxk1_coh;           
+            double[] fxk2_coh = UpdateForces(element, RtN3, integrationCoeffs);
+            return fxk2_coh;           
         }
 
         public double[] CalculateForcesForLogging(Element element, double[] localDisplacements)
@@ -568,24 +560,24 @@ namespace ISAAR.MSolve.FEM.Elements
 
         public virtual IMatrix StiffnessMatrix(IElement element)
         {
-            if (D_tan == null)
+            double[,] k_stoixeiou_coh2;
+            if (MatrixIsNotInitialized)
             {
                 this.GetInitialGeometricDataAndInitializeMatrices(element);
-                this.UpdateCoordinateData(new double[24]);
-                this.InitializeRN3();
+                this.UpdateCoordinateData(new double[2*3*interpolation.NumFunctions]); //returns Delta that can't be used for the initial material state
+                MatrixIsNotInitialized = false;
             }
 
-            for (int i = 0; i < materialsAtGaussPoints.Length; i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    for (int k = 0; k < 3; k++)
-                    { D_tan[i][j, k] = materialsAtGaussPoints[i].ConstitutiveMatrix[j, k]; }
-                }
-            }
-            this.UpdateKmatrices();
-            IMatrix element_stiffnessMatrix = Matrix.CreateFromArray(k_stoixeiou_coh); // TODO giati de ginetai return dof.Enumerator.GetTransformedMatrix, xrhsh symmetric
-            return element_stiffnessMatrix;
+            Tuple<Matrix[], double[]> RtN3AndIntegrationCoeffs;
+            RtN3AndIntegrationCoeffs = CalculateNecessaryMatricesForStiffnessMatrixAndForcesVectorCalculations();
+            Matrix[] RtN3;
+            RtN3 = RtN3AndIntegrationCoeffs.Item1;
+            double[] integrationCoeffs;
+            integrationCoeffs = RtN3AndIntegrationCoeffs.Item2;
+
+            k_stoixeiou_coh2 = this.UpdateKmatrices(element, RtN3, integrationCoeffs);
+            IMatrix element_stiffnessMatrix = Matrix.CreateFromArray(k_stoixeiou_coh2);
+            return element_stiffnessMatrix; // embedding
         }
 
 
