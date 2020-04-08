@@ -174,8 +174,8 @@ namespace ISAAR.MSolve.FEM.Elements
                     e_heta[l] = 0;
                     for (int m = 0; m < interpolation.NumFunctions; m++) // tha ginei 4 sto cohesive 8 node
                     {
-                        e_ksi[l] += shapeFunctionDerivatives[npoint1][0, m] * x_bar[l, m];
-                        e_heta[l] += shapeFunctionDerivatives[npoint1][1, m] * x_bar[l, m];
+                        e_ksi[l] += shapeFunctionDerivatives[npoint1][m,0] * x_bar[l, m];
+                        e_heta[l] += shapeFunctionDerivatives[npoint1][m,1] * x_bar[l, m];
                     }
                     e_ksi[l] = 0.5 * e_ksi[l];
                     e_heta[l] = 0.5 * e_heta[l];
@@ -278,8 +278,8 @@ namespace ISAAR.MSolve.FEM.Elements
                 {
                     for (int m = 0; m < interpolation.NumFunctions; m++) // must be 4 in cohesive 8-nodes
                     {
-                        e_ksi[l] += shapeFunctionDerivatives[npoint1][0, m] * x_bar[l, m];
-                        e_heta[l] += shapeFunctionDerivatives[npoint1][1, m] * x_bar[l, m];
+                        e_ksi[l] += shapeFunctionDerivatives[npoint1][m,0] * x_bar[l, m];
+                        e_heta[l] += shapeFunctionDerivatives[npoint1][m,1] * x_bar[l, m];
                     }
                     e_ksi[l] = 0.5 * e_ksi[l];
                     e_heta[l] = 0.5 * e_heta[l];
