@@ -16,6 +16,7 @@ using ISAAR.MSolve.Solvers;
 using ISAAR.MSolve.Solvers.Direct;
 using Xunit;
 using System.Linq;
+using ISAAR.MSolve.Tests.FEM.SupportiveClasses;
 
 namespace ISAAR.MSolve.Tests.FEM
 {
@@ -98,6 +99,8 @@ namespace ISAAR.MSolve.Tests.FEM
             var solutionOfIters5And12 = new double[] { log1.GetTotalDisplacement(5, 0, 3), log1.GetTotalDisplacement(12, 0, 3),
                 log1.GetTotalDisplacement(5, 0, 9), log1.GetTotalDisplacement(12, 0, 9) };
 
+
+            //var interfaceNodeSetTri6 = ElementFaceGeometryDescription.GetElementFaceNodesTet10(model, 1);
             return solutionOfIters5And12;
         }
 
