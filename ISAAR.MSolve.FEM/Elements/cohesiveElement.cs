@@ -105,8 +105,8 @@ namespace ISAAR.MSolve.FEM.Elements
         //private int n_iter = 0;
         private void GetInitialGeometricDataAndInitializeMatrices(IElement element)
         {
-            ox_i = new double[8][];
-            for (int j = 0; j < 8; j++)
+            ox_i = new double[2*interpolation.NumFunctions][];
+            for (int j = 0; j < 2*interpolation.NumFunctions; j++)
             {
                 ox_i[j] = new double[] { element.Nodes[j].X, element.Nodes[j].Y, element.Nodes[j].Z, };
             }
@@ -488,18 +488,18 @@ namespace ISAAR.MSolve.FEM.Elements
         // aplopoihtika implemented mhdenikes masses gia cohesive - not implemented
         public double[] CalculateAccelerationForces(Element element, IList<MassAccelerationLoad> loads)
         {
-            return new double[24];
+            return new double[2*3*interpolation.NumFunctions];
         }
 
         public virtual IMatrix MassMatrix(IElement element)
         {
-            return Matrix.CreateZero(24,24);
+            return Matrix.CreateZero(3*2*interpolation.NumFunctions,3*2*interpolation.NumFunctions);
         }
 
         public virtual IMatrix DampingMatrix(IElement element)
         {
 
-            return Matrix.CreateZero(24, 24);
+            return Matrix.CreateZero(3 * 2 * interpolation.NumFunctions, 3 * 2 * interpolation.NumFunctions);
         }
 
     }

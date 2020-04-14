@@ -20,7 +20,7 @@ using Xunit;
 
 namespace ISAAR.MSolve.SamplesConsole
 {
-    public static class CohesiveElementTest
+    public static class CohesiveElementHexa8Interface
     {
         [Fact]
         public static void SolveCantilever()
@@ -96,25 +96,25 @@ namespace ISAAR.MSolve.SamplesConsole
         //plhrofories: sto idio link apo panw
         public static void Example_cohesive_hexa_mixed(Model model)
         {
-            CohesiveElementTest.Example2Hexa8NL1Cohesive8node(model); 
-            CohesiveElementTest.Example2Hexa8NL1Cohesive8nodeConstraintsMixed(model);
-            CohesiveElementTest.Example2Hexa8NL1Cohesive8nodeLoadsMIxed(model, 1);
+            CohesiveElementHexa8Interface.Example2Hexa8NL1Cohesive8node(model); 
+            CohesiveElementHexa8Interface.Example2Hexa8NL1Cohesive8nodeConstraintsMixed(model);
+            CohesiveElementHexa8Interface.Example2Hexa8NL1Cohesive8nodeLoadsMIxed(model, 1);
         }
 
         public static void Example_cohesive_hexa_orthi_elastic(Model model)
         {
-            CohesiveElementTest.Example2Hexa8NL1Cohesive8node(model); // me 1353000
-            CohesiveElementTest.Example2Hexa8NL1Cohesive8nodeConstraintsOrthiElastic(model);
-            CohesiveElementTest.Example2Hexa8NL1Cohesive8nodeLoadsElasticOrthi(model, 3.47783);
+            CohesiveElementHexa8Interface.Example2Hexa8NL1Cohesive8node(model); // me 1353000
+            CohesiveElementHexa8Interface.Example2Hexa8NL1Cohesive8nodeConstraintsOrthiElastic(model);
+            CohesiveElementHexa8Interface.Example2Hexa8NL1Cohesive8nodeLoadsElasticOrthi(model, 3.47783);
         }
 
         public static void Example_cohesive_hexa_orthi_constr_anw_benc1(Model model, double load_value)
         {
-            CohesiveElementTest.Example2Hexa8NL1Cohesive8node(model); // me 135300
-            CohesiveElementTest.Example2Hexa8NL1Cohesive8nodeConstraintsBenc1(model);
+            CohesiveElementHexa8Interface.Example2Hexa8NL1Cohesive8node(model); // me 135300
+            CohesiveElementHexa8Interface.Example2Hexa8NL1Cohesive8nodeConstraintsBenc1(model);
             //ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsBenc1(model, 8);// gia elastiko klado 
             //ParadeigmataElegxwnBuilder.Example2Hexa8NL1Cohesive8nodeLoadsBenc1(model, 13.75); // gia metelastiko
-            CohesiveElementTest.Example2Hexa8NL1Cohesive8nodeLoadsBenc1(model, load_value);// gia elastiko klado 
+            CohesiveElementHexa8Interface.Example2Hexa8NL1Cohesive8nodeLoadsBenc1(model, load_value);// gia elastiko klado 
         }
 
         
