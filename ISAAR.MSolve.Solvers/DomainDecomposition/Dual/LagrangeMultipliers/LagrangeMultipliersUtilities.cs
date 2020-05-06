@@ -5,6 +5,7 @@ using System.Text;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.Discretization.SupportiveClasses;
+using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Matrices.Operators;
 using ISAAR.MSolve.Solvers.DomainDecomposition.DofSeparation;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP;
@@ -159,10 +160,18 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.LagrangeMultipliers
                     subdomainsMinus = new ISubdomain[] { nodeSubdomains[1] };
                 }
                 else
-                {   if (ShellDiscretizationInfoProvider.ellCrossPointDatall.Contains(node))
+                {
+                    if (CnstValues.useMinimumConstraintsInShell)
                     {
-                        ICrosspointStrategy crossPointStrategyMinimum = new MinimumConstraints();
-                        (subdomainsPlus, subdomainsMinus) = crosspointStrategy.FindSubdomainCombinations(nodeSubdomains);
+                        if (ShellDiscretizationInfoProvider.ellCrossPointDatall.Contains(node))
+                        {
+                            ICrosspointStrategy crossPointStrategyMinimum = new MinimumConstraints();
+                            (subdomainsPlus, subdomainsMinus) = crossPointStrategyMinimum.FindSubdomainCombinations(nodeSubdomains);
+                        }
+                        else
+                        {
+                            (subdomainsPlus, subdomainsMinus) = crosspointStrategy.FindSubdomainCombinations(nodeSubdomains);
+                        }
                     }
                     else
                     {

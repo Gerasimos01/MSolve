@@ -397,7 +397,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 else { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model, renumbering); }
             }
 
-            ShellDiscretizationInfoProvider.ellCrossPointDatall = FindShellCrossPointNodes(model);
+            
             #endregion
 
 
@@ -439,6 +439,8 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                     else { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model); }
                 }
                 else { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model, renumbering); }
+                if (CnstValues.useMinimumConstraintsInShell)
+                { ShellDiscretizationInfoProvider.ellCrossPointDatall = FindShellCrossPointNodes(model); }
 
                 #region find embedded
                 EmbeddedNodes = new List<Node>();

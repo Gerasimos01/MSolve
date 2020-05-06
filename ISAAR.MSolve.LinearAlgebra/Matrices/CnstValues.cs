@@ -18,7 +18,7 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
 
         public static bool useCornerNodesInShell = false;
 
-        public static bool useMinimumConstraintsInShell = false;
+        public static bool useMinimumConstraintsInShell = true;
 
 
         bool runCluster = true;
