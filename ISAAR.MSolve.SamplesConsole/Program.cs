@@ -24,7 +24,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
         static void Main(string[] args)
         {
-            for (int example = 47; example < 60 ; example++)
+            for (int example = 47; example < 48 ; example++)
             {
                 PredefinedRandomOrientationsProvider.ExampleNo = example;
                 CnstValues.exampleNo = example;
