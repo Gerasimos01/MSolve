@@ -34,6 +34,7 @@ using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.StiffnessDistribution;
 using ISAAR.MSolve.MSAnalysis.RveTemplates.SupportiveClasses;
+using ISAAR.MSolve.Discretization.SupportiveClasses;
 
 namespace ISAAR.MSolve.MultiscaleAnalysis
 {
@@ -396,7 +397,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 else { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model, renumbering); }
             }
 
-
+            ShellDiscretizationInfoProvider.ellCrossPointDatall = FindShellCrossPointNodes(model);
             #endregion
 
 
@@ -1158,6 +1159,19 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 CornerNodesIdAndsubdomains.Add(cornerShellElementNode.ID, model.NodesDictionary[cornerShellElementNode.ID].SubdomainsDictionary.Keys.ToArray());
             }
 
+        }
+
+        private List<INode> FindShellCrossPointNodes(Model model)
+        {
+            var shellElements = model.ElementsDictionary.Values.Where(x => x.ElementType is Shell8NonLinear);
+            var shellEmentesNodes = new List<Node>();
+            foreach (var shellElement in shellElements)
+            {
+                shellEmentesNodes = shellEmentesNodes.Union(shellElement.Nodes).ToList();
+            }
+
+            var cornerShellNodes = shellEmentesNodes.Where(x => x.SubdomainsDictionary.Keys.Count == 4).Select(x=>x as INode).ToList();
+            return cornerShellNodes;
         }
 
         private (Dictionary<int, double[]> CornerNodesIds, Dictionary<int, int[]> CornerNodesIdAndsubdomains, Dictionary<int, HashSet<INode>> cornerNodes)

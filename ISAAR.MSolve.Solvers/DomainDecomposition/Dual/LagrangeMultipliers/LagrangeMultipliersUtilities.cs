@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.Discretization.Interfaces;
+using ISAAR.MSolve.Discretization.SupportiveClasses;
 using ISAAR.MSolve.LinearAlgebra.Matrices.Operators;
 using ISAAR.MSolve.Solvers.DomainDecomposition.DofSeparation;
 using ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP;
@@ -157,7 +158,17 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.LagrangeMultipliers
                     subdomainsPlus = new ISubdomain[] { nodeSubdomains[0] };
                     subdomainsMinus = new ISubdomain[] { nodeSubdomains[1] };
                 }
-                else (subdomainsPlus, subdomainsMinus) = crosspointStrategy.FindSubdomainCombinations(nodeSubdomains);
+                else
+                {   if (ShellDiscretizationInfoProvider.ellCrossPointDatall.Contains(node))
+                    {
+                        ICrosspointStrategy crossPointStrategyMinimum = new MinimumConstraints();
+                        (subdomainsPlus, subdomainsMinus) = crosspointStrategy.FindSubdomainCombinations(nodeSubdomains);
+                    }
+                    else
+                    {
+                        (subdomainsPlus, subdomainsMinus) = crosspointStrategy.FindSubdomainCombinations(nodeSubdomains);
+                    }
+                }
 
                 // Add the lagrange multipliers of this node to the global list. The order is important: 
                 // node major - subdomain combination medium - dof minor.
