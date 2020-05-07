@@ -295,8 +295,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             else { renumbering = new renumbering(sunol_nodes_numbering); }
             #endregion
 
-            extraConstraintsNoeds = GetExtraConstraintNodes2renumberingRandomData(discr1, subdiscr1, renumbering);
-            extraConstraintsNoedsAve = GetExtraConstraintNodes2renumberingRandomDataOriginal(discr1, subdiscr1, renumbering);
+            
 
             //TODO delete unesessary double arrays (Dq)
             Dq = new double[9, 3 * (((mp.hexa1 + 1) * (mp.hexa2 + 1) * (mp.hexa3 + 1)) - ((mp.hexa1 - 1) * (mp.hexa2 - 1) * (mp.hexa3 - 1)))];
@@ -397,9 +396,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 else { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model, renumbering); }
             }
 
-            
+
             #endregion
 
+            extraConstraintsNoeds = GetExtraConstraintNodes2renumberingRandomData(discr1, subdiscr1, renumbering);
+            extraConstraintsNoedsAve = GetExtraConstraintNodes2renumberingRandomDataOriginal(discr1, subdiscr1, renumbering);
 
             //ds4
             if (decomposeModel)
@@ -441,6 +442,12 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 else { (CornerNodesIds, CornerNodesIdAndsubdomains, cornerNodes) = DefineCornerNodesFromCornerNodeData(CornerNodesData, model, renumbering); }
                 if (CnstValues.useMinimumConstraintsInShell)
                 { ShellDiscretizationInfoProvider.ellCrossPointDatall = FindShellCrossPointNodes(model); }
+
+                if (CnstValues.useExtraConstraintsInShell)
+                { var shellextraNodes = FindShellCrossPointNodes(model);
+                    var shellextraNodesLists = shellextraNodes.Select(x => new List<int>() { x.ID }).ToList();
+                    extraConstraintsNoeds.Union(shellextraNodesLists);
+                }
 
                 #region find embedded
                 EmbeddedNodes = new List<Node>();
