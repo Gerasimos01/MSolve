@@ -446,7 +446,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 if (CnstValues.useExtraConstraintsInShell)
                 { var shellextraNodes = FindShellCrossPointNodes(model);
                     var shellextraNodesLists = shellextraNodes.Select(x => new List<int>() { x.ID }).ToList();
-                    extraConstraintsNoeds.Union(shellextraNodesLists);
+                    extraConstraintsNoeds=extraConstraintsNoeds.Union(shellextraNodesLists).ToList();
                 }
 
                 #region find embedded
