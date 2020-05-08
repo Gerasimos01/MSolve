@@ -20,6 +20,7 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
          
 
         bool runCluster = true;
+        PC computer = PC.Cluster;
 
         public static bool runOnlyHexaModel { get; set; } = false;
         //public string exampleOutputPathGen = @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example1\input_matlab";
@@ -28,8 +29,13 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
         {
             get
             {
-                if (runCluster) { return @"C:\Users\cluster\Documents\Large_rves\examples\example" + exampleNo + @"\input_matlab"; }
-                else { return @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example" + exampleNo + @"\input_matlab"; }
+                if (computer == PC.Cluster) { return @"C:\Users\cluster\Documents\Large_rves\examples\example" + exampleNo + @"\input_matlab"; }
+                else if (computer == PC.Gerasimos) { return @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example" + exampleNo + @"\input_matlab"; }
+                else if (computer == PC.Serafeim) { return @"C:\Users\Serafeim\Desktop\embedding\example" + exampleNo + @"\input_matlab"; }
+                else throw new Exception();
+
+                //if (runCluster) { return @"C:\Users\cluster\Documents\Large_rves\examples\example" + exampleNo + @"\input_matlab"; }
+                //else { return @"C:\Users\acivi\Documents\notes_elegxoi\REFERENCE_kanonikh_gewmetria_fe2_post_dg\examples\example" + exampleNo + @"\input_matlab"; }
             }
         }
         public string solverPath { get { return exampleOutputPathGen + @"\model_overwrite\subdomain_data_solver"; } }
@@ -44,8 +50,13 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
         {
             get
             {
-                if (runCluster) { return @"C:\Users\cluster\Documents\Large_rves\files_from_old_paths\rand_data.txt"; }
-                else { return @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\rand_data.txt"; }
+                if (computer == PC.Cluster) { return @"C:\Users\cluster\Documents\Large_rves\files_from_old_paths\rand_data.txt"; }
+                else if (computer == PC.Gerasimos) { return @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\rand_data.txt"; }
+                else if (computer == PC.Serafeim) { return @"C:\Users\Serafeim\Desktop\embedding\files_from_old_paths\rand_data.txt"; }
+                else throw new Exception();
+
+                //if (runCluster) { return @"C:\Users\cluster\Documents\Large_rves\files_from_old_paths\rand_data.txt"; }
+                //else { return @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_random_geometry_Msolve\REF2_50_000_renu_new_multiple_algorithms_check_develop_copy_for_progr_random_direct_in_C\rand_data.txt"; }
             }
         }
         public CnstValues()
@@ -54,6 +65,11 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
         }
 
         public static bool printInterfaceSolutionStats { get; set; } = true;
+        public static int analyzerLoadingStep { get; set; } = -1;
+        public static int analyzerNRIter { get; set; } = -1;
+        public static string analyzerInfo { get; set; }
+        public string incrementalPcgStatsOutputFileExtention = @"\interfaceSolver_FetiDP_3d_iterations_Per_Increment.txt";
+
 
         #region supress output
         /// <summary>

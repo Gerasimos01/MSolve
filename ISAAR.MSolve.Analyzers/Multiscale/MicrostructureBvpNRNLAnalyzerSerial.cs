@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using ISAAR.MSolve.Analyzers.Interfaces;
 using ISAAR.MSolve.Analyzers.NonLinear;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
@@ -8,6 +9,7 @@ using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.FEM;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
+using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Logging;
 using ISAAR.MSolve.Logging.Interfaces;
@@ -32,6 +34,7 @@ namespace ISAAR.MSolve.Analyzers.Multiscale
         private int maxSteps = 1000;
         private int stepsForMatrixRebuild = 0;
         private readonly double tolerance = 1e-3;
+        private double toleranceForReortho = -1; // set this negative so it is cleared every time; 
         private double rhsNorm;
         private INonLinearParentAnalyzer parentAnalyzer = null;
         private readonly ISolverMpi solver;
@@ -182,6 +185,15 @@ namespace ISAAR.MSolve.Analyzers.Multiscale
             }
         }
 
+        private void WriteOutput(string text)
+        {
+            var cnstVal = new CnstValues();
+            var incrementalPcgStatsOutput = cnstVal.interfaceSolverStatsPath + cnstVal.incrementalPcgStatsOutputFileExtention;
+            var writer = new StreamWriter(incrementalPcgStatsOutput, true);
+            writer.WriteLine(text);
+            writer.Dispose();
+        }
+
         public void Solve()
         {
             InitializeLogs();
@@ -190,6 +202,17 @@ namespace ISAAR.MSolve.Analyzers.Multiscale
             UpdateInternalVectors();//TODOMaria this divides the externally applied load by the number of increments and scatters it to all subdomains and stores it in the class subdomain dictionary and total external load vector
             for (int increment = 0; increment < increments; increment++)
             {
+                WriteOutput($"LoadingStep: {increment} ");
+                if (solver is IFetiSolver fetiSolver1)
+                {
+                    if (fetiSolver1.InterfaceProblemSolver.Pcg != null)
+                    {
+                        fetiSolver1.InterfaceProblemSolver.Pcg.Clear();
+                         fetiSolver1.InterfaceProblemSolver.Pcg.ReorthoCache.Clear(); 
+                    }
+                }
+
+                CnstValues.analyzerLoadingStep = increment;
                 double errorNorm = 0;
                 ClearIncrementalSolutionVector();//TODOMaria this sets du to 0
                 UpdateRHS(increment);//comment MS2: apo to rhs[subdomain.ID] pernaei sto subdomain.RHS h fixed timh (externalLoads/increments) (ginetai copy kai oxi add)  AFTO thewreitai RHS sthn prwth iteration
@@ -198,10 +221,27 @@ namespace ISAAR.MSolve.Analyzers.Multiscale
                 int step = 0;
                 for (step = 0; step < maxSteps; step++)
                 {
+                    WriteOutput($"NR Iteration : {step}");
+                    CnstValues.analyzerNRIter = step;
+                    CnstValues.analyzerInfo = "Solution";
+                    if (solver is IFetiSolver fetiSolver)
+                    {
+                        if (fetiSolver.InterfaceProblemSolver.Pcg != null)
+                        {
+                            fetiSolver.InterfaceProblemSolver.Pcg.Clear();
+                            if (errorNorm > toleranceForReortho)
+                            { fetiSolver.InterfaceProblemSolver.Pcg.ReorthoCache.Clear(); }
+                        }
+                    }
                     solver.Solve();
                     errorNorm = rhsNorm != 0 ? CalculateInternalRHS(increment, step, increments) / rhsNorm : 0;//comment MS2: to subdomain.RHS lamvanei thn timh nIncrement*(externalLoads/increments)-interanalRHS me xrhsh ths fixed timhs apo to rhs[subdomain.ID]
                     if (step == 0) firstError = errorNorm;
-                    if (errorNorm < tolerance) break;
+                    WriteOutput($"NR error norm : {increment}");
+                    if (errorNorm < tolerance)
+                    {
+                        CnstValues.analyzerInfo = "Homogenization";
+                        break; 
+                    }
 
                     //SplitResidualForcesToSubdomains();//TODOmpi scatter residuals is unenecessary and implemented wrong for ISolverMpi
                     if ((step + 1) % stepsForMatrixRebuild == 0)

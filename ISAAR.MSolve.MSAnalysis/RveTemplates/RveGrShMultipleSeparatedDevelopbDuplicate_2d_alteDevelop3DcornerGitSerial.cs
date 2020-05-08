@@ -90,9 +90,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             var fetiSolverBuilder = new FetiDP3dSolverSerial.Builder(matrixManagerFactory);  //A.3
 
             //fetiSolverBuilder.InterfaceProblemSolver = interfaceSolverBuilder.Build();
-            fetiSolverBuilder.StiffnessDistribution =  StiffnessDistributionType.HeterogeneousCondensed; //TODO
-                fetiSolverBuilder.Preconditioning = new DirichletPreconditioning();
-                fetiSolverBuilder.PcgSettings = pcgSettings;
+            fetiSolverBuilder.StiffnessDistribution = StiffnessDistributionType.HeterogeneousCondensed; //TODO
+            fetiSolverBuilder.Preconditioning = new DirichletPreconditioning();
+            fetiSolverBuilder.PcgSettings = pcgSettings;
+            fetiSolverBuilder.Reorthogonalization = true;
 
             //Crosspoints crosspoints = Crosspoints.FullyRedundant; //A.2
             //Crosspoints crosspoints = Crosspoints.Minimum; //A.2

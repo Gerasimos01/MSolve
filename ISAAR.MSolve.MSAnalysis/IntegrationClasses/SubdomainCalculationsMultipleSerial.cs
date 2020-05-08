@@ -156,6 +156,19 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
                 solver.usePreviousLambda = this.UseLambdaSolutionsKff;
                 if (!(previousLambdaSolutionsKff == null)) { solver.previousLambda = previousLambdaSolutionsKff[k]; }
+
+                if (solver is IFetiSolver fetiSolver)
+                {
+                    if (fetiSolver.InterfaceProblemSolver.Pcg != null)
+                    {
+                        fetiSolver.InterfaceProblemSolver.Pcg.Clear();
+                        //fetiSolver.InterfaceProblemSolver.Pcg.ReorthoCache.Clear();
+                        if (k == 0)
+                        {
+                            //fetiSolver.InterfaceProblemSolver.Pcg.ReorthoCache.Clear();
+                        }
+                    }
+                }
                 solver.Solve();
                 if (UseLambdaSolutionsKff)
                 { previousLambdaSolutionsKff[k] = solver.previousLambda.Copy(); } //TODOGer1: pithanws axrhsto to copy
