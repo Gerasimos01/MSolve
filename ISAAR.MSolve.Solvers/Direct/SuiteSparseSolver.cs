@@ -76,12 +76,12 @@ namespace ISAAR.MSolve.Solvers.Direct
             if (CnstValues.printNRstiffnessMatrices && CnstValues.analyzerInfoIsSolutionForNRiters)
             {
                 var eriter = new MatlabWriter();
-                string print_path_gen = (new CnstValues()).exampleOutputPathGen + @"\subdomain_matrices_and_data\GlobalSuiteMatStress{0}LoadStep{1}Iter{2}_.txt";
-                string print_path = string.Format(print_path_gen, CnstValues.stressIncrNo, CnstValues.analyzerLoadingStep, CnstValues.analyzerNRIter);
+                string print_path_gen = (new CnstValues()).exampleOutputPathGen + @"\subdomain_matrices_and_data\GlobalSuiteMatStress{0}Iter{1}_.txt";
+                string print_path = string.Format(print_path_gen, CnstValues.stressIncrNo, CnstValues.analyzerNRIter);
                 var mat2 = DokColMajor.CreateFromDense(linearSystem.Matrix, 1e-14);
                 eriter.WriteToFile(mat2, print_path, false);
-                string print_path_gen2 = (new CnstValues()).exampleOutputPathGen + @"\subdomain_matrices_and_data\GlobalSuiteRHSStress{0}LoadStep{1}Iter{2}_.txt";
-                string print_path2 = string.Format(print_path_gen2, CnstValues.analyzerLoadingStep, CnstValues.analyzerNRIter);
+                string print_path_gen2 = (new CnstValues()).exampleOutputPathGen + @"\subdomain_matrices_and_data\GlobalSuiteRHSStress{0}Iter{1}_.txt";
+                string print_path2 = string.Format(print_path_gen2, CnstValues.stressIncrNo, CnstValues.analyzerNRIter);
                 (new ISAAR.MSolve.LinearAlgebra.Output.Array1DWriter()).WriteToFile(linearSystem.RhsConcrete.CopyToArray(), print_path2);
             }
             #endregion

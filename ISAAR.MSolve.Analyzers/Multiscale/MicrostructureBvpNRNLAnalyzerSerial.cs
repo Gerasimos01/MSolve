@@ -218,7 +218,7 @@ namespace ISAAR.MSolve.Analyzers.Multiscale
                     }
                 }
 
-                CnstValues.analyzerLoadingStep = increment;
+                //CnstValues.analyzerLoadingStep = increment;
                 #endregion
                 double errorNorm = 0;
                 ClearIncrementalSolutionVector();//TODOMaria this sets du to 0
@@ -230,7 +230,7 @@ namespace ISAAR.MSolve.Analyzers.Multiscale
                 {
                     #region solver parameters
                     WriteOutput($"NR Iteration : {step}");
-                    CnstValues.analyzerNRIter = step;
+                    CnstValues.analyzerNRIter += 1;
                     CnstValues.analyzerInfo = "Solution";
                     CnstValues.analyzerInfoIsSolutionForNRiters = true;
                     if (solver is IFetiSolver fetiSolver)

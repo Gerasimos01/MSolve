@@ -254,6 +254,7 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP3d
             if (CnstValues.printNRstiffnessMatrices && CnstValues.analyzerInfoIsSolutionForNRiters)
             {
                 string print_path_gen = (new CnstValues()).exampleOutputPathGen + @"\subdomain_matrices_and_data\Subdomain{0}Iter{1}Loads.txt";
+                string print_path_gen_st = (new CnstValues()).exampleOutputPathGen + @"\subdomain_matrices_and_data\Subdomain{0}Iter{1}Stiffness.txt";
                 foreach (var subd in model.EnumerateSubdomains())
                 {
                     var linearSystem = GetLinearSystem(subd); int subdId = subd.ID;
@@ -261,11 +262,18 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP3d
                     MatlabWriter eriter = new MatlabWriter();
                     //string print_path_gen = (new CnstValues()).exampleOutputPathGen + @"\subdomain_matrices_and_data\GlobalSuiteMatStress{0}LoadStep{1}Iter{2}_.txt";
                     //string print_path = string.Format(print_path_gen, CnstValues.stressIncrNo, CnstValues.analyzerLoadingStep, CnstValues.analyzerNRIter);
-                    string print_path = string.Format(print_path_gen, subdId, CnstValues.analyzerNRIter);
 
                     //var mat2 = DokColMajor.CreateFromDense(linearSystem.Matrix, 1e-14);
 
+                    string print_path = string.Format(print_path_gen, subdId, CnstValues.analyzerNRIter);
                     eriter.WriteToFile(linearSystem.RhsVector, print_path, false);
+
+                    bool print_stiffnesses = true;
+                    if (print_stiffnesses)
+                        {
+                        string print_path_sti = string.Format(print_path_gen_st, subdId, CnstValues.analyzerNRIter);
+                        eriter.WriteToFile((ISparseMatrix)GetLinearSystem(subd).Matrix, print_path_sti, false);
+                    }
                     //string print_path_gen2 = (new CnstValues()).exampleOutputPathGen + @"\subdomain_matrices_and_data\GlobalSuiteRHSStress{0}LoadStep{1}Iter{2}_.txt";
                     //string print_path2 = string.Format(print_path_gen2, CnstValues.analyzerLoadingStep, CnstValues.analyzerNRIter);
                     //(new ISAAR.MSolve.LinearAlgebra.Output.Array1DWriter()).WriteToFile(linearSystem.RhsConcrete.CopyToArray(), print_path2);

@@ -189,7 +189,7 @@ namespace ISAAR.MSolve.Analyzers.Multiscale
             for (int increment = 0; increment < increments; increment++)
             {
                 #region solver parameters
-                CnstValues.analyzerLoadingStep = increment;
+                //CnstValues.analyzerLoadingStep = increment;
                 #endregion
                 double errorNorm = 0;
                 ClearIncrementalSolutionVector();//TODOMaria this sets du to 0
@@ -200,7 +200,7 @@ namespace ISAAR.MSolve.Analyzers.Multiscale
                 for (step = 0; step < maxSteps; step++)
                 {
                     #region solver parameters
-                    CnstValues.analyzerNRIter = step;
+                    CnstValues.analyzerNRIter += 1;
                     CnstValues.analyzerInfo = "Solution";
                     CnstValues.analyzerInfoIsSolutionForNRiters = true;
                     #endregion

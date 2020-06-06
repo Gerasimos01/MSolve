@@ -34,6 +34,14 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem
                 (new FullMatrixWriter()).WriteToFile(prec, pathprec);
                 CnstValues.printPreconditoner = false;
             }
+            if (CnstValues.printNRiterPreconditioner == CnstValues.analyzerNRIter )
+            {
+                var prec = Matrix.CreateZero(lhs.Length, rhs.Length);
+                fetiPreconditioner.SolveLinearSystems(Matrix.CreateIdentity(rhs.Length), prec);
+                string pathprec = (new CnstValues()).solverPath + @"\preconditioner.txt";
+                (new FullMatrixWriter()).WriteToFile(prec, pathprec);
+                CnstValues.printPreconditoner = false;
+            }
         }
     }
 }

@@ -250,7 +250,7 @@ namespace ISAAR.MSolve.Solvers.DomainDecomposition.Dual.FetiDP.InterfaceProblem
                 var incrementalPcgStatsOutput = cnstVal.interfaceSolverStatsPath + cnstVal.incrementalPcgStatsOutputFileExtention ;
                 using (var writer = new StreamWriter(incrementalPcgStatsOutput, true))
                 {
-                    writer.Write(CnstValues.analyzerInfo + $" LoadStep {CnstValues.analyzerLoadingStep} nRITer {CnstValues.analyzerNRIter} : pcg Iterations= {nIter}");
+                    writer.Write(CnstValues.analyzerInfo + $" nRITer {CnstValues.analyzerNRIter} : pcg Iterations= {nIter}");
                     writer.WriteLine();
                 }
             }
