@@ -72,7 +72,7 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
 
         //-------------------------------------------------
         #region newtohn raphson and homogenisation pcg stats
-        public static bool printNRstiffnessMatrices { get; set; } = true;
+        public static bool printNRstiffnessMatrices { get; set; } = false;
         public static int printNRiterPreconditioner { get; set; } = -1;
         // public static int analyzerLoadingStep { get; set; } = -1;
         public static int analyzerNRIter { get; set; } = 0;
