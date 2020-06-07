@@ -92,7 +92,7 @@ namespace ISAAR.MSolve.Tests.FEMpartB.SeparationBenchmarks2
         }
 
         [Fact]
-        public static /*(double[], double[], double[,], IVector, IVector)*/ void Check_Graphene_rve_serialPRINT() //palio "Check_Graphene_rve_Obje_Integration()"
+        public static /*(double[], double[], double[,], IVector, IVector)*/ void Check_Graphene_rve_serialPRINT_for_matlab_Gsi_implementation() //palio "Check_Graphene_rve_Obje_Integration()"
         {
             //ORIGINAL: onerveexamplempiTest.Check_Graphene_rve_serial();
             #region rve builder parameters and example choice
@@ -143,7 +143,10 @@ namespace ISAAR.MSolve.Tests.FEMpartB.SeparationBenchmarks2
             CnstValues.analyzerNRIter = 0;
             microstructure3.UpdateMaterial(new double[9] { /*1.10*/ 1.01, 1, 1, 0, 0, 0, 0, 0, 0 });
             microstructure3.SaveState();
-            CnstValues.printNRiterPreconditioner = 3;
+            //-------------------------------------------------------
+            CnstValues.printNRiterPreconditioner = 3; //EDW EPILEGETAI h epilush feti dp thn opoia tha xrhsimopoioume se epomena load  steps kai o preconditioner ths tha grafei sto matlab
+            //thelei kai allo ena bool omws molis ton tupwsei mia fora gia na mhn ton tupwnei se kathe pcg iteration. TODO dld
+            //------------------------------------------------------
             microstructure3.UpdateMaterial(new double[9] { /*1.10*/ 1.03, 1, 1, 0, 0, 0, 0, 0, 0 });
             double[] stressesFeti = microstructure3.Stresses;
             double[,] constitutiveFeti = microstructure3.ConstitutiveMatrix.CopytoArray2D();
