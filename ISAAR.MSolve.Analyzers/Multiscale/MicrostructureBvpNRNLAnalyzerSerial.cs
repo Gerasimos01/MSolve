@@ -250,7 +250,7 @@ namespace ISAAR.MSolve.Analyzers.Multiscale
                     errorNorm = rhsNorm != 0 ? CalculateInternalRHS(increment, step, increments) / rhsNorm : 0;//comment MS2: to subdomain.RHS lamvanei thn timh nIncrement*(externalLoads/increments)-interanalRHS me xrhsh ths fixed timhs apo to rhs[subdomain.ID]
                     if (step == 0) firstError = errorNorm;
                     if (step == 0) AssemblyCheck.isSecondAssembly = true; //debugv2
-                    WriteOutput($"NR error norm : {increment}");
+                    //WriteOutput($"NR error norm : {increment}");
                     if (errorNorm < tolerance)
                     {
                         CnstValues.analyzerInfo = "Homogenization";
