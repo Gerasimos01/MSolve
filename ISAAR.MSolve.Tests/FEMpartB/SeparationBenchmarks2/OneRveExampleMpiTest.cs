@@ -239,7 +239,7 @@ namespace ISAAR.MSolve.Tests.FEMpartB.SeparationBenchmarks2
         [Fact]
         public static /*(double[], double[], double[,], IVector, IVector)*/ void Check_Graphene_rve_serial_CHECK_REORTHO_examples() //palio "Check_Graphene_rve_Obje_Integration()"
         {
-            for (int example_no = 63; example_no < 65; example_no++)
+            for (int example_no = 66; example_no < 68; example_no++)
             {
 
 
