@@ -84,6 +84,12 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
         public static int stressIncrNo { get; set; } = 0;
 
         public static bool WriteNRRelatedPcgStats { get; set; } = false;
+
+        public static bool printHomogenizationRHSsAndStiffnessmat1 { get; set; } = false;
+        public static int rhsCounter { get; set; } = 1;
+
+        public static bool isFirstStiffnessMatrixPrint { get; set; } = true;
+
         #endregion
 
         #region supress output

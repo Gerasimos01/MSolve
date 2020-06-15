@@ -84,6 +84,23 @@ namespace ISAAR.MSolve.Solvers.Direct
                 string print_path2 = string.Format(print_path_gen2, CnstValues.stressIncrNo, CnstValues.analyzerNRIter);
                 (new ISAAR.MSolve.LinearAlgebra.Output.Array1DWriter()).WriteToFile(linearSystem.RhsConcrete.CopyToArray(), print_path2);
             }
+            if (CnstValues.printHomogenizationRHSsAndStiffnessmat1 && !CnstValues.analyzerInfoIsSolutionForNRiters)
+            {
+                var eriter = new MatlabWriter();
+                if (CnstValues.isFirstStiffnessMatrixPrint)
+                {
+                    string print_path_gen = (new CnstValues()).exampleOutputPathGen + @"\subdomain_matrices_and_data\HomogenisationGlobalSuiteMatStress{0}Iter{1}_.txt";
+                    string print_path = string.Format(print_path_gen, CnstValues.stressIncrNo, CnstValues.analyzerNRIter);
+                    var mat2 = DokColMajor.CreateFromDense(linearSystem.Matrix, 1e-14);
+                    eriter.WriteToFile(mat2, print_path, false);
+                    CnstValues.isFirstStiffnessMatrixPrint = false;
+                }
+
+                string print_path_gen2 = (new CnstValues()).exampleOutputPathGen + @"\subdomain_matrices_and_data\HomogenisationGlobalSuiteRHSStress{0}Iter{1}RHSNo{2}_.txt";
+                string print_path2 = string.Format(print_path_gen2, CnstValues.stressIncrNo, CnstValues.analyzerNRIter, CnstValues.rhsCounter);
+                (new ISAAR.MSolve.LinearAlgebra.Output.Array1DWriter()).WriteToFile(linearSystem.RhsConcrete.CopyToArray(), print_path2);
+                CnstValues.rhsCounter++;
+            }
             #endregion
             // Factorization
             if (mustFactorize)
