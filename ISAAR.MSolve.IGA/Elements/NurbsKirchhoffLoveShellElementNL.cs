@@ -20,1393 +20,1209 @@ using ISAAR.MSolve.Materials.Interfaces;
 using Element = ISAAR.MSolve.IGA.Entities.Element;
 
 [assembly: InternalsVisibleTo("ISAAR.MSolve.IGA.Tests")]
-
 namespace ISAAR.MSolve.IGA.Elements
 {
-    public class NurbsKirchhoffLoveShellElementNL : Element, IStructuralIsogeometricElement, ISurfaceLoadedElement
-    {
-        protected static readonly IDofType[] ControlPointDofTypes =
-            {StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ};
-
-        private IDofType[][] dofTypes;
-
-        private Dictionary<GaussLegendrePoint3D, List<GaussLegendrePoint3D>> thicknessIntegrationPoints =
-            new Dictionary<GaussLegendrePoint3D, List<GaussLegendrePoint3D>>();
-
-        internal Dictionary<GaussLegendrePoint3D, Dictionary<GaussLegendrePoint3D, IShellMaterial>>
-            materialsAtThicknessGP =
-                new Dictionary<GaussLegendrePoint3D, Dictionary<GaussLegendrePoint3D, IShellMaterial>>();
-
-        private bool isInitialized;
-        internal double[] _solution;
-
-        public NurbsKirchhoffLoveShellElementNL(IShellMaterial shellMaterial, IList<Knot> elementKnots,
-            IList<ControlPoint> elementControlPoints, Patch patch, double thickness)
-        {
-            Contract.Requires(shellMaterial != null);
-            this.Patch = patch;
-            this.Thickness = thickness;
-            foreach (var knot in elementKnots)
-            {
-                if (!KnotsDictionary.ContainsKey(knot.ID))
-                    this.KnotsDictionary.Add(knot.ID, knot);
-            }
-
-            _solution = new double[3 * elementControlPoints.Count];
-
-            foreach (var controlPoint in elementControlPoints)
-            {
-                if (!ControlPointsDictionary.ContainsKey(controlPoint.ID))
-                    ControlPointsDictionary.Add(controlPoint.ID, controlPoint);
-            }
-
-            CreateElementGaussPoints(this);
-            foreach (var medianSurfaceGP in thicknessIntegrationPoints.Keys)
-            {
-                materialsAtThicknessGP.Add(medianSurfaceGP, new Dictionary<GaussLegendrePoint3D, IShellMaterial>());
-                foreach (var point in thicknessIntegrationPoints[medianSurfaceGP])
-                {
-                    materialsAtThicknessGP[medianSurfaceGP].Add(point, shellMaterial.Clone());
-                }
-            }
-
-            _controlPoints = elementControlPoints.ToArray();
-        }
-
-        public CellType CellType { get; } = CellType.Unknown;
-
-        public IElementDofEnumerator DofEnumerator { get; set; } = new GenericDofEnumerator();
-
-        public ElementDimensions ElementDimensions => ElementDimensions.ThreeD;
-
-        public bool MaterialModified => false;
-
-        public double[] CalculateAccelerationForces(IElement element, IList<MassAccelerationLoad> loads) =>
-            throw new NotImplementedException();
-
-        public double[,] CalculateDisplacementsForPostProcessing(Element element, Matrix localDisplacements)
-        {
-            var nurbsElement = (NurbsKirchhoffLoveShellElementNL) element;
-            var knotParametricCoordinatesKsi = Vector.CreateFromArray(Knots.Select(k => k.Ksi).ToArray());
-            var knotParametricCoordinatesHeta = Vector.CreateFromArray(Knots.Select(k => k.Heta).ToArray());
-
-            var nurbs = new Nurbs2D(nurbsElement, nurbsElement.ControlPoints.ToArray(), knotParametricCoordinatesKsi,
-                knotParametricCoordinatesHeta);
-
-            var knotDisplacements = new double[4, 3];
-            var paraviewKnotRenumbering = new int[] {0, 3, 1, 2};
-            for (var j = 0; j < knotDisplacements.GetLength(0); j++)
-            {
-                for (int i = 0; i < element.ControlPoints.Count(); i++)
-                {
-                    knotDisplacements[paraviewKnotRenumbering[j], 0] +=
-                        nurbs.NurbsValues[i, j] * localDisplacements[i, 0];
-                    knotDisplacements[paraviewKnotRenumbering[j], 1] +=
-                        nurbs.NurbsValues[i, j] * localDisplacements[i, 1];
-                    knotDisplacements[paraviewKnotRenumbering[j], 2] +=
-                        nurbs.NurbsValues[i, j] * localDisplacements[i, 2];
-                }
-            }
-
-            return knotDisplacements;
-        }
-
-        public double[] CalculateForces(IElement element, double[] localDisplacements, double[] localdDisplacements)
-        {
-            var shellElement = (NurbsKirchhoffLoveShellElementNL) element;
-            var elementNodalForces = new double[shellElement.ControlPointsDictionary.Count * 3];
-
-            _solution = localDisplacements;
-
-            var newControlPoints = CurrentControlPoint(_controlPoints);
-            var nurbs = CalculateShapeFunctions(shellElement, _controlPoints);
-            var gaussPoints = materialsAtThicknessGP.Keys.ToArray();
-
-            var Bmembrane = new double[3, _controlPoints.Length * 3];
-            var Bbending = new double[3, _controlPoints.Length * 3];
-            var numberOfControlPoints = _controlPoints.Length;
-            var MembraneForces = new Forces();
-            var BendingMoments = new Forces();
-
-            for (int j = 0; j < gaussPoints.Length; j++)
-            {
-                CalculateJacobian(newControlPoints, nurbs, j, jacobianMatrix);
-
-                var hessianMatrix = CalculateHessian(newControlPoints, nurbs, j);
-
-                var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
-
-                var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
-
-                var surfaceBasisVector3 = new[]
-                {
-                    surfaceBasisVector1[1] * surfaceBasisVector2[2] - surfaceBasisVector1[2] * surfaceBasisVector2[1],
-                    surfaceBasisVector1[2] * surfaceBasisVector2[0] - surfaceBasisVector1[0] * surfaceBasisVector2[2],
-                    surfaceBasisVector1[0] * surfaceBasisVector2[1] - surfaceBasisVector1[1] * surfaceBasisVector2[0],
-                };
-                
-                var J1 = Math.Sqrt(surfaceBasisVector3[0] * surfaceBasisVector3[0] +
-                                   surfaceBasisVector3[1] * surfaceBasisVector3[1] +
-                                   surfaceBasisVector3[2] * surfaceBasisVector3[2]);
-
-                surfaceBasisVector3[0] /= J1;
-                surfaceBasisVector3[1] /= J1;
-                surfaceBasisVector3[2] /= J1;
-
-
-                var surfaceBasisVectorDerivative1 = CalculateSurfaceBasisVector1(hessianMatrix, 0);
-                var surfaceBasisVectorDerivative2 = CalculateSurfaceBasisVector1(hessianMatrix, 1);
-                var surfaceBasisVectorDerivative12 = CalculateSurfaceBasisVector1(hessianMatrix, 2);
-                
-                CalculateMembraneDeformationMatrix(numberOfControlPoints, nurbs, j, surfaceBasisVector1,
-                    surfaceBasisVector2, Bmembrane);
-                CalculateBendingDeformationMatrix(numberOfControlPoints, surfaceBasisVector3, nurbs, j,
-                    surfaceBasisVector2,
-                    surfaceBasisVectorDerivative1, surfaceBasisVector1, J1, surfaceBasisVectorDerivative2,
-                    surfaceBasisVectorDerivative12, Bbending);
-
-                IntegratedStressesOverThickness(gaussPoints[j], ref MembraneForces, ref BendingMoments);
-
-                var wfactor = InitialJ1[j] * gaussPoints[j].WeightFactor;
-
-                for (int i = 0; i < Bmembrane.GetLength(1); i++)
-                {
-                    elementNodalForces[i] +=
-                        (Bmembrane[0, i] * MembraneForces.v0 * wfactor + Bbending[0, i] * BendingMoments.v0 * wfactor)+
-                        (Bmembrane[1, i] * MembraneForces.v1 * wfactor + Bbending[1, i] * BendingMoments.v1 * wfactor)+
-                        (Bmembrane[2, i] * MembraneForces.v2 * wfactor + Bbending[2, i] * BendingMoments.v2 * wfactor);
-                }
-            }
-
-            return elementNodalForces;
-        }
-
-        public double[] CalculateForcesForLogging(IElement element, double[] localDisplacements)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Dictionary<int, double> CalculateLoadingCondition(Element element, Edge edge,
-            NeumannBoundaryCondition neumann) => throw new NotImplementedException();
-
-        public Dictionary<int, double> CalculateLoadingCondition(Element element, Face face,
-            NeumannBoundaryCondition neumann) => throw new NotImplementedException();
+	public class NurbsKirchhoffLoveShellElementNL : Element, IStructuralIsogeometricElement, ISurfaceLoadedElement
+	{
+		protected static readonly IDofType[] ControlPointDofTypes = { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ };
+		private IDofType[][] dofTypes;
+
+		private Dictionary<GaussLegendrePoint3D, List<GaussLegendrePoint3D>> thicknessIntegrationPoints =
+			new Dictionary<GaussLegendrePoint3D, List<GaussLegendrePoint3D>>();
+
+		internal Dictionary<GaussLegendrePoint3D, Dictionary<GaussLegendrePoint3D, IShellMaterial>>
+			materialsAtThicknessGP = new Dictionary<GaussLegendrePoint3D, Dictionary<GaussLegendrePoint3D, IShellMaterial>>();
+
+		private bool isInitialized;
+		internal double[] _solution;
+
+		public NurbsKirchhoffLoveShellElementNL(IShellMaterial shellMaterial, IList<Knot> elementKnots, IList<ControlPoint> elementControlPoints, Patch patch, double thickness)
+		{
+			Contract.Requires(shellMaterial != null);
+			this.Patch = patch;
+			this.Thickness = thickness;
+			foreach (var knot in elementKnots)
+			{
+				if (!KnotsDictionary.ContainsKey(knot.ID))
+					this.KnotsDictionary.Add(knot.ID, knot);
+			}
+
+			_solution = new double[3 * elementControlPoints.Count];
+
+			foreach (var controlPoint in elementControlPoints)
+			{
+				if (!ControlPointsDictionary.ContainsKey(controlPoint.ID))
+					ControlPointsDictionary.Add(controlPoint.ID, controlPoint);
+			}
+			CreateElementGaussPoints(this);
+			foreach (var medianSurfaceGP in thicknessIntegrationPoints.Keys)
+			{
+				materialsAtThicknessGP.Add(medianSurfaceGP, new Dictionary<GaussLegendrePoint3D, IShellMaterial>());
+				foreach (var point in thicknessIntegrationPoints[medianSurfaceGP])
+				{
+					materialsAtThicknessGP[medianSurfaceGP].Add(point, shellMaterial.Clone());
+				}
+			}
+		}
+
+		public CellType CellType { get; } = CellType.Unknown;
 
-        public Dictionary<int, double> CalculateLoadingCondition(Element element, Edge edge,
-            PressureBoundaryCondition pressure) => throw new NotImplementedException();
+		public IElementDofEnumerator DofEnumerator { get; set; } = new GenericDofEnumerator();
+
+		public ElementDimensions ElementDimensions => ElementDimensions.ThreeD;
+
+		public bool MaterialModified => false;
+
+		public double[] CalculateAccelerationForces(IElement element, IList<MassAccelerationLoad> loads) => throw new NotImplementedException();
+
+		public double[,] CalculateDisplacementsForPostProcessing(Element element, Matrix localDisplacements)
+		{
+			var nurbsElement = (NurbsKirchhoffLoveShellElementNL)element;
+			var knotParametricCoordinatesKsi = Vector.CreateFromArray(Knots.Select(k => k.Ksi).ToArray());
+			var knotParametricCoordinatesHeta = Vector.CreateFromArray(Knots.Select(k => k.Heta).ToArray());
+
+			var nurbs = new Nurbs2D(nurbsElement, nurbsElement.ControlPoints.ToArray(), knotParametricCoordinatesKsi, knotParametricCoordinatesHeta);
 
-        public Dictionary<int, double> CalculateLoadingCondition(Element element, Face face,
-            PressureBoundaryCondition pressure) => throw new NotImplementedException();
+			var knotDisplacements = new double[4, 3];
+			var paraviewKnotRenumbering = new int[] { 0, 3, 1, 2 };
+			for (var j = 0; j < knotDisplacements.GetLength(0); j++)
+			{
+				for (int i = 0; i < element.ControlPoints.Count(); i++)
+				{
+					knotDisplacements[paraviewKnotRenumbering[j], 0] +=
+						nurbs.NurbsValues[i, j] * localDisplacements[i, 0];
+					knotDisplacements[paraviewKnotRenumbering[j], 1] +=
+						nurbs.NurbsValues[i, j] * localDisplacements[i, 1];
+					knotDisplacements[paraviewKnotRenumbering[j], 2] +=
+						nurbs.NurbsValues[i, j] * localDisplacements[i, 2];
+				}
+			}
 
-        double[,] jacobianMatrix = new double[2, 3];
-        public Tuple<double[], double[]> CalculateStresses(IElement element, double[] localDisplacements,
-            double[] localdDisplacements)
-        {
-            var shellElement = (NurbsKirchhoffLoveShellElementNL) element;
-            var elementControlPoints = shellElement.ControlPoints.ToArray();
-            var nurbs = CalculateShapeFunctions(shellElement, elementControlPoints);
-
-            _solution = localDisplacements;
-
-            var newControlPoints = CurrentControlPoint(elementControlPoints);
-            var midsurfaceGP = materialsAtThicknessGP.Keys.ToArray();
-
-            for (var j = 0; j < midsurfaceGP.Length; j++)
-            {
-                CalculateJacobian(newControlPoints, nurbs, j, jacobianMatrix);
-
-                var hessianMatrix = CalculateHessian(newControlPoints, nurbs, j);
-
-                var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
-
-                var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
-
-                var surfaceBasisVector3 = new[]
-                {
-                    surfaceBasisVector1[1] * surfaceBasisVector2[2] - surfaceBasisVector1[2] * surfaceBasisVector2[1],
-                    surfaceBasisVector1[2] * surfaceBasisVector2[0] - surfaceBasisVector1[0] * surfaceBasisVector2[2],
-                    surfaceBasisVector1[0] * surfaceBasisVector2[1] - surfaceBasisVector1[1] * surfaceBasisVector2[0]
-                };
-
-                var J1 = Math.Sqrt(surfaceBasisVector3[0] * surfaceBasisVector3[0] +
-                                   surfaceBasisVector3[1] * surfaceBasisVector3[1] +
-                                   surfaceBasisVector3[2] * surfaceBasisVector3[2]);
-
-                surfaceBasisVector3[0] /= J1;
-                surfaceBasisVector3[1] /= J1;
-                surfaceBasisVector3[2] /= J1;
-                
-                var surfaceBasisVectorDerivative1 = CalculateSurfaceBasisVector1(hessianMatrix, 0);
-                var surfaceBasisVectorDerivative2 = CalculateSurfaceBasisVector1(hessianMatrix, 1);
-                var surfaceBasisVectorDerivative12 = CalculateSurfaceBasisVector1(hessianMatrix, 2);
-
-                var A11 = initialSurfaceBasisVectors1[j][0] * initialSurfaceBasisVectors1[j][0] +
-                          initialSurfaceBasisVectors1[j][1] * initialSurfaceBasisVectors1[j][1] +
-                          initialSurfaceBasisVectors1[j][2] * initialSurfaceBasisVectors1[j][2];
-
-                var A22 = initialSurfaceBasisVectors2[j][0] * initialSurfaceBasisVectors2[j][0] +
-                          initialSurfaceBasisVectors2[j][1] * initialSurfaceBasisVectors2[j][1] +
-                          initialSurfaceBasisVectors2[j][2] * initialSurfaceBasisVectors2[j][2];
-
-                var A12 = initialSurfaceBasisVectors1[j][0] * initialSurfaceBasisVectors2[j][0] +
-                          initialSurfaceBasisVectors1[j][1] * initialSurfaceBasisVectors2[j][1] +
-                          initialSurfaceBasisVectors1[j][2] * initialSurfaceBasisVectors2[j][2];
-
-                var a11 = surfaceBasisVector1[0] * surfaceBasisVector1[0] +
-                          surfaceBasisVector1[1] * surfaceBasisVector1[1] +
-                          surfaceBasisVector1[2] * surfaceBasisVector1[2];
-
-                var a22 = surfaceBasisVector2[0] * surfaceBasisVector2[0] +
-                          surfaceBasisVector2[1] * surfaceBasisVector2[1] +
-                          surfaceBasisVector2[2] * surfaceBasisVector2[2];
-
-                var a12 = surfaceBasisVector1[0] * surfaceBasisVector2[0] +
-                          surfaceBasisVector1[1] * surfaceBasisVector2[1] +
-                          surfaceBasisVector1[2] * surfaceBasisVector2[2];
-
-
-                var membraneStrain = new double[] {0.5 * (a11 - A11), 0.5 * (a22 - A22), a12 - A12};
-
-                var B11 = initialSurfaceBasisVectorDerivative1[j][0] * initialUnitSurfaceBasisVectors3[j][0] +
-                          initialSurfaceBasisVectorDerivative1[j][1] * initialUnitSurfaceBasisVectors3[j][1] +
-                          initialSurfaceBasisVectorDerivative1[j][2] * initialUnitSurfaceBasisVectors3[j][2];
-
-                var B22 = initialSurfaceBasisVectorDerivative2[j][0] * initialUnitSurfaceBasisVectors3[j][0] +
-                          initialSurfaceBasisVectorDerivative2[j][1] * initialUnitSurfaceBasisVectors3[j][1] +
-                          initialSurfaceBasisVectorDerivative2[j][2] * initialUnitSurfaceBasisVectors3[j][2];
-
-                var B12 = initialSurfaceBasisVectorDerivative12[j][0] * initialUnitSurfaceBasisVectors3[j][0] +
-                          initialSurfaceBasisVectorDerivative12[j][1] * initialUnitSurfaceBasisVectors3[j][1] +
-                          initialSurfaceBasisVectorDerivative12[j][2] * initialUnitSurfaceBasisVectors3[j][2];
-
-                var b11 = surfaceBasisVectorDerivative1[0] * surfaceBasisVector3[0] +
-                          surfaceBasisVectorDerivative1[1] * surfaceBasisVector3[1] +
-                          surfaceBasisVectorDerivative1[2] * surfaceBasisVector3[2];
-
-                var b22 = surfaceBasisVectorDerivative2[0] * surfaceBasisVector3[0] +
-                          surfaceBasisVectorDerivative2[1] * surfaceBasisVector3[1] +
-                          surfaceBasisVectorDerivative2[2] * surfaceBasisVector3[2];
-
-                var b12 = surfaceBasisVectorDerivative12[0] * surfaceBasisVector3[0] +
-                          surfaceBasisVectorDerivative12[1] * surfaceBasisVector3[1] +
-                          surfaceBasisVectorDerivative12[2] * surfaceBasisVector3[2];
-
-                var bendingStrain = new double[] {b11 - B11, b22 - B22, 2 * b12 - 2 * B12};
-
-                //var bendingStrain = new double[] { -(b11 - B11), -(b22 - B22), -(2 * b12 - 2 * B12) };
-
-                foreach (var keyValuePair in materialsAtThicknessGP[midsurfaceGP[j]])
-                {
-                    var thicknessPoint = keyValuePair.Key;
-                    var material = keyValuePair.Value;
-                    var gpStrain = new double[bendingStrain.Length];
-                    var z = thicknessPoint.Zeta;
-                    for (var i = 0; i < bendingStrain.Length; i++)
-                    {
-                        gpStrain[i] += membraneStrain[i] + bendingStrain[i] * z;
-                    }
-
-                    material.UpdateMaterial(gpStrain);
-                }
-            }
-
-            return new Tuple<double[], double[]>(new double[0], new double[0]);
-        }
-
-        public Dictionary<int, double> CalculateSurfaceDistributedLoad(Element element, IDofType loadedDof,
-            double loadMagnitude)
-        {
-            var shellElement = (NurbsKirchhoffLoveShellElementNL) element;
-            var elementControlPoints = shellElement.ControlPoints.ToArray();
-            var gaussPoints = CreateElementGaussPoints(shellElement);
-            var distributedLoad = new Dictionary<int, double>();
-            var nurbs = new Nurbs2D(shellElement, elementControlPoints);
-
-            for (var j = 0; j < gaussPoints.Count; j++)
-            {
-                CalculateJacobian(elementControlPoints, nurbs, j, jacobianMatrix);
-                var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
-                var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
-                var surfaceBasisVector3 = surfaceBasisVector1.CrossProduct(surfaceBasisVector2);
-                var J1 = surfaceBasisVector3.Norm2();
-                surfaceBasisVector3.ScaleIntoThis(1 / J1);
-
-                for (int i = 0; i < elementControlPoints.Length; i++)
-                {
-                    var loadedDofIndex = ControlPointDofTypes.FindFirstIndex(loadedDof);
-                    if (!element.Model.GlobalDofOrdering.GlobalFreeDofs.Contains(elementControlPoints[i], loadedDof))
-                        continue;
-                    var dofId = element.Model.GlobalDofOrdering.GlobalFreeDofs[elementControlPoints[i], loadedDof];
-
-                    if (distributedLoad.ContainsKey(dofId))
-                    {
-                        distributedLoad[dofId] += loadMagnitude * J1 *
-                                                  nurbs.NurbsValues[i, j] * gaussPoints[j].WeightFactor;
-                    }
-                    else
-                    {
-                        distributedLoad.Add(dofId,
-                            loadMagnitude * nurbs.NurbsValues[i, j] * J1 * gaussPoints[j].WeightFactor);
-                    }
-                }
-            }
-
-            return distributedLoad;
-        }
-
-        public Dictionary<int, double> CalculateSurfacePressure(Element element, double pressureMagnitude)
-        {
-            var shellElement = (NurbsKirchhoffLoveShellElementNL) element;
-            var elementControlPoints = shellElement.ControlPoints.ToArray();
-            var gaussPoints = CreateElementGaussPoints(shellElement);
-            var pressureLoad = new Dictionary<int, double>();
-            var nurbs = new Nurbs2D(shellElement, elementControlPoints);
-
-            for (var j = 0; j < gaussPoints.Count; j++)
-            {
-                CalculateJacobian(elementControlPoints, nurbs, j, jacobianMatrix);
-                var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
-                var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
-                var surfaceBasisVector3 = surfaceBasisVector1.CrossProduct(surfaceBasisVector2);
-                var J1 = surfaceBasisVector3.Norm2();
-                surfaceBasisVector3.ScaleIntoThis(1 / J1);
-
-                for (int i = 0; i < elementControlPoints.Length; i++)
-                {
-                    for (int k = 0; k < ControlPointDofTypes.Length; k++)
-                    {
-                        int dofId = element.Model.GlobalDofOrdering.GlobalFreeDofs[elementControlPoints[i],
-                            ControlPointDofTypes[k]];
-
-                        if (pressureLoad.ContainsKey(dofId))
-                        {
-                            pressureLoad[dofId] += pressureMagnitude * surfaceBasisVector3[k] *
-                                                   nurbs.NurbsValues[i, j] * gaussPoints[j].WeightFactor;
-                        }
-                        else
-                        {
-                            pressureLoad.Add(dofId,
-                                pressureMagnitude * surfaceBasisVector3[k] * nurbs.NurbsValues[i, j] *
-                                gaussPoints[j].WeightFactor);
-                        }
-                    }
-                }
-            }
-
-            return pressureLoad;
-        }
-
-        public void ClearMaterialState()
-        {
-        }
-
-        public void ClearMaterialStresses() => throw new NotImplementedException();
-
-        public IMatrix DampingMatrix(IElement element) => throw new NotImplementedException();
-
-        public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element)
-        {
-            dofTypes = new IDofType[element.Nodes.Count][];
-            for (var i = 0; i < element.Nodes.Count; i++)
-            {
-                dofTypes[i] = ControlPointDofTypes;
-            }
-
-            return dofTypes;
-        }
-
-        internal (double[,] MembraneConstitutiveMatrix, double[,] BendingConstitutiveMatrix, double[,]
-            CouplingConstitutiveMatrix) IntegratedConstitutiveOverThickness(GaussLegendrePoint3D midSurfaceGaussPoint)
-        {
-            var MembraneConstitutiveMatrix = new double[3, 3];
-            var BendingConstitutiveMatrix = new double[3, 3];
-            var CouplingConstitutiveMatrix = new double[3, 3];
-
-            foreach (var keyValuePair in materialsAtThicknessGP[midSurfaceGaussPoint])
-            {
-                var thicknessPoint = keyValuePair.Key;
-                var material = keyValuePair.Value;
-                var constitutiveMatrixM = material.ConstitutiveMatrix;
-                double tempc = 0;
-                double w = thicknessPoint.WeightFactor;
-                double z = thicknessPoint.Zeta;
-                for (int i = 0; i < 3; i++)
-                {
-                    for (int k = 0; k < 3; k++)
-                    {
-                        tempc = constitutiveMatrixM[i, k];
-                        MembraneConstitutiveMatrix[i, k] += tempc * w;
-                        CouplingConstitutiveMatrix[i, k] += tempc * w * z;
-                        BendingConstitutiveMatrix[i, k] += tempc * w * z * z;
-                    }
-                }
-            }
-
-            return (MembraneConstitutiveMatrix, BendingConstitutiveMatrix, CouplingConstitutiveMatrix);
-        }
-
-        internal void IntegratedStressesOverThickness(
-            GaussLegendrePoint3D midSurfaceGaussPoint, ref Forces MembraneForces, ref Forces BendingMoments)
-        {
-            MembraneForces= new Forces();
-            BendingMoments= new Forces();
-            var thicknessPoints = thicknessIntegrationPoints[midSurfaceGaussPoint];
-
-            for (int i = 0; i < thicknessPoints.Count; i++)
-            {
-                var thicknessPoint = thicknessPoints[i];
-                var material = materialsAtThicknessGP[midSurfaceGaussPoint][thicknessPoints[i]];
-                var w = thicknessPoint.WeightFactor;
-                var z = thicknessPoint.Zeta;
-                MembraneForces.v0+= material.Stresses[0] * w;
-                MembraneForces.v1 += material.Stresses[1] * w;
-                MembraneForces.v2 += material.Stresses[2] * w;
-
-                BendingMoments.v0 -= material.Stresses[0] * w * z;
-                BendingMoments.v1 -= material.Stresses[1] * w * z;
-                BendingMoments.v2 -= material.Stresses[2] * w * z;
-            }
-        }
-
-        public IMatrix MassMatrix(IElement element) => throw new NotImplementedException();
-
-        public void ResetMaterialModified() => throw new NotImplementedException();
-
-        public void SaveMaterialState()
-        {
-            foreach (var gp in materialsAtThicknessGP.Keys)
-            {
-                foreach (var material in materialsAtThicknessGP[gp].Values)
-                {
-                    material.SaveState();
-                }
-            }
-        }
-
-        private Nurbs2D _nurbs;
-
-        public IMatrix StiffnessMatrix(IElement element)
-        {
-            var shellElement = (NurbsKirchhoffLoveShellElementNL) element;
-            var gaussPoints = materialsAtThicknessGP.Keys.ToArray();
-            var nurbs = CalculateShapeFunctions(shellElement, _controlPoints);
-
-            if (!isInitialized)
-            {
-                CalculateInitialConfigurationData(_controlPoints, nurbs, gaussPoints);
-                isInitialized = true;
-            }
-
-            var elementControlPoints = CurrentControlPoint(_controlPoints);
-            
-            var bRows = 3;
-            var bCols = elementControlPoints.Length * 3;
-            var stiffnessMatrix = new double[bCols, bCols];
-            var KmembraneNL = new double[bCols, bCols];
-            var KbendingNL = new double[bCols, bCols];
-            var Bmembrane = new double[bRows, bCols];
-            var Bbending = new double[bRows, bCols];
-
-            var BmTranspose = new double[bCols, bRows];
-            var BbTranspose = new double[bCols, bRows];
-
-            var BmTransposeMultStiffness = new double[bCols, bRows];
-            var BbTransposeMultStiffness = new double[bCols, bRows];
-            var BmbTransposeMultStiffness = new double[bCols, bRows];
-            var BbmTransposeMultStiffness = new double[bCols, bRows];
-            var MembraneForces = new Forces();
-            var BendingMoments = new Forces();
-
-            for (int j = 0; j < gaussPoints.Length; j++)
-            {
-                CalculateJacobian(elementControlPoints, nurbs, j, jacobianMatrix);
-
-                var hessianMatrix = CalculateHessian(elementControlPoints, nurbs, j);
-                var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
-
-                var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
-
-                var surfaceBasisVector3 = new[]
-                {
-                    surfaceBasisVector1[1] * surfaceBasisVector2[2] - surfaceBasisVector1[2] * surfaceBasisVector2[1],
-                    surfaceBasisVector1[2] * surfaceBasisVector2[0] - surfaceBasisVector1[0] * surfaceBasisVector2[2],
-                    surfaceBasisVector1[0] * surfaceBasisVector2[1] - surfaceBasisVector1[1] * surfaceBasisVector2[0],
-                };
-
-                var J1 = Math.Sqrt(surfaceBasisVector3[0]* surfaceBasisVector3[0]+
-                                   surfaceBasisVector3[1] * surfaceBasisVector3[1]+
-                                   surfaceBasisVector3[2] * surfaceBasisVector3[2]);
-
-                surfaceBasisVector3[0] /= J1;
-                surfaceBasisVector3[1] /= J1;
-                surfaceBasisVector3[2] /= J1;
-
-                var surfaceBasisVectorDerivative1 = CalculateSurfaceBasisVector1(hessianMatrix, 0);
-                var surfaceBasisVectorDerivative2 = CalculateSurfaceBasisVector1(hessianMatrix, 1);
-                var surfaceBasisVectorDerivative12 = CalculateSurfaceBasisVector1(hessianMatrix, 2);
-
-                double wFactor = InitialJ1[j] * gaussPoints[j].WeightFactor;
-
-                CalculateLinearStiffness(elementControlPoints, nurbs, j, surfaceBasisVector1, surfaceBasisVector2,
-                    Bmembrane, surfaceBasisVector3, surfaceBasisVectorDerivative1, J1, surfaceBasisVectorDerivative2,
-                    surfaceBasisVectorDerivative12, Bbending, gaussPoints, BmTranspose, bRows, bCols, BbTranspose,
-                    wFactor, BmTransposeMultStiffness, BbTransposeMultStiffness, BmbTransposeMultStiffness,
-                    BbmTransposeMultStiffness, stiffnessMatrix);
-                CalculateNonLinearStiffness(gaussPoints, j, KmembraneNL, bCols, KbendingNL, elementControlPoints, nurbs,
-                    surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3, surfaceBasisVectorDerivative1,
-                    surfaceBasisVectorDerivative2, surfaceBasisVectorDerivative12, J1, stiffnessMatrix, wFactor,
-                    ref MembraneForces, ref BendingMoments);
-            }
-
-            return Matrix.CreateFromArray(stiffnessMatrix);
-        }
-
-        private void CalculateNonLinearStiffness(GaussLegendrePoint3D[] gaussPoints, int j, double[,] KmembraneNL, int bCols,
-            double[,] KbendingNL, ControlPoint[] elementControlPoints, Nurbs2D nurbs, double[] surfaceBasisVector1,
-            double[] surfaceBasisVector2, double[] surfaceBasisVector3, double[] surfaceBasisVectorDerivative1,
-            double[] surfaceBasisVectorDerivative2, double[] surfaceBasisVectorDerivative12, double J1,
-            double[,] stiffnessMatrix, double wFactor, ref Forces MembraneForces, ref Forces BendingMoments)
-        {
-            IntegratedStressesOverThickness(gaussPoints[j], ref MembraneForces, ref BendingMoments);
-
-            Array.Clear(KmembraneNL, 0, bCols * bCols);
-            Array.Clear(KbendingNL, 0, bCols * bCols);
-
-            CalculateKmembraneNL(elementControlPoints, ref MembraneForces, nurbs, j, KmembraneNL);
-            CalculateKbendingNL(elementControlPoints, ref BendingMoments, nurbs,
-                surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3,
-                surfaceBasisVectorDerivative1,
-                surfaceBasisVectorDerivative2,
-                surfaceBasisVectorDerivative12, J1, j, KbendingNL);
-
-            for (var i = 0; i < stiffnessMatrix.GetLength(0); i++)
-            {
-                for (var k = 0; k < stiffnessMatrix.GetLength(1); k++)
-                {
-                    stiffnessMatrix[i, k] += (KmembraneNL[i, k] + KbendingNL[i, k]) * wFactor;
-                }
-            }
-        }
-
-        private void CalculateLinearStiffness(ControlPoint[] elementControlPoints, Nurbs2D nurbs, int j,
-            double[] surfaceBasisVector1, double[] surfaceBasisVector2, double[,] Bmembrane, double[] surfaceBasisVector3,
-            double[] surfaceBasisVectorDerivative1, double J1, double[] surfaceBasisVectorDerivative2,
-            double[] surfaceBasisVectorDerivative12, double[,] Bbending, GaussLegendrePoint3D[] gaussPoints,
-            double[,] BmTranspose, int bRows, int bCols, double[,] BbTranspose, double wFactor,
-            double[,] BmTransposeMultStiffness, double[,] BbTransposeMultStiffness, double[,] BmbTransposeMultStiffness,
-            double[,] BbmTransposeMultStiffness, double[,] stiffnessMatrix)
-        {
-            CalculateMembraneDeformationMatrix(elementControlPoints.Length, nurbs, j, surfaceBasisVector1,
-                surfaceBasisVector2, Bmembrane);
-            CalculateBendingDeformationMatrix(elementControlPoints.Length, surfaceBasisVector3, nurbs, j,
-                surfaceBasisVector2, surfaceBasisVectorDerivative1, surfaceBasisVector1, J1, surfaceBasisVectorDerivative2,
-                surfaceBasisVectorDerivative12, Bbending);
-
-            var (MembraneConstitutiveMatrix, BendingConstitutiveMatrix, CouplingConstitutiveMatrix) =
-                IntegratedConstitutiveOverThickness(gaussPoints[j]);
-
-
-            double tempb = 0;
-            double tempm = 0;
-            Array.Clear(BmTranspose, 0, bRows * bCols);
-            Array.Clear(BbTranspose, 0, bRows * bCols);
-            for (int i = 0; i < bRows; i++)
-            {
-                for (int k = 0; k < bCols; k++)
-                {
-                    BmTranspose[k, i] = Bmembrane[i, k] * wFactor;
-                    BbTranspose[k, i] = Bbending[i, k] * wFactor;
-                }
-            }
-
-            double tempcm = 0;
-            double tempcb = 0;
-            double tempcc = 0;
-            Array.Clear(BmTransposeMultStiffness, 0, bRows * bCols);
-            Array.Clear(BbTransposeMultStiffness, 0, bRows * bCols);
-            Array.Clear(BmbTransposeMultStiffness, 0, bRows * bCols);
-            Array.Clear(BbmTransposeMultStiffness, 0, bRows * bCols);
-            for (int i = 0; i < bCols; i++)
-            {
-                for (int k = 0; k < bRows; k++)
-                {
-                    tempm = BmTranspose[i, k];
-                    tempb = BbTranspose[i, k];
-                    for (int m = 0; m < bRows; m++)
-                    {
-                        tempcm = MembraneConstitutiveMatrix[k, m];
-                        tempcb = BendingConstitutiveMatrix[k, m];
-                        tempcc = CouplingConstitutiveMatrix[k, m];
-
-                        BmTransposeMultStiffness[i, m] += tempm * tempcm;
-                        BbTransposeMultStiffness[i, m] += tempb * tempcb;
-                        BmbTransposeMultStiffness[i, m] += tempm * tempcc;
-                        BbmTransposeMultStiffness[i, m] += tempb * tempcc;
-                    }
-                }
-            }
-
-            double tempmb = 0;
-            double tempbm = 0;
-            double mem = 0;
-            double ben = 0;
-            for (int i = 0; i < bCols; i++)
-            {
-                for (int k = 0; k < bRows; k++)
-                {
-                    tempm = BmTransposeMultStiffness[i, k];
-                    tempb = BbTransposeMultStiffness[i, k];
-                    tempmb = BmbTransposeMultStiffness[i, k];
-                    tempbm = BbmTransposeMultStiffness[i, k];
-
-                    for (int m = 0; m < bCols; m++)
-                    {
-                        mem = Bmembrane[k, m];
-                        ben = Bbending[k, m];
-                        stiffnessMatrix[i, m] += tempm * mem + tempb * ben + tempmb * ben + tempbm * mem;
-                    }
-                }
-            }
-        }
-
-        private Nurbs2D CalculateShapeFunctions(NurbsKirchhoffLoveShellElementNL shellElement,
-            ControlPoint[] controlPoints)
-        {
-            return _nurbs ?? (_nurbs = new Nurbs2D(shellElement, controlPoints));
-        }
-
-        internal ControlPoint[] CurrentControlPoint(ControlPoint[] controlPoints)
-        {
-            var cp = new ControlPoint[controlPoints.Length];
-
-            for (int i = 0; i < controlPoints.Length; i++)
-            {
-                cp[i] = new ControlPoint()
-                {
-                    ID = controlPoints[i].ID,
-                    X = controlPoints[i].X + _solution[i * 3],
-                    Y = controlPoints[i].Y + _solution[i * 3 + 1],
-                    Z = controlPoints[i].Z + _solution[i * 3 + 2],
-                    Ksi = controlPoints[i].Ksi,
-                    Heta = controlPoints[i].Heta,
-                    Zeta = controlPoints[i].Zeta,
-                    WeightFactor = controlPoints[i].WeightFactor
-                };
-            }
-
-            return cp;
-        }
-
-        internal double[,] CalculateHessian(ControlPoint[] controlPoints, Nurbs2D nurbs, int j)
-        {
-            var hessianMatrix = new double[3, 3];
-            for (var k = 0; k < controlPoints.Length; k++)
-            {
-                hessianMatrix[0, 0] +=
-                    nurbs.NurbsSecondDerivativeValueKsi[k, j] * controlPoints[k].X;
-                hessianMatrix[0, 1] +=
-                    nurbs.NurbsSecondDerivativeValueKsi[k, j] * controlPoints[k].Y;
-                hessianMatrix[0, 2] +=
-                    nurbs.NurbsSecondDerivativeValueKsi[k, j] * controlPoints[k].Z;
-                hessianMatrix[1, 0] +=
-                    nurbs.NurbsSecondDerivativeValueHeta[k, j] * controlPoints[k].X;
-                hessianMatrix[1, 1] +=
-                    nurbs.NurbsSecondDerivativeValueHeta[k, j] * controlPoints[k].Y;
-                hessianMatrix[1, 2] +=
-                    nurbs.NurbsSecondDerivativeValueHeta[k, j] * controlPoints[k].Z;
-                hessianMatrix[2, 0] +=
-                    nurbs.NurbsSecondDerivativeValueKsiHeta[k, j] * controlPoints[k].X;
-                hessianMatrix[2, 1] +=
-                    nurbs.NurbsSecondDerivativeValueKsiHeta[k, j] * controlPoints[k].Y;
-                hessianMatrix[2, 2] +=
-                    nurbs.NurbsSecondDerivativeValueKsiHeta[k, j] * controlPoints[k].Z;
-            }
-
-            return hessianMatrix;
-        }
-
-        internal void CalculateJacobian(ControlPoint[] controlPoints, Nurbs2D nurbs, int j, double[,] jacobianOut)
-        {
-            jacobianOut[0, 0] = jacobianOut[0, 1] = jacobianOut[0, 2] =
-                jacobianOut[1, 0] = jacobianOut[1, 1] = jacobianOut[1, 2] = 0.0;
-            for (var k = 0; k < controlPoints.Length; k++)
-            {
-                jacobianOut[0, 0] += nurbs.NurbsDerivativeValuesKsi[k, j] * controlPoints[k].X;
-                jacobianOut[0, 1] += nurbs.NurbsDerivativeValuesKsi[k, j] * controlPoints[k].Y;
-                jacobianOut[0, 2] += nurbs.NurbsDerivativeValuesKsi[k, j] * controlPoints[k].Z;
-                jacobianOut[1, 0] += nurbs.NurbsDerivativeValuesHeta[k, j] * controlPoints[k].X;
-                jacobianOut[1, 1] += nurbs.NurbsDerivativeValuesHeta[k, j] * controlPoints[k].Y;
-                jacobianOut[1, 2] += nurbs.NurbsDerivativeValuesHeta[k, j] * controlPoints[k].Z;
-            }
-        }
-
-        internal double[] CalculateSurfaceBasisVector1(double[,] Matrix, int row)
-        {
-            var surfaceBasisVector1 = new double[3];
-            surfaceBasisVector1[0] = Matrix[row, 0];
-            surfaceBasisVector1[1] = Matrix[row, 1];
-            surfaceBasisVector1[2] = Matrix[row, 2];
-            return surfaceBasisVector1;
-        }
-
-        internal void CalculateBendingDeformationMatrix(int controlPointsCount, double[] surfaceBasisVector3,
-            Nurbs2D nurbs, int j, double[] surfaceBasisVector2, double[] surfaceBasisVectorDerivative1,
-            double[] surfaceBasisVector1, double J1, double[] surfaceBasisVectorDerivative2,
-            double[] surfaceBasisVectorDerivative12, double[,] BbendingOut)
-        {
-            var s10 = surfaceBasisVector1[0];
-            var s11 = surfaceBasisVector1[1];
-            var s12 = surfaceBasisVector1[2];
-
-            var s20 = surfaceBasisVector2[0];
-            var s21 = surfaceBasisVector2[1];
-            var s22 = surfaceBasisVector2[2];
-
-            var s30 = surfaceBasisVector3[0];
-            var s31 = surfaceBasisVector3[1];
-            var s32 = surfaceBasisVector3[2];
-
-            var s11_0 = surfaceBasisVectorDerivative1[0];
-            var s11_1 = surfaceBasisVectorDerivative1[1];
-            var s11_2 = surfaceBasisVectorDerivative1[2];
-
-            var s22_0 = surfaceBasisVectorDerivative2[0];
-            var s22_1 = surfaceBasisVectorDerivative2[1];
-            var s22_2 = surfaceBasisVectorDerivative2[2];
-
-            var s12_0 = surfaceBasisVectorDerivative12[0];
-            var s12_1 = surfaceBasisVectorDerivative12[1];
-            var s12_2 = surfaceBasisVectorDerivative12[2];
-
-            for (int column = 0; column < controlPointsCount * 3; column += 3)
-            {
-                var dksi = nurbs.NurbsDerivativeValuesKsi[column / 3, j];
-                var dheta = nurbs.NurbsDerivativeValuesHeta[column / 3, j];
-                var d2Ksi = nurbs.NurbsSecondDerivativeValueKsi[column / 3, j];
-                var d2Heta = nurbs.NurbsSecondDerivativeValueHeta[column / 3, j];
-                var d2KsiHeta = nurbs.NurbsSecondDerivativeValueKsiHeta[column / 3, j];
-
-                BbendingOut[0, column] = -d2Ksi * s30 - ((dheta * (s11 * s32 - s12 * s31) - dksi * (s21 * s32 - s22 * s31)) * (s11_0 * s30 + s11_1 * s31 + s11_2 * s32) - dheta * (s11 * s11_2 - s12 * s11_1) + dksi * (s21 * s11_2 - s22 * s11_1)) / J1;
-                BbendingOut[0, column + 1] = ((dheta * (s10 * s32 - s12 * s30) - dksi * (s20 * s32 - s22 * s30)) * (s11_0 * s30 + s11_1 * s31 + s11_2 * s32) - dheta * (s10 * s11_2 - s12 * s11_0) + dksi * (s20 * s11_2 - s22 * s11_0)) / J1 - d2Ksi * s31;
-                BbendingOut[0, column + 2] = -d2Ksi * s32 - ((dheta * (s10 * s31 - s11 * s30) - dksi * (s20 * s31 - s21 * s30)) * (s11_0 * s30 + s11_1 * s31 + s11_2 * s32) - dheta * (s10 * s11_1 - s11 * s11_0) + dksi * (s20 * s11_1 - s21 * s11_0)) / J1;
-
-                BbendingOut[1, column] = -d2Heta * s30 - ((dheta * (s11 * s32 - s12 * s31) - dksi * (s21 * s32 - s22 * s31)) * (s22_0 * s30 + s22_1 * s31 + s22_2 * s32) - dheta * (s11 * s22_2 - s12 * s22_1) + dksi * (s21 * s22_2 - s22 * s22_1)) / J1;
-                BbendingOut[1, column + 1] = ((dheta * (s10 * s32 - s12 * s30) - dksi * (s20 * s32 - s22 * s30)) * (s22_0 * s30 + s22_1 * s31 + s22_2 * s32) - dheta * (s10 * s22_2 - s12 * s22_0) + dksi * (s20 * s22_2 - s22 * s22_0)) / J1 - d2Heta * s31;
-                BbendingOut[1, column + 2] = -d2Heta * s32 - ((dheta * (s10 * s31 - s11 * s30) - dksi * (s20 * s31 - s21 * s30)) * (s22_0 * s30 + s22_1 * s31 + s22_2 * s32) - dheta * (s10 * s22_1 - s11 * s22_0) + dksi * (s20 * s22_1 - s21 * s22_0)) / J1;
-
-                BbendingOut[2, column] = -2 * d2KsiHeta * s30 - (2 * ((dheta * (s11 * s32 - s12 * s31) - dksi * (s21 * s32 - s22 * s31)) * (s12_0 * s30 + s12_1 * s31 + s12_2 * s32) - dheta * (s11 * s12_2 - s12 * s12_1) + dksi * (s21 * s12_2 - s22 * s12_1))) / J1;
-                BbendingOut[2, column + 1] = (2 * ((dheta * (s10 * s32 - s12 * s30) - dksi * (s20 * s32 - s22 * s30)) * (s12_0 * s30 + s12_1 * s31 + s12_2 * s32) - dheta * (s10 * s12_2 - s12 * s12_0) + dksi * (s20 * s12_2 - s22 * s12_0))) / J1 - 2 * d2KsiHeta * s31;
-                BbendingOut[2, column + 2] = -2 * d2KsiHeta * s32 - (2 * ((dheta * (s10 * s31 - s11 * s30) - dksi * (s20 * s31 - s21 * s30)) * (s12_0 * s30 + s12_1 * s31 + s12_2 * s32) - dheta * (s10 * s12_1 - s11 * s12_0) + dksi * (s20 * s12_1 - s21 * s12_0))) / J1;
-            }
-        }
-
-        private double[] CalculateCrossProduct(double[] vector1, double[] vector2)
-        {
-            return new[]
-            {
-                vector1[1] * vector2[2] - vector1[2] * vector2[1],
-                vector1[2] * vector2[0] - vector1[0] * vector2[2],
-                vector1[0] * vector2[1] - vector1[1] * vector2[0]
-            };
-        }
-
-        private double[][] initialSurfaceBasisVectors1;
-        private double[][] initialSurfaceBasisVectors2;
-        private double[][] initialUnitSurfaceBasisVectors3;
-
-        private double[][] initialSurfaceBasisVectorDerivative1;
-        private double[][] initialSurfaceBasisVectorDerivative2;
-        private double[][] initialSurfaceBasisVectorDerivative12;
-
-        private double[] InitialJ1;
-
-        internal void CalculateInitialConfigurationData(ControlPoint[] controlPoints,
-            Nurbs2D nurbs, IList<GaussLegendrePoint3D> gaussPoints)
-        {
-            var numberOfGP = gaussPoints.Count;
-            InitialJ1 = new double[numberOfGP];
-            initialSurfaceBasisVectors1 = new double[numberOfGP][];
-            initialSurfaceBasisVectors2 = new double[numberOfGP][];
-            initialUnitSurfaceBasisVectors3 = new double[numberOfGP][];
-            initialSurfaceBasisVectorDerivative1 = new double[numberOfGP][];
-            initialSurfaceBasisVectorDerivative2 = new double[numberOfGP][];
-            initialSurfaceBasisVectorDerivative12 = new double[numberOfGP][];
-
-            for (int j = 0; j < gaussPoints.Count; j++)
-            {
-                CalculateJacobian(controlPoints, nurbs, j, jacobianMatrix);
-
-                var hessianMatrix = CalculateHessian(controlPoints, nurbs, j);
-                initialSurfaceBasisVectors1[j] = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
-                initialSurfaceBasisVectors2[j] = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
-                var s3 = CalculateCrossProduct(initialSurfaceBasisVectors1[j], initialSurfaceBasisVectors2[j]);
-                var norm = s3.Sum(t => t * t);
-                InitialJ1[j] = Math.Sqrt(norm);
-                var vector3 = CalculateCrossProduct(initialSurfaceBasisVectors1[j], initialSurfaceBasisVectors2[j]);
-                initialUnitSurfaceBasisVectors3[j] = new double[]
-                {
-                    vector3[0] / InitialJ1[j],
-                    vector3[1] / InitialJ1[j],
-                    vector3[2] / InitialJ1[j],
-                };
-
-                initialSurfaceBasisVectorDerivative1[j] = CalculateSurfaceBasisVector1(hessianMatrix, 0);
-                initialSurfaceBasisVectorDerivative2[j] = CalculateSurfaceBasisVector1(hessianMatrix, 1);
-                initialSurfaceBasisVectorDerivative12[j] = CalculateSurfaceBasisVector1(hessianMatrix, 2);
-
-                foreach (var integrationPointMaterial in materialsAtThicknessGP[gaussPoints[j]].Values)
-                {
-                    integrationPointMaterial.TangentVectorV1 = initialSurfaceBasisVectors1[j];
-                    integrationPointMaterial.TangentVectorV2 = initialSurfaceBasisVectors2[j];
-                    integrationPointMaterial.NormalVectorV3 = initialUnitSurfaceBasisVectors3[j];
-                }
-            }
-        }
-
-        private a3rs a3rs=new a3rs();
-        private Bab_rs Bab_rs = new Bab_rs();
-        private a3r a3r= new a3r();
-        private a3r a3s= new a3r();
-        private ControlPoint[] _controlPoints;
-
-        internal void CalculateKbendingNL(ControlPoint[] controlPoints,
-            ref Forces bendingMoments, Nurbs2D nurbs, double[] surfaceBasisVector1,
-            double[] surfaceBasisVector2, double[] surfaceBasisVector3,
-            double[] surfaceBasisVectorDerivative1, double[] surfaceBasisVectorDerivative2,
-            double[] surfaceBasisVectorDerivative12, double J1, int j, double[,] KbendingNLOut)
-        {
-            for (int i = 0; i < controlPoints.Length; i++)
-            {
-                var dksi_r = nurbs.NurbsDerivativeValuesKsi[i, j];
-                var dheta_r = nurbs.NurbsDerivativeValuesHeta[i, j];
-
-                var d2Ksi_dr2 = nurbs.NurbsSecondDerivativeValueKsi[i, j];
-                var d2Heta_dr2 = nurbs.NurbsSecondDerivativeValueHeta[i, j];
-                var d2KsiHeta_dr2 = nurbs.NurbsSecondDerivativeValueKsiHeta[i, j];
-
-                for (int k = 0; k < controlPoints.Length; k++)
-                {
-                    var d2Ksi_ds2 = nurbs.NurbsSecondDerivativeValueKsi[k, j];
-                    var d2Heta_ds2 = nurbs.NurbsSecondDerivativeValueHeta[k, j];
-                    var d2KsiHeta_ds2 = nurbs.NurbsSecondDerivativeValueKsiHeta[k, j];
-
-                    var dksi_s = nurbs.NurbsDerivativeValuesKsi[k, j];
-                    var dheta_s = nurbs.NurbsDerivativeValuesHeta[k, j];
-
-                    CalculateA3r(surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3, dksi_r,
-                        dheta_r, J1, ref a3r);
-                    CalculateA3r(surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3, dksi_s,
-                        dheta_s, J1, ref a3s);
-                    a3rs=new a3rs();//Clear struct values
-                    Calculate_a3rs(surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3, J1, dksi_r,
-                        dheta_r, dksi_s, dheta_s, ref a3rs);
-                    
-                    CalculateBab_rs(surfaceBasisVectorDerivative1, surfaceBasisVectorDerivative2, 
-                        surfaceBasisVectorDerivative12, d2Ksi_dr2, ref a3s, d2Ksi_ds2, ref a3r, ref a3rs, d2Heta_dr2, 
-                        d2Heta_ds2, d2KsiHeta_dr2, d2KsiHeta_ds2, ref Bab_rs);
-
-
-                    KbendingNLOut[i * 3 + 0, k * 3 + 0] -= (Bab_rs.Bab_rs00_0 * bendingMoments.v0 + Bab_rs.Bab_rs00_1 * bendingMoments.v1 + Bab_rs.Bab_rs00_2 * bendingMoments.v2);
-                    KbendingNLOut[i * 3 + 0, k * 3 + 1] -= (Bab_rs.Bab_rs01_0 * bendingMoments.v0 + Bab_rs.Bab_rs01_1 * bendingMoments.v1 + Bab_rs.Bab_rs01_2 * bendingMoments.v2);
-                    KbendingNLOut[i * 3 + 0, k * 3 + 2] -= (Bab_rs.Bab_rs02_0 * bendingMoments.v0 + Bab_rs.Bab_rs02_1 * bendingMoments.v1 + Bab_rs.Bab_rs02_2 * bendingMoments.v2);
-
-                    KbendingNLOut[i * 3 + 1, k * 3 + 0] -= (Bab_rs.Bab_rs10_0 * bendingMoments.v0 + Bab_rs.Bab_rs10_1 * bendingMoments.v1 + Bab_rs.Bab_rs10_2 * bendingMoments.v2);
-                    KbendingNLOut[i * 3 + 1, k * 3 + 1] -= (Bab_rs.Bab_rs11_0 * bendingMoments.v0 + Bab_rs.Bab_rs11_1 * bendingMoments.v1 + Bab_rs.Bab_rs11_2 * bendingMoments.v2);
-                    KbendingNLOut[i * 3 + 1, k * 3 + 2] -= (Bab_rs.Bab_rs12_0 * bendingMoments.v0 + Bab_rs.Bab_rs12_1 * bendingMoments.v1 + Bab_rs.Bab_rs12_2 * bendingMoments.v2);
-
-                    KbendingNLOut[i * 3 + 2, k * 3 + 0] -= (Bab_rs.Bab_rs20_0 * bendingMoments.v0 + Bab_rs.Bab_rs20_1 * bendingMoments.v1 + Bab_rs.Bab_rs20_2 * bendingMoments.v2);
-                    KbendingNLOut[i * 3 + 2, k * 3 + 1] -= (Bab_rs.Bab_rs21_0 * bendingMoments.v0 + Bab_rs.Bab_rs21_1 * bendingMoments.v1 + Bab_rs.Bab_rs21_2 * bendingMoments.v2);
-                    KbendingNLOut[i * 3 + 2, k * 3 + 2] -= (Bab_rs.Bab_rs22_0 * bendingMoments.v0 + Bab_rs.Bab_rs22_1 * bendingMoments.v1 + Bab_rs.Bab_rs22_2 * bendingMoments.v2);
-
-                }
-            }
-        }
-
-        private static void CalculateBab_rs(double[] surfaceBasisVectorDerivative1,
-            double[] surfaceBasisVectorDerivative2, double[] surfaceBasisVectorDerivative12, double d2Ksi_dr2, ref a3r a3s,
-            double d2Ksi_ds2, ref a3r a3r, ref a3rs a3rs, double d2Heta_dr2, double d2Heta_ds2, double d2KsiHeta_dr2,
-            double d2KsiHeta_ds2, ref Bab_rs Bab_rsOut)
-        {
-            var s11_0 = surfaceBasisVectorDerivative1[0];
-            var s11_1 = surfaceBasisVectorDerivative1[1];
-            var s11_2 = surfaceBasisVectorDerivative1[2];
-
-            var s22_0 = surfaceBasisVectorDerivative2[0];
-            var s22_1 = surfaceBasisVectorDerivative2[1];
-            var s22_2 = surfaceBasisVectorDerivative2[2];
-
-            var s12_0 = surfaceBasisVectorDerivative12[0];
-            var s12_1 = surfaceBasisVectorDerivative12[1];
-            var s12_2 = surfaceBasisVectorDerivative12[2];
-
-            Bab_rsOut.Bab_rs00_0 = d2Ksi_dr2 * a3s.a3r00 + d2Ksi_ds2 * a3r.a3r00 +
-                                 s11_0 * a3rs.a3rs00_0 +
-                                 s11_1 * a3rs.a3rs00_1 +
-                                 s11_2 * a3rs.a3rs00_2;
-            
-            Bab_rsOut.Bab_rs00_1 = d2Heta_dr2 * a3s.a3r00 + d2Heta_ds2 * a3r.a3r00 +
-                                 s22_0 * a3rs.a3rs00_0 +
-                                 s22_1 * a3rs.a3rs00_1 +
-                                 s22_2 * a3rs.a3rs00_2;
-            
-            Bab_rsOut.Bab_rs00_2 = (d2KsiHeta_dr2 * a3s.a3r00 + d2KsiHeta_ds2 * a3r.a3r00) * 2 +
-                                 s12_0 * a3rs.a3rs00_0 +
-                                 s12_1 * a3rs.a3rs00_1 +
-                                 s12_2 * a3rs.a3rs00_2;
-
-            Bab_rsOut.Bab_rs01_0 = d2Ksi_dr2 * a3s.a3r01 + d2Ksi_ds2 * a3r.a3r10 +
-                                 s11_0 * a3rs.a3rs01_0 +
-                                 s11_1 * a3rs.a3rs01_1 +
-                                 s11_2 * a3rs.a3rs01_2;
-            Bab_rsOut.Bab_rs01_1 = d2Heta_dr2 * a3s.a3r01 + d2Heta_ds2 * a3r.a3r10 +
-                                 s22_0 * a3rs.a3rs01_0 +
-                                 s22_1 * a3rs.a3rs01_1 +
-                                 s22_2 * a3rs.a3rs01_2;
-            Bab_rsOut.Bab_rs01_2= (d2KsiHeta_dr2 * a3s.a3r01 + d2KsiHeta_ds2 * a3r.a3r10) * 2 +
-                                s12_0 * a3rs.a3rs01_0 +
-                                s12_1 * a3rs.a3rs01_1 +
-                                s12_2 * a3rs.a3rs01_2;
-
-            Bab_rsOut.Bab_rs02_0 = d2Ksi_dr2 * a3s.a3r02 + d2Ksi_ds2 * a3r.a3r20 +
-                                 s11_0 * a3rs.a3rs02_0 +
-                                 s11_1 * a3rs.a3rs02_1 +
-                                 s11_2 * a3rs.a3rs02_2;
-            Bab_rsOut.Bab_rs02_1 = d2Heta_dr2 * a3s.a3r02 + d2Heta_ds2 * a3r.a3r20 +
-                                 s22_0 * a3rs.a3rs02_0 +
-                                 s22_1 * a3rs.a3rs02_1 +
-                                 s22_2 * a3rs.a3rs02_2;
-            Bab_rsOut.Bab_rs02_2 = (d2KsiHeta_dr2 * a3s.a3r02 + d2KsiHeta_ds2 * a3r.a3r20) * 2 +
-                                 s12_0 * a3rs.a3rs02_0 +
-                                 s12_1 * a3rs.a3rs02_1 +
-                                 s12_2 * a3rs.a3rs02_2;
-
-            Bab_rsOut.Bab_rs10_0 = d2Ksi_dr2 * a3s.a3r10 + d2Ksi_ds2 * a3r.a3r01 +
-                                 s11_0 * a3rs.a3rs10_0 +
-                                 s11_1 * a3rs.a3rs10_1 +
-                                 s11_2 * a3rs.a3rs10_2;
-            Bab_rsOut.Bab_rs10_1 = d2Heta_dr2 * a3s.a3r10 + d2Heta_ds2 * a3r.a3r01 +
-                                 s22_0 * a3rs.a3rs10_0 +
-                                 s22_1 * a3rs.a3rs10_1 +
-                                 s22_2 * a3rs.a3rs10_2;
-            Bab_rsOut.Bab_rs10_2 = (d2KsiHeta_dr2 * a3s.a3r10 + d2KsiHeta_ds2 * a3r.a3r01) * 2 +
-                                 s12_0 * a3rs.a3rs10_0 +
-                                 s12_1 * a3rs.a3rs10_1 +
-                                 s12_2 * a3rs.a3rs10_2;
-
-            Bab_rsOut.Bab_rs11_0 = d2Ksi_dr2 * a3s.a3r11 + d2Ksi_ds2 * a3r.a3r11 +
-                                 s11_0 * a3rs.a3rs11_0 +
-                                 s11_1 * a3rs.a3rs11_1 +
-                                 s11_2 * a3rs.a3rs11_2;
-            Bab_rsOut.Bab_rs11_1 = d2Heta_dr2 * a3s.a3r11 + d2Heta_ds2 * a3r.a3r11 +
-                                 s22_0 * a3rs.a3rs11_0 +
-                                 s22_1 * a3rs.a3rs11_1 +
-                                 s22_2 * a3rs.a3rs11_2;
-            Bab_rsOut.Bab_rs11_2 = (d2KsiHeta_dr2 * a3s.a3r11 + d2KsiHeta_ds2 * a3r.a3r11) * 2 +
-                                 s12_0 * a3rs.a3rs11_0 +
-                                 s12_1 * a3rs.a3rs11_1 +
-                                 s12_2 * a3rs.a3rs11_2;
-
-            Bab_rsOut.Bab_rs12_0 = d2Ksi_dr2 * a3s.a3r12 + d2Ksi_ds2 * a3r.a3r21 +
-                                 s11_0 * a3rs.a3rs12_0 +
-                                 s11_1 * a3rs.a3rs12_1 +
-                                 s11_2 * a3rs.a3rs12_2;
-            Bab_rsOut.Bab_rs12_1 = d2Heta_dr2 * a3s.a3r12 + d2Heta_ds2 * a3r.a3r21 +
-                                 s22_0 * a3rs.a3rs12_0 +
-                                 s22_1 * a3rs.a3rs12_1 +
-                                 s22_2 * a3rs.a3rs12_2;
-            Bab_rsOut.Bab_rs12_2 = (d2KsiHeta_dr2 * a3s.a3r12 + d2KsiHeta_ds2 * a3r.a3r21) * 2 +
-                                 s12_0 * a3rs.a3rs12_0 +
-                                 s12_1 * a3rs.a3rs12_1 +
-                                 s12_2 * a3rs.a3rs12_2;
-
-            Bab_rsOut.Bab_rs20_0 = d2Ksi_dr2 * a3s.a3r20 + d2Ksi_ds2 * a3r.a3r02 +
-                                 s11_0 * a3rs.a3rs20_0 +
-                                 s11_1 * a3rs.a3rs20_1 +
-                                 s11_2 * a3rs.a3rs20_2;
-            Bab_rsOut.Bab_rs20_1 = d2Heta_dr2 * a3s.a3r20 + d2Heta_ds2 * a3r.a3r02 +
-                                 s22_0 * a3rs.a3rs20_0 +
-                                 s22_1 * a3rs.a3rs20_1 +
-                                 s22_2 * a3rs.a3rs20_2;
-            Bab_rsOut.Bab_rs20_2 = (d2KsiHeta_dr2 * a3s.a3r20 + d2KsiHeta_ds2 * a3r.a3r02) * 2 +
-                                 s12_0 * a3rs.a3rs20_0 +
-                                 s12_1 * a3rs.a3rs20_1 +
-                                 s12_2 * a3rs.a3rs20_2;
-
-            Bab_rsOut.Bab_rs21_0 = d2Ksi_dr2 * a3s.a3r21 + d2Ksi_ds2 * a3r.a3r12 +
-                                 s11_0 * a3rs.a3rs21_0 +
-                                 s11_1 * a3rs.a3rs21_1 +
-                                 s11_2 * a3rs.a3rs21_2;
-            Bab_rsOut.Bab_rs21_1 = d2Heta_dr2 * a3s.a3r21 + d2Heta_ds2 * a3r.a3r12 +
-                                 s22_0 * a3rs.a3rs21_0 +
-                                 s22_1 * a3rs.a3rs21_1 +
-                                 s22_2 * a3rs.a3rs21_2;
-            Bab_rsOut.Bab_rs21_2 = (d2KsiHeta_dr2 * a3s.a3r21 + d2KsiHeta_ds2 * a3r.a3r12) * 2 +
-                                 s12_0 * a3rs.a3rs21_0 +
-                                 s12_1 * a3rs.a3rs21_1 +
-                                 s12_2 * a3rs.a3rs21_2;
-
-            Bab_rsOut.Bab_rs22_0 = d2Ksi_dr2 * a3s.a3r22 + d2Ksi_ds2 * a3r.a3r22 +
-                                 s11_0 * a3rs.a3rs22_0 +
-                                 s11_1 * a3rs.a3rs22_1 +
-                                 s11_2 * a3rs.a3rs22_2;
-            Bab_rsOut.Bab_rs22_1 = d2Heta_dr2 * a3s.a3r22 + d2Heta_ds2 * a3r.a3r22 +
-                                 s22_0 * a3rs.a3rs22_0 +
-                                 s22_1 * a3rs.a3rs22_1 +
-                                 s22_2 * a3rs.a3rs22_2;
-            Bab_rsOut.Bab_rs22_2 = (d2KsiHeta_dr2 * a3s.a3r22 + d2KsiHeta_ds2 * a3r.a3r22) * 2 +
-                                 s12_0 * a3rs.a3rs22_0 +
-                                 s12_1 * a3rs.a3rs22_1 +
-                                 s12_2 * a3rs.a3rs22_2;
-        }
-
-        private static void Calculate_a3rs(double[] surfaceBasisVector1, double[] surfaceBasisVector2,
-            double[] surfaceBasisVector3, double J1, double dksi_r, double dheta_r, double dksi_s, double dheta_s, ref a3rs a3rsOut)
-        {
-            #region Initializations
-            var s10 = surfaceBasisVector1[0];
-            var s11 = surfaceBasisVector1[1];
-            var s12 = surfaceBasisVector1[2];
-
-            var s20 = surfaceBasisVector2[0];
-            var s21 = surfaceBasisVector2[1];
-            var s22 = surfaceBasisVector2[2];
-
-            var s30 = surfaceBasisVector3[0];
-            var s31 = surfaceBasisVector3[1];
-            var s32 = surfaceBasisVector3[2];
-
-            var aux1Term1 = (dheta_s * dksi_r - dheta_r * dksi_s) * J1;
-            var aux2Term1 = dheta_r * dksi_s - dheta_s * dksi_r;
-            var aux3Term1 = aux2Term1 * J1;
-
-            var aux1Term2 = dheta_s * s11 - dksi_s * s21;
-            var aux2Term2 = dheta_s * s12 - dksi_s * s22;
-            var aux3Term2 = dheta_r * s12 - dksi_r * s22;
-            var aux4Term2 = dheta_r * s11 - dksi_r * s21;
-            var aux5Term2 = dheta_s * s10 - dksi_s * s20;
-            var aux6Term2 = dheta_r * s10 - dksi_r * s20;
-            var aux7Term2 = s32 * aux1Term2 - s31 * aux2Term2;
-            var aux8Term2 = s32 * aux5Term2 - s30 * aux2Term2;
-            var aux9Term2 = s31 * aux5Term2 - s30 * aux1Term2;
-            var J1squared = J1 * J1;
-
-            var aux1Term3 = s32 * aux4Term2 - s31 * aux3Term2;
-            var aux2Term3 = s32 * aux6Term2 - s30 * aux3Term2;
-            var aux3Term3 = s31 * aux6Term2 - s30 * aux4Term2;
-
-            var aux1 = aux4Term2 * aux1Term2;
-            var aux2 = aux3Term2 * aux2Term2;
-            var aux3 = aux1Term3 * aux7Term2;
-            var aux4 = aux7Term2 * aux3Term2;
-            var aux5 = aux1Term3 * aux2Term2;
-            var aux6 = aux7Term2 * aux4Term2;
-            var aux7 = aux1Term3 * aux1Term2;
-            var aux8 = aux1 + aux2 - aux3;
-            var aux9 = aux1Term3 * aux8Term2;
-            var aux10 = aux4Term2 * aux5Term2;
-            var aux11 = J1 * s32 * J1 * aux2Term1;
-            var aux12 = aux8Term2 * aux4Term2;
-            var aux13 = aux8Term2 * aux3Term2;
-            var aux14 = aux1Term3 * aux5Term2;
-            var aux15 = (aux10 + aux11 - aux9);
-            var aux16 = aux9Term2 * aux1Term3;
-            var aux17 = aux3Term2 * aux5Term2;
-            var aux18 = J1 * s31 * J1 * aux2Term1;
-            var aux19 = aux9Term2 * aux3Term2;
-            var aux20 = aux9Term2 * aux4Term2;
-            var aux21 = (aux17 - aux18 + aux16);
-            var aux22 = aux2Term3 * aux7Term2;
-            var aux23 = aux6Term2 * aux1Term2;
-            var aux24 = aux2Term3 * aux2Term2;
-            var aux25 = aux7Term2 * aux6Term2;
-            var aux26 = aux2Term3 * aux1Term2;
-            var aux27 = aux23 - aux11 - aux22;
-            var aux28 = aux2Term3 * aux8Term2;
-            var aux29 = aux6Term2 * aux5Term2;
-            var aux30 = aux8Term2 * aux6Term2;
-            var aux31 = aux2Term3 * aux5Term2;
-            var aux32 = (aux29 + aux2 - aux28);
-            var aux33 = aux2Term3 * aux9Term2;
-            var aux34 = J1 * s30 * J1 * aux2Term1;
-            var aux35 = aux3Term2 * aux1Term2;
-            var aux36 = aux9Term2 * aux6Term2;
-            var aux37 = (aux35 + aux34 - aux33);
-            var aux38 = aux3Term3 * aux7Term2;
-            var aux39 = aux6Term2 * aux2Term2;
-            var aux40 = aux3Term3 * aux2Term2;
-            var aux41 = aux3Term3 * aux1Term2;
-            var aux42 = (aux39 + aux18 + aux38);
-            var aux43 = aux3Term3 * aux8Term2;
-            var aux44 = aux4Term2 * aux2Term2;
-            var aux45 = aux3Term3 * aux5Term2;
-            var aux46 = (aux44 - aux34 - aux43);
-            var aux47 = aux3Term3 * aux9Term2;
-            var aux48 = (aux29 + aux1 - aux47);
-            #endregion
-
-            #region Term1
-
-
-
-            a3rsOut.a3rs00_0 = (2 * s30 * aux3 - s30 * aux8) / J1squared;
-            a3rsOut.a3rs00_1 = (aux4 + aux5 + 2 * s31 * aux3 - s31 * aux8) / J1squared;
-            a3rsOut.a3rs00_2 = -(aux6 + aux7 - 2 * s32 * aux3 + s32 * aux8) / J1squared;
-            
-            a3rsOut.a3rs01_0 = -(aux5 + 2 * s30 * aux9- s30 * aux15) / J1squared;
-            a3rsOut.a3rs01_1 = -(aux13 + 2 * s31 * aux9 - s31 * aux15) / J1squared;
-            a3rsOut.a3rs01_2 = aux1Term1 + (aux12 + aux14 - 2 * s32 * aux9 + s32 * aux15) / J1squared;
-            
-            a3rsOut.a3rs02_0 = (aux7 + 2 * s30 * aux16 + s30 * aux21) / J1squared;
-            a3rsOut.a3rs02_1 = aux3Term1 + (aux19 - aux14 + 2 * s31 * aux16 + s31 * aux21) / J1squared;
-            a3rsOut.a3rs02_2 = -(aux20 - 2 * s32 * aux16 - s32 * aux21) / J1squared;
-            
-            a3rsOut.a3rs10_0 = -(aux4 + 2 * s30 * aux22 - s30 * aux27) / J1squared;
-            a3rsOut.a3rs10_1 = -(aux24 + 2 * s31 * aux22 - s31 * aux27) / J1squared;
-            a3rsOut.a3rs10_2 = aux3Term1 + (aux25 + aux26 - 2 * s32 * aux22 + s32 * aux27) / J1squared;
-            
-            a3rsOut.a3rs11_0 = (aux13 + aux24 + 2 * s30 * aux28 - s30 * aux32) / J1squared;
-            a3rsOut.a3rs11_1 = (2 * s31 * aux28 - s31 * aux32) / J1squared;
-            a3rsOut.a3rs11_2 = -(aux30 + aux31 - 2 * s32 * aux28 + s32 * aux32) /J1squared;
-            
-            a3rsOut.a3rs12_0 = aux1Term1 - (aux19 + aux26 + 2 * s30 * aux33 - s30 * aux37) / J1squared;
-            a3rsOut.a3rs12_1 = (aux31 - 2 * s31 * aux33 + s31 * aux37) / J1squared;
-            a3rsOut.a3rs12_2 = (aux36 - 2 * s32 * aux33 + s32 * aux37) / J1squared;
-            
-            a3rsOut.a3rs20_0 = (aux6 + 2 * s30 * aux38 + s30 * aux42) / J1squared;
-            a3rsOut.a3rs20_1 = aux1Term1 - (aux25 - aux40 - 2 * s31 * aux38 - s31 * aux42) / J1squared;
-            a3rsOut.a3rs20_2 = -(aux41 - 2 * s32 * aux38 - s32 * aux42) / J1squared;
-            
-            a3rsOut.a3rs21_0 = aux3Term1 - (aux12 + aux40 + 2 * s30 * aux43 - s30 * aux46) / J1squared;
-            a3rsOut.a3rs21_1 = (aux30 - 2 * s31 * aux43 + s31 * aux46) / J1squared;
-            a3rsOut.a3rs21_2 = (aux45 - 2 * s32 * aux43 + s32 * aux46) / J1squared;
-            
-            a3rsOut.a3rs22_0 = (aux20 + aux41 + 2 * s30 * aux47 - s30 * aux48) / J1squared;
-            a3rsOut.a3rs22_1 = -(aux36 + aux45 - 2 * s31 * aux47 + s31 * aux48) / J1squared;
-            a3rsOut.a3rs22_2 = (2 * s32 * aux47 - s32 * aux48) / J1squared;
-
-            #endregion
-        }
-
-
-        private void CalculateA3r(double[] surfaceBasisVector1,
-            double[] surfaceBasisVector2, double[] surfaceBasisVector3,
-            double dksi_r, double dheta_r, double J1, ref a3r da3_unit_dr_out)
-        {
-            var s30 = surfaceBasisVector3[0];
-            var s31 = surfaceBasisVector3[1];
-            var s32 = surfaceBasisVector3[2];
-
-            var da3_tilde_dr10 = dheta_r * surfaceBasisVector1[2] - dksi_r * surfaceBasisVector2[2];
-            var da3_tilde_dr20 = dksi_r * surfaceBasisVector2[1] - dheta_r * surfaceBasisVector1[1];
-
-            var da3_tilde_dr01 = dksi_r * surfaceBasisVector2[2] - dheta_r * surfaceBasisVector1[2];
-            var da3_tilde_dr21 = dheta_r * surfaceBasisVector1[0] - dksi_r * surfaceBasisVector2[0];
-
-            var da3_tilde_dr02 = dheta_r * surfaceBasisVector1[1] - dksi_r * surfaceBasisVector2[1];
-            var da3_tilde_dr12 = dksi_r * surfaceBasisVector2[0] - dheta_r * surfaceBasisVector1[0];
-
-
-            var dnorma3_dr0 = s31 * da3_tilde_dr10 +
-                              s32 * da3_tilde_dr20;
-
-            var dnorma3_dr1 = s30 * da3_tilde_dr01 +
-                              s32 * da3_tilde_dr21;
-
-            var dnorma3_dr2 = s30 * da3_tilde_dr02 +
-                              s31 * da3_tilde_dr12;
-
-            da3_unit_dr_out.a3r00 = -s30 * dnorma3_dr0;
-            da3_unit_dr_out.a3r10 = da3_tilde_dr10 - s31 * dnorma3_dr0;
-            da3_unit_dr_out.a3r20 = da3_tilde_dr20 - s32 * dnorma3_dr0;
-
-            da3_unit_dr_out.a3r01 = da3_tilde_dr01 - s30 * dnorma3_dr1;
-            da3_unit_dr_out.a3r11 = -s31 * dnorma3_dr1;
-            da3_unit_dr_out.a3r21 = da3_tilde_dr21 - s32 * dnorma3_dr1;
-
-            da3_unit_dr_out.a3r02 = da3_tilde_dr02 - s30 * dnorma3_dr2;
-            da3_unit_dr_out.a3r12 = da3_tilde_dr12 - s31 * dnorma3_dr2;
-            da3_unit_dr_out.a3r22 = -s32 * dnorma3_dr2;
-        }
-
-        internal void CalculateKmembraneNL(ControlPoint[] controlPoints, ref Forces membraneForces, Nurbs2D nurbs,
-            int j, double[,] KmembraneNLOut)
-        {
-            for (var i = 0; i < controlPoints.Length; i++)
-            {
-                var dksi_r = nurbs.NurbsDerivativeValuesKsi[i, j];
-                var dheta_r = nurbs.NurbsDerivativeValuesHeta[i, j];
-
-                for (int k = 0; k < controlPoints.Length; k++)
-                {
-                    var dksi_s = nurbs.NurbsDerivativeValuesKsi[k, j];
-                    var dheta_s = nurbs.NurbsDerivativeValuesHeta[k, j];
-
-                    
-                    var aux = membraneForces.v0 * dksi_r * dksi_s +
-                              membraneForces.v1 * dheta_r * dheta_s +
-                              membraneForces.v2 * (dksi_r * dheta_s + dksi_s * dheta_r);
-
-                    KmembraneNLOut[i * 3, k * 3] += aux;
-                    KmembraneNLOut[i * 3 + 1, k * 3 + 1] += aux;
-                    KmembraneNLOut[i * 3 + 2, k * 3 + 2] += aux;
-                }
-            }
-        }
-        
-        internal void CalculateMembraneDeformationMatrix(int controlPointsCount, Nurbs2D nurbs, int j,
-            double[] surfaceBasisVector1, double[] surfaceBasisVector2, double[,] BmembraneOut)
-        {
-            var s1_0 = surfaceBasisVector1[0];
-            var s1_1 = surfaceBasisVector1[1];
-            var s1_2 = surfaceBasisVector1[2];
-
-            var s2_0 = surfaceBasisVector2[0];
-            var s2_1 = surfaceBasisVector2[1];
-            var s2_2 = surfaceBasisVector2[2];
-
-            for (int column = 0; column < controlPointsCount * 3; column += 3)
-            {
-                var dKsi = nurbs.NurbsDerivativeValuesKsi[column / 3, j];
-                var dHeta = nurbs.NurbsDerivativeValuesHeta[column / 3, j];
-                
-                BmembraneOut[0, column] = dKsi * s1_0;
-                BmembraneOut[0, column + 1] = dKsi * s1_1;
-                BmembraneOut[0, column + 2] = dKsi * s1_2;
-                
-                BmembraneOut[1, column] = dHeta * s2_0;
-                BmembraneOut[1, column + 1] = dHeta * s2_1;
-                BmembraneOut[1, column + 2] = dHeta * s2_2;
-
-                BmembraneOut[2, column] = dHeta * s1_0 + dKsi * s2_0;
-                BmembraneOut[2, column + 1] = dHeta * s1_1 + dKsi * s2_1;
-                BmembraneOut[2, column + 2] = dHeta * s1_2 + dKsi * s2_2;
-            }
-        }
-        
-        private IList<GaussLegendrePoint3D> CreateElementGaussPoints(NurbsKirchhoffLoveShellElementNL shellElement)
-        {
-            var gauss = new GaussQuadrature();
-            var medianSurfaceGP = gauss.CalculateElementGaussPoints(shellElement.Patch.DegreeKsi,
-                shellElement.Patch.DegreeHeta, shellElement.Knots.ToList());
-            foreach (var point in medianSurfaceGP)
-            {
-                var gp = gauss.CalculateElementGaussPoints(ThicknessIntegrationDegree,
-                    new List<Knot>
-                    {
-                        new Knot() {ID = 0, Ksi = -shellElement.Thickness / 2, Heta = point.Heta},
-                        new Knot() {ID = 1, Ksi = shellElement.Thickness / 2, Heta = point.Heta},
-                    }).ToList();
-
-                thicknessIntegrationPoints.Add(point,
-                    gp.Select(g => new GaussLegendrePoint3D(point.Ksi, point.Heta, g.Ksi, g.WeightFactor))
-                        .ToList());
-            }
-
-            return medianSurfaceGP;
-        }
-
-        private const int ThicknessIntegrationDegree = 2;
-
-        public double Thickness { get; set; }
-    }
-
-    public struct a3r
-    {
-        public double a3r00;
-        public double a3r01;
-        public double a3r02;
-
-        public double a3r10;
-        public double a3r11;
-        public double a3r12;
-
-        public double a3r20;
-        public double a3r21;
-        public double a3r22;
-    }
-
-    public struct a3rs
-    {
-        public double a3rs00_0;
-        public double a3rs00_1;
-        public double a3rs00_2;
-
-        public double a3rs01_0;
-        public double a3rs01_1;
-        public double a3rs01_2;
-
-        public double a3rs02_0;
-        public double a3rs02_1;
-        public double a3rs02_2;
-
-        public double a3rs10_0;
-        public double a3rs10_1;
-        public double a3rs10_2;
-
-        public double a3rs11_0;
-        public double a3rs11_1;
-        public double a3rs11_2;
-
-        public double a3rs12_0;
-        public double a3rs12_1;
-        public double a3rs12_2;
-
-        public double a3rs20_0 ;
-        public double a3rs20_1 ;
-        public double a3rs20_2 ;
-
-        public double a3rs21_0 ;
-        public double a3rs21_1 ;
-        public double a3rs21_2 ;
-
-        public double a3rs22_0 ;
-        public double a3rs22_1 ;
-        public double a3rs22_2 ;
-    }
-
-    public struct Bab_rs
-    {
-        public double Bab_rs00_0 ;
-        public double Bab_rs00_1 ;
-        public double Bab_rs00_2 ;
-
-        public double Bab_rs01_0 ;
-        public double Bab_rs01_1 ;
-        public double Bab_rs01_2 ;
-
-        public double Bab_rs02_0 ;
-        public double Bab_rs02_1 ;
-        public double Bab_rs02_2 ;
-
-        public double Bab_rs10_0 ;
-        public double Bab_rs10_1 ;
-        public double Bab_rs10_2 ;
-
-        public double Bab_rs11_0 ;
-        public double Bab_rs11_1 ;
-        public double Bab_rs11_2 ;
-
-        public double Bab_rs12_0 ;
-        public double Bab_rs12_1 ;
-        public double Bab_rs12_2 ;
-
-        public double Bab_rs20_0 ;
-        public double Bab_rs20_1 ;
-        public double Bab_rs20_2 ;
-
-        public double Bab_rs21_0 ;
-        public double Bab_rs21_1 ;
-        public double Bab_rs21_2 ;
-
-        public double Bab_rs22_0 ;
-        public double Bab_rs22_1 ;
-        public double Bab_rs22_2 ;
-    }
-
-    public struct Forces
-    {
-        public double v0;
-        public double v1;
-        public double v2;
-    }
+			return knotDisplacements;
+		}
+
+		public double[] CalculateForces(IElement element, double[] localDisplacements, double[] localdDisplacements)
+		{
+			var shellElement = (NurbsKirchhoffLoveShellElementNL)element;
+			var controlPoints = shellElement.ControlPoints.ToArray();
+			var elementNodalForces = new double[shellElement.ControlPointsDictionary.Count * 3];
+
+			var elementMembraneForces = new double[shellElement.ControlPointsDictionary.Count * 3];
+			var elementBendingForces = new double[shellElement.ControlPointsDictionary.Count * 3];
+
+			_solution = localDisplacements;
+
+			var newControlPoints = CurrentControlPoint(controlPoints);
+			//var newControlPoints = controlPoints;
+
+			var nurbs = new Nurbs2D(shellElement, shellElement.ControlPoints.ToArray());
+			var gaussPoints = materialsAtThicknessGP.Keys.ToArray();
+
+			for (int j = 0; j < gaussPoints.Length; j++)
+			{
+				var jacobianMatrix = CalculateJacobian(newControlPoints, nurbs, j);
+
+				var hessianMatrix = CalculateHessian(newControlPoints, nurbs, j);
+
+				var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
+
+				var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
+
+				var surfaceBasisVector3 = new[]
+				{
+					surfaceBasisVector1[1] * surfaceBasisVector2[2] - surfaceBasisVector1[2] * surfaceBasisVector2[1],
+					surfaceBasisVector1[2] * surfaceBasisVector2[0] - surfaceBasisVector1[0] * surfaceBasisVector2[2],
+					surfaceBasisVector1[0] * surfaceBasisVector2[1] - surfaceBasisVector1[1] * surfaceBasisVector2[0],
+				};
+
+				double norm = surfaceBasisVector3.Sum(t => t * t);
+
+				var J1 = Math.Sqrt(norm);
+
+				for (int i = 0; i < surfaceBasisVector3.Length; i++)
+					surfaceBasisVector3[i] = surfaceBasisVector3[i] / J1;
+
+				var surfaceBasisVectorDerivative1 = CalculateSurfaceBasisVector1(hessianMatrix, 0);
+				var surfaceBasisVectorDerivative2 = CalculateSurfaceBasisVector1(hessianMatrix, 1);
+				var surfaceBasisVectorDerivative12 = CalculateSurfaceBasisVector1(hessianMatrix, 2);
+
+				var Bmembrane = CalculateMembraneDeformationMatrix(newControlPoints, nurbs, j, surfaceBasisVector1,
+					surfaceBasisVector2);
+				var Bbending = CalculateBendingDeformationMatrix(newControlPoints, surfaceBasisVector3, nurbs, j, surfaceBasisVector2,
+					surfaceBasisVectorDerivative1, surfaceBasisVector1, J1, surfaceBasisVectorDerivative2,
+					surfaceBasisVectorDerivative12);
+
+				var (membraneForces, bendingMoments) =
+					IntegratedStressesOverThickness(gaussPoints[j]);
+
+				var wfactor = InitialJ1[j] * gaussPoints[j].WeightFactor;
+
+
+
+				for (int i = 0; i < Bmembrane.GetLength(1); i++)
+				{
+					for (int k = 0; k < Bmembrane.GetLength(0); k++)
+					{
+						elementNodalForces[i] += (Bmembrane[k, i] * membraneForces[k] * wfactor +
+												 Bbending[k, i] * bendingMoments[k] * wfactor);
+
+						elementMembraneForces[i] += Bmembrane[k, i] * membraneForces[k] * wfactor;
+						elementBendingForces[i] += Bbending[k, i] * bendingMoments[k] * wfactor;
+					}
+				}
+			}
+
+			return elementNodalForces;
+		}
+
+		public double[] CalculateForcesForLogging(IElement element, double[] localDisplacements)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Dictionary<int, double> CalculateLoadingCondition(Element element, Edge edge, NeumannBoundaryCondition neumann) => throw new NotImplementedException();
+
+		public Dictionary<int, double> CalculateLoadingCondition(Element element, Face face, NeumannBoundaryCondition neumann) => throw new NotImplementedException();
+
+		public Dictionary<int, double> CalculateLoadingCondition(Element element, Edge edge, PressureBoundaryCondition pressure) => throw new NotImplementedException();
+
+		public Dictionary<int, double> CalculateLoadingCondition(Element element, Face face, PressureBoundaryCondition pressure) => throw new NotImplementedException();
+
+		public Tuple<double[], double[]> CalculateStresses(IElement element, double[] localDisplacements, double[] localdDisplacements)
+		{
+			var shellElement = (NurbsKirchhoffLoveShellElementNL)element;
+			var elementControlPoints = shellElement.ControlPoints.ToArray();
+			var nurbs = new Nurbs2D(shellElement, elementControlPoints);
+
+			_solution = localDisplacements;
+
+			var newControlPoints = CurrentControlPoint(elementControlPoints);
+
+
+			//var newControlPoints = elementControlPoints;
+
+			var midsurfaceGP = materialsAtThicknessGP.Keys.ToArray();
+			for (var j = 0; j < midsurfaceGP.Length; j++)
+			{
+				var jacobianMatrix = CalculateJacobian(newControlPoints, nurbs, j);
+
+				var hessianMatrix = CalculateHessian(newControlPoints, nurbs, j);
+
+				var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
+
+				var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
+
+				var surfaceBasisVector3 = new[]
+				{
+					surfaceBasisVector1[1] * surfaceBasisVector2[2] - surfaceBasisVector1[2] * surfaceBasisVector2[1],
+					surfaceBasisVector1[2] * surfaceBasisVector2[0] - surfaceBasisVector1[0] * surfaceBasisVector2[2],
+					surfaceBasisVector1[0] * surfaceBasisVector2[1] - surfaceBasisVector1[1] * surfaceBasisVector2[0]
+				};
+
+				var norm = surfaceBasisVector3.Sum(t => t * t);
+				var J1 = Math.Sqrt(norm);
+
+				var unitVector3 = new double[]
+				{
+					surfaceBasisVector3[0] / J1, surfaceBasisVector3[1] / J1, surfaceBasisVector3[2] / J1
+				};
+
+				var surfaceBasisVectorDerivative1 = CalculateSurfaceBasisVector1(hessianMatrix, 0);
+				var surfaceBasisVectorDerivative2 = CalculateSurfaceBasisVector1(hessianMatrix, 1);
+				var surfaceBasisVectorDerivative12 = CalculateSurfaceBasisVector1(hessianMatrix, 2);
+
+				if (j == ElementStiffnesses.gpNumberToCheck)
+				{
+					ElementStiffnesses.ProccessVariable(1, surfaceBasisVectorDerivative1, false);
+					ElementStiffnesses.ProccessVariable(2, surfaceBasisVectorDerivative2, false);
+					ElementStiffnesses.ProccessVariable(3, surfaceBasisVectorDerivative12, false);
+				}
+
+				var A11 = initialSurfaceBasisVectors1[j][0] * initialSurfaceBasisVectors1[j][0] +
+						  initialSurfaceBasisVectors1[j][1] * initialSurfaceBasisVectors1[j][1] +
+						  initialSurfaceBasisVectors1[j][2] * initialSurfaceBasisVectors1[j][2];
+
+				var A22 = initialSurfaceBasisVectors2[j][0] * initialSurfaceBasisVectors2[j][0] +
+						 initialSurfaceBasisVectors2[j][1] * initialSurfaceBasisVectors2[j][1] +
+						 initialSurfaceBasisVectors2[j][2] * initialSurfaceBasisVectors2[j][2];
+
+				var A12 = initialSurfaceBasisVectors1[j][0] * initialSurfaceBasisVectors2[j][0] +
+						  initialSurfaceBasisVectors1[j][1] * initialSurfaceBasisVectors2[j][1] +
+						  initialSurfaceBasisVectors1[j][2] * initialSurfaceBasisVectors2[j][2];
+
+				var a11 = surfaceBasisVector1[0] * surfaceBasisVector1[0] +
+						  surfaceBasisVector1[1] * surfaceBasisVector1[1] +
+						  surfaceBasisVector1[2] * surfaceBasisVector1[2];
+
+				var a22 = surfaceBasisVector2[0] * surfaceBasisVector2[0] +
+						  surfaceBasisVector2[1] * surfaceBasisVector2[1] +
+						  surfaceBasisVector2[2] * surfaceBasisVector2[2];
+
+				var a12 = surfaceBasisVector1[0] * surfaceBasisVector2[0] +
+						  surfaceBasisVector1[1] * surfaceBasisVector2[1] +
+						  surfaceBasisVector1[2] * surfaceBasisVector2[2];
+
+				var membraneStrain = new double[] { 0.5 * (a11 - A11), 0.5 * (a22 - A22), a12 - A12 };
+
+				var B11 = initialSurfaceBasisVectorDerivative1[j][0] * initialUnitSurfaceBasisVectors3[j][0] +
+						  initialSurfaceBasisVectorDerivative1[j][1] * initialUnitSurfaceBasisVectors3[j][1] +
+						  initialSurfaceBasisVectorDerivative1[j][2] * initialUnitSurfaceBasisVectors3[j][2];
+
+				var B22 = initialSurfaceBasisVectorDerivative2[j][0] * initialUnitSurfaceBasisVectors3[j][0] +
+						  initialSurfaceBasisVectorDerivative2[j][1] * initialUnitSurfaceBasisVectors3[j][1] +
+						  initialSurfaceBasisVectorDerivative2[j][2] * initialUnitSurfaceBasisVectors3[j][2];
+
+				var B12 = initialSurfaceBasisVectorDerivative12[j][0] * initialUnitSurfaceBasisVectors3[j][0] +
+						  initialSurfaceBasisVectorDerivative12[j][1] * initialUnitSurfaceBasisVectors3[j][1] +
+						  initialSurfaceBasisVectorDerivative12[j][2] * initialUnitSurfaceBasisVectors3[j][2];
+
+				var b11 = surfaceBasisVectorDerivative1[0] * unitVector3[0] +
+						  surfaceBasisVectorDerivative1[1] * unitVector3[1] +
+						  surfaceBasisVectorDerivative1[2] * unitVector3[2];
+
+				var b22 = surfaceBasisVectorDerivative2[0] * unitVector3[0] +
+						  surfaceBasisVectorDerivative2[1] * unitVector3[1] +
+						  surfaceBasisVectorDerivative2[2] * unitVector3[2];
+
+				var b12 = surfaceBasisVectorDerivative12[0] * unitVector3[0] +
+						 surfaceBasisVectorDerivative12[1] * unitVector3[1] +
+						 surfaceBasisVectorDerivative12[2] * unitVector3[2];
+
+				var bendingStrain = new double[] { b11 - B11, b22 - B22, 2 * b12 - 2 * B12 };
+
+				//var bendingStrain = new double[] { -(b11 - B11), -(b22 - B22), -(2 * b12 - 2 * B12) };
+
+				foreach (var keyValuePair in materialsAtThicknessGP[midsurfaceGP[j]])
+				{
+					var thicknessPoint = keyValuePair.Key;
+					var material = keyValuePair.Value;
+					var gpStrain = new double[bendingStrain.Length];
+					var z = thicknessPoint.Zeta;
+					for (var i = 0; i < bendingStrain.Length; i++)
+					{
+						gpStrain[i] += membraneStrain[i] + bendingStrain[i] * z;
+					}
+
+					material.UpdateMaterial(gpStrain);
+				}
+			}
+
+			return new Tuple<double[], double[]>(new double[0], new double[0]);
+		}
+
+		public Dictionary<int, double> CalculateSurfaceDistributedLoad(Element element, IDofType loadedDof, double loadMagnitude)
+		{
+			var shellElement = (NurbsKirchhoffLoveShellElementNL)element;
+			var elementControlPoints = shellElement.ControlPoints.ToArray();
+			var gaussPoints = CreateElementGaussPoints(shellElement);
+			var distributedLoad = new Dictionary<int, double>();
+			var nurbs = new Nurbs2D(shellElement, elementControlPoints);
+
+			for (var j = 0; j < gaussPoints.Count; j++)
+			{
+				var jacobianMatrix = CalculateJacobian(elementControlPoints, nurbs, j);
+				var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
+				var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
+				var surfaceBasisVector3 = surfaceBasisVector1.CrossProduct(surfaceBasisVector2);
+				var J1 = surfaceBasisVector3.Norm2();
+				surfaceBasisVector3.ScaleIntoThis(1 / J1);
+
+				for (int i = 0; i < elementControlPoints.Length; i++)
+				{
+					var loadedDofIndex = ControlPointDofTypes.FindFirstIndex(loadedDof);
+					if (!element.Model.GlobalDofOrdering.GlobalFreeDofs.Contains(elementControlPoints[i], loadedDof))
+						continue;
+					var dofId = element.Model.GlobalDofOrdering.GlobalFreeDofs[elementControlPoints[i], loadedDof];
+
+					if (distributedLoad.ContainsKey(dofId))
+					{
+						distributedLoad[dofId] += loadMagnitude * J1 *
+												  nurbs.NurbsValues[i, j] * gaussPoints[j].WeightFactor;
+					}
+					else
+					{
+						distributedLoad.Add(dofId, loadMagnitude * nurbs.NurbsValues[i, j] * J1 * gaussPoints[j].WeightFactor);
+					}
+				}
+			}
+
+			return distributedLoad;
+		}
+
+		public Dictionary<int, double> CalculateSurfacePressure(Element element, double pressureMagnitude)
+		{
+			var shellElement = (NurbsKirchhoffLoveShellElementNL)element;
+			var elementControlPoints = shellElement.ControlPoints.ToArray();
+			var gaussPoints = CreateElementGaussPoints(shellElement);
+			var pressureLoad = new Dictionary<int, double>();
+			var nurbs = new Nurbs2D(shellElement, elementControlPoints);
+
+			for (var j = 0; j < gaussPoints.Count; j++)
+			{
+				var jacobianMatrix = CalculateJacobian(elementControlPoints, nurbs, j);
+				var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
+				var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
+				var surfaceBasisVector3 = surfaceBasisVector1.CrossProduct(surfaceBasisVector2);
+				var J1 = surfaceBasisVector3.Norm2();
+				surfaceBasisVector3.ScaleIntoThis(1 / J1);
+
+				for (int i = 0; i < elementControlPoints.Length; i++)
+				{
+					for (int k = 0; k < ControlPointDofTypes.Length; k++)
+					{
+						int dofId = element.Model.GlobalDofOrdering.GlobalFreeDofs[elementControlPoints[i], ControlPointDofTypes[k]];
+
+						if (pressureLoad.ContainsKey(dofId))
+						{
+							pressureLoad[dofId] += pressureMagnitude * surfaceBasisVector3[k] *
+												   nurbs.NurbsValues[i, j] * gaussPoints[j].WeightFactor;
+						}
+						else
+						{
+							pressureLoad.Add(dofId, pressureMagnitude * surfaceBasisVector3[k] * nurbs.NurbsValues[i, j] * gaussPoints[j].WeightFactor);
+						}
+					}
+				}
+			}
+
+			return pressureLoad;
+		}
+
+		public void ClearMaterialState()
+		{
+		}
+
+		public void ClearMaterialStresses() => throw new NotImplementedException();
+
+		public IMatrix DampingMatrix(IElement element) => throw new NotImplementedException();
+
+		public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element)
+		{
+			dofTypes = new IDofType[element.Nodes.Count][];
+			for (var i = 0; i < element.Nodes.Count; i++)
+			{
+				dofTypes[i] = ControlPointDofTypes;
+			}
+
+			return dofTypes;
+		}
+
+		internal (double[,] MembraneConstitutiveMatrix, double[,] BendingConstitutiveMatrix, double[,]
+			CouplingConstitutiveMatrix) IntegratedConstitutiveOverThickness(GaussLegendrePoint3D midSurfaceGaussPoint)
+		{
+			var MembraneConstitutiveMatrix = new double[3, 3];
+			var BendingConstitutiveMatrix = new double[3, 3];
+			var CouplingConstitutiveMatrix = new double[3, 3];
+
+			foreach (var keyValuePair in materialsAtThicknessGP[midSurfaceGaussPoint])
+			{
+				var thicknessPoint = keyValuePair.Key;
+				var material = keyValuePair.Value;
+				var constitutiveMatrixM = material.ConstitutiveMatrix;
+				double tempc = 0;
+				double w = thicknessPoint.WeightFactor;
+				double z = thicknessPoint.Zeta;
+				for (int i = 0; i < 3; i++)
+				{
+					for (int k = 0; k < 3; k++)
+					{
+						tempc = constitutiveMatrixM[i, k];
+						MembraneConstitutiveMatrix[i, k] += tempc * w;
+						CouplingConstitutiveMatrix[i, k] += tempc * w * z;
+						BendingConstitutiveMatrix[i, k] += tempc * w * z * z;
+					}
+				}
+			}
+
+			return (MembraneConstitutiveMatrix, BendingConstitutiveMatrix, CouplingConstitutiveMatrix);
+		}
+
+		internal (double[] MembraneForces, double[] BendingMoments) IntegratedStressesOverThickness(GaussLegendrePoint3D midSurfaceGaussPoint)
+		{
+			var MembraneForces = new double[3];
+			var BendingMoments = new double[3];
+			var thicknessPoints = thicknessIntegrationPoints[midSurfaceGaussPoint];
+
+			for (int i = 0; i < thicknessPoints.Count; i++)
+			{
+				var thicknessPoint = thicknessPoints[i];
+				var material = materialsAtThicknessGP[midSurfaceGaussPoint][thicknessPoints[i]];
+				var w = thicknessPoint.WeightFactor;
+				var z = thicknessPoint.Zeta;
+				for (int j = 0; j < 3; j++)
+				{
+					MembraneForces[j] += material.Stresses[j] * w;
+					BendingMoments[j] -= material.Stresses[j] * w * z;
+				}
+			}
+
+			return (MembraneForces, BendingMoments);
+		}
+
+		public IMatrix MassMatrix(IElement element) => throw new NotImplementedException();
+
+		public void ResetMaterialModified() => throw new NotImplementedException();
+
+		public void SaveMaterialState()
+		{
+			foreach (var gp in materialsAtThicknessGP.Keys)
+			{
+				foreach (var material in materialsAtThicknessGP[gp].Values)
+				{
+					material.SaveState();
+				}
+			}
+		}
+
+		public IMatrix StiffnessMatrix(IElement element)
+		{
+			var shellElement = (NurbsKirchhoffLoveShellElementNL)element;
+			var gaussPoints = materialsAtThicknessGP.Keys.ToArray();
+
+			var controlPoints = shellElement.ControlPoints.ToArray();
+			var nurbs = new Nurbs2D(shellElement, controlPoints);
+
+			if (!isInitialized)
+			{
+				CalculateInitialConfigurationData(controlPoints, nurbs, gaussPoints);
+				isInitialized = true;
+			}
+
+			var elementControlPoints = CurrentControlPoint(controlPoints);
+
+			var bRows = 3;
+			var bCols = elementControlPoints.Length * 3;
+			var stiffnessMatrix = new double[bCols, bCols];
+			var BmTranspose = new double[bCols, bRows];
+			var BbTranspose = new double[bCols, bRows];
+
+			var BmTransposeMultStiffness = new double[bCols, bRows];
+			var BbTransposeMultStiffness = new double[bCols, bRows];
+			var BmbTransposeMultStiffness = new double[bCols, bRows];
+			var BbmTransposeMultStiffness = new double[bCols, bRows];
+
+			var KmembraneNL_total = new double[bCols, bCols];
+			var KbendingNL_total = new double[bCols, bCols];
+			var KL_total = new double[bCols, bCols];
+			var KmembraneL_total = new double[bCols, bCols];
+			var KbendingL_total = new double[bCols, bCols];
+			var KmembranebendingL_total = new double[bCols, bCols];
+			var KbendingMembraneL_total = new double[bCols, bCols];
+
+
+			for (int j = 0; j < gaussPoints.Length; j++)
+			{
+				ElementStiffnesses.gpNumber = j;
+				var jacobianMatrix = CalculateJacobian(elementControlPoints, nurbs, j);
+
+				var hessianMatrix = CalculateHessian(elementControlPoints, nurbs, j);
+				var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
+
+				var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
+
+				var surfaceBasisVector3 = new[]
+				{
+					surfaceBasisVector1[1] * surfaceBasisVector2[2] - surfaceBasisVector1[2] * surfaceBasisVector2[1],
+					surfaceBasisVector1[2] * surfaceBasisVector2[0] - surfaceBasisVector1[0] * surfaceBasisVector2[2],
+					surfaceBasisVector1[0] * surfaceBasisVector2[1] - surfaceBasisVector1[1] * surfaceBasisVector2[0],
+				};
+
+				double norm = 0;
+				for (int i = 0; i < surfaceBasisVector3.Length; i++)
+					norm += surfaceBasisVector3[i] * surfaceBasisVector3[i];
+				var J1 = Math.Sqrt(norm);
+
+				for (int i = 0; i < surfaceBasisVector3.Length; i++)
+					surfaceBasisVector3[i] = surfaceBasisVector3[i] / J1;
+
+				var surfaceBasisVectorDerivative1 = CalculateSurfaceBasisVector1(hessianMatrix, 0);
+				var surfaceBasisVectorDerivative2 = CalculateSurfaceBasisVector1(hessianMatrix, 1);
+				var surfaceBasisVectorDerivative12 = CalculateSurfaceBasisVector1(hessianMatrix, 2);
+
+				var Bmembrane = CalculateMembraneDeformationMatrix(elementControlPoints, nurbs, j, surfaceBasisVector1, surfaceBasisVector2);
+				var Bbending = CalculateBendingDeformationMatrix(elementControlPoints, surfaceBasisVector3, nurbs, j, surfaceBasisVector2,
+					surfaceBasisVectorDerivative1, surfaceBasisVector1, J1, surfaceBasisVectorDerivative2,
+					surfaceBasisVectorDerivative12);
+
+				var (MembraneConstitutiveMatrix, BendingConstitutiveMatrix, CouplingConstitutiveMatrix) =
+					IntegratedConstitutiveOverThickness(gaussPoints[j]);
+
+				double wFactor = InitialJ1[j] * gaussPoints[j].WeightFactor;
+				double tempb = 0;
+				double tempm = 0;
+				Array.Clear(BmTranspose, 0, bRows * bCols);
+				Array.Clear(BbTranspose, 0, bRows * bCols);
+				for (int i = 0; i < bRows; i++)
+				{
+					for (int k = 0; k < bCols; k++)
+					{
+						BmTranspose[k, i] = Bmembrane[i, k] * wFactor;
+						BbTranspose[k, i] = Bbending[i, k] * wFactor;
+					}
+				}
+
+				double tempcm = 0;
+				double tempcb = 0;
+				double tempcc = 0;
+				Array.Clear(BmTransposeMultStiffness, 0, bRows * bCols);
+				Array.Clear(BbTransposeMultStiffness, 0, bRows * bCols);
+				Array.Clear(BmbTransposeMultStiffness, 0, bRows * bCols);
+				Array.Clear(BbmTransposeMultStiffness, 0, bRows * bCols);
+				for (int i = 0; i < bCols; i++)
+				{
+					for (int k = 0; k < bRows; k++)
+					{
+						tempm = BmTranspose[i, k];
+						tempb = BbTranspose[i, k];
+						for (int m = 0; m < bRows; m++)
+						{
+							tempcm = MembraneConstitutiveMatrix[k, m];
+							tempcb = BendingConstitutiveMatrix[k, m];
+							tempcc = CouplingConstitutiveMatrix[k, m];
+
+							BmTransposeMultStiffness[i, m] += tempm * tempcm;
+							BbTransposeMultStiffness[i, m] += tempb * tempcb;
+							BmbTransposeMultStiffness[i, m] += tempm * tempcc;
+							BbmTransposeMultStiffness[i, m] += tempb * tempcc;
+						}
+					}
+				}
+
+				double tempmb = 0;
+				double tempbm = 0;
+				double mem = 0;
+				double ben = 0;
+				for (int i = 0; i < bCols; i++)
+				{
+					for (int k = 0; k < bRows; k++)
+					{
+						tempm = BmTransposeMultStiffness[i, k];
+						tempb = BbTransposeMultStiffness[i, k];
+						tempmb = BmbTransposeMultStiffness[i, k];
+						tempbm = BbmTransposeMultStiffness[i, k];
+
+						for (int m = 0; m < bCols; m++)
+						{
+							mem = Bmembrane[k, m];
+							ben = Bbending[k, m];
+							stiffnessMatrix[i, m] += tempm * mem + tempb * ben + tempmb * ben + tempbm * mem;
+							//if(ElementStiffnesses.saveOriginalState)
+							//{
+								KL_total[i,m]+= tempm * mem + tempb * ben + tempmb * ben + tempbm * mem;
+							KmembraneL_total[i, m] += tempm * mem;
+							KbendingL_total[i, m] += tempb * ben;
+							KmembranebendingL_total[i, m] += tempmb * ben;
+							KbendingMembraneL_total[i, m] += tempbm * mem;
+
+							//}
+						}
+					}
+				}
+
+				var (MembraneForces, BendingMoments) = IntegratedStressesOverThickness(gaussPoints[j]);
+
+				var KmembraneNL = CalculateKmembraneNL(elementControlPoints, MembraneForces, nurbs, j);
+				var KbendingNL = CalculateKbendingNL(elementControlPoints, BendingMoments, nurbs,
+					Vector.CreateFromArray(surfaceBasisVector1), Vector.CreateFromArray(surfaceBasisVector2),
+					Vector.CreateFromArray(surfaceBasisVector3),
+					Vector.CreateFromArray(surfaceBasisVectorDerivative1),
+					Vector.CreateFromArray(surfaceBasisVectorDerivative2),
+					Vector.CreateFromArray(surfaceBasisVectorDerivative12), J1, j);
+
+				for (var i = 0; i < stiffnessMatrix.GetLength(0); i++)
+				{
+					for (var k = 0; k < stiffnessMatrix.GetLength(1); k++)
+					{
+						stiffnessMatrix[i, k] += KmembraneNL[i, k] * wFactor;
+						stiffnessMatrix[i, k] += KbendingNL[i, k] * wFactor;
+
+						if (ElementStiffnesses.saveOriginalState)
+						{
+							KmembraneNL_total[i, k] += KmembraneNL[i, k] * wFactor;
+							KbendingNL_total[i, k] += KbendingNL[i, k] * wFactor;
+						}
+
+
+					}
+				}
+			}
+
+ 			{
+				ElementStiffnesses.SaveStiffnessMatrixes(KL_total, KmembraneNL_total, KbendingNL_total, Matrix.CreateFromArray(KbendingNL_total) + Matrix.CreateFromArray(KmembraneNL_total),element);
+			}
+
+			return Matrix.CreateFromArray(stiffnessMatrix);
+		}
+
+		internal ControlPoint[] CurrentControlPoint(ControlPoint[] controlPoints)
+		{
+			var cp = new ControlPoint[controlPoints.Length];
+
+			for (int i = 0; i < controlPoints.Length; i++)
+			{
+				cp[i] = new ControlPoint()
+				{
+					ID = controlPoints[i].ID,
+					X = controlPoints[i].X + _solution[i * 3],
+					Y = controlPoints[i].Y + _solution[i * 3 + 1],
+					Z = controlPoints[i].Z + _solution[i * 3 + 2],
+					Ksi = controlPoints[i].Ksi,
+					Heta = controlPoints[i].Heta,
+					Zeta = controlPoints[i].Zeta,
+					WeightFactor = controlPoints[i].WeightFactor
+				};
+			}
+
+			return cp;
+		}
+
+		internal double[,] CalculateHessian(ControlPoint[] controlPoints, Nurbs2D nurbs, int j)
+		{
+			var hessianMatrix = new double[3, 3];
+			for (var k = 0; k < controlPoints.Length; k++)
+			{
+				hessianMatrix[0, 0] +=
+					nurbs.NurbsSecondDerivativeValueKsi[k, j] * controlPoints[k].X;
+				hessianMatrix[0, 1] +=
+					nurbs.NurbsSecondDerivativeValueKsi[k, j] * controlPoints[k].Y;
+				hessianMatrix[0, 2] +=
+					nurbs.NurbsSecondDerivativeValueKsi[k, j] * controlPoints[k].Z;
+				hessianMatrix[1, 0] +=
+					nurbs.NurbsSecondDerivativeValueHeta[k, j] * controlPoints[k].X;
+				hessianMatrix[1, 1] +=
+					nurbs.NurbsSecondDerivativeValueHeta[k, j] * controlPoints[k].Y;
+				hessianMatrix[1, 2] +=
+					nurbs.NurbsSecondDerivativeValueHeta[k, j] * controlPoints[k].Z;
+				hessianMatrix[2, 0] +=
+					nurbs.NurbsSecondDerivativeValueKsiHeta[k, j] * controlPoints[k].X;
+				hessianMatrix[2, 1] +=
+					nurbs.NurbsSecondDerivativeValueKsiHeta[k, j] * controlPoints[k].Y;
+				hessianMatrix[2, 2] +=
+					nurbs.NurbsSecondDerivativeValueKsiHeta[k, j] * controlPoints[k].Z;
+			}
+
+			return hessianMatrix;
+		}
+
+		internal double[,] CalculateJacobian(ControlPoint[] controlPoints, Nurbs2D nurbs, int j)
+		{
+			var jacobianMatrix = new double[2, 3];
+			for (var k = 0; k < controlPoints.Length; k++)
+			{
+				jacobianMatrix[0, 0] += nurbs.NurbsDerivativeValuesKsi[k, j] * controlPoints[k].X;
+				jacobianMatrix[0, 1] += nurbs.NurbsDerivativeValuesKsi[k, j] * controlPoints[k].Y;
+				jacobianMatrix[0, 2] += nurbs.NurbsDerivativeValuesKsi[k, j] * controlPoints[k].Z;
+				jacobianMatrix[1, 0] += nurbs.NurbsDerivativeValuesHeta[k, j] * controlPoints[k].X;
+				jacobianMatrix[1, 1] += nurbs.NurbsDerivativeValuesHeta[k, j] * controlPoints[k].Y;
+				jacobianMatrix[1, 2] += nurbs.NurbsDerivativeValuesHeta[k, j] * controlPoints[k].Z;
+			}
+
+			return jacobianMatrix;
+		}
+
+		internal double[] CalculateSurfaceBasisVector1(double[,] Matrix, int row)
+		{
+			var surfaceBasisVector1 = new double[3];
+			surfaceBasisVector1[0] = Matrix[row, 0];
+			surfaceBasisVector1[1] = Matrix[row, 1];
+			surfaceBasisVector1[2] = Matrix[row, 2];
+			return surfaceBasisVector1;
+		}
+
+		internal double[,] CalculateBendingDeformationMatrix(ControlPoint[] controlPoints, double[] surfaceBasisVector3,
+			Nurbs2D nurbs, int j, double[] surfaceBasisVector2, double[] surfaceBasisVectorDerivative1, double[] surfaceBasisVector1,
+			double J1, double[] surfaceBasisVectorDerivative2, double[] surfaceBasisVectorDerivative12)
+		{
+			var Bbending = new double[3, controlPoints.Length * 3];
+			var s1 = Vector.CreateFromArray(surfaceBasisVector1);
+			var s2 = Vector.CreateFromArray(surfaceBasisVector2);
+			var s3 = Vector.CreateFromArray(surfaceBasisVector3);
+			var s11 = Vector.CreateFromArray(surfaceBasisVectorDerivative1);
+			var s22 = Vector.CreateFromArray(surfaceBasisVectorDerivative2);
+			var s12 = Vector.CreateFromArray(surfaceBasisVectorDerivative12);
+			for (int column = 0; column < controlPoints.Length * 3; column += 3)
+			{
+				#region BI1
+
+				var BI1 = s3.CrossProduct(s1);
+				BI1.ScaleIntoThis(nurbs.NurbsDerivativeValuesHeta[column / 3, j]);
+
+				var auxVector = s2.CrossProduct(s3);
+				auxVector.ScaleIntoThis(nurbs.NurbsDerivativeValuesKsi[column / 3, j]);
+				BI1.AddIntoThis(auxVector);
+
+				BI1.ScaleIntoThis(s3.DotProduct(s11));
+				auxVector = s1.CrossProduct(s11);
+				auxVector.ScaleIntoThis(nurbs.NurbsDerivativeValuesHeta[column / 3, j]);
+				BI1.AddIntoThis(auxVector);
+
+				auxVector = s11.CrossProduct(s2);
+				auxVector.ScaleIntoThis(nurbs.NurbsDerivativeValuesKsi[column / 3, j]);
+				BI1.AddIntoThis(auxVector);
+
+				BI1.ScaleIntoThis(1 / J1);
+				auxVector[0] = surfaceBasisVector3[0];
+				auxVector[1] = surfaceBasisVector3[1];
+				auxVector[2] = surfaceBasisVector3[2];
+				auxVector.ScaleIntoThis(-nurbs.NurbsSecondDerivativeValueKsi[column / 3, j]);
+				BI1.AddIntoThis(auxVector);
+
+				#endregion BI1
+
+				#region BI2
+
+				IVector BI2 = s3.CrossProduct(s1);
+				BI2.ScaleIntoThis(nurbs.NurbsDerivativeValuesHeta[column / 3, j]);
+				auxVector = s2.CrossProduct(s3);
+				auxVector.ScaleIntoThis(nurbs.NurbsDerivativeValuesKsi[column / 3, j]);
+				BI2.AddIntoThis(auxVector);
+				BI2.ScaleIntoThis(s3.DotProduct(s22));
+				auxVector = s1.CrossProduct(s22);
+				auxVector.ScaleIntoThis(nurbs.NurbsDerivativeValuesHeta[column / 3, j]);
+				BI2.AddIntoThis(auxVector);
+				auxVector = s22.CrossProduct(s2);
+				auxVector.ScaleIntoThis(nurbs.NurbsDerivativeValuesKsi[column / 3, j]);
+				BI2.AddIntoThis(auxVector);
+				BI2.ScaleIntoThis(1 / J1);
+				auxVector[0] = surfaceBasisVector3[0];
+				auxVector[1] = surfaceBasisVector3[1];
+				auxVector[2] = surfaceBasisVector3[2];
+				auxVector.ScaleIntoThis(-nurbs.NurbsSecondDerivativeValueHeta[column / 3, j]);
+				BI2.AddIntoThis(auxVector);
+
+				#endregion BI2
+
+				#region BI3
+
+				var BI3 = s3.CrossProduct(s1);
+				BI3.ScaleIntoThis(nurbs.NurbsDerivativeValuesHeta[column / 3, j]);
+				auxVector = s2.CrossProduct(s3);
+				auxVector.ScaleIntoThis(nurbs.NurbsDerivativeValuesKsi[column / 3, j]);
+				BI3.AddIntoThis(auxVector);
+				BI3.ScaleIntoThis(s3.DotProduct(s12));
+				auxVector = s1.CrossProduct(s12);
+				auxVector.ScaleIntoThis(nurbs.NurbsDerivativeValuesHeta[column / 3, j]);
+				BI3.AddIntoThis(auxVector);
+				auxVector = s22.CrossProduct(s2);
+				auxVector.ScaleIntoThis(nurbs.NurbsDerivativeValuesKsi[column / 3, j]);
+				BI3.AddIntoThis(auxVector);
+				BI3.ScaleIntoThis(1 / J1);
+				auxVector[0] = surfaceBasisVector3[0];
+				auxVector[1] = surfaceBasisVector3[1];
+				auxVector[2] = surfaceBasisVector3[2];
+				auxVector.ScaleIntoThis(-nurbs.NurbsSecondDerivativeValueKsiHeta[column / 3, j]);
+				BI3.AddIntoThis(auxVector);
+
+				#endregion BI3
+
+				//Bbending[0, column] = BI1[0];
+				//Bbending[0, column + 1] = BI1[1];
+				//Bbending[0, column + 2] = BI1[2];
+
+				//Bbending[1, column] = BI2[0];
+				//Bbending[1, column + 1] = BI2[1];
+				//Bbending[1, column + 2] = BI2[2];
+
+				//Bbending[2, column] = 2 * BI3[0];
+				//Bbending[2, column + 1] = 2 * BI3[1];
+				//Bbending[2, column + 2] = 2 * BI3[2];
+
+				Bbending[0, column] = BI1[0];
+				Bbending[0, column + 1] = BI1[1];
+				Bbending[0, column + 2] = BI1[2];
+
+				Bbending[1, column] = BI2[0];
+				Bbending[1, column + 1] = BI2[1];
+				Bbending[1, column + 2] = BI2[2];
+
+				Bbending[2, column] = 2 * BI3[0];
+				Bbending[2, column + 1] = 2 * BI3[1];
+				Bbending[2, column + 2] = 2 * BI3[2];
+			}
+			return Bbending;
+		}
+
+		private double[] CalculateCrossProduct(double[] vector1, double[] vector2)
+		{
+			return new[]
+			{
+				vector1[1] * vector2[2] - vector1[2] * vector2[1],
+				vector1[2] * vector2[0] - vector1[0] * vector2[2],
+				vector1[0] * vector2[1] - vector1[1] * vector2[0]
+			};
+		}
+
+		private double[][] initialSurfaceBasisVectors1;
+		private double[][] initialSurfaceBasisVectors2;
+		private double[][] initialUnitSurfaceBasisVectors3;
+
+		private double[][] initialSurfaceBasisVectorDerivative1;
+		private double[][] initialSurfaceBasisVectorDerivative2;
+		private double[][] initialSurfaceBasisVectorDerivative12;
+
+		private double[] InitialJ1;
+
+		internal void CalculateInitialConfigurationData(ControlPoint[] controlPoints,
+			Nurbs2D nurbs, IList<GaussLegendrePoint3D> gaussPoints)
+		{
+			var numberOfGP = gaussPoints.Count;
+			InitialJ1 = new double[numberOfGP];
+			initialSurfaceBasisVectors1 = new double[numberOfGP][];
+			initialSurfaceBasisVectors2 = new double[numberOfGP][];
+			initialUnitSurfaceBasisVectors3 = new double[numberOfGP][];
+			initialSurfaceBasisVectorDerivative1 = new double[numberOfGP][];
+			initialSurfaceBasisVectorDerivative2 = new double[numberOfGP][];
+			initialSurfaceBasisVectorDerivative12 = new double[numberOfGP][];
+
+			for (int j = 0; j < gaussPoints.Count; j++)
+			{
+				var jacobianMatrix = CalculateJacobian(controlPoints, nurbs, j);
+
+				var hessianMatrix = CalculateHessian(controlPoints, nurbs, j);
+				initialSurfaceBasisVectors1[j] = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
+				initialSurfaceBasisVectors2[j] = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
+				var s3 = CalculateCrossProduct(initialSurfaceBasisVectors1[j], initialSurfaceBasisVectors2[j]);
+				var norm = s3.Sum(t => t * t);
+				InitialJ1[j] = Math.Sqrt(norm);
+				var vector3 = CalculateCrossProduct(initialSurfaceBasisVectors1[j], initialSurfaceBasisVectors2[j]);
+				initialUnitSurfaceBasisVectors3[j] = new double[]
+				{
+					 vector3[0]/InitialJ1[j],
+					 vector3[1]/InitialJ1[j],
+					 vector3[2]/InitialJ1[j],
+				};
+
+				initialSurfaceBasisVectorDerivative1[j] = CalculateSurfaceBasisVector1(hessianMatrix, 0);
+				initialSurfaceBasisVectorDerivative2[j] = CalculateSurfaceBasisVector1(hessianMatrix, 1);
+				initialSurfaceBasisVectorDerivative12[j] = CalculateSurfaceBasisVector1(hessianMatrix, 2);
+
+				foreach (var integrationPointMaterial in materialsAtThicknessGP[gaussPoints[j]].Values)
+				{
+					integrationPointMaterial.TangentVectorV1 = initialSurfaceBasisVectors1[j];
+					integrationPointMaterial.TangentVectorV2 = initialSurfaceBasisVectors2[j];
+					integrationPointMaterial.NormalVectorV3 = initialUnitSurfaceBasisVectors3[j];
+				}
+			}
+		}
+
+		internal Matrix CalculateKbendingNL(ControlPoint[] controlPoints,
+		   double[] bendingMoments, Nurbs2D nurbs, Vector surfaceBasisVector1,
+		   Vector surfaceBasisVector2, Vector surfaceBasisVector3, Vector surfaceBasisVectorDerivative1, Vector surfaceBasisVectorDerivative2,
+		   Vector surfaceBasisVectorDerivative12, double J1, int j)
+		{
+			var KbendingNL =
+				Matrix.CreateZero(controlPoints.Length * 3, controlPoints.Length * 3);
+
+			for (int i = 0; i < controlPoints.Length; i++)
+			{
+				var a1r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesKsi[i, j]);
+				var a2r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesHeta[i, j]);
+
+				var a11r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsSecondDerivativeValueKsi[i, j]);
+				var a22r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsSecondDerivativeValueHeta[i, j]);
+				var a12r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsSecondDerivativeValueKsiHeta[i, j]);
+
+				if(ElementStiffnesses.gpNumber==ElementStiffnesses.gpNumberToCheck) 
+				{
+					for (int i1 = 0; i1 < 3; i1++)
+					{
+						ElementStiffnesses.ProccessVariable(1, a11r.GetColumn(i1).CopyToArray(), true, 3 * i + i1);
+						ElementStiffnesses.ProccessVariable(2, a22r.GetColumn(i1).CopyToArray(), true, 3 * i + i1);
+						ElementStiffnesses.ProccessVariable(3, a12r.GetColumn(i1).CopyToArray(), true, 3 * i + i1);
+					}
+				}
+				
+
+
+				for (int k = 0; k < controlPoints.Length; k++)
+				{
+
+					var a11s = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsSecondDerivativeValueKsi[k, j]);
+					var a22s = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsSecondDerivativeValueHeta[k, j]);
+					var a12s = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsSecondDerivativeValueKsiHeta[k, j]);
+
+					var a1s = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesKsi[k, j]);
+					var a2s = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesHeta[k, j]);
+
+					var a3r = CalculateA3r(surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3, a1r, a2r, J1);
+					var a3s = CalculateA3r(surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3, a1s, a2s, J1);
+
+
+					#region B
+
+					var a3rs = Calculate_a3rs(surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3, J1, a1r, a2s, a1s, a2r);
+
+					#endregion B
+
+					var ktemp = Matrix3by3.CreateZero();
+					for (int l = 0; l < 3; l++)
+					{
+						for (int m = 0; m < 3; m++)
+						{
+							var Bab_rs = new double[3]
+							{(a11r.GetColumn(l) * a3s.GetColumn(m) + a11s.GetColumn(m) * a3r.GetColumn(l)),
+								(a22r.GetColumn(l) * a3s.GetColumn(m) + a22s.GetColumn(m) * a3r.GetColumn(l)),
+								(a12r.GetColumn(l) * a3s.GetColumn(m) + a12s.GetColumn(m) * a3r.GetColumn(l)) * 2};
+
+							Bab_rs[0] += surfaceBasisVectorDerivative1 * a3rs[l, m];
+							Bab_rs[1] += surfaceBasisVectorDerivative2 * a3rs[l, m];
+							Bab_rs[2] += surfaceBasisVectorDerivative12 * a3rs[l, m];
+
+
+							ktemp[l, m] += Vector.CreateFromArray(bendingMoments) * Vector.CreateFromArray(Bab_rs);
+						}
+					}
+
+
+					for (int l = 0; l < 3; l++)
+					{
+						for (int m = 0; m < 3; m++)
+						{
+							KbendingNL[i * 3 + l, k * 3 + m] -= ktemp[l, m];
+						}
+					}
+				}
+			}
+
+			return KbendingNL;
+		}
+
+		private static Vector[,] Calculate_a3rs(Vector surfaceBasisVector1, Vector surfaceBasisVector2,
+			Vector surfaceBasisVector3, double J1, Matrix3by3 a1r, Matrix3by3 a2s, Matrix3by3 a1s, Matrix3by3 a2r)
+		{
+			var term1_532 = new Vector[3, 3];
+			for (int m = 0; m < 3; m++)
+			{
+				for (int n = 0; n < 3; n++)
+				{
+					var temp = a1r.GetColumn(m).CrossProduct(a2s.GetColumn(n)) +
+							   a1s.GetColumn(n).CrossProduct(a2r.GetColumn(m));
+					temp.ScaleIntoThis(J1);
+					term1_532[m, n] = temp;
+				}
+			}
+
+			var term2_532 = new Vector[3, 3];
+			for (int m = 0; m < 3; m++)
+			{
+				// 5.24 Kiendl Thesis
+				var a3r_dashed = a1r.GetColumn(m).CrossProduct(surfaceBasisVector2) +
+								 surfaceBasisVector1.CrossProduct(a2r.GetColumn(m));
+				for (int n = 0; n < 3; n++)
+				{
+					//TODO: a3s_dashed, a3r_dashed calculated out of the loop for all cp
+					var a3s_dashed = a1s.GetColumn(n).CrossProduct(surfaceBasisVector2) +
+									 surfaceBasisVector1.CrossProduct(a2s.GetColumn(n));
+					// 5.25 Kiendl Thesis
+					var term_525 = surfaceBasisVector3 * a3s_dashed;
+					term2_532[m, n] = a3r_dashed.Scale(-term_525 / J1 / J1);
+				}
+			}
+
+			var term3_532 = new Vector[3, 3];
+			for (int m = 0; m < 3; m++)
+			{
+				var a3r_dashed = a1r.GetColumn(m).CrossProduct(surfaceBasisVector2) +
+								 surfaceBasisVector1.CrossProduct(a2r.GetColumn(m));
+				for (int n = 0; n < 3; n++)
+				{
+					var a3s_dashed = a1s.GetColumn(n).CrossProduct(surfaceBasisVector2) +
+									 surfaceBasisVector1.CrossProduct(a2s.GetColumn(n));
+					var term_525 = surfaceBasisVector3 * a3r_dashed;
+					term3_532[m, n] = a3s_dashed.Scale(-term_525 / J1 / J1);
+				}
+			}
+
+			var term4_532 = new Vector[3, 3];
+			for (int m = 0; m < 3; m++)
+			{
+				var a3r_dashed = a1r.GetColumn(m).CrossProduct(surfaceBasisVector2) +
+								 surfaceBasisVector1.CrossProduct(a2r.GetColumn(m));
+				for (int n = 0; n < 3; n++)
+				{
+					var a3s_dashed = a1s.GetColumn(n).CrossProduct(surfaceBasisVector2) +
+									 surfaceBasisVector1.CrossProduct(a2s.GetColumn(n));
+					// term 5_31
+					var a3_rs = ((term1_532[m, n] * J1) *
+								 (surfaceBasisVector3 * J1)
+								 + a3r_dashed * a3s_dashed) / J1 -
+								((a3r_dashed * surfaceBasisVector3 * J1) *
+								 (a3s_dashed * surfaceBasisVector3 * J1)) / J1 / J1 / J1;
+
+					term4_532[m, n] = surfaceBasisVector3.Scale(-a3_rs / J1);
+				}
+			}
+
+			var term5_532 = new Vector[3, 3];
+			for (int m = 0; m < 3; m++)
+			{
+				var a3r_dashed = a1r.GetColumn(m).CrossProduct(surfaceBasisVector2) +
+								 surfaceBasisVector1.CrossProduct(a2r.GetColumn(m));
+				var term_525_r = surfaceBasisVector3 * a3r_dashed;
+				for (int n = 0; n < 3; n++)
+				{
+					var a3s_dashed = a1s.GetColumn(n).CrossProduct(surfaceBasisVector2) +
+									 surfaceBasisVector1.CrossProduct(a2s.GetColumn(n));
+					var term_525_s = surfaceBasisVector3 * a3s_dashed;
+
+					term5_532[m, n] = surfaceBasisVector3.Scale(2 / J1 / J1 * term_525_r * term_525_s);
+				}
+			}
+
+			var a3rs = new Vector[3, 3];
+			for (int m = 0; m < 3; m++)
+			{
+				for (int n = 0; n < 3; n++)
+				{
+					a3rs[m, n] = term1_532[m, n] + term2_532[m, n] + term3_532[m, n] + term4_532[m, n] +
+								 term5_532[m, n];
+				}
+			}
+
+			return a3rs;
+		}
+
+
+		private Matrix3by3 CalculateA3r(Vector surfaceBasisVector1,
+			Vector surfaceBasisVector2, Vector surfaceBasisVector3,
+			Matrix3by3 a1r, Matrix3by3 a2r, double J1)
+		{
+			Matrix3by3 da3_tilde_dr = Matrix3by3.CreateZero(); //r1, r2 kai r3 sthles
+
+			for (int i1 = 0; i1 < 3; i1++)
+			{
+				var col = (a1r.GetColumn(i1).CrossProduct(surfaceBasisVector2) +
+						   surfaceBasisVector1.CrossProduct(a2r.GetColumn(i1)));
+				for (int i2 = 0; i2 < 3; i2++)
+				{
+					da3_tilde_dr[i2, i1] = col[i2];
+				}
+
+			}
+
+			double[] dnorma3_dr = new double[3]; //r1, r2 kai r3 sthles
+			for (int i1 = 0; i1 < 3; i1++)
+			{
+				dnorma3_dr[i1] = surfaceBasisVector3.DotProduct(da3_tilde_dr.GetColumn(i1));
+			}
+
+			Matrix3by3 da3_unit_dr = Matrix3by3.CreateZero();
+			for (int i1 = 0; i1 < 3; i1++)
+			{
+				var col = (1 / J1) * (da3_tilde_dr.GetColumn(i1) - surfaceBasisVector3.Scale(dnorma3_dr[i1]));
+				for (int i2 = 0; i2 < 3; i2++)
+				{
+					da3_unit_dr[i2, i1] = col[i2];
+				}
+			}
+
+			return da3_unit_dr;
+		}
+
+		internal Matrix CalculateKmembraneNL(ControlPoint[] controlPoints, double[] membraneForces, Nurbs2D nurbs, int j)
+		{
+			var kmembraneNl =
+				Matrix.CreateZero(controlPoints.Length * 3, controlPoints.Length * 3);
+
+			for (var i = 0; i < controlPoints.Length; i++)
+			{
+				var a1r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesKsi[i, j]);
+				var a2r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesHeta[i, j]);
+				for (int k = 0; k < controlPoints.Length; k++)
+				{
+					var a1s = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesKsi[k, j]);
+					var a2s = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesHeta[k, j]);
+
+					var klocal = membraneForces[0] * a1r * a1s + membraneForces[1] * a2r * a2s +
+								 membraneForces[2] * (a1r * a2s + a1s * a2r);
+
+					for (int l = 0; l < 3; l++)
+					{
+						for (int m = 0; m < 3; m++)
+						{
+							kmembraneNl[i * 3 + l, k * 3 + m] += klocal[l, m];
+						}
+					}
+				}
+			}
+
+			return kmembraneNl;
+		}
+
+		private double[,] CreateDiagonal3by3WithValue(double value)
+		{
+			var matrix = new double[3, 3];
+			matrix[0, 0] = value;
+			matrix[1, 1] = value;
+			matrix[2, 2] = value;
+			return matrix;
+		}
+
+
+		internal double[,] CalculateMembraneDeformationMatrix(ControlPoint[] controlPoints, Nurbs2D nurbs, int j,
+			double[] surfaceBasisVector1,
+			double[] surfaceBasisVector2)
+		{
+			var dRIa = new double[3, controlPoints.Length * 3];
+			for (int i = 0; i < controlPoints.Length; i++)
+			{
+				for (int m = 0; m < 3; m++)
+				{
+					dRIa[m, i] = nurbs.NurbsDerivativeValuesHeta[i, j] * surfaceBasisVector1[m] +
+								 nurbs.NurbsDerivativeValuesKsi[i, j] * surfaceBasisVector2[m];
+				}
+			}
+
+			var bmembrane = new double[3, controlPoints.Length * 3];
+			for (int column = 0; column < controlPoints.Length * 3; column += 3)
+			{
+				bmembrane[0, column] = nurbs.NurbsDerivativeValuesKsi[column / 3, j] * surfaceBasisVector1[0];
+				bmembrane[0, column + 1] = nurbs.NurbsDerivativeValuesKsi[column / 3, j] * surfaceBasisVector1[1];
+				bmembrane[0, column + 2] = nurbs.NurbsDerivativeValuesKsi[column / 3, j] * surfaceBasisVector1[2];
+
+				bmembrane[1, column] = nurbs.NurbsDerivativeValuesHeta[column / 3, j] * surfaceBasisVector2[0];
+				bmembrane[1, column + 1] = nurbs.NurbsDerivativeValuesHeta[column / 3, j] * surfaceBasisVector2[1];
+				bmembrane[1, column + 2] = nurbs.NurbsDerivativeValuesHeta[column / 3, j] * surfaceBasisVector2[2];
+
+				bmembrane[2, column] = dRIa[0, column / 3];
+				bmembrane[2, column + 1] = dRIa[1, column / 3];
+				bmembrane[2, column + 2] = dRIa[2, column / 3];
+			}
+
+			return bmembrane;
+		}
+
+		private double[,] CopyConstitutiveMatrix(double[,] f)
+		{
+			var g = new double[f.GetLength(0), f.GetLength(1)];
+			Array.Copy(f, 0, g, 0, f.Length);
+			return g;
+		}
+
+		private IList<GaussLegendrePoint3D> CreateElementGaussPoints(NurbsKirchhoffLoveShellElementNL shellElement)
+		{
+			var gauss = new GaussQuadrature();
+			//var medianSurfaceGP = gauss.CalculateElementGaussPoints(shellElement.Patch.DegreeKsi, shellElement.Patch.DegreeHeta, shellElement.Knots.ToList());
+			var medianSurfaceGP = gauss.CalculateElementGaussPoints(shellElement.Patch.DegreeKsi, shellElement.Patch.DegreeHeta, shellElement.Knots.ToList());
+			foreach (var point in medianSurfaceGP)
+			{
+				var gp = gauss.CalculateElementGaussPoints(ThicknessIntegrationDegree,
+					new List<Knot>
+					{
+						new Knot() {ID = 0, Ksi = -shellElement.Thickness / 2, Heta = point.Heta},
+						new Knot() {ID = 1, Ksi = shellElement.Thickness / 2, Heta = point.Heta},
+					}).ToList();
+
+				thicknessIntegrationPoints.Add(point,
+					gp.Select(g => new GaussLegendrePoint3D(point.Ksi, point.Heta, g.Ksi, g.WeightFactor))
+						.ToList());
+			}
+
+			return medianSurfaceGP;
+		}
+
+		private const int ThicknessIntegrationDegree = 2;
+
+		public double Thickness { get; set; }
+	}
 }
