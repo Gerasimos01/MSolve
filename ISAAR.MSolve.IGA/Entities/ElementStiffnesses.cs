@@ -109,10 +109,11 @@ namespace ISAAR.MSolve.IGA.Entities
                 localSolution[i1] += variationSize;
                 saveVariationStates = true;
                 element.ElementType.CalculateStresses(element, localSolution, localdSolution);
+                saveVariationStates = false;
                 var forces2 = element.ElementType.CalculateForces(element, localSolution, localdSolution);
                 for (int i2 = 0; i2 < localSolution.Length; i2++) variatedForcesStep2[elementId][i2, i1] = forces2[i2];
                 localSolution[i1] += -variationSize;
-                saveVariationStates = false;
+                
                 element.ElementType.CalculateStresses(element, localSolution, localdSolution);
 
             }
