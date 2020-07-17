@@ -29,7 +29,7 @@ namespace ISAAR.MSolve.Analyzers.NonLinear
         protected readonly Dictionary<int, IVector> rhs = new Dictionary<int, IVector>();
         protected readonly Dictionary<int, IVector> u = new Dictionary<int, IVector>();
         protected readonly Dictionary<int, IVector> du = new Dictionary<int, IVector>();
-        protected readonly Dictionary<int, IVector> uPlusdu = new Dictionary<int, IVector>();
+        public readonly Dictionary<int, IVector> uPlusdu = new Dictionary<int, IVector>();
         protected Vector globalRhs; //TODO: This was originally readonly 
         protected double globalRhsNormInitial; //TODO: This can probably be a local variable.
         protected INonLinearParentAnalyzer parentAnalyzer = null;

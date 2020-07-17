@@ -314,15 +314,15 @@ namespace ISAAR.MSolve.IGA.Elements
                     ElementStiffnesses.ProccessVariable(7, surfaceBasisVector2, false);
                 }
 
-                var A11 = initialSurfaceBasisVectors1[j][0] * initialSurfaceBasisVectors1[j][0] +
+                var A11 = initialSurfaceBasisVectors1[j][0] * initialSurfaceBasisVectors1[j][0] + //E
                           initialSurfaceBasisVectors1[j][1] * initialSurfaceBasisVectors1[j][1] +
                           initialSurfaceBasisVectors1[j][2] * initialSurfaceBasisVectors1[j][2];
 
-                var A22 = initialSurfaceBasisVectors2[j][0] * initialSurfaceBasisVectors2[j][0] +
+                var A22 = initialSurfaceBasisVectors2[j][0] * initialSurfaceBasisVectors2[j][0] + //G
                           initialSurfaceBasisVectors2[j][1] * initialSurfaceBasisVectors2[j][1] +
                           initialSurfaceBasisVectors2[j][2] * initialSurfaceBasisVectors2[j][2];
 
-                var A12 = initialSurfaceBasisVectors1[j][0] * initialSurfaceBasisVectors2[j][0] +
+                var A12 = initialSurfaceBasisVectors1[j][0] * initialSurfaceBasisVectors2[j][0] + //F
                           initialSurfaceBasisVectors1[j][1] * initialSurfaceBasisVectors2[j][1] +
                           initialSurfaceBasisVectors1[j][2] * initialSurfaceBasisVectors2[j][2];
 
@@ -346,15 +346,15 @@ namespace ISAAR.MSolve.IGA.Elements
                     ElementStiffnesses.ProccessVariable(4, membraneStrain, false);
                 }
 
-                var B11 = initialSurfaceBasisVectorDerivative1[j][0] * initialUnitSurfaceBasisVectors3[j][0] +
+                var B11 = initialSurfaceBasisVectorDerivative1[j][0] * initialUnitSurfaceBasisVectors3[j][0] + //L
                           initialSurfaceBasisVectorDerivative1[j][1] * initialUnitSurfaceBasisVectors3[j][1] +
                           initialSurfaceBasisVectorDerivative1[j][2] * initialUnitSurfaceBasisVectors3[j][2];
 
-                var B22 = initialSurfaceBasisVectorDerivative2[j][0] * initialUnitSurfaceBasisVectors3[j][0] +
+                var B22 = initialSurfaceBasisVectorDerivative2[j][0] * initialUnitSurfaceBasisVectors3[j][0] + //N
                           initialSurfaceBasisVectorDerivative2[j][1] * initialUnitSurfaceBasisVectors3[j][1] +
                           initialSurfaceBasisVectorDerivative2[j][2] * initialUnitSurfaceBasisVectors3[j][2];
 
-                var B12 = initialSurfaceBasisVectorDerivative12[j][0] * initialUnitSurfaceBasisVectors3[j][0] +
+                var B12 = initialSurfaceBasisVectorDerivative12[j][0] * initialUnitSurfaceBasisVectors3[j][0] + //M
                           initialSurfaceBasisVectorDerivative12[j][1] * initialUnitSurfaceBasisVectors3[j][1] +
                           initialSurfaceBasisVectorDerivative12[j][2] * initialUnitSurfaceBasisVectors3[j][2];
 
@@ -373,6 +373,9 @@ namespace ISAAR.MSolve.IGA.Elements
                 var bendingStrain = new double[] {b11 - B11, b22 - B22, 2 * b12 - 2 * B12};
                 //var bendingStrain = new double[] { -(b11 - B11), -(b22 - B22), -(2 * b12 - 2 * B12) };
 
+                //double du = 0.1;
+                //double dv = 0.1;
+                //double kn = (B11 * du * du + 2 * B12 * du * dv + B22 * dv * dv) / (A11 * du * du + 2 * A12 * du * dv + A22 * dv * dv);
                 if (j == ElementStiffnesses.gpNumberToCheck)
                 {
                     ElementStiffnesses.ProccessVariable(5, bendingStrain, false);
