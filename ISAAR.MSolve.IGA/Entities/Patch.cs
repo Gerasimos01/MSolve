@@ -1127,6 +1127,28 @@ namespace ISAAR.MSolve.IGA.Entities
 								}
 							};
 							break;
+						case GeometricalFormulation.NonLinearDevelop:
+							element = new NurbsKirchhoffLoveShellElementNL(new ShellElasticMaterial2Dtransformationb()
+							{
+								YoungModulus = this.Material.YoungModulus,
+								PoissonRatio = this.Material.PoissonRatio
+							}, knotsOfElement, elementControlPoints, this, this.Thickness)
+							{
+								ID = elementID,
+								Patch = this,
+								Thickness = this.Thickness,
+								ElementType = new NurbsKirchhoffLoveShellElementNL(new ShellElasticMaterial2Dtransformationb()
+								{
+									YoungModulus = this.Material.YoungModulus,
+									PoissonRatio = this.Material.PoissonRatio
+								}, knotsOfElement, elementControlPoints.ToList(), this, this.Thickness)
+								{
+									ID = elementID,
+									Patch = this,
+									Thickness = this.Thickness
+								}
+							};
+							break;
 						case GeometricalFormulation.SectionNonLinear:
 							element = new NurbsKirchhoffLoveShellElementSectionNL(
 								new ShellElasticSectionMaterial2D()
