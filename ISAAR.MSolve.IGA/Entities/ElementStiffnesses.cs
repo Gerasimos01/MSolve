@@ -83,8 +83,8 @@ namespace ISAAR.MSolve.IGA.Entities
 
         public static double variationSize = 0.0000001;
 
-        public static int[] variableIds = new int[] { 1, 2, 3, 4, 5, 6, 7,8,9,10 }; //a1,1,ur   //a2,2,ur  // a1,2,ur  // a1,r
-        public static int[] variableSizes = new int[] { 3, 3, 3, 3, 3, 3, 3,3,3,3 };
+        public static int[] variableIds = new int[] { 1, 2, 3, 4, 5, 6, 7,8,9,10,11,12,13,14,15,16,17 }; //a1,1,ur   //a2,2,ur  // a1,2,ur  // a1,r
+        public static int[] variableSizes = new int[] { 3, 3, 3, 3, 3, 3, 3,3,3,3,1,3,3,1,1,3,3 };
 
         public static int elementId { get; set; }
 

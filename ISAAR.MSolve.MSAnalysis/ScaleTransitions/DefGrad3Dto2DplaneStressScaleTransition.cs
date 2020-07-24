@@ -18,18 +18,18 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         public double[] MacroToMicroTransition(Node boundaryNode, double[] MacroScaleVariable)
         {
-            double[,] Dq_nodal = new double[3,2]; // Prosoxh: pithanes diorthoseis eis triploun
+            double[,] Dq_nodal = new double[4,2]; // Prosoxh: pithanes diorthoseis eis triploun
             Dq_nodal[0, +0] = boundaryNode.X;
+            Dq_nodal[2, +0] = boundaryNode.Y;
             Dq_nodal[1, +1] = boundaryNode.Y;
-            Dq_nodal[2, +0] = 0.5*boundaryNode.Y;
-            Dq_nodal[2, +1] = 0.5 * boundaryNode.X;
+            Dq_nodal[3, +1] = boundaryNode.X;
 
 
             double[] microVariable = new double[2];            
 
             for (int i1 = 0; i1 < 2; i1++)
             {
-                for (int j1 = 0; j1 < 3; j1++)
+                for (int j1 = 0; j1 < 4; j1++)
                 {
                     microVariable[i1] += Dq_nodal[j1, i1] * MacroScaleVariable[j1]; //einai sunolikh 
                 }
@@ -40,15 +40,15 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         public double[] MicroToMacroTransition(INode boundaryNode, double[] MicroScaleVariable)
         {
-            double[,] Dq_nodal = new double[3, 2];
+            double[,] Dq_nodal = new double[4, 2]; // Prosoxh: pithanes diorthoseis eis triploun
             Dq_nodal[0, +0] = boundaryNode.X;
+            Dq_nodal[2, +0] = boundaryNode.Y;
             Dq_nodal[1, +1] = boundaryNode.Y;
-            Dq_nodal[2, +0] = 0.5 * boundaryNode.Y;
-            Dq_nodal[2, +1] = 0.5 * boundaryNode.X;
+            Dq_nodal[3, +1] = boundaryNode.X;
 
-            double[] macroVariable = new double[3];
+            double[] macroVariable = new double[4];
             //
-            for (int i1 = 0; i1 < 3; i1++)
+            for (int i1 = 0; i1 < 4; i1++)
             {
                 for (int j1 = 0; j1 < 2; j1++)
                 {
@@ -66,29 +66,32 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
 
         public int MacroscaleVariableDimension()
         {
-            return 3;
+            return 4;
         }
 
         public void ModifyMicrostructureTotalPrescribedBoundaryDisplacementsVectorForMacroStrainVariable(Node boundaryNode,
             double[] smallStrain2Dmacro, Dictionary<int, Dictionary<IDofType, double>> totalPrescribedBoundaryDisplacements)
         {
             //double[,] Dq_nodal = new double[9, 3];
-            double[,] Dq_nodal = new double[3, 2];
+            double[,] Dq_nodal = new double[4, 2]; // Prosoxh: pithanes diorthoseis eis triploun
             Dq_nodal[0, +0] = boundaryNode.X;
+            Dq_nodal[2, +0] = boundaryNode.Y;
             Dq_nodal[1, +1] = boundaryNode.Y;
-            Dq_nodal[2, +0] = 0.5 * boundaryNode.Y;
-            Dq_nodal[2, +1] = 0.5 * boundaryNode.X;
+            Dq_nodal[3, +1] = boundaryNode.X;
 
             //double[] thesi_prescr_xyz = new double[2];
             double[] u_prescr_xyz_sunol = new double[2];
 
             for (int i1 = 0; i1 < 2; i1++)
             {
-                for (int j1 = 0; j1 < 3; j1++)
+                for (int j1 = 0; j1 < 4; j1++)
                 {
                     u_prescr_xyz_sunol[i1] += Dq_nodal[j1, i1] * smallStrain2Dmacro[j1]; //einai sunolikh 
                 }
             }
+
+            u_prescr_xyz_sunol = new double[2] { u_prescr_xyz_sunol[0] - boundaryNode.X,
+                                                     u_prescr_xyz_sunol[1] - boundaryNode.Y};
 
             //SHMEIWSH: an prosthesoume sto totalBoundaryNodalDIsplacements trith metakinhsh (dld logw u_prescr_xyz_sunol[3]) ==0
             // ousiastika h methodos "ImposePrescribedDisplacementsWithInitialConditionSEffect" ths subdomain.cs tha paei kai tha 

@@ -1299,5 +1299,167 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             return possibleHosts;
         
         }
+
+        public static void HexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(Model model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
+        {
+            // Perioxh renumbering initialization 
+            renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
+            // perioxh renumbering initialization ews edw 
+
+            // Perioxh parametroi Rve Matrix
+            double E_disp = mp.E_disp; //Gpa
+            double ni_disp = mp.ni_disp; // stather Poisson
+            double L01 = mp.L01; // diastaseis
+            double L02 = mp.L02;
+            double L03 = mp.L03;
+            int hexa1 = mp.hexa1;// diakritopoihsh
+            int hexa2 = mp.hexa2;
+            int hexa3 = mp.hexa3;
+            // Perioxh parametroi Rve Matrix ews edw
+
+
+            // Perioxh Gewmetria shmeiwn
+            int nodeCounter = 0;
+
+            int nodeID;
+            double nodeCoordX;
+            double nodeCoordY;
+            double nodeCoordZ;
+            int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
+            int endiam_plaka = 2 * (hexa1 + 1) + 2 * (hexa2 - 1);
+            int katw_plaka = (hexa1 + 1) * (hexa2 + 1);
+
+            for (int h1 = 0; h1 < hexa1 + 1; h1++)
+            {
+                for (int h2 = 0; h2 < hexa2 + 1; h2++)
+                {
+                    for (int h3 = 0; h3 < hexa3 + 1; h3++)
+                    {
+                        nodeID = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka)); // h1+1 dioti h1 einai zero based
+                        nodeCoordX = -0.5 * L01 + (h1 + 1 - 1) * (L01 / hexa1);  // h1+1 dioti h1 einai zero based
+                        nodeCoordY = -0.5 * L02 + (h2 + 1 - 1) * (L02 / hexa2);
+                        nodeCoordZ = -0.5 * L03 + (h3 + 1 - 1) * (L03 / hexa3);
+
+                        model.NodesDictionary.Add(nodeID, new Node(id: nodeID, x: nodeCoordX, y: nodeCoordY, z: nodeCoordZ));
+                        nodeCounter++;
+                    }
+                }
+            }
+            // Perioxh Gewmetria shmeiwn ews edw
+
+            //Perioxh Eisagwgh elements
+            int elementCounter = 0;
+            int subdomainID = 1;
+
+            ElasticMaterial3D material1 = new ElasticMaterial3D()
+            {
+                YoungModulus = E_disp,
+                PoissonRatio = ni_disp,
+            };
+            Element e1;
+            int ElementID;
+            int[] globalNodeIDforlocalNode_i = new int[8];
+
+            for (int h1 = 0; h1 < hexa1; h1++)
+            {
+                for (int h2 = 0; h2 < hexa2; h2++)
+                {
+                    for (int h3 = 0; h3 < hexa3; h3++)
+                    {
+                        ElementID = h1 + 1 + (h2 + 1 - 1) * hexa1 + (h3 + 1 - 1) * (hexa1) * hexa2; // h1+1 dioti h1 einai zero based
+                        globalNodeIDforlocalNode_i[0] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[1] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[2] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[3] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[4] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[5] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[6] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                        globalNodeIDforlocalNode_i[7] = renumbering.GetNewNodeNumbering(Topol_rve(h1 + 1 + 1, h2 + 1, h3 + 1, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+
+                        e1 = new Element()
+                        {
+                            ID = ElementID,
+                            ElementType = new Hexa8NonLinear(material1, GaussLegendre3D.GetQuadratureWithOrder(3, 3, 3)) // dixws to e. exoume sfalma enw sto beambuilding oxi//edw kaleitai me ena orisma to Hexa8
+                        };
+
+                        for (int j = 0; j < 8; j++)
+                        {
+                            e1.NodesDictionary.Add(globalNodeIDforlocalNode_i[j], model.NodesDictionary[globalNodeIDforlocalNode_i[j]]);
+                        }
+                        model.ElementsDictionary.Add(e1.ID, e1);
+                        model.SubdomainsDictionary[subdomainID].Elements.Add(e1);
+                        elementCounter++;
+                    }
+                }
+            }
+            //Perioxh Eisagwgh elements
+
+            //Tuple<int, int> nodeElementCounters = new Tuple<int, int>(nodeCounter, elementCounter);
+            // change one tuple value
+            //nodeElementCounters = new Tuple<int, int>(nodeElementCounters.Item1, elementCounter);
+            // get one tuple value
+            //elementCounter = nodeElementCounters.Item2;            
+            //return nodeElementCounters;
+
+            //int komvoi_rve = (hexa1 + 1) * (hexa2 + 1) * (hexa3 + 1);
+            //int f_komvoi_rve = kuvos;
+            //int p_komvoi_rve = komvoi_rve - f_komvoi_rve;
+            //int komvos;
+            //Dq = new double[9, 3 * p_komvoi_rve];
+            //for (int j = 0; j < p_komvoi_rve; j++)
+            //{
+            //    komvos = renumbering.GetNewNodeNumbering(f_komvoi_rve + j + 1);
+            //    Dq[0, 3 * j + 0] = model.NodesDictionary[komvos].X;
+            //    Dq[1, 3 * j + 1] = model.NodesDictionary[komvos].Y;
+            //    Dq[2, 3 * j + 2] = model.NodesDictionary[komvos].Z;
+            //    Dq[3, 3 * j + 0] = model.NodesDictionary[komvos].Y;
+            //    Dq[4, 3 * j + 1] = model.NodesDictionary[komvos].Z;
+            //    Dq[5, 3 * j + 2] = model.NodesDictionary[komvos].X;
+            //    Dq[6, 3 * j + 0] = model.NodesDictionary[komvos].Z;
+            //    Dq[7, 3 * j + 1] = model.NodesDictionary[komvos].X;
+            //    Dq[8, 3 * j + 2] = model.NodesDictionary[komvos].Y;
+            //    boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
+            //}
+
+            int i_2 = 1;
+            for (int i1 = 1; i1 < hexa1 + 2; i1++)
+            {
+                for (int i3 = 1; i3 < hexa3 + 2; i3++)
+                {
+                    int komvos = renumbering.GetNewNodeNumbering(Topol_rve(i1, i_2, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                    boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
+                }
+            }
+
+            i_2 = hexa2 + 1;
+            for (int i1 = 1; i1 < hexa1 + 2; i1++)
+            {
+                for (int i3 = 1; i3 < hexa3 + 2; i3++)
+                {
+                    int komvos = renumbering.GetNewNodeNumbering(Topol_rve(i1, i_2, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                    boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
+                }
+            }
+
+            int i_1 = 1;
+            for (int i2 = 2; i2 < hexa2 + 1; i2++)
+            {
+                for (int i3 = 1; i3 < hexa3 + 2; i3++)
+                {
+                    int komvos = renumbering.GetNewNodeNumbering(Topol_rve(i_1, i2, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                    boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
+                }
+            }
+
+            i_1 = hexa1 + 1;
+            for (int i2 = 2; i2 < hexa2 + 1; i2++)
+            {
+                for (int i3 = 1; i3 < hexa3 + 2; i3++)
+                {
+                    int komvos = renumbering.GetNewNodeNumbering(Topol_rve(i_1, i2, i3, hexa1, hexa2, hexa3, kuvos, endiam_plaka, katw_plaka));
+                    boundaryNodes.Add(komvos, model.NodesDictionary[komvos]);
+                }
+            }
+        }
     }
 }
