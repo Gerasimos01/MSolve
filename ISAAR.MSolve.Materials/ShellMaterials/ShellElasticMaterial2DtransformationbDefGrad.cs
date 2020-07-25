@@ -60,7 +60,7 @@ namespace ISAAR.MSolve.Materials
         /// <param name="tG_i">Each Column is a Vector and not normalised.</param>
         /// <param name="F"></param>
         /// <returns></returns>
-        public (double[,], double[]) CalculateTransformations(double[,]tgi, double[,] tG_i, double[,] F_3D)
+        public (double[,], double[]) CalculateTransformations(double[,] tgi, double[,] tG_i, double[,] F_3D)
         {
             double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
 
@@ -86,12 +86,46 @@ namespace ISAAR.MSolve.Materials
 
             }
 
+            OrthogonaliseBasisMembranePart(tgi);
+
+
             var Qij = CalculateRotationMatrix(tG_i, eye);
             var Qij1 = CalculateRotationMatrix(tgi, eye);
 
             double[,] F_rve = Transform_F3D_to_Frve(F_3D, Qij, Qij1);
 
+            //
+            //double[,] exampleBasis = new double[3, 3] {{ 14.285714922100491, -1.7441909127627026E-08, 0 }, { 8.3652124878453923E-07, 14.285714288340733,0},
+            //{ 0,0,1} };
             
+            var exampleG1 = Vector.CreateFromArray( new double[] { 14.285714286775336, 3.2374954496774966E-16, 0 });
+            var exampleG2 = Vector.CreateFromArray( new double[] { 4.4431960281171579E-17, 14.285714286775336, 0 });
+            double exampleG1_norm_sqred = exampleG1.DotProduct(exampleG1);
+            double exampleG2_norm_sqred = exampleG2.DotProduct(exampleG2);
+            //double G3_norm_sqred = a3.DotProduct(a3);
+            double[] exampleG_1 = new double[3] { exampleG1[0] / exampleG1_norm_sqred, exampleG1[1] / exampleG1_norm_sqred, exampleG1[2] / exampleG1_norm_sqred };
+            double[] exampleG_2 = new double[3] { exampleG2[0] / exampleG2_norm_sqred, exampleG2[1] / exampleG2_norm_sqred, exampleG2[2] / exampleG2_norm_sqred };
+            double[,] exampleBasis = new double[3, 3] {{ exampleG_1[0], exampleG_2[0], 0 }, { exampleG_1[1], exampleG_2[1],0 },
+            { exampleG_1[2],exampleG_2[2],1} };
+            double[,] exampleCovarBasis = new double[3, 3] {{ exampleG1[0], exampleG2[0], 0 }, { exampleG1[1], exampleG2[1],0 },
+            { exampleG1[2],exampleG2[2],1} };
+
+
+
+            double[,] exampleGlTensr = new double[3, 3] { {3.2357191827259157E-05, 0.5 * (8.3678113701926713E-06), 0  },
+                { 0.5 * (8.3678113701926713E-06), 1.4505218359772698E-08, 0 },  { 0,0,0} };
+
+            var exampleQij = CalculateRotationMatrix(tG_i, exampleBasis);
+            var exampleQij1 = CalculateRotationMatrix(tgi, exampleBasis);
+            double[,] exampleTensorTransformed = Transform_F3D_to_Frve(exampleGlTensr, exampleQij, exampleQij1);
+
+            double[,] exampleSpkTensor = new double[,] { {0.0077689617554168137, 0.0010045557546931828,0    },
+                { 0.0010045557546931828, 3.4827029271466839E-06, 0 },  { 0,0,0} };
+            var exampleQijcov = CalculateRotationMatrix(tG_i, exampleCovarBasis);
+            var exampleQij1cov = CalculateRotationMatrix(tgi, exampleCovarBasis);
+            double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
+
+
 
             double[] GLvec = Transform2DDefGradToGL(F_rve);
             (double[] SPKvec, double[,] ConsCartes )= CalculateSPK(GLvec);
@@ -121,7 +155,30 @@ namespace ISAAR.MSolve.Materials
 
         }
 
-        
+        private void OrthogonaliseBasisMembranePart(double[,] tgi)
+        {
+            double[] E1 = new double[] { tgi[0, 0], tgi[1, 0], tgi[2, 0] };
+            double[] E2 = new double[] { tgi[0, 1], tgi[1, 1], tgi[2, 1] };
+
+            double E1_dot_E2 = 0;
+            for (int i1 = 0; i1 < 3; i1++) { E1_dot_E2 += E1[i1] * E2[i1]; }
+
+            double[] projection = new double[3];
+            for (int i1 = 0; i1 < 3; i1++) { projection[i1] = E1_dot_E2 * E1[i1]; }
+
+            double[] E2ortho = new double[3];
+            for (int i1 = 0; i1 < 3; i1++) { E2ortho[i1] = E2[i1] - projection[i1]; }
+            double norm1 = (Vector.CreateFromArray(E2ortho)).Norm2();
+            for (int i1 = 0; i1 < 3; i1++) { E2[i1] = E2ortho[i1] / norm1; }
+
+            tgi[0, 1] = E2[0];
+            tgi[1, 1] = E2[1];
+            tgi[2, 1] = E2[2];
+
+            //
+        }
+
+
 
         private double[,] TransformCinpk(double[,] Cinpk, double[,] F_rve, double[,] SPKMat)
         {
