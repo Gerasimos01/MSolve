@@ -496,7 +496,7 @@ namespace ISAAR.MSolve.IGA.Tests
             }
 
             double load_factor = 6;
-            int increments = 5;
+            int increments = 6;
             Value verticalDistributedLoad = delegate (double x, double y, double z)
             {
                 return new double[] { 0, 0, load_factor };
@@ -552,7 +552,7 @@ namespace ISAAR.MSolve.IGA.Tests
             }
 
             double load_factor = 6;
-            int increments = 5;
+            int increments = 6;
 
             double[] loadValues = new double[] { 0, 0, load_factor, 0, 0, 0 };
             double rot_phi_1 = 0;
@@ -616,7 +616,7 @@ namespace ISAAR.MSolve.IGA.Tests
             }
 
             double load_factor = 6;
-            int increments = 5;
+            int increments = 6;
             Value verticalDistributedLoad = delegate (double x, double y, double z)
             {
                 return new double[] { 0,  0, load_factor };
