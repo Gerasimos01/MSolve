@@ -405,6 +405,14 @@ namespace ISAAR.MSolve.IGA.Elements
                                                             { g1[2]*G_1[0]+g2[2]*G_2[0], g1[2]*G_1[1]+g2[2]*G_2[1], g1[2]*G_1[2]+g2[2]*G_2[2] },
                         };
 
+                        if ((j == ElementStiffnesses.gpNumberToCheck)&&(i1==0))
+                        {
+                            if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = true; }
+                            double[] F_3D_vec = { F_3D[0, 0], F_3D[1, 1], F_3D[2, 2], F_3D[0, 1], F_3D[1, 2], F_3D[2, 0], F_3D[0, 2], F_3D[1, 0], F_3D[2, 1] };//  .
+                            ElementStiffnesses.ProccessVariable(18, F_3D_vec, false);
+                            if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = false; }
+                        }
+
                         double[,] tgi = new double[3, 3] { { g1[0], g2[0], a3[0] }, { g1[1], g2[1], a3[1] }, { g1[2], g2[2], a3[2] } };
                         double[,] G_i = new double[3, 3] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } };
 
@@ -424,6 +432,9 @@ namespace ISAAR.MSolve.IGA.Elements
                                                                  { dg1_dr[2]*G_1[0]+dg2_dr[2]*G_2[0], dg1_dr[2]*G_1[1]+dg2_dr[2]*G_2[1], dg1_dr[2]*G_1[2]+dg2_dr[2]*G_2[2] }, };
 
                             double[] dF_3D_dr_vec = { dF_3D_dr[0, 0], dF_3D_dr[1, 1], dF_3D_dr[2, 2], dF_3D_dr[0, 1], dF_3D_dr[1, 2], dF_3D_dr[2, 0], dF_3D_dr[0, 2], dF_3D_dr[1, 0], dF_3D_dr[2, 1]  };
+
+                            if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
+                            {ElementStiffnesses.ProccessVariable(18, dF_3D_dr_vec, true, 3 * i + r1);}
 
                             for (int i2 = 0; i2 < 9; i2++)
                             {
