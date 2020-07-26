@@ -619,7 +619,7 @@ namespace ISAAR.MSolve.IGA.Tests
             int increments = 5;
             Value verticalDistributedLoad = delegate (double x, double y, double z)
             {
-                return new double[] { 0, load_factor, 0 };
+                return new double[] { 0,  0, load_factor };
             };
             model.Patches[0].EdgesDictionary[1].LoadingConditions.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
 
@@ -636,11 +636,11 @@ namespace ISAAR.MSolve.IGA.Tests
             var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
             var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], increments,
-                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationZ, "squarePlateZ.txt");
+                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationZ, "squarePlateZDevelop.txt");
             var loggerB = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
-                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationX, "squareplateX.txt");
+                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationX, "squareplateXDevelop.txt");
             var loggerC = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
-                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationY, "squareplateY.txt");
+                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationY, "squareplateYDevelop.txt");
             childAnalyzer.IncrementalLogs.Add(0, loggerA);
             childAnalyzer.IncrementalLogs.Add(1, loggerB);
             childAnalyzer.IncrementalLogs.Add(2, loggerC);
