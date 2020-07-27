@@ -495,8 +495,8 @@ namespace ISAAR.MSolve.IGA.Tests
                 model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
             }
 
-            double load_factor = 6;
-            int increments = 6;
+            double load_factor = 300;
+            int increments = 30;
             Value verticalDistributedLoad = delegate (double x, double y, double z)
             {
                 return new double[] { 0, 0, load_factor };
@@ -551,8 +551,8 @@ namespace ISAAR.MSolve.IGA.Tests
                 model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
             }
 
-            double load_factor = 6;
-            int increments = 6;
+            double load_factor = 300;
+            int increments = 30;
 
             double[] loadValues = new double[] { 0, 0, load_factor, 0, 0, 0 };
             double rot_phi_1 = 0;
@@ -615,8 +615,8 @@ namespace ISAAR.MSolve.IGA.Tests
                 model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
             }
 
-            double load_factor = 6;
-            int increments = 6;
+            double load_factor = 300;
+            int increments = 30;
             Value verticalDistributedLoad = delegate (double x, double y, double z)
             {
                 return new double[] { 0,  0, load_factor };
