@@ -957,6 +957,7 @@ namespace ISAAR.MSolve.IGA.Elements
         internal void CalculateInitialConfigurationData(ControlPoint[] controlPoints,
             Nurbs2D nurbs, IList<GaussLegendrePoint3D> gaussPoints)
         {
+            bool useDifferenetTicknessCovariants = true;
             var numberOfGP = gaussPoints.Count;
             InitialJ1 = new double[numberOfGP];
             initialSurfaceBasisVectors1 = new double[numberOfGP][];
@@ -990,14 +991,45 @@ namespace ISAAR.MSolve.IGA.Elements
                 initialSurfaceBasisVectorDerivative2[j] = CalculateSurfaceBasisVector1(hessianMatrix, 1);
                 initialSurfaceBasisVectorDerivative12[j] = CalculateSurfaceBasisVector1(hessianMatrix, 2);
 
-                foreach (var integrationPointMaterial in materialsAtThicknessGP[gaussPoints[j]].Values)
+                var a1_init = Vector.CreateFromArray(initialSurfaceBasisVectors1[j]);
+                var a2_init = Vector.CreateFromArray(initialSurfaceBasisVectors2[j]);
+                var a3_init = Vector.CreateFromArray(initialUnitSurfaceBasisVectors3[j]);
+                var a11_init = Vector.CreateFromArray(initialSurfaceBasisVectorDerivative1[j]);
+                var a22_init = Vector.CreateFromArray(initialSurfaceBasisVectorDerivative2[j]);
+                var a12_init = Vector.CreateFromArray(initialSurfaceBasisVectorDerivative12[j]);
+
+                (Vector da3tilde_dksi_init, Vector da3tilde_dheta_init, double da3norm_dksi_init, double da3norm_dheta_init, Vector da3_dksi_init, Vector da3_dheta_init) =
+            Calculate_da3tilde_dksi_524_525_526_b(a1_init, a2_init, a11_init, a22_init, a12_init, a3_init, InitialJ1[j]);
+
+                var thicknessPoints = thicknessIntegrationPoints[gaussPoints[j]];
+                for (int i1 = 0; i1 < thicknessPoints.Count; i1++)
                 {
-                    integrationPointMaterial.TangentVectorV1 = initialSurfaceBasisVectors1[j];
-                    integrationPointMaterial.TangentVectorV2 = initialSurfaceBasisVectors2[j];
-                    integrationPointMaterial.NormalVectorV3 = initialUnitSurfaceBasisVectors3[j];
+                    var integrationPointMaterial = materialsAtThicknessGP[gaussPoints[j]][thicknessPoints[i1]];
+                    //}
+                    //foreach (var integrationPointMaterial in materialsAtThicknessGP[gaussPoints[j]].Values)
+                    //{
+
+                    var thicknessPoint = thicknessPoints[i1];
+                    if (!useDifferenetTicknessCovariants)
+                    {
+                        integrationPointMaterial.TangentVectorV1 = initialSurfaceBasisVectors1[j];
+                        integrationPointMaterial.TangentVectorV2 = initialSurfaceBasisVectors2[j];
+                        integrationPointMaterial.NormalVectorV3 = initialUnitSurfaceBasisVectors3[j];
+                    }
+                    else
+                    {
+                        var z = thicknessPoint.Zeta;
+                        Vector G1 = a1_init + da3_dksi_init.Scale(z);
+                        Vector G2 = a2_init + da3_dheta_init.Scale(z);
+
+                        integrationPointMaterial.TangentVectorV1 = G1.CopyToArray();
+                        integrationPointMaterial.TangentVectorV2 = G2.CopyToArray();
+                        integrationPointMaterial.NormalVectorV3 = initialUnitSurfaceBasisVectors3[j];
+                    }
                 }
             }
         }
+
 
         private a3rs a3rs = new a3rs();
         private Bab_rs Bab_rs = new Bab_rs();
