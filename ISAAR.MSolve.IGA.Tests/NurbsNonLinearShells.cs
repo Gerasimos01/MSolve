@@ -509,7 +509,7 @@ namespace ISAAR.MSolve.IGA.Tests
             var filename = "PinchedSemiCylindricalShell";
             var filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", $"{filename}.txt");
             IsogeometricShellReader modelReader = new IsogeometricShellReader(model, filepath);
-            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinear);
+            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinearDevelop);
 
             //TODO:Find load from previous papers
             model.Loads.Add(new Load()
@@ -557,12 +557,12 @@ namespace ISAAR.MSolve.IGA.Tests
             var provider = new ProblemStructural(model, solver);
 
             // Linear static analysis
-            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, 500);
+            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, 100);
             var childAnalyzer = newtonRaphsonBuilder.Build();
             var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
-            var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 500,
-                model.ControlPoints.ToList()[31], StructuralDof.TranslationZ, "PinchedSemiCylinderShellNoPenalty.txt");
+            var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 100,
+                model.ControlPoints.ToList()[31], StructuralDof.TranslationZ, "PinchedSemiCylinderShellNoPenaltyPointA.txt");
             //var loggerB = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
             //    model.ControlPointsDictionary[790], StructuralDof.TranslationZ, "SplitAnnularPlateWb.txt");
             childAnalyzer.IncrementalLogs.Add(0, loggerA);
