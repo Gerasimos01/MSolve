@@ -767,8 +767,8 @@ namespace ISAAR.MSolve.IGA.Elements
                           surfaceBasisVectorDerivative12[1] * surfaceBasisVector3[1] +
                           surfaceBasisVectorDerivative12[2] * surfaceBasisVector3[2];
 
-                var bendingStrain = new double[] {b11 - B11, b22 - B22, 2 * b12 - 2 * B12};
-                //var bendingStrain = new double[] { -(b11 - B11), -(b22 - B22), -(2 * b12 - 2 * B12) };
+                //var bendingStrain = new double[] {b11 - B11, b22 - B22, 2 * b12 - 2 * B12};
+                var bendingStrain = new double[] { -(b11 - B11), -(b22 - B22), -(2 * b12 - 2 * B12) };
 
                 //double du = 0.1;
                 //double dv = 0.1;
@@ -947,9 +947,9 @@ namespace ISAAR.MSolve.IGA.Elements
                 MembraneForces.v1 += material.Stresses[1] * w;
                 MembraneForces.v2 += material.Stresses[2] * w;
 
-                BendingMoments.v0 -= material.Stresses[0] * w * z;
-                BendingMoments.v1 -= material.Stresses[1] * w * z;
-                BendingMoments.v2 -= material.Stresses[2] * w * z;
+                BendingMoments.v0 += material.Stresses[0] * w * z;
+                BendingMoments.v1 += material.Stresses[1] * w * z;
+                BendingMoments.v2 += material.Stresses[2] * w * z;
             }
         }
 

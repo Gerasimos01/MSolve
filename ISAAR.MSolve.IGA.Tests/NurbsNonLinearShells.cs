@@ -237,7 +237,7 @@ namespace ISAAR.MSolve.IGA.Tests
             var filename = "PinchedHemisphere";
             var filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", $"{filename}.txt");
             IsogeometricShellReader modelReader = new IsogeometricShellReader(model, filepath);
-            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinear);
+            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinearDevelop);
 
             model.Loads.Add(new Load()
             {
@@ -417,8 +417,93 @@ namespace ISAAR.MSolve.IGA.Tests
         }
 
 
-         [Fact]
+        [Fact]
         public void PinchedSemiCylinderShell()
+        {
+            Model model = new Model();
+            var filename = "PinchedSemiCylindricalShell";
+            var filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", $"{filename}.txt");
+            IsogeometricShellReader modelReader = new IsogeometricShellReader(model, filepath);
+            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinear);
+
+            model.Loads.Add(new Load()
+            {
+                Amount = -1000,
+                Node = model.ControlPoints.ToList()[31],
+                DOF = StructuralDof.TranslationZ
+            });
+
+            //TODO: Possibly the tangent should also be fixes due to symmetry
+            //TODO:Check boundary conditions
+            foreach (var controlPoint in model.Patches[0].EdgesDictionary[1].ControlPointsDictionary)
+            {
+                var id = controlPoint.Value.ID;
+                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
+
+                model.ControlPointsDictionary[id - 32].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+                model.ControlPointsDictionary[id - 32].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+                model.ControlPointsDictionary[id - 32].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
+            }
+
+            //TODO: constrain rotation
+            foreach (var controlPoint in model.Patches[0].EdgesDictionary[2].ControlPointsDictionary)
+            {
+                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
+                var id = controlPoint.Value.ID;
+                model.ControlPointsDictionary[id + 1].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
+                model.AddPenaltyConstrainedDofPair(new PenaltyDofPair(
+                    new NodalDof(model.ControlPointsDictionary[id], StructuralDof.TranslationX),
+                    new NodalDof(model.ControlPointsDictionary[id + 1], StructuralDof.TranslationX)));
+                model.AddPenaltyConstrainedDofPair(new PenaltyDofPair(
+                    new NodalDof(model.ControlPointsDictionary[id], StructuralDof.TranslationY),
+                    new NodalDof(model.ControlPointsDictionary[id + 1], StructuralDof.TranslationY)));
+            }
+
+            foreach (var controlPoint in model.Patches[0].EdgesDictionary[3].ControlPointsDictionary)
+            {
+                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+
+                var id = controlPoint.Value.ID;
+                model.ControlPointsDictionary[id - 1].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+                model.AddPenaltyConstrainedDofPair(new PenaltyDofPair(
+                    new NodalDof(model.ControlPointsDictionary[id], StructuralDof.TranslationZ),
+                    new NodalDof(model.ControlPointsDictionary[id - 1], StructuralDof.TranslationZ)));
+                model.AddPenaltyConstrainedDofPair(new PenaltyDofPair(
+                    new NodalDof(model.ControlPointsDictionary[id], StructuralDof.TranslationY),
+                    new NodalDof(model.ControlPointsDictionary[id - 1], StructuralDof.TranslationY)));
+            }
+
+            // Solvers
+            var solverBuilder = new SuiteSparseSolver.Builder();
+            ISolver solver = solverBuilder.BuildSolver(model);
+
+            // Structural problem provider
+            var provider = new ProblemStructural(model, solver);
+
+            // Linear static analysis
+            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, 100);
+            var childAnalyzer = newtonRaphsonBuilder.Build();
+            var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
+
+            var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 100,
+                model.ControlPoints.ToList()[31], StructuralDof.TranslationZ, "PinchedSemiCylinderShell.txt");
+            //var loggerB = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
+            //    model.ControlPointsDictionary[790], StructuralDof.TranslationZ, "SplitAnnularPlateWb.txt");
+            childAnalyzer.IncrementalLogs.Add(0, loggerA);
+            //childAnalyzer.IncrementalLogs.Add(1, loggerB);
+
+            // Run the analysis
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
+
+            var paraview = new ParaviewNurbsShells(model, childAnalyzer.uPlusdu[0], filename);
+            //paraview.CreateParaviewFile();
+        }
+
+        [Fact]
+        public void PinchedSemiCylinderShellNoPenalty()
         {
             Model model = new Model();
             var filename = "PinchedSemiCylindricalShell";
@@ -429,7 +514,7 @@ namespace ISAAR.MSolve.IGA.Tests
             //TODO:Find load from previous papers
             model.Loads.Add(new Load()
             {
-                Amount = 2000,
+                Amount = -2000,
                 Node = model.ControlPoints.ToList()[31],
                 DOF = StructuralDof.TranslationZ
             });
@@ -438,20 +523,30 @@ namespace ISAAR.MSolve.IGA.Tests
             //TODO:Check boundary conditions
             foreach (var controlPoint in model.Patches[0].EdgesDictionary[1].ControlPointsDictionary)
             {
-                controlPoint.Value.Constraints.Add(new Constraint(){DOF = StructuralDof.TranslationZ});
-                controlPoint.Value.Constraints.Add(new Constraint(){DOF = StructuralDof.TranslationY});
-                controlPoint.Value.Constraints.Add(new Constraint(){DOF = StructuralDof.TranslationZ});
+                var id = controlPoint.Value.ID;
+                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
+
+                model.ControlPointsDictionary[id - 32].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+                model.ControlPointsDictionary[id - 32].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+                model.ControlPointsDictionary[id - 32].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
             }
 
             //TODO: constrain rotation
             foreach (var controlPoint in model.Patches[0].EdgesDictionary[2].ControlPointsDictionary)
             {
-                controlPoint.Value.Constraints.Add(new Constraint(){DOF = StructuralDof.TranslationZ});
+                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
+                var id = controlPoint.Value.ID;
+                model.ControlPointsDictionary[id + 1].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
             }
 
             foreach (var controlPoint in model.Patches[0].EdgesDictionary[3].ControlPointsDictionary)
             {
-                controlPoint.Value.Constraints.Add(new Constraint(){DOF = StructuralDof.TranslationX});
+                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+
+                var id = controlPoint.Value.ID;
+                model.ControlPointsDictionary[id - 1].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
             }
 
             // Solvers
@@ -467,7 +562,7 @@ namespace ISAAR.MSolve.IGA.Tests
             var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
             var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 500,
-                model.ControlPoints.ToList()[31], StructuralDof.TranslationZ, "PinchedSemiCylinderShell.txt");
+                model.ControlPoints.ToList()[31], StructuralDof.TranslationZ, "PinchedSemiCylinderShellNoPenalty.txt");
             //var loggerB = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
             //    model.ControlPointsDictionary[790], StructuralDof.TranslationZ, "SplitAnnularPlateWb.txt");
             childAnalyzer.IncrementalLogs.Add(0, loggerA);
@@ -477,7 +572,6 @@ namespace ISAAR.MSolve.IGA.Tests
             parentAnalyzer.Initialize();
             parentAnalyzer.Solve();
         }
-
 
         [Fact]
         public void IsogeometricSquareShell10x10Straight()

@@ -172,7 +172,7 @@ namespace ISAAR.MSolve.Materials
 
 
                 double[,] exampleGlTensr = new double[3, 3] { {-7.0829702148917644E-05, 0.5 * (1.9389935310977689E-05), 0  },
-                { 0.5 * (1.9389935310977689E-05), 0.00015551997161231441, 0 },  { 0,0,0} };
+                { 0.5 * (1.9389935310977689E-05), 0.00015551997161231441, 0 },  { 0,0,0} }; // afta ta values exoun allaxei logw allaghs proshmou sto class shell ele.
 
                 var exampleQij = CalculateRotationMatrix(tG_i, exampleBasis);
                 var exampleQij1 = CalculateRotationMatrix(tgi, exampleBasis);

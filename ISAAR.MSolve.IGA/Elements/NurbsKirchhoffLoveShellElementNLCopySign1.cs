@@ -370,8 +370,8 @@ namespace ISAAR.MSolve.IGA.Elements
                           surfaceBasisVectorDerivative12[1] * surfaceBasisVector3[1] +
                           surfaceBasisVectorDerivative12[2] * surfaceBasisVector3[2];
 
-                var bendingStrain = new double[] { b11 - B11, b22 - B22, 2 * b12 - 2 * B12 };
-                //var bendingStrain = new double[] { -(b11 - B11), -(b22 - B22), -(2 * b12 - 2 * B12) };
+                //var bendingStrain = new double[] { b11 - B11, b22 - B22, 2 * b12 - 2 * B12 };
+                var bendingStrain = new double[] { -(b11 - B11), -(b22 - B22), -(2 * b12 - 2 * B12) };
 
                 //double du = 0.1;
                 //double dv = 0.1;
@@ -550,9 +550,9 @@ namespace ISAAR.MSolve.IGA.Elements
                 MembraneForces.v1 += material.Stresses[1] * w;
                 MembraneForces.v2 += material.Stresses[2] * w;
 
-                BendingMoments.v0 -= material.Stresses[0] * w * z;
-                BendingMoments.v1 -= material.Stresses[1] * w * z;
-                BendingMoments.v2 -= material.Stresses[2] * w * z;
+                BendingMoments.v0 += material.Stresses[0] * w * z;
+                BendingMoments.v1 += material.Stresses[1] * w * z;
+                BendingMoments.v2 += material.Stresses[2] * w * z;
             }
         }
 
@@ -1030,6 +1030,23 @@ namespace ISAAR.MSolve.IGA.Elements
             }
         }
 
+        private (Vector da3tilde_dksi, Vector da3tilde_dheta, double da3norm_dksi, double da3norm_dheta, Vector da3_dksi, Vector da3_dheta)
+            Calculate_da3tilde_dksi_524_525_526_b(Vector a1, Vector a2, Vector a11, Vector a22, Vector a12, Vector a3, double normA3)
+        {
+            var da3tilde_dksi = a11.CrossProduct(a2) + a1.CrossProduct(a12);
+            var da3tilde_dheta = a12.CrossProduct(a2) + a1.CrossProduct(a22);
+
+            var da3norm_dksi = a3.DotProduct(da3tilde_dksi);
+            var da3norm_dheta = a3.DotProduct(da3tilde_dheta);
+
+            double scaleFactor = (double)1 / normA3;
+            var da3_dksi = da3tilde_dksi.Scale(scaleFactor) - a3.Scale(da3norm_dksi).Scale(scaleFactor);
+            var da3_dheta = da3tilde_dheta.Scale(scaleFactor) - a3.Scale(da3norm_dheta).Scale(scaleFactor);
+
+
+            return (da3tilde_dksi, da3tilde_dheta, da3norm_dksi, da3norm_dheta, da3_dksi, da3_dheta);
+
+        }
 
         private a3rs a3rs = new a3rs();
         private Bab_rs Bab_rs = new Bab_rs();
