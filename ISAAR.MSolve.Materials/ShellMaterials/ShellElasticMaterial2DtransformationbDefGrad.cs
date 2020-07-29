@@ -130,6 +130,8 @@ namespace ISAAR.MSolve.Materials
                 double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
             }
 
+            
+
 
             double[] GLvec = Transform2DDefGradToGL(F_rve);
             (double[] SPKvec, double[,] ConsCartes )= CalculateSPK(GLvec);
@@ -145,6 +147,123 @@ namespace ISAAR.MSolve.Materials
             FPKrve = new double[3, 3] { { FPKrve[0, 0], FPKrve[0, 1], 0 }, { FPKrve[1, 0], FPKrve[1, 1], 0 }, { 0, 0, 0 } };
                   
             double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPKrve, Qij, Qij1);
+
+            bool runExample2 = true; //z=-...
+            if (runExample2)
+            {
+                //
+                //double[,] exampleBasis = new double[3, 3] {{ 14.285714922100491, -1.7441909127627026E-08, 0 }, { 8.3652124878453923E-07, 14.285714288340733,0},
+                //{ 0,0,1} };
+
+                var exampleG1 = Vector.CreateFromArray(new double[] { -0.010109380507998852, 1.2063529570299063, 7.1865868866394246E-10 });
+                var exampleG2 = Vector.CreateFromArray(new double[] { -0.00819119424556895, -6.8721022557950172E-05, 1.0857567150015821 });
+                var exampleG3 = Vector.CreateFromArray(new double[] { 0.99993643119452769, 0.0083795855951000336, 0.0075442769836465062 }); // a3_init dld einai hdh normalised
+                
+                double exampleG1_norm_sqred = exampleG1.DotProduct(exampleG1);
+                double exampleG2_norm_sqred = exampleG2.DotProduct(exampleG2);
+                //double G3_norm_sqred = a3.DotProduct(a3);
+                double[] exampleG_1 = new double[3] { exampleG1[0] / exampleG1_norm_sqred, exampleG1[1] / exampleG1_norm_sqred, exampleG1[2] / exampleG1_norm_sqred };
+                double[] exampleG_2 = new double[3] { exampleG2[0] / exampleG2_norm_sqred, exampleG2[1] / exampleG2_norm_sqred, exampleG2[2] / exampleG2_norm_sqred };
+                double[,] exampleBasis = new double[3, 3] {{ exampleG_1[0], exampleG_2[0], exampleG3[0] }, { exampleG_1[1], exampleG_2[1],exampleG3[1] },
+            { exampleG_1[2],exampleG_2[2],exampleG3[2]} };
+                double[,] exampleCovarBasis = new double[3, 3] {{ exampleG1[0], exampleG2[0], exampleG3[0] }, { exampleG1[1], exampleG2[1],exampleG3[1] },
+            { exampleG1[2],exampleG2[2],exampleG3[2]} };
+
+
+
+                double[,] exampleGlTensr = new double[3, 3] { {-7.0829702148917644E-05, 0.5 * (1.9389935310977689E-05), 0  },
+                { 0.5 * (1.9389935310977689E-05), 0.00015551997161231441, 0 },  { 0,0,0} };
+
+                var exampleQij = CalculateRotationMatrix(tG_i, exampleBasis);
+                var exampleQij1 = CalculateRotationMatrix(tgi, exampleBasis);
+                double[,] exampleTensorTransformed = Transform_F3D_to_Frve(exampleGlTensr, exampleQij, exampleQij1);
+
+
+                double[,] exampleSpkTensor = new double[,] { { -468.55859198619288, 296.64505487001753,0    },
+                {296.64505487001753, 7463.2325991276839, 0 },  { 0,0,0} };
+                var exampleQijcov = CalculateRotationMatrix(tG_i, exampleCovarBasis);
+                var exampleQij1cov = CalculateRotationMatrix(tgi, exampleCovarBasis);
+                double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
+            }
+
+            bool runExample3 = true; //z=0
+            if (runExample3)
+            {
+                //
+                //double[,] exampleBasis = new double[3, 3] {{ 14.285714922100491, -1.7441909127627026E-08, 0 }, { 8.3652124878453923E-07, 14.285714288340733,0},
+                //{ 0,0,1} };
+
+                
+
+                var exampleG1 = Vector.CreateFromArray(new double[] { -0.010125086915473506, 1.2082272041845672, 5.403943148540348E-17 });
+                var exampleG2 = Vector.CreateFromArray(new double[] { -0.0082039172057740226, -6.8828411272038153E-05, 1.0874431657141146 });
+                var exampleG3 = Vector.CreateFromArray(new double[] { 0.99993643119452769, 0.0083795855951000336, 0.0075442769836465062 });
+                double exampleG1_norm_sqred = exampleG1.DotProduct(exampleG1);
+                double exampleG2_norm_sqred = exampleG2.DotProduct(exampleG2);
+                //double G3_norm_sqred = a3.DotProduct(a3);
+                double[] exampleG_1 = new double[3] { exampleG1[0] / exampleG1_norm_sqred, exampleG1[1] / exampleG1_norm_sqred, exampleG1[2] / exampleG1_norm_sqred };
+                double[] exampleG_2 = new double[3] { exampleG2[0] / exampleG2_norm_sqred, exampleG2[1] / exampleG2_norm_sqred, exampleG2[2] / exampleG2_norm_sqred };
+                double[,] exampleBasis = new double[3, 3] {{ exampleG_1[0], exampleG_2[0], exampleG3[0] }, { exampleG_1[1], exampleG_2[1],exampleG3[1] },
+            { exampleG_1[2],exampleG_2[2],exampleG3[2]} };
+                double[,] exampleCovarBasis = new double[3, 3] {{ exampleG1[0], exampleG2[0], exampleG3[0] }, { exampleG1[1], exampleG2[1],exampleG3[1] },
+            { exampleG1[2],exampleG2[2],exampleG3[2]} };
+
+
+                double[,] exampleGlTensr = new double[3, 3] { {2.0737144890037307E-05, 0.5 * (1.1308041227672513E-05), 0  },
+                { 0.5 * (1.1308041227672513E-05), 0.00012549972453512748, 0 },  { 0,0,0} };
+
+                var exampleQij = CalculateRotationMatrix(tG_i, exampleBasis);
+                var exampleQij1 = CalculateRotationMatrix(tgi, exampleBasis);
+                double[,] exampleTensorTransformed = Transform_F3D_to_Frve(exampleGlTensr, exampleQij, exampleQij1);
+
+
+                 double[,] exampleSpkTensor = new double[,] { { 2365.2521089180445, 171.93028053115697,0    },
+                {171.93028053115697, 7000.4556652076062, 0 },  { 0,0,0} };
+                var exampleQijcov = CalculateRotationMatrix(tG_i, exampleCovarBasis);
+                var exampleQij1cov = CalculateRotationMatrix(tgi, exampleCovarBasis);
+                double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
+            }
+
+            bool runExample4 = true; //z=0
+            if (runExample4)
+            {
+                //
+                //double[,] exampleBasis = new double[3, 3] {{ 14.285714922100491, -1.7441909127627026E-08, 0 }, { 8.3652124878453923E-07, 14.285714288340733,0},
+                //{ 0,0,1} };
+
+               
+
+                var exampleG1 = Vector.CreateFromArray(new double[] { -0.01014079332294816, 1.2101014513392281, -7.1865858058507949E-10});
+                var exampleG2 = Vector.CreateFromArray(new double[] { -0.0082166401659790958, - 6.8935799986126134E-05, 1.0891296164266471 });
+                var exampleG3 = Vector.CreateFromArray(new double[] { 0.99993643119452769, 0.0083795855951000336, 0.0075442769836465062 }); // a3_init dld einai hdh normalised
+
+                double exampleG1_norm_sqred = exampleG1.DotProduct(exampleG1);
+                double exampleG2_norm_sqred = exampleG2.DotProduct(exampleG2);
+                //double G3_norm_sqred = a3.DotProduct(a3);
+                double[] exampleG_1 = new double[3] { exampleG1[0] / exampleG1_norm_sqred, exampleG1[1] / exampleG1_norm_sqred, exampleG1[2] / exampleG1_norm_sqred };
+                double[] exampleG_2 = new double[3] { exampleG2[0] / exampleG2_norm_sqred, exampleG2[1] / exampleG2_norm_sqred, exampleG2[2] / exampleG2_norm_sqred };
+                double[,] exampleBasis = new double[3, 3] {{ exampleG_1[0], exampleG_2[0], exampleG3[0] }, { exampleG_1[1], exampleG_2[1],exampleG3[1] },
+            { exampleG_1[2],exampleG_2[2],exampleG3[2]} };
+                double[,] exampleCovarBasis = new double[3, 3] {{ exampleG1[0], exampleG2[0], exampleG3[0] }, { exampleG1[1], exampleG2[1],exampleG3[1] },
+            { exampleG1[2],exampleG2[2],exampleG3[2]} };
+
+
+
+
+                double[,] exampleGlTensr = new double[3, 3] { {0.00011230399192899226, 0.5 * (3.22614714436734E-06), 0  },
+                { 0.5 * (3.22614714436734E-06), 9.5479477457940546E-05, 0 },  { 0,0,0} };
+
+                var exampleQij = CalculateRotationMatrix(tG_i, exampleBasis);
+                var exampleQij1 = CalculateRotationMatrix(tgi, exampleBasis);
+                double[,] exampleTensorTransformed = Transform_F3D_to_Frve(exampleGlTensr, exampleQij, exampleQij1);
+
+               
+                double[,] exampleSpkTensor = new double[,] { { 5164.0442904259, 48.748518031151249,0    },
+                {48.748518031151249, 6543.1821336104158, 0 },  { 0,0,0} };
+                var exampleQijcov = CalculateRotationMatrix(tG_i, exampleCovarBasis);
+                var exampleQij1cov = CalculateRotationMatrix(tgi, exampleCovarBasis);
+                double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
+            }
 
             var Qpi = CalculateRotationMatrix(eye, tgi);
             var Qqj = CalculateRotationMatrix(eye, tG_i);

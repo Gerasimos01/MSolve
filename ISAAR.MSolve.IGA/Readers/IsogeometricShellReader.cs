@@ -12,7 +12,8 @@ namespace ISAAR.MSolve.IGA.Readers
 		Linear,
 		NonLinear,
 		SectionNonLinear,
-		NonLinearDevelop
+		NonLinearDevelop,
+		NonLinearSigned,
 	}
 
 	/// <summary>

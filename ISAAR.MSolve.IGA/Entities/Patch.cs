@@ -1175,6 +1175,28 @@ namespace ISAAR.MSolve.IGA.Entities
 							};
 								
 							break;
+						case GeometricalFormulation.NonLinearSigned:
+							element = new NurbsKirchhoffLoveShellElementNLCopySign1(new ShellElasticMaterial2Dtransformationb()
+							{
+								YoungModulus = this.Material.YoungModulus,
+								PoissonRatio = this.Material.PoissonRatio
+							}, knotsOfElement, elementControlPoints, this, this.Thickness)
+							{
+								ID = elementID,
+								Patch = this,
+								Thickness = this.Thickness,
+								ElementType = new NurbsKirchhoffLoveShellElementNLCopySign1(new ShellElasticMaterial2Dtransformationb()
+								{
+									YoungModulus = this.Material.YoungModulus,
+									PoissonRatio = this.Material.PoissonRatio
+								}, knotsOfElement, elementControlPoints.ToList(), this, this.Thickness)
+								{
+									ID = elementID,
+									Patch = this,
+									Thickness = this.Thickness
+								}
+							};
+							break;
 					}
 					Elements.Add(element);
 				}
