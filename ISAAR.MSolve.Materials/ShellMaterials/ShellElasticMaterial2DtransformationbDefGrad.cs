@@ -148,7 +148,7 @@ namespace ISAAR.MSolve.Materials
                   
             double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPKrve, Qij, Qij1);
 
-            bool runExample2 = true; //z=-...
+            bool runExample2 = false; //z=-...
             if (runExample2)
             {
                 //
@@ -186,7 +186,7 @@ namespace ISAAR.MSolve.Materials
                 double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
             }
 
-            bool runExample3 = true; //z=0
+            bool runExample3 = false; //z=0
             if (runExample3)
             {
                 //
@@ -224,7 +224,7 @@ namespace ISAAR.MSolve.Materials
                 double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
             }
 
-            bool runExample4 = true; //z=0
+            bool runExample4 = false; //z=0
             if (runExample4)
             {
                 //
