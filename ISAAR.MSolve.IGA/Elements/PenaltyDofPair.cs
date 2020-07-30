@@ -122,7 +122,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
 		public void SaveMaterialState()
 		{
-			throw new NotImplementedException();
+			//throw new NotImplementedException();
 		}
 
 		public IMatrix StiffnessMatrix(IElement element) => Matrix2by2.CreateFromArray(new double[2, 2]
