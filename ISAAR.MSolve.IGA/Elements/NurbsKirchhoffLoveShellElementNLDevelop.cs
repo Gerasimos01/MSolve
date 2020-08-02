@@ -1101,7 +1101,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     surfaceBasisVector1[1] * surfaceBasisVector2[2] - surfaceBasisVector1[2] * surfaceBasisVector2[1],
                     surfaceBasisVector1[2] * surfaceBasisVector2[0] - surfaceBasisVector1[0] * surfaceBasisVector2[2],
                     surfaceBasisVector1[0] * surfaceBasisVector2[1] - surfaceBasisVector1[1] * surfaceBasisVector2[0],
-                };
+                    };
 
                     var J1 = Math.Sqrt(surfaceBasisVector3[0] * surfaceBasisVector3[0] +
                                        surfaceBasisVector3[1] * surfaceBasisVector3[1] +
@@ -1159,6 +1159,49 @@ namespace ISAAR.MSolve.IGA.Elements
                     (Vector da3tilde_dksi_init, Vector da3tilde_dheta_init, double da3norm_dksi_init, double da3norm_dheta_init, Vector da3_dksi_init, Vector da3_dheta_init) =
                         Calculate_da3tilde_dksi_524_525_526_b(a1_init, a2_init, a11_init, a22_init, a12_init, a3_init, J1_init);
 
+                    #region materials at thickness points. (this will be unnecessar if the material is used correctly)
+                    var thicknessPoints = thicknessIntegrationPoints[gaussPoints[j]];
+                    double[][,] Aijkl_3D_ofGPs = new double[thicknessGPoints.Count()][,]; 
+                    double[][] FPK_3D_vec_ofGPs = new double[thicknessGPoints.Count()][]; 
+                    double[][] G_1_ofGPs = new double[thicknessGPoints.Count()][]; 
+                    double[][] G_2_ofGPs = new double[thicknessGPoints.Count()][]; 
+                    for (int i1 = 0; i1 < thicknessPoints.Count; i1++)
+                    {
+                        var thicknessPoint = thicknessPoints[i1];
+                        var material = materialsAtThicknessGP[gaussPoints[j]][thicknessPoints[i1]];
+                        var w = thicknessPoint.WeightFactor;
+                        var z = thicknessPoint.Zeta;
+
+                        Vector G1 = a1_init + da3_dksi_init.Scale(z);
+                        Vector G2 = a2_init + da3_dheta_init.Scale(z);
+
+                        double G1_norm_sqred = G1.DotProduct(G1);
+                        double G2_norm_sqred = G2.DotProduct(G2);
+                        double G3_norm_sqred = a3.DotProduct(a3);
+
+                        double[] G_1 = new double[3] { G1[0] / G1_norm_sqred, G1[1] / G1_norm_sqred, G1[2] / G1_norm_sqred };
+                        double[] G_2 = new double[3] { G2[0] / G2_norm_sqred, G2[1] / G2_norm_sqred, G2[2] / G2_norm_sqred };
+                        double[] G_3 = new double[3] { a3[0] / G3_norm_sqred, a3[1] / G3_norm_sqred, a3[2] / G3_norm_sqred };
+
+                        G_1_ofGPs[i1] = G_1;
+                        G_2_ofGPs[i1] = G_2;
+
+                        Vector g1 = a1 + da3_dksi.Scale(z);
+                        Vector g2 = a2 + da3_dheta.Scale(z);
+
+                        double[,] F_3D = new double[3, 3] { { g1[0]*G_1[0]+g2[0]*G_2[0], g1[0]*G_1[1]+g2[0]*G_2[1], g1[0]*G_1[2]+g2[0]*G_2[2] },
+                                                            { g1[1]*G_1[0]+g2[1]*G_2[0], g1[1]*G_1[1]+g2[1]*G_2[1], g1[1]*G_1[2]+g2[1]*G_2[2] },
+                                                            { g1[2]*G_1[0]+g2[2]*G_2[0], g1[2]*G_1[1]+g2[2]*G_2[1], g1[2]*G_1[2]+g2[2]*G_2[2] },
+                        };
+
+                        double[,] tgi = new double[3, 3] { { g1[0], g2[0], a3[0] }, { g1[1], g2[1], a3[1] }, { g1[2], g2[2], a3[2] } };
+                        double[,] G_i = new double[3, 3] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } };
+
+                        (Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1]) = transformations.CalculateTransformations(tgi, G_i, F_3D);
+
+                    }
+                    #endregion
+
                     #region small loop precalculated values
                     //315 line and 
                     //1442
@@ -1177,6 +1220,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     var da3norm_dhetadrArray = new double[elementControlPoints.Length][];
                     var da3_dksidrArray = new Vector[elementControlPoints.Length][];
                     var da3_dhetadrArray = new Vector[elementControlPoints.Length][];
+                    double[,][] dF_3D_dr_vecArray = new double[3*elementControlPoints.Length, thicknessPoints.Count()][];
                     for (int i = 0; i < elementControlPoints.Length; i++)
                     {
                         var a3r = new a3r();
@@ -1210,6 +1254,39 @@ namespace ISAAR.MSolve.IGA.Elements
                         //5.32 b
                         (da3_dksidrArray[i], da3_dhetadrArray[i]) = Calculate_da3_dksidr(da3tilde_dksidrArray[i], da3tilde_dhetadrArray[i], da3tilde_dksi, da3tilde_dheta,
                             dnorma3_drArray[i], a3_tilde, da3norm_dksidrArray[i], da3norm_dhetadrArray[i], da3norm_dksi, da3norm_dheta, J1, da3tilde_drArray[i]);
+
+                        for (int i1 = 0; i1 < thicknessPoints.Count; i1++)
+                        {
+                            var thicknessPoint = thicknessPoints[i1];
+                            var material = materialsAtThicknessGP[gaussPoints[j]][thicknessPoints[i1]];
+                            var w = thicknessPoint.WeightFactor;
+                            var z = thicknessPoint.Zeta;
+                            
+                            for (int r1 = 0; r1 < 3; r1++)
+                            {
+                                //(31)
+                                Vector dg1_dr = a1rArray[i].GetColumn(r1) + da3_dksidrArray[i][r1] * z;
+                                Vector dg2_dr = a2rArray[i].GetColumn(r1) + da3_dhetadrArray[i][r1] * z;
+
+                                //Vector dg3_dr = a3r. ....
+
+                                var G_1=G_1_ofGPs[i1];
+                                var G_2 = G_2_ofGPs[i1];
+
+                                //(39)
+                                double[,] dF_3D_dr = new double[3, 3] { { dg1_dr[0]*G_1[0]+dg2_dr[0]*G_2[0], dg1_dr[0]*G_1[1]+dg2_dr[0]*G_2[1], dg1_dr[0]*G_1[2]+dg2_dr[0]*G_2[2] },
+                                                                 { dg1_dr[1]*G_1[0]+dg2_dr[1]*G_2[0], dg1_dr[1]*G_1[1]+dg2_dr[1]*G_2[1], dg1_dr[1]*G_1[2]+dg2_dr[1]*G_2[2] },
+                                                                 { dg1_dr[2]*G_1[0]+dg2_dr[2]*G_2[0], dg1_dr[2]*G_1[1]+dg2_dr[2]*G_2[1], dg1_dr[2]*G_1[2]+dg2_dr[2]*G_2[2] }, };
+
+                                //double[] dF_3D_dr_vec =
+                                dF_3D_dr_vecArray[3 * i + r1, i1] = new double[] { dF_3D_dr[0, 0], dF_3D_dr[1, 1], dF_3D_dr[2, 2], dF_3D_dr[0, 1], dF_3D_dr[1, 2], dF_3D_dr[2, 0], dF_3D_dr[0, 2], dF_3D_dr[1, 0], dF_3D_dr[2, 1] };
+                                                             
+                            }
+                            //  (31) 
+
+
+
+                        }
                     }
                     #endregion
 
@@ -1378,7 +1455,54 @@ namespace ISAAR.MSolve.IGA.Elements
                                 }
                             }
 
+                            for (int i1 = 0; i1 < thicknessPoints.Count; i1++)
+                            {
+                                var thicknessPoint = thicknessPoints[i1];
+                                var material = materialsAtThicknessGP[gaussPoints[j]][thicknessPoints[i1]];
+                                var w = thicknessPoint.WeightFactor;
+                                var z = thicknessPoint.Zeta;
 
+                                var Aijkl_3D = Aijkl_3D_ofGPs[i1];
+                                var FPK_3D_vec = FPK_3D_vec_ofGPs[i1];
+                                var G_1 = G_1_ofGPs[i1];
+                                var G_2 = G_2_ofGPs[i1];
+                                for (int r1 = 0; r1 < 3; r1++)
+                                {
+                                    var dF_3D_dr1 = dF_3D_dr_vecArray[3 * i + r1, i1];
+                                    for (int s1 = 0; s1 < 3; s1++)
+                                    {
+                                        // linear stiffness
+                                        var dF_3D_ds1 = dF_3D_dr_vecArray[3 * k + s1, i1];
+
+                                        for (int n1 = 0; n1 < 9; n1++)
+                                        {
+                                            for (int p1 = 0; p1 < 9; p1++)
+                                            {
+                                                StiffnessDevelop[3 * i + r1, 3 * k + s1] += dF_3D_dr1[n1] * Aijkl_3D[n1,p1] * dF_3D_ds1[p1] * w * wFactor;
+                                            }
+                                        }
+
+
+
+                                        var dg1_drds = da3_dksidrds[r1, s1].Scale(z);
+                                        var dg2_drds = da3_dhetadrds[r1, s1].Scale(z);
+                                        double[,] dF_3D_drds = new double[3, 3] { { dg1_drds[0]*G_1[0]+dg2_drds[0]*G_2[0], dg1_drds[0]*G_1[1]+dg2_drds[0]*G_2[1], dg1_drds[0]*G_1[2]+dg2_drds[0]*G_2[2] },
+                                                                 { dg1_drds[1]*G_1[0]+dg2_drds[1]*G_2[0], dg1_drds[1]*G_1[1]+dg2_drds[1]*G_2[1], dg1_drds[1]*G_1[2]+dg2_drds[1]*G_2[2] },
+                                                                 { dg1_drds[2]*G_1[0]+dg2_drds[2]*G_2[0], dg1_drds[2]*G_1[1]+dg2_drds[2]*G_2[1], dg1_drds[2]*G_1[2]+dg2_drds[2]*G_2[2] }, };
+
+                                        //double[] dF_3D_dr_vec =
+                                        var dF_3D_drds_vecArray = new double[] { dF_3D_drds[0, 0], dF_3D_drds[1, 1], dF_3D_drds[2, 2], dF_3D_drds[0, 1], dF_3D_drds[1, 2], dF_3D_drds[2, 0], dF_3D_drds[0, 2], dF_3D_drds[1, 0], dF_3D_drds[2, 1] };
+
+                                        for (int i2 = 0; i2 < 9; i2++)
+                                        {
+                                            StiffnessDevelop[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
+                                        }
+
+                                    }
+                                }
+                                
+
+                            }
                         }
                     }
 
