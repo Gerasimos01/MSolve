@@ -713,7 +713,7 @@ namespace ISAAR.MSolve.IGA.Tests
             int increments = 30;
             Value verticalDistributedLoad = delegate (double x, double y, double z)
             {
-                return new double[] { 0,  0, load_factor };
+                return new double[] { load_factor, 0, 0};
             };
             model.Patches[0].EdgesDictionary[1].LoadingConditions.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
 
@@ -730,11 +730,67 @@ namespace ISAAR.MSolve.IGA.Tests
             var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
             var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], increments,
-                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationZ, "squarePlateZDevelop.txt");
+                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationZ, "squarePlateZDevelopTension.txt");
             var loggerB = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
-                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationX, "squareplateXDevelop.txt");
+                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationX, "squareplateXDevelopTension.txt");
             var loggerC = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
-                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationY, "squareplateYDevelop.txt");
+                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationY, "squareplateYDevelopTension.txt");
+            childAnalyzer.IncrementalLogs.Add(0, loggerA);
+            childAnalyzer.IncrementalLogs.Add(1, loggerB);
+            childAnalyzer.IncrementalLogs.Add(2, loggerC);
+
+            // Run the analysis
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
+
+            //var paraview = new ParaviewNurbsShells(model, solver.LinearSystems[0].Solution, filename);
+            //paraview.CreateParaview2DFile();
+
+            //var a = solver.LinearSystems[0].Solution;
+        }
+
+        [Fact]
+        public void IsogeometricSquareShell10x10DeformedDevelop()
+        {
+            Model model = new Model();
+            var filename = "SquareShell10x10Deformed";
+            string filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", $"{filename}.txt");
+            IsogeometricShellReader modelReader = new IsogeometricShellReader(model, filepath);
+            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinearDevelop);
+
+            for (int i = 0; i < 20; i++)
+            {
+                model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+                model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+                model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
+            }
+
+            double load_factor = 300;
+            int increments = 30;
+            Value verticalDistributedLoad = delegate (double x, double y, double z)
+            {
+                return new double[] { load_factor, 0, 0 };
+            };
+            model.Patches[0].EdgesDictionary[1].LoadingConditions.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
+
+
+            // Solvers
+            var solverBuilder = new SkylineSolver.Builder();
+            ISolver solver = solverBuilder.BuildSolver(model);
+
+            // Structural problem provider
+            var provider = new ProblemStructural(model, solver);
+
+            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, increments);
+            var childAnalyzer = newtonRaphsonBuilder.Build();
+            var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
+
+            var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], increments,
+                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationZ, "squarePlateZDevelopDeformedTension.txt");
+            var loggerB = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
+                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationX, "squareplateXDevelopDeformedTension.txt");
+            var loggerC = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
+                model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationY, "squareplateYDevelopDeformedTension.txt");
             childAnalyzer.IncrementalLogs.Add(0, loggerA);
             childAnalyzer.IncrementalLogs.Add(1, loggerB);
             childAnalyzer.IncrementalLogs.Add(2, loggerC);
