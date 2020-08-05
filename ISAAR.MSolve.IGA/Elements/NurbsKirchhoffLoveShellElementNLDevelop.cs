@@ -453,6 +453,15 @@ namespace ISAAR.MSolve.IGA.Elements
                                 forcesDevelopGp[3 * i + r1] += FPK_3D_vec[i2] * dF_3D_dr_vec[i2] * wfactor * w;
                             }
 
+                            if ((j == ElementStiffnesses.gpNumberToCheck)&&(i==0)&&(r1==1)&&(i1==0))
+                            {
+                                if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = true; }
+
+                                ElementStiffnesses.ProccessVariable(27, dF_3D_dr_vec, false);
+                                
+                                if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = false; }
+                            }
+
 
                         }
                         //  (31) 
@@ -971,6 +980,8 @@ namespace ISAAR.MSolve.IGA.Elements
         private Nurbs2D _nurbs;
 
         public static bool  runDevelop= false;
+        public static bool newMatrix = false;
+
         public IMatrix StiffnessMatrix(IElement element)
         {
             var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop) element;
@@ -1076,11 +1087,15 @@ namespace ISAAR.MSolve.IGA.Elements
                      KmembraneL, KbendingL,element);
             }
 
-
+            double[,] StiffnessDevelop = new double[1, 1];
+            double[,] StiffnessDevelopLinear = new double[1, 1];
+            double[,] StiffnessDevelopNonLinear = new double[1, 1];
             if (runDevelop)
             {
                 #region develop formulation
-                var StiffnessDevelop = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3];
+                StiffnessDevelop = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3];
+                StiffnessDevelopLinear = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3];
+                StiffnessDevelopNonLinear = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3];
                 for (int j = 0; j < gaussPoints.Length; j++)
                 {
                     var thicknessGPoints = thicknessIntegrationPoints[gaussPoints[j]];
@@ -1479,13 +1494,14 @@ namespace ISAAR.MSolve.IGA.Elements
                                             for (int p1 = 0; p1 < 9; p1++)
                                             {
                                                 StiffnessDevelop[3 * i + r1, 3 * k + s1] += dF_3D_dr1[n1] * Aijkl_3D[n1,p1] * dF_3D_ds1[p1] * w * wFactor;
+                                                StiffnessDevelopLinear[3 * i + r1, 3 * k + s1] += dF_3D_dr1[n1] * Aijkl_3D[n1, p1] * dF_3D_ds1[p1] * w * wFactor;
                                             }
                                         }
 
 
 
-                                        var dg1_drds = da3_dksidrds[r1, s1].Scale(z);
-                                        var dg2_drds = da3_dhetadrds[r1, s1].Scale(z);
+                                        var dg1_drds = da3_dksidrds[r1, s1].Scale(z); //Scale(z);
+                                        var dg2_drds = da3_dhetadrds[r1, s1].Scale(z);// .Scale(z);
                                         double[,] dF_3D_drds = new double[3, 3] { { dg1_drds[0]*G_1[0]+dg2_drds[0]*G_2[0], dg1_drds[0]*G_1[1]+dg2_drds[0]*G_2[1], dg1_drds[0]*G_1[2]+dg2_drds[0]*G_2[2] },
                                                                  { dg1_drds[1]*G_1[0]+dg2_drds[1]*G_2[0], dg1_drds[1]*G_1[1]+dg2_drds[1]*G_2[1], dg1_drds[1]*G_1[2]+dg2_drds[1]*G_2[2] },
                                                                  { dg1_drds[2]*G_1[0]+dg2_drds[2]*G_2[0], dg1_drds[2]*G_1[1]+dg2_drds[2]*G_2[1], dg1_drds[2]*G_1[2]+dg2_drds[2]*G_2[2] }, };
@@ -1496,6 +1512,21 @@ namespace ISAAR.MSolve.IGA.Elements
                                         for (int i2 = 0; i2 < 9; i2++)
                                         {
                                             StiffnessDevelop[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
+                                            StiffnessDevelopNonLinear[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
+                                        }
+
+                                        if (ElementStiffnesses.performCalculations)
+                                        {
+                                            if ((ElementStiffnesses.gpNumber == ElementStiffnesses.gpNumberToCheck) && ElementStiffnesses.saveStiffnessMatrixState && (i == 0) && (r1 == 1) && (i1 == 0))
+                                            {
+                                                ElementStiffnesses.saveOriginalState = true;
+                                                ElementStiffnesses.ProccessVariable(27, dF_3D_drds_vecArray, true, 3 * k+ s1);
+                                                
+                                                ElementStiffnesses.saveOriginalState = false;
+
+                                            }
+
+                                            
                                         }
 
                                     }
@@ -1511,7 +1542,12 @@ namespace ISAAR.MSolve.IGA.Elements
                 }
                 #endregion
             }
-            return Matrix.CreateFromArray(stiffnessMatrix);
+            if (newMatrix)
+            { return Matrix.CreateFromArray(StiffnessDevelop); }
+            else
+            {
+                return Matrix.CreateFromArray(stiffnessMatrix);
+            }
         }
 
         private (Vector[,] da3_dksidrds, Vector[,] da3_dhetadrds) Calculate_532_c(double J1, Vector[] da3tilde_dksidr, Vector[] da3tilde_dhetadr,

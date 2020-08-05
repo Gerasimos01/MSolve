@@ -116,15 +116,19 @@ namespace ISAAR.MSolve.Materials
 
 
 
-                double[,] exampleGlTensr = new double[3, 3] { {3.2357191827259157E-05, 0.5 * (8.3678113701926713E-06), 0  },
-                { 0.5 * (8.3678113701926713E-06), 1.4505218359772698E-08, 0 },  { 0,0,0} };
+                //double[,] exampleGlTensr = new double[3, 3] { {3.2357191827259157E-05, 0.5 * (8.3678113701926713E-06), 0  },
+                //{ 0.5 * (8.3678113701926713E-06), 1.4505218359772698E-08, 0 },  { 0,0,0} };
+
+                //efelkusmos
+                double[,] exampleGlTensr = new double[3, 3] { {3.9474348824342087E-05, 0.5 * (-8.15207639374829E-17), 0  },
+                { 0.5 * (-8.15207639374829E-17), 0, 0 },  { 0,0,0} };
 
                 var exampleQij = CalculateRotationMatrix(tG_i, exampleBasis);
                 var exampleQij1 = CalculateRotationMatrix(tgi, exampleBasis);
                 double[,] exampleTensorTransformed = Transform_F3D_to_Frve(exampleGlTensr, exampleQij, exampleQij1);
 
-                double[,] exampleSpkTensor = new double[,] { {0.0077689617554168137, 0.0010045557546931828,0    },
-                { 0.0010045557546931828, 3.4827029271466839E-06, 0 },  { 0,0,0} };
+                double[,] exampleSpkTensor = new double[,] { {0.0094777911499087427, -9.7868119761061161E-15,0    },
+                { -9.7868119761061161E-15, 5.044589476002491E-31, 0 },  { 0,0,0} };
                 var exampleQijcov = CalculateRotationMatrix(tG_i, exampleCovarBasis);
                 var exampleQij1cov = CalculateRotationMatrix(tgi, exampleCovarBasis);
                 double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
