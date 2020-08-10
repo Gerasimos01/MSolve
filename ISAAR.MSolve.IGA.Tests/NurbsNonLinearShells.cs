@@ -629,14 +629,14 @@ namespace ISAAR.MSolve.IGA.Tests
             //var a = solver.LinearSystems[0].Solution;
         }
 
-        [Fact]
+        [Fact]// exei ginei develop kai efelkusmos
         public void IsogeometricSquareShell10x10Straight30Degrees()
         {
             Model model = new Model();
             var filename = "SquareShell10x10Straight30Degrees";
             string filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", $"{filename}.txt");
             IsogeometricShellReader modelReader = new IsogeometricShellReader(model, filepath);
-            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinear);
+            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinearDevelop);
 
             for (int i = 0; i < 20; i++)
             {
@@ -648,7 +648,7 @@ namespace ISAAR.MSolve.IGA.Tests
             double load_factor = 300;
             int increments = 30;
 
-            double[] loadValues = new double[] { 0, 0, load_factor, 0, 0, 0 };
+            double[] loadValues = new double[] { load_factor, 0, 0, 0, 0, 0 };
             double rot_phi_1 = 0;
             double rot_phi_2 = Math.PI * 2 * 30 / 360;
             double[] ekk_xyz = new double[] { 0, 0, 0 };

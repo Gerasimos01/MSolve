@@ -92,7 +92,7 @@ namespace ISAAR.MSolve.Materials
             var Qij = CalculateRotationMatrix(tG_i, eye);
             var Qij1 = CalculateRotationMatrix(tgi, eye);
 
-            double[,] F_rve = Transform_F3D_to_Frve(F_3D, Qij, Qij1);
+            double[,] F_rve = Transform_F3D_to_Frve(F_3D, Qij, Qij); // 1);
 
 
             bool runExample = false;
@@ -149,8 +149,8 @@ namespace ISAAR.MSolve.Materials
 
 
             FPKrve = new double[3, 3] { { FPKrve[0, 0], FPKrve[0, 1], 0 }, { FPKrve[1, 0], FPKrve[1, 1], 0 }, { 0, 0, 0 } };
-                  
-            double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPKrve, Qij, Qij1);
+
+            double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPKrve, Qij, Qij);// 1);
 
             bool runExample2 = false; //z=-...
             if (runExample2)
@@ -269,7 +269,135 @@ namespace ISAAR.MSolve.Materials
                 double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
             }
 
-            var Qpi = CalculateRotationMatrix(eye, tgi);
+            bool runExample5 = false; //z= -; // plate warped
+            if (runExample5)
+            {
+                //
+                //double[,] exampleBasis = new double[3, 3] {{ 14.285714922100491, -1.7441909127627026E-08, 0 }, { 8.3652124878453923E-07, 14.285714288340733,0},
+                //{ 0,0,1} };
+
+
+
+                var exampleG1 = Vector.CreateFromArray(new double[] { 3.6524987999804055, -0.0030524745407180458, 0 });
+                var exampleG2 = Vector.CreateFromArray(new double[] { 0.31047049677853678, 13.638616788095289, 0 });
+                var exampleG3 = Vector.CreateFromArray(new double[] { 0, 00, 1 }); // a3_init dld einai hdh normalised
+
+                double exampleG1_norm_sqred = exampleG1.DotProduct(exampleG1);
+                double exampleG2_norm_sqred = exampleG2.DotProduct(exampleG2);
+                //double G3_norm_sqred = a3.DotProduct(a3);
+                double[] exampleG_1 = new double[3] { exampleG1[0] / exampleG1_norm_sqred, exampleG1[1] / exampleG1_norm_sqred, exampleG1[2] / exampleG1_norm_sqred };
+                double[] exampleG_2 = new double[3] { exampleG2[0] / exampleG2_norm_sqred, exampleG2[1] / exampleG2_norm_sqred, exampleG2[2] / exampleG2_norm_sqred };
+                double[,] exampleBasis = new double[3, 3] {{ exampleG_1[0], exampleG_2[0], exampleG3[0] }, { exampleG_1[1], exampleG_2[1],exampleG3[1] },
+            { exampleG_1[2],exampleG_2[2],exampleG3[2]} };
+                double[,] exampleCovarBasis = new double[3, 3] {{ exampleG1[0], exampleG2[0], exampleG3[0] }, { exampleG1[1], exampleG2[1],exampleG3[1] },
+            { exampleG1[2],exampleG2[2],exampleG3[2]} };
+
+
+
+
+                double[,] exampleGlTensr = new double[3, 3] { {3.513815970634937E-06, 0.5 * (1.4221485205023754E-06), 0  },
+                { 0.5 * (1.4221485205023754E-06), 2.6178867074122536E-08, 0 },  { 0,0,0} };
+
+                var exampleQij = CalculateRotationMatrix(tG_i, exampleBasis);
+                var exampleQij1 = CalculateRotationMatrix(tgi, exampleBasis);
+                double[,] exampleTensorTransformed = Transform_F3D_to_Frve(exampleGlTensr, exampleQij, exampleQij1);
+
+
+                double[,] exampleSpkTensor = new double[,] { { 0.19715273909078354, 0.001707543307020885,0    },
+                {0.001707543307020885, - 1.9278719468371267E-05, 0 },  { 0,0,0} };
+                var exampleQijcov = CalculateRotationMatrix(tG_i, exampleCovarBasis);
+                var exampleQij1cov = CalculateRotationMatrix(tgi, exampleCovarBasis);
+                double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
+            }
+
+            bool runExample6 = false; //z= -; // hemispherical
+            if (runExample6)
+            {
+                //
+                //double[,] exampleBasis = new double[3, 3] {{ 14.285714922100491, -1.7441909127627026E-08, 0 }, { 8.3652124878453923E-07, 14.285714288340733,0},
+                //{ 0,0,1} };
+
+
+
+                var exampleG1 = Vector.CreateFromArray(new double[] { -0.010109380507998852, 1.2063529570299063, 7.1865868866394246E-10 });
+                var exampleG2 = Vector.CreateFromArray(new double[] { -0.00819119424556895, -6.8721022557950172E-05, 1.0857567150015821});
+                var exampleG3 = Vector.CreateFromArray(new double[] { 1.7157003609709955, 0.014377772008092392, 0.012944541613155218 }); // a3_init dld einai hdh normalised
+
+                double exampleG1_norm_sqred = exampleG1.DotProduct(exampleG1);
+                double exampleG2_norm_sqred = exampleG2.DotProduct(exampleG2);
+                //double G3_norm_sqred = a3.DotProduct(a3);
+                double[] exampleG_1 = new double[3] { exampleG1[0] / exampleG1_norm_sqred, exampleG1[1] / exampleG1_norm_sqred, exampleG1[2] / exampleG1_norm_sqred };
+                double[] exampleG_2 = new double[3] { exampleG2[0] / exampleG2_norm_sqred, exampleG2[1] / exampleG2_norm_sqred, exampleG2[2] / exampleG2_norm_sqred };
+                double[,] exampleBasis = new double[3, 3] {{ exampleG_1[0], exampleG_2[0], exampleG3[0] }, { exampleG_1[1], exampleG_2[1],exampleG3[1] },
+            { exampleG_1[2],exampleG_2[2],exampleG3[2]} };
+                double[,] exampleCovarBasis = new double[3, 3] {{ exampleG1[0], exampleG2[0], exampleG3[0] }, { exampleG1[1], exampleG2[1],exampleG3[1] },
+            { exampleG1[2],exampleG2[2],exampleG3[2]} };
+
+
+
+                
+
+
+
+
+                double[,] exampleGlTensr = new double[3, 3] { {0.00011230399192899226, 0.5 * (3.22614714436734E-06), 0  },
+                { 0.5 * (3.22614714436734E-06),9.5479477457940546E-05, 0 },  { 0,0,0} };
+
+                var exampleQij = CalculateRotationMatrix(tG_i, exampleBasis);
+                var exampleQij1 = CalculateRotationMatrix(tgi, exampleBasis);
+                double[,] exampleTensorTransformed = Transform_F3D_to_Frve(exampleGlTensr, exampleQij, exampleQij1);
+
+
+
+                
+
+
+                double[,] exampleSpkTensor = new double[,] { { 5228.5269163275243, 49.357152115028043,0    },
+                {49.357152115028043, 6624.8696580176875, 0 },  { 0,0,0} };
+                var exampleQijcov = CalculateRotationMatrix(tG_i, exampleCovarBasis);
+                var exampleQij1cov = CalculateRotationMatrix(tgi, exampleCovarBasis);
+                double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
+            }
+
+            bool runExample7 = false; //z=0; // hemispherical
+            if (runExample7)
+            {
+                //
+                //double[,] exampleBasis = new double[3, 3] {{ 14.285714922100491, -1.7441909127627026E-08, 0 }, { 8.3652124878453923E-07, 14.285714288340733,0},
+                //{ 0,0,1} };
+
+
+
+                var exampleG1 = Vector.CreateFromArray(new double[] { -0.010125086915473506, 1.2082272041845672, 5.403943148540348E-17 });
+                var exampleG2 = Vector.CreateFromArray(new double[] { -0.0082039172057740226, -6.8828411272038153E-05, 1.0874431657141146 });
+                var exampleG3 = Vector.CreateFromArray(new double[] { 1.7263862358694682, 0.014467320903979015, 0.013025163938266793 }); // a3_init dld einai hdh normalised
+
+                double exampleG1_norm_sqred = exampleG1.DotProduct(exampleG1);
+                double exampleG2_norm_sqred = exampleG2.DotProduct(exampleG2);
+                //double G3_norm_sqred = a3.DotProduct(a3);
+                double[] exampleG_1 = new double[3] { exampleG1[0] / exampleG1_norm_sqred, exampleG1[1] / exampleG1_norm_sqred, exampleG1[2] / exampleG1_norm_sqred };
+                double[] exampleG_2 = new double[3] { exampleG2[0] / exampleG2_norm_sqred, exampleG2[1] / exampleG2_norm_sqred, exampleG2[2] / exampleG2_norm_sqred };
+                double[,] exampleBasis = new double[3, 3] {{ exampleG_1[0], exampleG_2[0], exampleG3[0] }, { exampleG_1[1], exampleG_2[1],exampleG3[1] },
+            { exampleG_1[2],exampleG_2[2],exampleG3[2]} };
+                double[,] exampleCovarBasis = new double[3, 3] {{ exampleG1[0], exampleG2[0], exampleG3[0] }, { exampleG1[1], exampleG2[1],exampleG3[1] },
+            { exampleG1[2],exampleG2[2],exampleG3[2]} };
+                
+                double[,] exampleGlTensr = new double[3, 3] { { 2.0737144890037307E-05, 0.5 * (1.1308041227672513E-05), 0  },
+                { 0.5 * (1.1308041227672513E-05),0.00012549972453512748, 0 },  { 0,0,0} };
+
+                var exampleQij = CalculateRotationMatrix(tG_i, exampleBasis);
+                var exampleQij1 = CalculateRotationMatrix(tgi, exampleBasis);
+                double[,] exampleTensorTransformed = Transform_F3D_to_Frve(exampleGlTensr, exampleQij, exampleQij1);
+
+
+                double[,] exampleSpkTensor = new double[,] { {  2365.2521089180445, 171.93028053115697,0    },
+                {171.93028053115697, 7000.4556652076062, 0 },  { 0,0,0} };
+                var exampleQijcov = CalculateRotationMatrix(tG_i, exampleCovarBasis);
+                var exampleQij1cov = CalculateRotationMatrix(tgi, exampleCovarBasis);
+                double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
+            }
+
+            var Qpi = CalculateRotationMatrix(eye, tG_i);
             var Qqj = CalculateRotationMatrix(eye, tG_i);
             var Qrk = Qpi;
             var Qsl = Qqj;
@@ -723,5 +851,92 @@ namespace ISAAR.MSolve.Materials
 			set { throw new InvalidOperationException(); }
 		}
 
-	}
+        public (double[,] ,double[] ) CalculateTransformationsV2(Vector g1, Vector g2, Vector g3, Vector G1, Vector G2, Vector G3, double[] G_1, double[] G_2, double[] G_3)
+        {
+            double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
+            double[,] tgi = new double[3, 3] { { g1[0], g2[0], g3[0] }, { g1[1], g2[1], g3[1] }, { g1[2], g2[2], g3[2] } };
+            double[,] Gi = new double[3, 3] { { G1[0], G2[0], G3[0] }, { G1[1], G2[1], G3[1] }, { G1[2], G2[2], G3[2] } };
+
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                double norm = tgi[0, i1] * tgi[0, i1] + tgi[1, i1] * tgi[1, i1] + tgi[2, i1] * tgi[2, i1];
+                norm = Math.Sqrt(norm);
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    tgi[i2, i1] = tgi[i2, i1] / norm;
+                }
+
+            }
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                double norm = Gi[0, i1] * Gi[0, i1] + Gi[1, i1] * Gi[1, i1] + Gi[2, i1] * Gi[2, i1];
+                norm = Math.Sqrt(norm);
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    Gi[i2, i1] = Gi[i2, i1] / norm;
+                }
+
+            }
+
+            OrthogonaliseBasisMembranePart(tgi);
+            OrthogonaliseBasisMembranePart(Gi);
+
+            var ei = tgi;
+            var Ei = Gi;
+                                    //[..,0] 
+            double[] g1__ei =new double[] {g1[0]*ei[0,0]+g1[1]*ei[1,0]+g1[2]*ei[2,0],g1[0]*ei[0,1]+g1[1]*ei[1,1]+g1[2]*ei[2,1],g1[0]*ei[0,2]+g1[1]*ei[1,2]+g1[2]*ei[2,2]};
+            double[] g2__ei =new double[] {g2[0]*ei[0,0]+g2[1]*ei[1,0]+g2[2]*ei[2,0],g2[0]*ei[0,1]+g2[1]*ei[1,1]+g2[2]*ei[2,1],g2[0]*ei[0,2]+g2[1]*ei[1,2]+g2[2]*ei[2,2]};
+            double[] g3__ei =new double[] {g3[0]*ei[0,0]+g3[1]*ei[1,0]+g3[2]*ei[2,0],g3[0]*ei[0,1]+g3[1]*ei[1,1]+g3[2]*ei[2,1],g3[0]*ei[0,2]+g3[1]*ei[1,2]+g3[2]*ei[2,2]};
+
+            double[] G_1__Ei =new double[] {G_1[0]*Ei[0,0]+G_1[1]*Ei[1,0]+G_1[2]*Ei[2,0],G_1[0]*Ei[0,1]+G_1[1]*Ei[1,1]+G_1[2]*Ei[2,1],G_1[0]*Ei[0,2]+G_1[1]*Ei[1,2]+G_1[2]*Ei[2,2]};
+            double[] G_2__Ei =new double[] {G_2[0]*Ei[0,0]+G_2[1]*Ei[1,0]+G_2[2]*Ei[2,0],G_2[0]*Ei[0,1]+G_2[1]*Ei[1,1]+G_2[2]*Ei[2,1],G_2[0]*Ei[0,2]+G_2[1]*Ei[1,2]+G_2[2]*Ei[2,2]};
+            double[] G_3__Ei =new double[] {G_3[0]*Ei[0,0]+G_3[1]*Ei[1,0]+G_3[2]*Ei[2,0],G_3[0]*Ei[0,1]+G_3[1]*Ei[1,1]+G_3[2]*Ei[2,1],G_3[0]*Ei[0,2]+G_3[1]*Ei[1,2]+G_3[2]*ei[2,2]};
+
+            double[,] F = CaclculateDefGrad3D(g1__ei, g2__ei, g3__ei, G_1__Ei, G_2__Ei, G_3__Ei);
+
+            double[,] F_rve = new double[,]
+            {
+                {F[0,0], F[0,1] },
+                {F[1,0], F[1,1] }
+            };
+
+            double[] GLvec = Transform2DDefGradToGL(F_rve);
+            (double[] SPKvec, double[,] ConsCartes) = CalculateSPK(GLvec);
+
+            double[,] SPKMat = new double[2, 2] { { SPKvec[0], SPKvec[2] }, { SPKvec[2], SPKvec[1] } };
+            double[,] FPKrve = TransformSPKvecToFPK(F_rve, SPKMat);
+
+            double[,] Cinpk = ExpandCijrs(ConsCartes);
+
+            double[,] Aijkl_rve = TransformCinpk(Cinpk, F_rve, SPKMat/*,...*/);
+
+            var cartes_to_Gi = CalculateRotationMatrix(Gi, eye);
+            var cartes_to_tgi = CalculateRotationMatrix(tgi, eye);
+
+            FPKrve = new double[3, 3] { { FPKrve[0, 0], FPKrve[0, 1], 0 }, { FPKrve[1, 0], FPKrve[1, 1], 0 }, { 0, 0, 0 } };
+            double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPKrve, cartes_to_Gi, cartes_to_tgi);// 1);
+
+            var Qpi = CalculateRotationMatrix(eye, tgi);
+            var Qqj = CalculateRotationMatrix(eye, Gi);
+            var Qrk = Qpi;
+            var Qsl = Qqj;
+
+            var Aijkl_3D = Transform_Aijkl_rve_to_Aijkl_3D(Aijkl_rve, Qpi, Qqj, Qrk, Qsl);
+            //var Aijkl_3D = Transform_Aijkl_rve_to_Aijkl_3D(Aijkl_rve, Qqj, Qpi, Qsl, Qrk);
+
+            double[] FPK_3D_vec = new double[9] { FPK_3D[0, 0], FPK_3D[1, 1], FPK_3D[2, 2], FPK_3D[0, 1], FPK_3D[1, 2], FPK_3D[2, 0], FPK_3D[0, 2], FPK_3D[1, 0], FPK_3D[2, 1] };
+
+            return (Aijkl_3D, FPK_3D_vec);
+        }
+
+        private double[,] CaclculateDefGrad3D(double[] g1__ei, double[] g2__ei, double[] g3__ei, double[] G_1__Ei, double[] G_2__Ei, double[] G_3__Ei)
+        {
+            double[,] F = new double[3, 3] { 
+                { g1__ei[0]*G_1__Ei[0]+g2__ei[0]*G_2__Ei[0]+g3__ei[0]*G_3__Ei[0], g1__ei[0]*G_1__Ei[1]+g2__ei[0]*G_2__Ei[1]+g3__ei[0]*G_3__Ei[1], g1__ei[0]*G_1__Ei[2]+g2__ei[0]*G_2__Ei[2]+g3__ei[0]*G_3__Ei[2] },
+                { g1__ei[1]*G_1__Ei[0]+g2__ei[1]*G_2__Ei[0]+g3__ei[1]*G_3__Ei[0], g1__ei[1]*G_1__Ei[1]+g2__ei[1]*G_2__Ei[1]+g3__ei[1]*G_3__Ei[1], g1__ei[1]*G_1__Ei[2]+g2__ei[1]*G_2__Ei[2]+g3__ei[1]*G_3__Ei[2] },
+                { g1__ei[2]*G_1__Ei[0]+g2__ei[2]*G_2__Ei[0]+g3__ei[2]*G_3__Ei[0], g1__ei[2]*G_1__Ei[1]+g2__ei[2]*G_2__Ei[1]+g3__ei[2]*G_3__Ei[1], g1__ei[2]*G_1__Ei[2]+g2__ei[2]*G_2__Ei[2]+g3__ei[2]*G_3__Ei[2] },
+                        };
+            return F;
+        }
+    }
 }

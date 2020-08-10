@@ -397,13 +397,13 @@ namespace ISAAR.MSolve.IGA.Elements
                         Vector G1 = a1_init + da3_dksi_init.Scale(z);
                         Vector G2 = a2_init + da3_dheta_init.Scale(z);
 
-                        double G1_norm_sqred = G1.DotProduct(G1);
-                        double G2_norm_sqred = G2.DotProduct(G2);
+                        //double G1_norm_sqred = G1.DotProduct(G1);
+                        //double G2_norm_sqred = G2.DotProduct(G2);
                         double G3_norm_sqred = a3.DotProduct(a3);
 
-                        double[] G_1 = new double[3] { G1[0] / G1_norm_sqred, G1[1] / G1_norm_sqred, G1[2] / G1_norm_sqred };
-                        double[] G_2 = new double[3] { G2[0] / G2_norm_sqred, G2[1] / G2_norm_sqred, G2[2] / G2_norm_sqred };
-                        double[] G_3 = new double[3] { a3[0] / G3_norm_sqred, a3[1] / G3_norm_sqred, a3[2] / G3_norm_sqred };
+                        //double[] G_1 = new double[3] { G1[0] / G1_norm_sqred, G1[1] / G1_norm_sqred, G1[2] / G1_norm_sqred };
+                        //double[] G_2 = new double[3] { G2[0] / G2_norm_sqred, G2[1] / G2_norm_sqred, G2[2] / G2_norm_sqred };
+                        (double[] G_1, double[] G_2, double[] G_3) = CalculateContravariants(G1, G2, a3_init);
 
                         Vector g1 = a1 + da3_dksi.Scale(z);
                         Vector g2 = a2 + da3_dheta.Scale(z);
@@ -423,8 +423,11 @@ namespace ISAAR.MSolve.IGA.Elements
 
                         double[,] tgi = new double[3, 3] { { g1[0], g2[0], a3[0] }, { g1[1], g2[1], a3[1] }, { g1[2], g2[2], a3[2] } };
                         double[,] G_i = new double[3, 3] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } };
+                        double[,] Gi = new double[3, 3] { { G1[0], G2[0], a3_init[0] }, { G1[1], G2[1], a3_init[1] }, { G1[2], G2[2], a3_init[2] } };
 
-                        (double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, G_i, F_3D);
+                        //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, G_i, F_3D);
+                        //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, Gi, F_3D);
+                        (double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
 
                         for (int r1 = 0; r1 < 3; r1++)
                         {
@@ -489,6 +492,35 @@ namespace ISAAR.MSolve.IGA.Elements
 
 
 
+        }
+
+        private (double[] G_1, double[] G_2, double[] G_3) CalculateContravariants(Vector g1, Vector g2, Vector a3)
+        {
+            var auxMatrix1 = Matrix.CreateZero(3,3);  //auxMatrix: covariant metric coefficients gab
+            auxMatrix1[0, 0] = g1.DotProduct(g1);
+            auxMatrix1[0, 1] = g1.DotProduct(g2);
+            auxMatrix1[0, 2] = g1.DotProduct(a3);
+            auxMatrix1[1, 0] = g2.DotProduct(g1);
+            auxMatrix1[1, 1] = g2.DotProduct(g2);
+            auxMatrix1[1, 2] = g2.DotProduct(a3);
+            auxMatrix1[2, 0] = a3.DotProduct(g1);
+            auxMatrix1[2, 1] = a3.DotProduct(g2);
+            auxMatrix1[2, 2] = a3.DotProduct(a3);
+            Matrix inverse = auxMatrix1.Invert(); //inverse: contravariant metric coefficients g_ab (ekthetis ta a,b)
+                                                  //TODO: auxMatrix1.Invert2x2AndDeterminant(1e-20) for bad geometry
+
+            //Contravariant base vectors
+            double[][] G_i = new double[3][];
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                G_i[i1] = new double[3];
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    G_i[i1][i2] = inverse[i1, 0] * g1[i2] + inverse[i1, 1] * g2[i2] + inverse[i1, 2] * a3[i2];
+                }
+            }
+
+            return (G_i[0], G_i[1], G_i[2]);
         }
 
         private (Vector[] da3_dksidr, Vector[] da3_dhetadr) Calculate_da3_dksidr(Vector[] da3tilde_dksidr, Vector[] da3tilde_dhetadr, Vector da3tilde_dksi,
@@ -1190,13 +1222,15 @@ namespace ISAAR.MSolve.IGA.Elements
                         Vector G1 = a1_init + da3_dksi_init.Scale(z);
                         Vector G2 = a2_init + da3_dheta_init.Scale(z);
 
-                        double G1_norm_sqred = G1.DotProduct(G1);
-                        double G2_norm_sqred = G2.DotProduct(G2);
+                        //double G1_norm_sqred = G1.DotProduct(G1);
+                        //double G2_norm_sqred = G2.DotProduct(G2);
                         double G3_norm_sqred = a3.DotProduct(a3);
 
-                        double[] G_1 = new double[3] { G1[0] / G1_norm_sqred, G1[1] / G1_norm_sqred, G1[2] / G1_norm_sqred };
-                        double[] G_2 = new double[3] { G2[0] / G2_norm_sqred, G2[1] / G2_norm_sqred, G2[2] / G2_norm_sqred };
-                        double[] G_3 = new double[3] { a3[0] / G3_norm_sqred, a3[1] / G3_norm_sqred, a3[2] / G3_norm_sqred };
+                        //double[] G_1 = new double[3] { G1[0] / G1_norm_sqred, G1[1] / G1_norm_sqred, G1[2] / G1_norm_sqred };
+                        //double[] G_2 = new double[3] { G2[0] / G2_norm_sqred, G2[1] / G2_norm_sqred, G2[2] / G2_norm_sqred };
+                        //(double[] G_1, double[] G_2) = CalculateContravariants(G1, G2);
+                        //double[] G_3 = new double[3] { a3[0] / G3_norm_sqred, a3[1] / G3_norm_sqred, a3[2] / G3_norm_sqred };
+                        (double[] G_1, double[] G_2, double[] G_3) = CalculateContravariants(G1, G2, a3_init);
 
                         G_1_ofGPs[i1] = G_1;
                         G_2_ofGPs[i1] = G_2;
@@ -1211,8 +1245,13 @@ namespace ISAAR.MSolve.IGA.Elements
 
                         double[,] tgi = new double[3, 3] { { g1[0], g2[0], a3[0] }, { g1[1], g2[1], a3[1] }, { g1[2], g2[2], a3[2] } };
                         double[,] G_i = new double[3, 3] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } };
+                        double[,] Gi = new double[3, 3] { { G1[0], G2[0], a3_init[0] }, { G1[1], G2[1], a3_init[1] }, { G1[2], G2[2], a3_init[2] } };
 
-                        (Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1]) = transformations.CalculateTransformations(tgi, G_i, F_3D);
+
+
+                        //(Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1]) = transformations.CalculateTransformations(tgi, G_i, F_3D);
+                        //(Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1]) = transformations.CalculateTransformations(tgi, Gi, F_3D);
+                        (Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1]) = transformations.CalculateTransformationsV2(g1,g2,a3, G1,G2,a3_init,G_1,G_2,G_3);
 
                     }
                     #endregion
