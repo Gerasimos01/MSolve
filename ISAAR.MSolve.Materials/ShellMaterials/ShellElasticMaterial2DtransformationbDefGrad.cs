@@ -851,7 +851,7 @@ namespace ISAAR.MSolve.Materials
 			set { throw new InvalidOperationException(); }
 		}
 
-        public (double[,] ,double[], double[,],double[,] ) CalculateTransformationsV2(Vector g1, Vector g2, Vector g3, Vector G1, Vector G2, Vector G3, double[] G_1, double[] G_2, double[] G_3)
+        public (double[,] ,double[], double[,],double[,], double[,], double[,], double[,] ) CalculateTransformationsV2(Vector g1, Vector g2, Vector g3, Vector G1, Vector G2, Vector G3, double[] G_1, double[] G_2, double[] G_3)
         {
             double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
             double[,] tgi = new double[3, 3] { { g1[0], g2[0], g3[0] }, { g1[1], g2[1], g3[1] }, { g1[2], g2[2], g3[2] } };
@@ -916,6 +916,9 @@ namespace ISAAR.MSolve.Materials
             FPKrve = new double[3, 3] { { FPKrve[0, 0], FPKrve[0, 1], 0 }, { FPKrve[1, 0], FPKrve[1, 1], 0 }, { 0, 0, 0 } };
             double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPKrve, cartes_to_Gi, cartes_to_tgi);// 1);
 
+            var ch01_FPK_3D = Calculate3DtensorFrom2D(new double[2, 2] { { FPKrve[0, 0], FPKrve[0, 1] }, { FPKrve[1, 0], FPKrve[1, 1] } }, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }),
+            Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
+
             var Qpi = CalculateRotationMatrix(eye, tgi);
             var Qqj = CalculateRotationMatrix(eye, Gi);
             var Qrk = Qpi;
@@ -926,7 +929,7 @@ namespace ISAAR.MSolve.Materials
 
             double[] FPK_3D_vec = new double[9] { FPK_3D[0, 0], FPK_3D[1, 1], FPK_3D[2, 2], FPK_3D[0, 1], FPK_3D[1, 2], FPK_3D[2, 0], FPK_3D[0, 2], FPK_3D[1, 0], FPK_3D[2, 1] };
 
-            return (Aijkl_3D, FPK_3D_vec, FPKrve,Ei);
+            return (Aijkl_3D, FPK_3D_vec, FPKrve,Ei, Aijkl_rve, ei , F_rve );
         }
 
         private double[,] CaclculateDefGrad3D(double[] g1__ei, double[] g2__ei, double[] g3__ei, double[] G_1__Ei, double[] G_2__Ei, double[] G_3__Ei)
@@ -937,6 +940,34 @@ namespace ISAAR.MSolve.Materials
                 { g1__ei[2]*G_1__Ei[0]+g2__ei[2]*G_2__Ei[0]+g3__ei[2]*G_3__Ei[0], g1__ei[2]*G_1__Ei[1]+g2__ei[2]*G_2__Ei[1]+g3__ei[2]*G_3__Ei[1], g1__ei[2]*G_1__Ei[2]+g2__ei[2]*G_2__Ei[2]+g3__ei[2]*G_3__Ei[2] },
                         };
             return F;
+        }
+
+        private double[,] Calculate3DtensorFrom2D(double[,] FPK_2D, Vector dg1_dr, Vector dg2_dr, double[,] Ei)
+        {
+            double[,] tensor3D = new double[3, 3];
+            double[] leftVec = new double[3];
+            double[] rigthVec = new double[3];
+
+            for (int i1 = 0; i1 < 2; i1++)
+            {
+                if (i1 == 0) { leftVec = dg1_dr.CopyToArray(); }
+                else if (i1 == 1) { leftVec = dg2_dr.CopyToArray(); }
+                for (int i2 = 0; i2 < 2; i2++)
+                {
+                    rigthVec = new double[] { Ei[0, i2], Ei[1, i2], Ei[2, i2] };
+
+                    for (int i3 = 0; i3 < 3; i3++)
+                    {
+                        for (int i4 = 0; i4 < 3; i4++)
+                        {
+                            tensor3D[i3, i4] = FPK_2D[i1, i2] * leftVec[i3] * rigthVec[i4];
+                        }
+                    }
+
+                }
+            }
+
+            return tensor3D;
         }
     }
 }
