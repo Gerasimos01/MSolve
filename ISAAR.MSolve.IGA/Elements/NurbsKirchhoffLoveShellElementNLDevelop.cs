@@ -1033,6 +1033,8 @@ namespace ISAAR.MSolve.IGA.Elements
         public static bool  runDevelop= false;
         public static bool newMatrix = false;
 
+        public static int matrix_vi = 1;
+
         public IMatrix StiffnessMatrix(IElement element)
         {
             var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop) element;
@@ -1146,10 +1148,13 @@ namespace ISAAR.MSolve.IGA.Elements
             if (runDevelop)
             {
                 #region develop formulation
-                StiffnessDevelop_v2 = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3]; 
-                StiffnessDevelop = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3];
-                StiffnessDevelop_v3 = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3];
-                StiffnessDevelopLinear = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3];
+                if (matrix_vi == 2)
+                { StiffnessDevelop_v2 = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3]; }
+                else if (matrix_vi == 1)
+                { StiffnessDevelop = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3]; }
+                else if (matrix_vi == 3)
+                { StiffnessDevelop_v3 = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3]; }
+                //StiffnessDevelopLinear = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3];
                 StiffnessDevelopNonLinear = new double[shellElement.ControlPointsDictionary.Count * 3, shellElement.ControlPointsDictionary.Count * 3];
                 for (int j = 0; j < gaussPoints.Length; j++)
                 {
@@ -1577,106 +1582,172 @@ namespace ISAAR.MSolve.IGA.Elements
                                     {
                                         // linear stiffness
                                         var dF_3D_ds1 = dF_3D_dr_vecArray[3 * k + s1, i1];
-                                        Vector dg1_ds = a1rArray[k].GetColumn(s1) + da3_dksidrArray[k][s1] * z;
-                                        Vector dg2_ds = a2rArray[k].GetColumn(s1) + da3_dhetadrArray[k][s1] * z;
-                                        Vector da3_ds = Vector.CreateZero(3);
-                                        if (s1 == 0) { da3_ds = Vector.CreateFromArray(new double[] { a3s.a3r00, a3s.a3r10, a3s.a3r20 }); }
-                                        else if (s1 == 1) { da3_ds = Vector.CreateFromArray(new double[] { a3s.a3r01, a3s.a3r11, a3s.a3r21 }); }
-                                        else if (s1 == 2) { da3_ds = Vector.CreateFromArray(new double[] { a3s.a3r02, a3s.a3r12, a3s.a3r22 }); }
+                                        //Vector dg1_ds = a1rArray[k].GetColumn(s1) + da3_dksidrArray[k][s1] * z;
+                                        //Vector dg2_ds = a2rArray[k].GetColumn(s1) + da3_dhetadrArray[k][s1] * z;
+                                        //Vector da3_ds = Vector.CreateZero(3);
+                                        //if (s1 == 0) { da3_ds = Vector.CreateFromArray(new double[] { a3s.a3r00, a3s.a3r10, a3s.a3r20 }); }
+                                        //else if (s1 == 1) { da3_ds = Vector.CreateFromArray(new double[] { a3s.a3r01, a3s.a3r11, a3s.a3r21 }); }
+                                        //else if (s1 == 2) { da3_ds = Vector.CreateFromArray(new double[] { a3s.a3r02, a3s.a3r12, a3s.a3r22 }); }
+                                        // 
 
 
-                                        for (int n1 = 0; n1 < 9; n1++)
+                                        if (matrix_vi == 1 | matrix_vi == 2)
                                         {
-                                            for (int p1 = 0; p1 < 9; p1++)
-                                            {
-                                                StiffnessDevelop[3 * i + r1, 3 * k + s1] += dF_3D_dr1[n1] * Aijkl_3D[n1,p1] * dF_3D_ds1[p1] * w * wFactor;
-                                                StiffnessDevelopLinear[3 * i + r1, 3 * k + s1] += dF_3D_dr1[n1] * Aijkl_3D[n1, p1] * dF_3D_ds1[p1] * w * wFactor;
-                                            }
-                                        }
-
-
-
-                                        var dg1_drds = da3_dksidrds[r1, s1].Scale(z); //Scale(z);
-                                        var dg2_drds = da3_dhetadrds[r1, s1].Scale(z);// .Scale(z);
-                                        double[,] dF_3D_drds = new double[3, 3] { { dg1_drds[0]*G_1[0]+dg2_drds[0]*G_2[0], dg1_drds[0]*G_1[1]+dg2_drds[0]*G_2[1], dg1_drds[0]*G_1[2]+dg2_drds[0]*G_2[2] },
+                                            var dg1_drds = da3_dksidrds[r1, s1].Scale(z); //Scale(z);
+                                            var dg2_drds = da3_dhetadrds[r1, s1].Scale(z);// .Scale(z);
+                                            double[,] dF_3D_drds = new double[3, 3] { { dg1_drds[0]*G_1[0]+dg2_drds[0]*G_2[0], dg1_drds[0]*G_1[1]+dg2_drds[0]*G_2[1], dg1_drds[0]*G_1[2]+dg2_drds[0]*G_2[2] },
                                                                  { dg1_drds[1]*G_1[0]+dg2_drds[1]*G_2[0], dg1_drds[1]*G_1[1]+dg2_drds[1]*G_2[1], dg1_drds[1]*G_1[2]+dg2_drds[1]*G_2[2] },
                                                                  { dg1_drds[2]*G_1[0]+dg2_drds[2]*G_2[0], dg1_drds[2]*G_1[1]+dg2_drds[2]*G_2[1], dg1_drds[2]*G_1[2]+dg2_drds[2]*G_2[2] }, };
 
-                                        //double[] dF_3D_dr_vec =
-                                        var dF_3D_drds_vecArray = new double[] { dF_3D_drds[0, 0], dF_3D_drds[1, 1], dF_3D_drds[2, 2], dF_3D_drds[0, 1], dF_3D_drds[1, 2], dF_3D_drds[2, 0], dF_3D_drds[0, 2], dF_3D_drds[1, 0], dF_3D_drds[2, 1] };
+                                            //double[] dF_3D_dr_vec =
+                                            var dF_3D_drds_vecArray = new double[] { dF_3D_drds[0, 0], dF_3D_drds[1, 1], dF_3D_drds[2, 2], dF_3D_drds[0, 1], dF_3D_drds[1, 2], dF_3D_drds[2, 0], dF_3D_drds[0, 2], dF_3D_drds[1, 0], dF_3D_drds[2, 1] };
 
-                                        for (int i2 = 0; i2 < 9; i2++)
-                                        {
-                                            StiffnessDevelop[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
-                                            StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
-                                            StiffnessDevelopNonLinear[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
-                                        }
 
-                                        //double[,] Pcontributions = Calculate3DtensorFrom2D(FPK_2D, dg1_dr, dg2_dr, a3r, Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
-                                        double[,] Pcontributions = Calculate3DtensorFrom2Dcorrected(FPK_2D, de1_dr, de2_dr, da3_dr, Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
 
-                                        (double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec, double[] dFPK2D_coefs_dr_vec, double[,] dFPK2D_coefs_dr) = Calculate_FPK_variation_term1(Aijkl_2D, dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
+                                            //double[,] Pcontributions = Calculate3DtensorFrom2D(FPK_2D, dg1_dr, dg2_dr, a3r, Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
+                                            double[,] Pcontributions = Calculate3DtensorFrom2Dcorrected(FPK_2D, de1_dr, de2_dr, da3_dr, Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
 
-                                        var Pcontributions_dr_vec = new double[] { Pcontributions[0, 0], Pcontributions[1, 1], Pcontributions[2, 2], Pcontributions[0, 1], Pcontributions[1, 2], Pcontributions[2, 0], Pcontributions[0, 2], Pcontributions[1, 0], Pcontributions[2, 1] };
-                                        var Pcontributions_term_1_dr_vec = new double[] { Pcontributions_term_1[0, 0], Pcontributions_term_1[1, 1], Pcontributions_term_1[2, 2], Pcontributions_term_1[0, 1], Pcontributions_term_1[1, 2], Pcontributions_term_1[2, 0], Pcontributions_term_1[0, 2], Pcontributions_term_1[1, 0], Pcontributions_term_1[2, 1] };
+                                            (double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec, double[] dFPK2D_coefs_dr_vec, double[,] dFPK2D_coefs_dr) = Calculate_FPK_variation_term1(Aijkl_2D, dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
 
-                                        for (int p1 = 0; p1 < 9; p1++)
-                                        {
-                                            StiffnessDevelop[3 * i + r1, 3 * k + s1] += Pcontributions_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
-                                            StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += Pcontributions_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
-                                            StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += Pcontributions_term_1_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
+                                            var Pcontributions_dr_vec = new double[] { Pcontributions[0, 0], Pcontributions[1, 1], Pcontributions[2, 2], Pcontributions[0, 1], Pcontributions[1, 2], Pcontributions[2, 0], Pcontributions[0, 2], Pcontributions[1, 0], Pcontributions[2, 1] };
+                                            var Pcontributions_term_1_dr_vec = new double[] { Pcontributions_term_1[0, 0], Pcontributions_term_1[1, 1], Pcontributions_term_1[2, 2], Pcontributions_term_1[0, 1], Pcontributions_term_1[1, 2], Pcontributions_term_1[2, 0], Pcontributions_term_1[0, 2], Pcontributions_term_1[1, 0], Pcontributions_term_1[2, 1] };
 
-                                        }
-
-                                        double[,] dei_dr = new double[3, 3] { { de1_dr[0], de2_dr[0], da3_dr[0] }, { de1_dr[1], de2_dr[1], da3_dr[1] }, { de1_dr[2], de2_dr[2], da3_dr[2] } };
-                                        double[,] dFPK_3D_dr = Calculate_dFPK_3D_dr(ei, Ei, FPK_2D, dFPK2D_coefs_dr, dei_dr);
-                                        var dFPK_3D_dr_vec_v3 = new double[] { dFPK_3D_dr[0, 0], dFPK_3D_dr[1, 1], dFPK_3D_dr[2, 2], dFPK_3D_dr[0, 1], dFPK_3D_dr[1, 2], dFPK_3D_dr[2, 0], dFPK_3D_dr[0, 2], dFPK_3D_dr[1, 0], dFPK_3D_dr[2, 1] };
-
-                                        for (int p1 = 0; p1 < 9; p1++)
-                                        {
-                                            StiffnessDevelop_v3[3 * i + r1, 3 * k + s1] += dFPK_3D_dr_vec_v3[p1] * dF_3D_ds1[p1] * w * wFactor;
-
-                                        }
-
-                                        if (ElementStiffnesses.performCalculations)
-                                        {
-                                            if ((ElementStiffnesses.gpNumber == ElementStiffnesses.gpNumberToCheck) && ElementStiffnesses.saveStiffnessMatrixState && (i == 0) && (r1 == 1) && (i1 == 0))
+                                            if (matrix_vi == 1)
                                             {
-                                                ElementStiffnesses.saveOriginalState = true;
-                                                ElementStiffnesses.ProccessVariable(27, dF_3D_drds_vecArray, true, 3 * k+ s1);
-                                                
-
-                                                ElementStiffnesses.saveOriginalState = false;
-
-                                            }
-
-                                            if ((ElementStiffnesses.gpNumber == ElementStiffnesses.gpNumberToCheck) && ElementStiffnesses.saveStiffnessMatrixState && (i1 == 0))
-                                            {
-                                                ElementStiffnesses.saveOriginalState = true;
-                                                //ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }, true, 3 * i + 0);
-                                                //ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r01, a3r.a3r11, a3r.a3r21 }, true, 3 * i + 1);
-                                                //ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r02, a3r.a3r12, a3r.a3r22 }, true, 3 * i + 2); ;
-                                                ElementStiffnesses.ProccessVariable(28, dF2D_coefs_dr_vec, true, 3 * i + r1);
-                                                ElementStiffnesses.ProccessVariable(29, dFPK2D_coefs_dr_vec, true, 3 * i + r1);
-
-                                                double[] dFPK_3D_dr_vec = new double[9];
-                                                for (int j1 = 0; j1 < 9; j1++)
+                                                #region teliko assembly tou v1
+                                                for (int n1 = 0; n1 < 9; n1++)
                                                 {
-                                                    dFPK_3D_dr_vec[j1] = Pcontributions_term_1_dr_vec[j1] + Pcontributions_dr_vec[j1];
+                                                    for (int p1 = 0; p1 < 9; p1++)
+                                                    {
+                                                        StiffnessDevelop[3 * i + r1, 3 * k + s1] += dF_3D_dr1[n1] * Aijkl_3D[n1, p1] * dF_3D_ds1[p1] * w * wFactor;
+                                                        //StiffnessDevelopLinear[3 * i + r1, 3 * k + s1] += dF_3D_dr1[n1] * Aijkl_3D[n1, p1] * dF_3D_ds1[p1] * w * wFactor;
+                                                    }
                                                 }
 
-                                                ElementStiffnesses.ProccessVariable(30, dFPK_3D_dr_vec_v3, true, 3 * i + r1);
-                                                ElementStiffnesses.ProccessVariable(33, dFPK_3D_dr_vec, true, 3 * i + r1);
-                                                ElementStiffnesses.ProccessVariable(31, de1_dr.CopyToArray(), true, 3 * i + r1);
+                                                for (int i2 = 0; i2 < 9; i2++)
+                                                {
+                                                    StiffnessDevelop[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
+                                                }
 
-                                                ElementStiffnesses.ProccessVariable(32, de2_dr.CopyToArray(), true, 3 * i + r1);
+                                                for (int p1 = 0; p1 < 9; p1++)
+                                                {
+                                                    StiffnessDevelop[3 * i + r1, 3 * k + s1] += Pcontributions_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
+                                                }
+                                                #endregion
+                                            }
+                                            else if (matrix_vi == 2)
+                                            {
+                                                #region teliko assembly tou v1
+                                                for (int i2 = 0; i2 < 9; i2++)
+                                                {
+                                                    StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
+                                                    StiffnessDevelopNonLinear[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
+                                                }
 
-                                                ElementStiffnesses.saveOriginalState = false;
+                                                for (int p1 = 0; p1 < 9; p1++)
+                                                {
+                                                    StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += Pcontributions_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
+                                                    StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += Pcontributions_term_1_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
+
+                                                }
+                                                #endregion
+                                            }
+
+                                            if (ElementStiffnesses.performCalculations)
+                                            {
+                                                if ((ElementStiffnesses.gpNumber == ElementStiffnesses.gpNumberToCheck) && ElementStiffnesses.saveStiffnessMatrixState && (i == 0) && (r1 == 1) && (i1 == 0))
+                                                {
+                                                    ElementStiffnesses.saveOriginalState = true;
+                                                    ElementStiffnesses.ProccessVariable(27, dF_3D_drds_vecArray, true, 3 * k + s1);
+
+
+                                                    ElementStiffnesses.saveOriginalState = false;
+
+                                                }
+
+                                                if ((ElementStiffnesses.gpNumber == ElementStiffnesses.gpNumberToCheck) && ElementStiffnesses.saveStiffnessMatrixState && (i1 == 0))
+                                                {
+                                                    ElementStiffnesses.saveOriginalState = true;
+                                                    //ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }, true, 3 * i + 0);
+                                                    //ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r01, a3r.a3r11, a3r.a3r21 }, true, 3 * i + 1);
+                                                    //ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r02, a3r.a3r12, a3r.a3r22 }, true, 3 * i + 2); ;
+                                                    ElementStiffnesses.ProccessVariable(28, dF2D_coefs_dr_vec, true, 3 * i + r1);
+                                                    ElementStiffnesses.ProccessVariable(29, dFPK2D_coefs_dr_vec, true, 3 * i + r1);
+
+                                                    double[] dFPK_3D_dr_vec = new double[9];
+                                                    for (int j1 = 0; j1 < 9; j1++)
+                                                    {
+                                                        dFPK_3D_dr_vec[j1] = Pcontributions_term_1_dr_vec[j1] + Pcontributions_dr_vec[j1];
+                                                    }
+
+                                                    ElementStiffnesses.ProccessVariable(30, new double[9], true, 3 * i + r1);
+                                                    ElementStiffnesses.ProccessVariable(33, dFPK_3D_dr_vec, true, 3 * i + r1);
+                                                    ElementStiffnesses.ProccessVariable(31, de1_dr.CopyToArray(), true, 3 * i + r1);
+
+                                                    ElementStiffnesses.ProccessVariable(32, de2_dr.CopyToArray(), true, 3 * i + r1);
+
+                                                    ElementStiffnesses.saveOriginalState = false;
+
+                                                }
+
 
                                             }
 
 
                                         }
+                                        else
+                                        {
+                                            double[,] dei_dr = new double[3, 3] { { de1_dr[0], de2_dr[0], da3_dr[0] }, { de1_dr[1], de2_dr[1], da3_dr[1] }, { de1_dr[2], de2_dr[2], da3_dr[2] } };
+                                            (double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec, double[] dFPK2D_coefs_dr_vec, double[,] dFPK2D_coefs_dr) = Calculate_FPK_variation_term1(Aijkl_2D, dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
+
+
+                                            double[,] dFPK_3D_dr = Calculate_dFPK_3D_dr(ei, Ei, FPK_2D, dFPK2D_coefs_dr, dei_dr);
+                                            var dFPK_3D_dr_vec_v3 = new double[] { dFPK_3D_dr[0, 0], dFPK_3D_dr[1, 1], dFPK_3D_dr[2, 2], dFPK_3D_dr[0, 1], dFPK_3D_dr[1, 2], dFPK_3D_dr[2, 0], dFPK_3D_dr[0, 2], dFPK_3D_dr[1, 0], dFPK_3D_dr[2, 1] };
+
+                                            for (int p1 = 0; p1 < 9; p1++)
+                                            {
+                                                StiffnessDevelop_v3[3 * i + r1, 3 * k + s1] += dFPK_3D_dr_vec_v3[p1] * dF_3D_ds1[p1] * w * wFactor;
+
+                                            }
+
+                                            if (ElementStiffnesses.performCalculations)
+                                            {
+                                                if ((ElementStiffnesses.gpNumber == ElementStiffnesses.gpNumberToCheck) && ElementStiffnesses.saveStiffnessMatrixState && (i == 0) && (r1 == 1) && (i1 == 0))
+                                                {
+                                                    ElementStiffnesses.saveOriginalState = true;
+                                                    ElementStiffnesses.ProccessVariable(27, new double[9], true, 3 * k + s1);
+
+
+                                                    ElementStiffnesses.saveOriginalState = false;
+
+                                                }
+
+                                                if ((ElementStiffnesses.gpNumber == ElementStiffnesses.gpNumberToCheck) && ElementStiffnesses.saveStiffnessMatrixState && (i1 == 0))
+                                                {
+                                                    ElementStiffnesses.saveOriginalState = true;
+                                                    //ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }, true, 3 * i + 0);
+                                                    //ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r01, a3r.a3r11, a3r.a3r21 }, true, 3 * i + 1);
+                                                    //ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r02, a3r.a3r12, a3r.a3r22 }, true, 3 * i + 2); ;
+                                                    ElementStiffnesses.ProccessVariable(28, dF2D_coefs_dr_vec, true, 3 * i + r1);
+                                                    ElementStiffnesses.ProccessVariable(29, dFPK2D_coefs_dr_vec, true, 3 * i + r1);
+
+                                                    
+
+                                                    ElementStiffnesses.ProccessVariable(30, dFPK_3D_dr_vec_v3, true, 3 * i + r1);
+                                                    ElementStiffnesses.ProccessVariable(33, new double[9], true, 3 * i + r1);
+                                                    ElementStiffnesses.ProccessVariable(31, de1_dr.CopyToArray(), true, 3 * i + r1);
+
+                                                    ElementStiffnesses.ProccessVariable(32, de2_dr.CopyToArray(), true, 3 * i + r1);
+
+                                                    ElementStiffnesses.saveOriginalState = false;
+
+                                                }
+
+
+                                            }
+                                        }
+
+                                        
 
 
                                     }
@@ -1693,7 +1764,15 @@ namespace ISAAR.MSolve.IGA.Elements
                 #endregion
             }
             if (newMatrix)
-            { return Matrix.CreateFromArray(StiffnessDevelop); }
+            {
+                if (matrix_vi == 1)
+                { return Matrix.CreateFromArray(StiffnessDevelop); }
+                else if (matrix_vi == 2)
+                { return Matrix.CreateFromArray(StiffnessDevelop_v2); }
+                else if (matrix_vi == 3)
+                { return Matrix.CreateFromArray(StiffnessDevelop_v3); }
+                else { throw new NotImplementedException(); }
+            }
             else
             {
                 return Matrix.CreateFromArray(stiffnessMatrix);
