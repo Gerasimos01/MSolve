@@ -446,7 +446,7 @@ namespace ISAAR.MSolve.Materials
             int rowC;// anaferetai sto Cinpk mhtrwo
             int colC;// anaferetai sto Cinpk mhtrwo
 
-            int[,] dlj = new int[2,2] { { 1,0 }, { 0,1 } };
+            int[,] dlj = new int[2, 2] { { 1, 0 }, { 0, 1 } };
 
             // exwterika loop einai oi theseis pou gemizoun sto Aijkl
             for (int i = 0; i < 2; i++)
@@ -460,6 +460,8 @@ namespace ISAAR.MSolve.Materials
                         {
                             col = thesi[k, l];
 
+                            Aijkl[row, col] += Aijkl[row, col] + SPKMat[i, k] * dlj[l, j];
+
                             //eswterika loop einai to athroisma logw n kai p
                             for (int n = 0; n < 2; n++)
                             {
@@ -468,7 +470,8 @@ namespace ISAAR.MSolve.Materials
                                 {
                                     colC = thesi[p, k];
 
-                                    Aijkl[row, col] += Cinpk[rowC, colC] * F_rve[j, n] * F_rve[l, p] + SPKMat[i, k] * dlj[l, j];
+                                    Aijkl[row, col] += Cinpk[rowC, colC] * F_rve[j, n] * F_rve[l, p];
+                                    //Aijkl[row, col] += Cinpk[rowC, colC] * F_rve[j, n] * F_rve[l, p] + SPKMat[i, k] * dlj[l, j];
                                 }
                             }
 
@@ -491,7 +494,7 @@ namespace ISAAR.MSolve.Materials
                 {
                     for (int k1 = 0; k1 < 3; k1++)
                     {
-                        Qij[i1, i2] += + e_new[k1, i2] * e_old[k1, i1];
+                        Qij[i1, i2] += +e_new[k1, i2] * e_old[k1, i1];
                     }
                 }
             }
@@ -500,7 +503,7 @@ namespace ISAAR.MSolve.Materials
 
         }
 
-        public double[] Transform2DDefGradToGL(double[,] F )
+        public double[] Transform2DDefGradToGL(double[,] F)
         {
             //double[,] GL = new double[2, 2];
 
@@ -525,7 +528,7 @@ namespace ISAAR.MSolve.Materials
             double[] GLvec = new double[3] { GL[0, 0], GL[1, 1], 2 * GL[1, 0], };
 
             return GLvec;
-                       
+
         }
 
         public (double[], double[,]) CalculateSPK(double[] GLvec)
@@ -564,7 +567,8 @@ namespace ISAAR.MSolve.Materials
                 {
                     for (int k1 = 0; k1 < 2; k1++)
                     {
-                        FPKmat[i1, i2] += F_rve[i1,k1] * SPKMat[k1, i2];
+                        //FPKmat[i1, i2] += F_rve[i1,k1] * SPKMat[k1, i2];
+                        FPKmat[i1, i2] += SPKMat[i1, k1] * F_rve[i2, k1];
                     }
                 }
             }
