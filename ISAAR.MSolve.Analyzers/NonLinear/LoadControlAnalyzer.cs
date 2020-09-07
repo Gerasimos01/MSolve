@@ -43,7 +43,7 @@ namespace ISAAR.MSolve.Analyzers.NonLinear
                     double residualNormCurrent = UpdateResidualForcesAndNorm(increment, internalRhsVectors); // This also sets the rhs vectors in linear systems.
                     errorNorm = globalRhsNormInitial != 0 ? residualNormCurrent / globalRhsNormInitial : 0;// (rhsNorm*increment/increments) : 0;//TODOMaria this calculates the internal force vector and subtracts it from the external one (calculates the residual)
                     //Console.WriteLine($"Increment {increment}, iteration {iteration}: norm2(error) = {errorNorm}");
-
+                    Debug.WriteLine("INFO NR step {0}, iteration {1}, norm: {2}", increment, iteration, errorNorm);
                     if (iteration == 0) firstError = errorNorm;
 
                     if (TotalDisplacementsPerIterationLog != null) TotalDisplacementsPerIterationLog.StoreDisplacements(uPlusdu);
@@ -59,6 +59,7 @@ namespace ISAAR.MSolve.Analyzers.NonLinear
                             provider.Reset();
                             BuildMatrices();
                         }
+                        (new ISAAR.MSolve.LinearAlgebra.Output.Array1DWriter()).WriteToFile(uPlusdu[0].CopyToArray(), $@"C:\Users\acivi\Documents\notes_elegxoi_2\develop_nl_iga_shell\MSolve_output\1\uPlusdu{increment}.txt");
                         break;
                     }
 

@@ -112,6 +112,8 @@ namespace ISAAR.MSolve.IGA.Elements
             return knotDisplacements;
         }
 
+        public static bool runNewForces = true;
+
         public double[] CalculateForces(IElement element, double[] localDisplacements, double[] localdDisplacements)
         {
             var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop) element;
@@ -133,7 +135,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
             var forcesDevelop = new double[shellElement.ControlPointsDictionary.Count * 3];
 
-            bool runNewForces = true;
+            
 
             for (int j = 0; j < gaussPoints.Length; j++)
             {
@@ -437,6 +439,7 @@ namespace ISAAR.MSolve.IGA.Elements
                             ElementStiffnesses.ProccessVariable(28, /*dF2D_coefs_dr_vec  */ new double[] { F_rve[0, 0], F_rve[1, 1], F_rve[0, 1], F_rve[1, 0] }, false);
                             ElementStiffnesses.ProccessVariable(29, /*dFPK2D_coefs_dr_vec*/ new double[] { FPK_2D[0, 0], FPK_2D[1, 1], FPK_2D[0, 1], FPK_2D[1, 0] }, false);
                             ElementStiffnesses.ProccessVariable(30, /*dFPK_3D_dr_vec*/ FPK_3D_vec, false);
+                            ElementStiffnesses.ProccessVariable(33, /*dFPK_3D_dr_vec*/ FPK_3D_vec, false);
 
                             ElementStiffnesses.ProccessVariable(31,new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }, false);
 
@@ -1663,6 +1666,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                                 }
 
                                                 ElementStiffnesses.ProccessVariable(30, dFPK_3D_dr_vec_v3, true, 3 * i + r1);
+                                                ElementStiffnesses.ProccessVariable(33, dFPK_3D_dr_vec, true, 3 * i + r1);
                                                 ElementStiffnesses.ProccessVariable(31, de1_dr.CopyToArray(), true, 3 * i + r1);
 
                                                 ElementStiffnesses.ProccessVariable(32, de2_dr.CopyToArray(), true, 3 * i + r1);
