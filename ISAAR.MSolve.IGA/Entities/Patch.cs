@@ -12,7 +12,7 @@ using ISAAR.MSolve.Materials.Interfaces;
 
 namespace ISAAR.MSolve.IGA.Entities
 {
-    /// <summary>
+	/// <summary>
 	/// Patch entity of Isogeometric analysis that is similar to FEM Subdomain.
 	/// </summary>
 	public class Patch : ISubdomain
@@ -33,7 +33,7 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// Table containing constrained degrees of freedom and their value in a patch.
 		/// </summary>
 		public Table<INode, IDofType, double> Constraints { get; } = new Table<INode, IDofType, double>();
-        
+
 		/// <summary>
 		/// Returns a list of the Control Points of the Patch.
 		/// </summary>
@@ -42,7 +42,7 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// <summary>
 		/// Return a list with the elements of the patch.
 		/// </summary>
-		IReadOnlyList<IElement> ISubdomain.Elements => Elements;
+		//IReadOnlyList<IElement> ISubdomain.Elements => Elements;
 
 		/// <summary>
 		/// A list containing the elements of a patch.
@@ -63,12 +63,12 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// Patch ID.
 		/// </summary>
 		public int ID { get; }
-        
+
 		/// <summary>
 		/// Return a list of the Controls Points of the Patchas <see cref="INode"/>.
 		/// </summary>
-		IReadOnlyList<INode> ISubdomain.Nodes => controlPoints;
-        
+		//IReadOnlyList<INode> ISubdomain.Nodes => controlPoints;
+
 		/// <summary>
 		/// Dimensionality of the problem.
 		/// </summary>
@@ -107,7 +107,7 @@ namespace ISAAR.MSolve.IGA.Entities
 		{
 			throw new NotImplementedException();
 		}
-        
+
 		/// <summary>
 		/// Implements equivalent method of <see cref="ISubdomain"/>.
 		/// </summary>
@@ -125,6 +125,28 @@ namespace ISAAR.MSolve.IGA.Entities
 					}
 				}
 			}
+		}
+
+		public void ConnectDataStructures()
+		{
+			DefineNodesFromElements();
+
+			foreach (Element element in Elements)
+			{
+				foreach (ControlPoint node in element.Nodes) node.ElementsDictionary[element.ID] = element;
+			}
+		}
+
+		public void DefineNodesFromElements()
+		{
+			ControlPoints.Clear();
+			foreach (Element element in Elements)
+			{
+				foreach (ControlPoint node in element.ControlPoints) ControlPoints[node.ID] = node; // It may already be contained
+			}
+
+			//foreach (var e in modelEmbeddedNodes.Where(x => nodeIDs.IndexOf(x.Node.ID) >= 0))
+			//    EmbeddedNodes.Add(e);
 		}
 
 		/// <summary>
@@ -183,5 +205,51 @@ namespace ISAAR.MSolve.IGA.Entities
 		{
 			throw new NotImplementedException();
 		}
-    }
+
+		public int NumElements => Elements.Count;
+		public int NumNodalLoads => throw new NotImplementedException(); //NodalLoads.Count;
+		public int NumNodes => controlPoints.Count;
+
+		public IEnumerable<IElement> EnumerateElements() => Elements;
+		public IEnumerable<INodalLoad> EnumerateNodalLoads() => throw new NotImplementedException(); // NodalLoads;
+		public IEnumerable<INode> EnumerateNodes() => controlPoints;
+
+		public IElement GetElement(int elementID) => Elements[elementID];
+		public INode GetNode(int nodeID) => ControlPoints[nodeID];
+
+		public void CalculateStressesOnly(IVectorView solution, IVectorView dSolution)
+		{
+			foreach (Element element in Elements)
+			{
+				//var localSolution = GetLocalVectorFromGlobal(element, solution);//TODOMaria: This is where the element displacements are calculated //removeMaria
+				//var localdSolution = GetLocalVectorFromGlobal(element, dSolution);//removeMaria
+
+				//TODO: ElementType should operate with Vector instead of double[]. Then the ToRawArray() calls can be removed
+				double[] localSolution = CalculateElementDisplacements(element, solution);
+				double[] localdSolution = CalculateElementDisplacements(element, dSolution);
+				element.ElementType.CalculateStresses(element, localSolution, localdSolution);
+				if (element.ElementType.MaterialModified)
+					element.Subdomain.StiffnessModified = true;
+			}
+
+		}
+
+		public IVector CalculateRHSonly(IVectorView solution, IVectorView dSolution)
+		{
+			var forces = Vector.CreateZero(FreeDofOrdering.NumFreeDofs); //TODO: use Vector
+			foreach (Element element in Elements)
+			{
+				//var localSolution = GetLocalVectorFromGlobal(element, solution);//TODOMaria: This is where the element displacements are calculated //removeMaria
+				//var localdSolution = GetLocalVectorFromGlobal(element, dSolution);//removeMaria
+
+				//TODO: ElementType should operate with Vector instead of double[]. Then the ToRawArray() calls can be removed
+				double[] localSolution = CalculateElementDisplacements(element, solution);
+				double[] localdSolution = CalculateElementDisplacements(element, dSolution);
+
+				var f = element.ElementType.CalculateForces(element, localSolution, localdSolution);
+				FreeDofOrdering.AddVectorElementToSubdomain(element, f, forces);
+			}
+			return forces;
+		}
+	}
 }

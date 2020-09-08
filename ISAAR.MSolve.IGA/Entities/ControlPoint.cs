@@ -21,7 +21,7 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// Dictionary containing the Elements adjacent to the <see cref="ControlPoint"/>.
 		/// </summary>
 		public Dictionary<int, Element> ElementsDictionary { get; } = new Dictionary<int, Element>();
-        Dictionary<int, IElement> INode.ElementsDictionary => throw new NotImplementedException();
+        //Dictionary<int, IElement> INode.ElementsDictionary => throw new NotImplementedException();
         /// <summary>
         /// Parametric coordinate Heta of the <see cref="ControlPoint"/>.
         /// </summary>
@@ -82,6 +82,7 @@ namespace ISAAR.MSolve.IGA.Entities
 				if (!PatchesDictionary.ContainsKey(element.Patch.ID))
 					PatchesDictionary.Add(element.Patch.ID, element.Patch);
 			}
+			Multiplicity = PatchesDictionary.Count;
 		}
 
 		/// <summary>
@@ -131,5 +132,18 @@ namespace ISAAR.MSolve.IGA.Entities
 
 			return $"{header} - Con({constraintsDescription})";
 		}
+
+		public double[] tU { get; set; }
+		public double[] tX { get; set; }
+
+		public double[] oX { get; set; }
+
+		public double[] oVn { get; set; }
+		public double[] tVn { get; set; }
+		public double[] tV1 { get; set; }
+
+		public double[] tV2 { get; set; }
+
+		public int Multiplicity { get; protected set; }
 	}
 }

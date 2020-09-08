@@ -1,24 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ISAAR.MSolve.Discretization;
 using ISAAR.MSolve.Discretization.Commons;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.Discretization.Interfaces;
+using ISAAR.MSolve.Discretization.Transfer;
 using ISAAR.MSolve.FEM.Entities;
 using ISAAR.MSolve.FEM.Interfaces;
+using ISAAR.MSolve.FEM.Transfer;
 using ISAAR.MSolve.IGA.Elements;
 using ISAAR.MSolve.IGA.Elements.Boundary;
 using ISAAR.MSolve.IGA.Interfaces;
 using ISAAR.MSolve.IGA.Loading.Interfaces;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 
+[assembly: InternalsVisibleTo("ISAAR.MSolve.IGA.Tests")]
+
 namespace ISAAR.MSolve.IGA.Entities
 {
     /// <summary>
 	/// Model that contains all data needed for Isogeometric analysis.
 	/// </summary>
-	public class Model : IStructuralModel
+	public class Model : IModel
 	{
 		private IGlobalFreeDofOrdering _globalDofOrdering;
 
@@ -44,7 +49,21 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// <summary>
 		/// List with the Elements of the <see cref="Model"/>.
 		/// </summary>
-		IReadOnlyList<IElement> IStructuralModel.Elements => ElementsDictionary.Values.ToList();
+		
+
+		public IEnumerable<IElement> EnumerateElements() => ElementsDictionary.Values;
+		public IEnumerable<INode> EnumerateNodes() => ControlPointsDictionary.Values;
+		public IEnumerable<ISubdomain> EnumerateSubdomains() => PatchesDictionary.Values;
+
+		public IElement GetElement(int elementID) => ElementsDictionary[elementID];
+		public INode GetNode(int nodeID) => ControlPointsDictionary[nodeID];
+		public ISubdomain GetSubdomain(int subdomainID) => PatchesDictionary[subdomainID];
+
+		public int NumElements => ElementsDictionary.Count;
+		public int NumNodes => ControlPointsDictionary.Count;
+		public int NumSubdomains => PatchesDictionary.Count;
+
+		public IDofSerializer DofSerializer { get; set; } = new StandardDofSerializer();
 
 		/// <summary>
 		/// List with the Elements of the <see cref="Model"/>.
@@ -59,18 +78,19 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// <summary>
 		/// <see cref="IGlobalFreeDofOrdering"/> of the degrees of freedom of the <see cref="Model"/>.
 		/// </summary>
-		public IGlobalFreeDofOrdering GlobalDofOrdering
-		{
-			get => _globalDofOrdering;
-			set
-			{
-				_globalDofOrdering = value;
-				foreach (var patch in Patches)
-				{
-					patch.FreeDofOrdering = GlobalDofOrdering.SubdomainDofOrderings[patch];
-				}
-			}
-		}
+		public IGlobalFreeDofOrdering GlobalDofOrdering { get; set; }
+		//public IGlobalFreeDofOrdering GlobalDofOrdering
+		//{
+		//	get => _globalDofOrdering;
+		//	set
+		//	{
+		//		_globalDofOrdering = value;
+		//		foreach (var patch in Patches)
+		//		{
+		//			patch.FreeDofOrdering = GlobalDofOrdering.SubdomainDofOrderings[patch];
+		//		}
+		//	}
+		//}
 
 		private readonly List<PenaltyDofPair> penaltyBC = new List<PenaltyDofPair>();
 
@@ -104,7 +124,7 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// <summary>
 		/// Return an <see cref="IReadOnlyList{ControlPoint}"/> with the Control Points of the <see cref="Model"/> as <see cref="INode"/>.
 		/// </summary>
-		IReadOnlyList<INode> IStructuralModel.Nodes => ControlPointsDictionary.Values.ToList();
+		//IReadOnlyList<INode> IModel.Nodes => ControlPointsDictionary.Values.ToList();
 
 		/// <summary>
 		/// Number of interfaces between patches.
@@ -129,7 +149,7 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// <summary>
 		/// Dictionary with the patches of the model returned as <see cref="ISubdomain"/>.
 		/// </summary>
-		IReadOnlyList<ISubdomain> IStructuralModel.Subdomains => PatchesDictionary.Values.ToList();
+		//IReadOnlyList<ISubdomain> IStructuralModel.Subdomains => PatchesDictionary.Values.ToList();
 
 		/// <summary>
 		/// List of time dependent loads added to the <see cref="Model"/>.
@@ -141,12 +161,12 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// Assigns nodal loads of the <see cref="Model"/>.
 		/// </summary>
 		/// <param name="distributeNodalLoads"><inheritdoc cref="NodalLoadsToSubdomainsDistributor"/></param>
-		public void AssignLoads(NodalLoadsToSubdomainsDistributor distributeNodalLoads)
-		{
-			foreach (var patch in PatchesDictionary.Values) patch.Forces.Clear();
-			AssignNodalLoads(distributeNodalLoads);
-			//Add possible penalty forces
-		}
+		//public void AssignLoads(NodalLoadsToSubdomainsDistributor distributeNodalLoads)
+		//{
+		//	foreach (var patch in PatchesDictionary.Values) patch.Forces.Clear();
+		//	AssignNodalLoads(distributeNodalLoads);
+		//	//Add possible penalty forces
+		//}
 
 		/// <summary>
 		/// Assigns mass acceleration loads of the time step to the <see cref="Model"/>.
@@ -161,62 +181,104 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// Assigns nodal loads of the <see cref="Model"/>.
 		/// </summary>
 		/// <param name="distributeNodalLoads"><inheritdoc cref="NodalLoadsToSubdomainsDistributor"/></param>
-		public void AssignNodalLoads(NodalLoadsToSubdomainsDistributor distributeNodalLoads)
-		{
-            var globalNodalLoads = new Table<INode, IDofType, double>();
-            foreach (var load in Loads)
-            {
-                var loadTable = load.CalculateLoad();
-                foreach ((INode node, IDofType dof, double load) tuple in loadTable)
-                {
-                    if (tuple.node.Constraints.Any(x => x.DOF == tuple.dof)) continue;
-                    if (globalNodalLoads.Contains(tuple.node, tuple.dof))
-                    {
-                        globalNodalLoads[tuple.node, tuple.dof] += tuple.load;
-                    }
-                    else
-                    {
-                        globalNodalLoads.TryAdd(tuple.node, tuple.dof, tuple.load);
-                    }
+		//public void AssignNodalLoads(NodalLoadsToSubdomainsDistributor distributeNodalLoads)
+		//{
+  //          var globalNodalLoads = new Table<INode, IDofType, double>();
+  //          foreach (var load in Loads)
+  //          {
+  //              var loadTable = load.CalculateLoad();
+  //              foreach ((INode node, IDofType dof, double load) tuple in loadTable)
+  //              {
+  //                  if (tuple.node.Constraints.Any(x => x.DOF == tuple.dof)) continue;
+  //                  if (globalNodalLoads.Contains(tuple.node, tuple.dof))
+  //                  {
+  //                      globalNodalLoads[tuple.node, tuple.dof] += tuple.load;
+  //                  }
+  //                  else
+  //                  {
+  //                      globalNodalLoads.TryAdd(tuple.node, tuple.dof, tuple.load);
+  //                  }
 
-                }
-            }
+  //              }
+  //          }
 
-            Dictionary<int, SparseVector> subdomainNodalLoads = distributeNodalLoads(globalNodalLoads);
-            foreach (var idSubdomainLoads in subdomainNodalLoads)
-            {
-                PatchesDictionary[idSubdomainLoads.Key].Forces.AddIntoThis(idSubdomainLoads.Value);
-            }
+  //          Dictionary<int, SparseVector> subdomainNodalLoads = distributeNodalLoads(globalNodalLoads);
+  //          foreach (var idSubdomainLoads in subdomainNodalLoads)
+  //          {
+  //              PatchesDictionary[idSubdomainLoads.Key].Forces.AddIntoThis(idSubdomainLoads.Value);
+  //          }
 
-			//var globalNodalLoads = new Table<INode, IDofType, double>();
-			//foreach (var load in Loads) globalNodalLoads.TryAdd(load.Node, load.DOF, load.Amount);
+		//	//var globalNodalLoads = new Table<INode, IDofType, double>();
+		//	//foreach (var load in Loads) globalNodalLoads.TryAdd(load.Node, load.DOF, load.Amount);
 
-			//var subdomainNodalLoads = distributeNodalLoads(globalNodalLoads);
-			//foreach (var idSubdomainLoads in subdomainNodalLoads)
-			//{
-			//	PatchesDictionary[idSubdomainLoads.Key].Forces.AddIntoThis(idSubdomainLoads.Value);
-			//}
-		}
+		//	//var subdomainNodalLoads = distributeNodalLoads(globalNodalLoads);
+		//	//foreach (var idSubdomainLoads in subdomainNodalLoads)
+		//	//{
+		//	//	PatchesDictionary[idSubdomainLoads.Key].Forces.AddIntoThis(idSubdomainLoads.Value);
+		//	//}
+		//}
 
 		/// <summary>
 		/// Assigns mass acceleration loads of the time step to the <see cref="Model"/>.
 		/// </summary>
 		/// <param name="timeStep">An <see cref="int"/> denoting the number of the time step.</param>
-		public void AssignTimeDependentNodalLoads(int timeStep, NodalLoadsToSubdomainsDistributor distributeNodalLoads)
-		{
-			var globalNodalLoads = new Table<INode, IDofType, double>();
-			foreach (ITimeDependentNodalLoad load in TimeDependentNodalLoads)
-			{
-				globalNodalLoads.TryAdd(load.Node, load.DOF, load.GetLoadAmount(timeStep));
-			}
+		//public void AssignTimeDependentNodalLoads(int timeStep, NodalLoadsToSubdomainsDistributor distributeNodalLoads)
+		//{
+		//	var globalNodalLoads = new Table<INode, IDofType, double>();
+		//	foreach (ITimeDependentNodalLoad load in TimeDependentNodalLoads)
+		//	{
+		//		globalNodalLoads.TryAdd(load.Node, load.DOF, load.GetLoadAmount(timeStep));
+		//	}
 
-			Dictionary<int, SparseVector> subdomainNodalLoads = distributeNodalLoads(globalNodalLoads);
-			foreach (var idSubdomainLoads in subdomainNodalLoads)
-			{
-				PatchesDictionary[idSubdomainLoads.Key].Forces.AddIntoThis(idSubdomainLoads.Value);
-			}
+		//	Dictionary<int, SparseVector> subdomainNodalLoads = distributeNodalLoads(globalNodalLoads);
+		//	foreach (var idSubdomainLoads in subdomainNodalLoads)
+		//	{
+		//		PatchesDictionary[idSubdomainLoads.Key].Forces.AddIntoThis(idSubdomainLoads.Value);
+		//	}
+		//}
+
+		public void ApplyLoads()
+		{
+			foreach(var subdomain in PatchesDictionary.Values) subdomain.Forces.Clear();
+			//AssignElementMassLoads();
+			//AssignMassAccelerationLoads();
 		}
 
+		public void ApplyMassAccelerationHistoryLoads(int timeStep)
+		{
+			//if (MassAccelerationHistoryLoads.Count > 0)
+			//{
+			//	List<MassAccelerationLoad> m = new List<MassAccelerationLoad>(MassAccelerationHistoryLoads.Count);
+			//	foreach (IMassAccelerationHistoryLoad l in MassAccelerationHistoryLoads)
+			//	{
+			//		m.Add(new MassAccelerationLoad() { Amount = l[timeStep], DOF = l.DOF });
+			//	}
+
+			//	foreach (Subdomain subdomain in SubdomainsDictionary.Values)
+			//	{
+			//		foreach (Element element in subdomain.Elements.Values)
+			//		{
+			//			double[] accelerationForces = element.ElementType.CalculateAccelerationForces(element, m);
+			//			subdomain.FreeDofOrdering.AddVectorElementToSubdomain(element, accelerationForces, subdomain.Forces);
+			//		}
+			//	}
+			//}
+
+			//foreach (ElementMassAccelerationHistoryLoad load in ElementMassAccelerationHistoryLoads)
+			//{
+			//	MassAccelerationLoad hl = new MassAccelerationLoad()
+			//	{
+			//		Amount = load.HistoryLoad[timeStep] * 564000000,
+			//		DOF = load.HistoryLoad.DOF
+			//	};
+			//	Element element = load.Element;
+			//	ISubdomain subdomain = element.Subdomain;
+			//	var accelerationForces = element.ElementType.CalculateAccelerationForces(
+			//		load.Element, (new MassAccelerationLoad[] { hl }).ToList());
+			//	GlobalDofOrdering.GetSubdomainDofOrdering(subdomain).AddVectorElementToSubdomain(element, accelerationForces,
+			//		subdomain.Forces);
+			//}
+		}
 		/// <summary>
 		/// Clear the <see cref="Model"/>.
 		/// </summary>
