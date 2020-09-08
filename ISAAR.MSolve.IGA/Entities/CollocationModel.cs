@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using ISAAR.MSolve.Discretization;
 using ISAAR.MSolve.Discretization.Commons;
-using ISAAR.MSolve.Discretization.Entities;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.Discretization.Interfaces;
-using ISAAR.MSolve.Discretization.Transfer;
 using ISAAR.MSolve.FEM.Interfaces;
+using ISAAR.MSolve.IGA.Entities.Loads;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 
 namespace ISAAR.MSolve.IGA.Entities
@@ -31,14 +30,11 @@ namespace ISAAR.MSolve.IGA.Entities
 
         //public IList<EmbeddedNode> EmbeddedNodes { get; } = new List<EmbeddedNode>();
 
-        public Dictionary<int, Cluster> Clusters { get; } = new Dictionary<int, Cluster>();
+        public IList<Cluster> Clusters => ClustersDictionary.Values.ToList();
+        public Dictionary<int, Cluster> ClustersDictionary { get; } = new Dictionary<int, Cluster>();
 
-        public IDofSerializer DofSerializer
-        {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-        }
-
+        IReadOnlyList<IElement> IStructuralModel.Elements => ElementsDictionary.Values.ToList();
+        public IList<ICollocationElement> Elements => ElementsDictionary.Values.ToList();
         public Dictionary<int, ICollocationElement> ElementsDictionary => elementsDictionary;
 
         public IList<Load> Loads { get; private set; } = new List<Load>();
@@ -46,6 +42,8 @@ namespace ISAAR.MSolve.IGA.Entities
         public IList<IMassAccelerationHistoryLoad> MassAccelerationHistoryLoads { get; } =
             new List<IMassAccelerationHistoryLoad>();
 
+        public IList<ControlPoint> ControlPoints => controlPointsDictionary.Values.ToList();
+        IReadOnlyList<INode> IStructuralModel.Nodes => controlPointsDictionary.Values.ToList();
 
         public Dictionary<int, ControlPoint> ControlPointsDictionary
         {
@@ -64,11 +62,13 @@ namespace ISAAR.MSolve.IGA.Entities
             set { numberOfInterfaces = value; }
         }
 
-        public int NumElements => ElementsDictionary.Count;
-        public int NumNodes => ControlPointsDictionary.Count;
-        public int NumSubdomains => PatchesDictionary.Count;
+        IReadOnlyList<ISubdomain> IStructuralModel.Subdomains => patchesDictionary.Values.ToList();
+        public IList<CollocationPatch> Patches => patchesDictionary.Values.ToList();
 
-        public Dictionary<int, CollocationPatch> PatchesDictionary => patchesDictionary;
+        public Dictionary<int, CollocationPatch> PatchesDictionary
+        {
+            get => patchesDictionary;
+        }
 
         public Table<INode, IDofType, double> Constraints { get; private set; } =
             new Table<INode, IDofType, double>(); //TODOMaria: maybe it's useless in model class
@@ -79,9 +79,9 @@ namespace ISAAR.MSolve.IGA.Entities
             set
             {
                 globalDofOrdering = value;
-                foreach (var patch in PatchesDictionary.Values)
+                foreach (var patch in Patches)
                 {
-                    patch.FreeDofRowOrdering = GlobalDofOrdering.GetSubdomainDofOrdering(patch);
+                    patch.FreeDofRowOrdering = GlobalDofOrdering.SubdomainDofOrderings[patch];
                 }
 
                 //EnumerateSubdomainLagranges();
@@ -96,9 +96,9 @@ namespace ISAAR.MSolve.IGA.Entities
             set
             {
                 globalRowDofOrdering = value;
-                foreach (var patch in PatchesDictionary.Values)
+                foreach (var patch in Patches)
                 {
-                    patch.FreeDofColOrdering = GlobalRowDofOrdering.GetSubdomainDofOrdering(patch);
+                    patch.FreeDofColOrdering = GlobalRowDofOrdering.SubdomainDofOrderings[patch];
                     patch.Forces = Vector.CreateZero(patch.FreeDofColOrdering.NumFreeDofs);
                 }
 
@@ -114,9 +114,9 @@ namespace ISAAR.MSolve.IGA.Entities
             set
             {
                 globalColDofOrdering = value;
-                foreach (var patch in PatchesDictionary.Values)
+                foreach (var patch in Patches)
                 {
-                    patch.FreeDofColOrdering = GlobalColDofOrdering.GetSubdomainDofOrdering(patch);
+                    patch.FreeDofColOrdering = GlobalColDofOrdering.SubdomainDofOrderings[patch];
                     patch.Forces = Vector.CreateZero(patch.FreeDofColOrdering.NumFreeDofs);
                 }
 
@@ -127,13 +127,14 @@ namespace ISAAR.MSolve.IGA.Entities
 
         public IReadOnlyList<IAsymmetricSubdomain> Subdomains => patchesDictionary.Values.ToList();
 
-        public void ApplyLoads()
+        public void AssignLoads(NodalLoadsToSubdomainsDistributor distributeNodalLoads)
         {
             foreach (var patch in PatchesDictionary.Values) patch.Forces.Clear();
+            AssignControlPointLoads(distributeNodalLoads);
             AssignBoundaryLoads();
         }
 
-        public void ApplyMassAccelerationHistoryLoads(int timeStep)
+        public void AssignMassAccelerationHistoryLoads(int timeStep)
         {
             throw new NotImplementedException();
         }
@@ -160,66 +161,17 @@ namespace ISAAR.MSolve.IGA.Entities
             }
         }
 
-        //What is the purpose of this method? If someone wanted to clear the Model, they could just create a new one.
-        public void Clear()
+        private void AssignControlPointLoads(NodalLoadsToSubdomainsDistributor distributeControlPointLoads)
         {
-            Loads.Clear();
-            Clusters.Clear();
-            PatchesDictionary.Clear();
-            ElementsDictionary.Clear();
-            ControlPointsDictionary.Clear();
-            globalDofOrdering = null;
-            Constraints.Clear();
-            MassAccelerationHistoryLoads.Clear();
-        }
+            var globalPointLoads = new Table<INode, IDofType, double>();
+            foreach (Load load in Loads) globalPointLoads.TryAdd(load.ControlPoint, load.DOF, load.Amount);
 
-        public void ConnectDataStructures()
-        {
-            BuildInterconnectionData();
-            AssignConstraints();
-            AssignNodalLoadsToPatches();
-        }
-
-        public IEnumerable<IElement> EnumerateElements() => ElementsDictionary.Values;
-        public IEnumerable<INode> EnumerateNodes() => controlPointsDictionary.Values;
-        public IEnumerable<ISubdomain> EnumerateSubdomains() => PatchesDictionary.Values;
-
-        public IElement GetElement(int elementID) => ElementsDictionary[elementID];
-        public INode GetNode(int nodeID) => controlPointsDictionary[nodeID];
-        public ISubdomain GetSubdomain(int subdomainID) => PatchesDictionary[subdomainID];
-
-        //TODO: constraints should not be saved inside the nodes. As it is right now (22/11/2018) the same constraint 
-        //      is saved in the node, the model constraints table and the subdomain constraints table. Furthermore,
-        //      displacement control analyzer updates the subdomain constraints table only (another bad design decision).  
-        //      It is too easy to access the wrong instance of the constraint. 
-        private void AssignConstraints()
-        {
-            foreach (ControlPoint controlPoint in ControlPointsDictionary.Values)
+            Dictionary<int, SparseVector> patchPointLoads = distributeControlPointLoads(globalPointLoads);
+            foreach (var idPatchLoads in patchPointLoads)
             {
-                if (controlPoint.Constraints == null) continue;
-                foreach (Constraint constraint in controlPoint.Constraints)
-                    Constraints[controlPoint, constraint.DOF] = constraint.Amount;
+                PatchesDictionary[idPatchLoads.Key].Forces.AddIntoThis(idPatchLoads.Value);
             }
 
-            foreach (var patch in PatchesDictionary.Values) patch.ExtractConstraintsFromGlobal(Constraints);
-        }
-
-        private void AssignNodalLoadsToPatches()
-        {
-            // Remove inactive loads added by the user
-            var activeLoads = new List<Load>(Loads.Count);
-            foreach (Load load in Loads)
-            {
-                bool isConstrained = Constraints.Contains(load.ControlPoint, load.DOF);
-                if (!isConstrained) activeLoads.Add(load);
-            }
-            Loads = activeLoads;
-
-            // Assign the rest to their subdomains without scaling them. That will be done later by the analyzer and solver.
-            foreach (Load load in Loads)
-            {
-                foreach (Patch patch in load.ControlPoint.PatchesDictionary.Values) patch.NodalLoads.Add(load);
-            }
 
             // Old code. It should probably be deleted.
             //foreach (Patch patch in PatchesDictionary.Values)
@@ -249,6 +201,43 @@ namespace ISAAR.MSolve.IGA.Entities
             //}
         }
 
+
+        //What is the purpose of this method? If someone wanted to clear the Model, they could just create a new one.
+        public void Clear()
+        {
+            Loads.Clear();
+            ClustersDictionary.Clear();
+            PatchesDictionary.Clear();
+            ElementsDictionary.Clear();
+            ControlPointsDictionary.Clear();
+            globalDofOrdering = null;
+            Constraints.Clear();
+            MassAccelerationHistoryLoads.Clear();
+        }
+
+        public void ConnectDataStructures()
+        {
+            BuildInterconnectionData();
+            AssignConstraints();
+            RemoveInactiveNodalLoads();
+        }
+
+        //TODO: constraints should not be saved inside the nodes. As it is right now (22/11/2018) the same constraint 
+        //      is saved in the node, the model constraints table and the subdomain constraints table. Furthermore,
+        //      displacement control analyzer updates the subdomain constraints table only (another bad design decision).  
+        //      It is too easy to access the wrong instance of the constraint. 
+        private void AssignConstraints()
+        {
+            foreach (ControlPoint controlPoint in ControlPointsDictionary.Values)
+            {
+                if (controlPoint.Constraints == null) continue;
+                foreach (Constraint constraint in controlPoint.Constraints)
+                    Constraints[controlPoint, constraint.DOF] = constraint.Amount;
+            }
+
+            foreach (var patch in PatchesDictionary.Values) patch.ExtractConstraintsFromGlobal(Constraints);
+        }
+
         private void BuildElementDictionaryOfEachControlPoint()
         {
             foreach (Element element in elementsDictionary.Values)
@@ -256,7 +245,8 @@ namespace ISAAR.MSolve.IGA.Entities
                     controlPoint.ElementsDictionary.Add(element.ID, element);
         }
 
-        private void BuildInterconnectionData() //TODOMaria: maybe I have to generate the constraints dictionary for each subdomain here
+        private void
+            BuildInterconnectionData() //TODOMaria: maybe I have to generate the constraints dictionary for each subdomain here
         {
             BuildPatchOfEachElement();
             BuildElementDictionaryOfEachControlPoint();
@@ -268,11 +258,22 @@ namespace ISAAR.MSolve.IGA.Entities
         private void BuildPatchOfEachElement()
         {
             foreach (var patch in patchesDictionary.Values)
-                foreach (var element in patch.Elements.Values)
+                foreach (var element in patch.Elements)
                 {
                     element.Patch = patch;
                     element.Model = this;
                 }
+        }
+
+        private void RemoveInactiveNodalLoads()
+        {
+            var activeLoads = new List<Load>(Loads.Count);
+            foreach (Load load in Loads)
+            {
+                bool isConstrained = Constraints.Contains(load.ControlPoint, load.DOF);
+                if (!isConstrained) activeLoads.Add(load);
+            }
+            Loads = activeLoads;
         }
     }
 }

@@ -41,25 +41,9 @@ namespace ISAAR.MSolve.IGA.Entities
         public double Y { get; set; }
         public double Z { get; set; }
         public List<Constraint> Constraints { get; }
-        public int Multiplicity => SubdomainsDictionary.Count;
         public Dictionary<int, ISubdomain> SubdomainsDictionary { get; }
 
         public int CompareTo(INode other) => this.ID - other.ID;
-
-        public double[] tU { get; set; }
-        public double[] tX { get; set; }
-
-        public double[] oX { get; set; }
-
-        double[] oVn { get; set; }
-        double[] tVn { get; set; }
-        double[] tV1 { get; set; }
-
-        double[] tV2 { get; set; }
-        double[] INode.oVn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        double[] INode.tVn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        double[] INode.tV1 { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        double[] INode.tV2 { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 
     public enum Surface

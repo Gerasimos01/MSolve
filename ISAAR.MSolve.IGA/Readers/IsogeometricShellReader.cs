@@ -1,18 +1,37 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using ISAAR.MSolve.IGA.Elements;
+using ISAAR.MSolve.IGA.Elements.Structural;
 using ISAAR.MSolve.IGA.Entities;
+using ISAAR.MSolve.IGA.SupportiveClasses;
+using ISAAR.MSolve.IGA.SupportiveClasses.Interpolation;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Materials;
+using ISAAR.MSolve.Materials.Interfaces;
 
 namespace ISAAR.MSolve.IGA.Readers
 {
-    public class IsogeometricShellReader
+    public enum GeometricalFormulation
 	{
-		public Model Model { get; }
-		public string Filename { get; private set; }
+		Linear,
+		NonLinear,
+		SectionNonLinear
+	}
 
-		enum Attributes
+	/// <summary>
+	/// Reader for custom isogeometric shell model files.
+	/// </summary>
+	public class IsogeometricShellReader
+	{
+		private readonly string _filename;
+        private readonly GeometricalFormulation _formulation;
+        private readonly IShellMaterial _material;
+        private readonly IShellSectionMaterial _sectionMaterial;
+
+        private enum Attributes
 		{
 			numberofdimensions,
 			numberofpatches, numberofinterfaces,
@@ -24,108 +43,136 @@ namespace ISAAR.MSolve.IGA.Readers
 			cpcoord, thickness, material, end
 		}
 
-		public IsogeometricShellReader(Model model, string filename)
+		/// <summary>
+		/// Defines a custom isogeometric shell file reader.
+		/// </summary>
+		/// <param name="modelCreator">An <see cref="ModelCreator"/> object responsible for generating the model.</param>
+		/// <param name="filename">The name of the file to be read.</param>
+		public IsogeometricShellReader(GeometricalFormulation formulation,
+            string filename, IShellMaterial material=null,IShellSectionMaterial sectionMaterial=null )
 		{
-			Model = model;
-			Filename = filename;
-		}
+			_filename = filename;
+            _formulation = formulation;
+            _material = material;
+            _sectionMaterial = sectionMaterial;
+        }
 
+		private Dictionary<int, int[]> ControlPointIDsDictionary = new Dictionary<int, int[]>();
+        private int NumberOfDimensions;
+        private double Thickness;
+        private int DegreeKsi;
+        private int DegreeHeta;
+        private int NumberOfControlPointsKsi;
+        private int NumberOfControlPointsHeta;
+        private Vector KnotValueVectorKsi;
+        private Vector KnotValueVectorHeta;
+        private Dictionary<int, ControlPoint> ControlPointsDictionary=new Dictionary<int, ControlPoint>();
 
-		private int patchID = -1;
-		private int numberOfValues = 0;
-		int[] localControlPointIDs;
-		int counterElementID = 0;
-		private int counterCPID;
-		Dictionary<int, int[]> ControlPointIDsDictionary= new Dictionary<int, int[]>();
+        public Model GenerateModelFromFile()
+        {
+            ReadShellModelFromFile();
+            return GenerateModel();
+        }
 
-		public void CreateShellModelFromFile()
+        private void ReadShellModelFromFile()
 		{
 			char[] delimeters = { ' ', '=', '\t' };
-			IsogeometricShellReader.Attributes? name = null;
+			Attributes? name = null;
 
-			String[] text = System.IO.File.ReadAllLines(Filename);
+			int patchID = -1;
+			int numberOfValues = 0;
+			int[] localControlPointIDs;
+			int counterElementID = 0;
+			int counterCPID;
+
+			string[] text = File.ReadAllLines(_filename);
 
 			for (int i = 0; i < text.Length; i++)
 			{
-				String[] line = text[i].Split(delimeters, StringSplitOptions.RemoveEmptyEntries);
+				string[] line = text[i].Split(delimeters, StringSplitOptions.RemoveEmptyEntries);
 				if (line.Length == 0)
 				{
 					continue;
 				}
 				try
 				{
-					name = (IsogeometricShellReader.Attributes)Enum.Parse(typeof(IsogeometricShellReader.Attributes), line[0].ToLower());
+					name = (Attributes)Enum.Parse(typeof(Attributes), line[0].ToLower());
 				}
 				catch (Exception exception)
 				{
-					throw new KeyNotFoundException("Variable name " + line[0] + " is not found.");
+					throw new KeyNotFoundException($"Variable name {line[0]} is not found. {exception.Message}");
 				}
 
 				switch (name)
 				{
-					case IsogeometricShellReader.Attributes.numberofdimensions:
-						Model.PatchesDictionary[patchID].NumberOfDimensions = Int32.Parse(line[1]);
+					case Attributes.numberofdimensions:
+						this.NumberOfDimensions = Int32.Parse(line[1]);
 						break;
-					case IsogeometricShellReader.Attributes.thickness:
-						Model.PatchesDictionary[patchID].Thickness = Double.Parse(line[1], CultureInfo.InvariantCulture);
+
+					case Attributes.thickness:
+						this.Thickness = Double.Parse(line[1], CultureInfo.InvariantCulture);
 						break;
-					case IsogeometricShellReader.Attributes.numberofpatches:
-						//Model.NumberOfPatches = Int32.Parse(line[1]);
+
+					case Attributes.numberofpatches:
 						break;
-					case IsogeometricShellReader.Attributes.material:
-						Model.PatchesDictionary[patchID].Material = new ElasticMaterial2D(StressState2D.PlaneStrain) { YoungModulus = Double.Parse(line[2], CultureInfo.InvariantCulture), PoissonRatio = Double.Parse(line[3], CultureInfo.InvariantCulture) };
-						break;
-					case IsogeometricShellReader.Attributes.patchid:
+
+					case Attributes.patchid:
 						patchID = Int32.Parse(line[1]);
-						Model.PatchesDictionary.Add(patchID,new Patch());
 						break;
-					case IsogeometricShellReader.Attributes.degreeksi:
+
+					case Attributes.degreeksi:
 						if (patchID == -1)
 							throw new ArgumentOutOfRangeException("Degree Ksi of a patch must be defined after the patchID");
-						Model.PatchesDictionary[patchID].DegreeKsi=Int32.Parse(line[1]);
+						this.DegreeKsi = Int32.Parse(line[1]);
 						break;
-					case IsogeometricShellReader.Attributes.degreeheta:
+
+					case Attributes.degreeheta:
 						if (patchID == -1)
 							throw new ArgumentOutOfRangeException("Degree Heta of a patch must be defined after the patchID");
-						Model.PatchesDictionary[patchID].DegreeHeta = Int32.Parse(line[1]);
+						this.DegreeHeta = Int32.Parse(line[1]);
 						break;
-					case IsogeometricShellReader.Attributes.numberofcpksi:
+
+					case Attributes.numberofcpksi:
 						if (patchID == -1)
 							throw new ArgumentOutOfRangeException("Number of Control Points Ksi of a patch must be defined after the patchID");
-						Model.PatchesDictionary[patchID].NumberOfControlPointsKsi= Int32.Parse(line[1]);
+						this.NumberOfControlPointsKsi = Int32.Parse(line[1]);
 						break;
-					case IsogeometricShellReader.Attributes.numberofcpheta:
+
+					case Attributes.numberofcpheta:
 						if (patchID == -1)
 							throw new ArgumentOutOfRangeException("Number of Control Points Heta of a patch must be defined after the patchID");
-						Model.PatchesDictionary[patchID].NumberOfControlPointsHeta= Int32.Parse(line[1]);
+						this.NumberOfControlPointsHeta = Int32.Parse(line[1]);
 						break;
-					case IsogeometricShellReader.Attributes.knotvaluevectorksi:
+
+					case Attributes.knotvaluevectorksi:
 						if (patchID == -1)
 							throw new ArgumentOutOfRangeException("KnotValue Vector Ksi of a patch must be defined after the patchID");
-						if (Model.PatchesDictionary[patchID].DegreeKsi == 0 || Model.PatchesDictionary[patchID].NumberOfControlPointsKsi == 0)
+						if (this.DegreeKsi == 0 || this.NumberOfControlPointsKsi == 0)
 							throw new ArgumentOutOfRangeException("Degree Ksi and number of Control Points per axis Ksi must be defined before Knot Value Vector Ksi.");
-						numberOfValues = Model.PatchesDictionary[patchID].DegreeKsi + Model.PatchesDictionary[patchID].NumberOfControlPointsKsi + 1;
+						numberOfValues = this.DegreeKsi + this.NumberOfControlPointsKsi + 1;
 						double[] KnotValueVectorKsi = new double[numberOfValues];
 						for (int j = 0; j < numberOfValues; j++)
 							KnotValueVectorKsi[j] = Double.Parse(line[j + 1], CultureInfo.InvariantCulture);
-						Model.PatchesDictionary[patchID].KnotValueVectorKsi = Vector.CreateFromArray(KnotValueVectorKsi);
+						this.KnotValueVectorKsi = Vector.CreateFromArray(KnotValueVectorKsi);
 						break;
-					case IsogeometricShellReader.Attributes.knotvaluevectorheta:
+
+					case Attributes.knotvaluevectorheta:
 						if (patchID == -1)
 							throw new ArgumentOutOfRangeException("KnotValue Vector Heta of a patch must be defined after the patchID");
-						if (Model.PatchesDictionary[patchID].DegreeHeta == 0 || Model.PatchesDictionary[patchID].NumberOfControlPointsHeta == 0)
+						if (this.DegreeHeta == 0 || this.NumberOfControlPointsHeta == 0)
 							throw new ArgumentOutOfRangeException("Degree Heta and number of Control Points per axis Heta must be defined before Knot Value Vector Heta.");
-						numberOfValues = Model.PatchesDictionary[patchID].DegreeHeta + Model.PatchesDictionary[patchID].NumberOfControlPointsHeta + 1;
+						numberOfValues = this.DegreeHeta + this.NumberOfControlPointsHeta + 1;
 						double[] KnotValueVectorHeta = new double[numberOfValues];
 						for (int j = 0; j < numberOfValues; j++)
 							KnotValueVectorHeta[j] = Double.Parse(line[j + 1], CultureInfo.InvariantCulture);
-						Model.PatchesDictionary[patchID].KnotValueVectorHeta = Vector.CreateFromArray(KnotValueVectorHeta);
+						this.KnotValueVectorHeta = Vector.CreateFromArray(KnotValueVectorHeta);
 						break;
-					case IsogeometricShellReader.Attributes.patchcpid:
+
+					case Attributes.patchcpid:
 						if (patchID == -1)
 							throw new ArgumentOutOfRangeException("Control Points ID of a patch must be defined after the patchID");
-						int numberOfPatchCP = Model.PatchesDictionary[patchID].NumberOfControlPointsKsi *
-						                      Model.PatchesDictionary[patchID].NumberOfControlPointsHeta;
+						int numberOfPatchCP = this.NumberOfControlPointsKsi *
+											  this.NumberOfControlPointsHeta;
 						localControlPointIDs = new int[numberOfPatchCP];
 						for (int j = 0; j < numberOfPatchCP; j++)
 						{
@@ -133,37 +180,191 @@ namespace ISAAR.MSolve.IGA.Readers
 						}
 						ControlPointIDsDictionary.Add(patchID, localControlPointIDs);
 						break;
-					case IsogeometricShellReader.Attributes.cpcoord:
+
+					case Attributes.cpcoord:
 						var numberOfControlPoints = Int32.Parse(line[1]);
 						for (int j = 0; j < numberOfControlPoints; j++)
 						{
 							i++;
 							line = text[i].Split(delimeters);
 							int controlPointGlobalID = Int32.Parse(line[0]);
-							double x = Double.Parse(line[1], CultureInfo.InvariantCulture);
-							double y = Double.Parse(line[2], CultureInfo.InvariantCulture);
-							double z = Double.Parse(line[3], CultureInfo.InvariantCulture);
-							double w = Double.Parse(line[4], CultureInfo.InvariantCulture);
+							double x = double.Parse(line[1], CultureInfo.InvariantCulture);
+							double y = double.Parse(line[2], CultureInfo.InvariantCulture);
+							double z = double.Parse(line[3], CultureInfo.InvariantCulture);
+							double w = double.Parse(line[4], CultureInfo.InvariantCulture);
 							ControlPoint controlPoint = new ControlPoint()
-							{ ID = controlPointGlobalID, X = x, Y =  y, Z = z, WeightFactor = w };
-							Model.ControlPointsDictionary.Add(controlPointGlobalID, controlPoint);
+							{ ID = controlPointGlobalID, X = x, Y = y, Z = z, WeightFactor = w };
+							this.ControlPointsDictionary.Add(controlPointGlobalID, controlPoint);
 						}
 						break;
-					case IsogeometricShellReader.Attributes.end:
-						for (int j = 0; j < ControlPointIDsDictionary[patchID].Length; j++)
-                        {
-                            ControlPoint cp = Model.ControlPointsDictionary[ControlPointIDsDictionary[patchID][j]];
-                            Model.PatchesDictionary[patchID].ControlPoints[cp.ID] = cp;
-                        }
 
-						Model.PatchesDictionary[patchID].CreateNurbsShell();
-						foreach (var element in Model.PatchesDictionary[patchID].Elements.Values)
-							Model.ElementsDictionary.Add(counterElementID++, element);
+					case Attributes.end:
 						return;
 				}
 			}
 		}
 
+        private Model GenerateModel()
+        {
+            var model= new Model();
+            model.PatchesDictionary.Add(0, new Patch());
+            foreach (var controlPoint in ControlPointsDictionary)
+            {
+                model.ControlPointsDictionary.Add(controlPoint.Key, controlPoint.Value);
+                model.PatchesDictionary[0].ControlPoints.Add(controlPoint.Value);
+            }
 
-	}
+            CreateNURBSShells(model, _formulation);
+            var counterElementID = 0;
+            foreach (var element in model.PatchesDictionary[0].Elements)
+            {
+                model.ElementsDictionary.Add(counterElementID, element);
+                counterElementID++;
+            }
+            return model;
+        }
+
+
+
+        private void CreateNURBSShells(Model model, GeometricalFormulation formulation)
+        {
+            #region Knots
+
+            Vector singleKnotValuesKsi = KnotValueVectorKsi.RemoveDuplicatesFindMultiplicity()[0];
+            Vector singleKnotValuesHeta = KnotValueVectorHeta.RemoveDuplicatesFindMultiplicity()[0];
+
+            var knots = CreateShellKnots(singleKnotValuesKsi, singleKnotValuesHeta);
+
+            #endregion Knots
+
+            #region Elements
+
+            CreateShellElements(model,singleKnotValuesKsi, singleKnotValuesHeta, knots, formulation);
+
+            #endregion Elements
+        }
+
+
+        private void CreateShellElements(Model model,Vector singleKnotValuesKsi, Vector singleKnotValuesHeta, List<Knot> knots, GeometricalFormulation formulation)
+        {
+            Vector multiplicityKsi = KnotValueVectorKsi.RemoveDuplicatesFindMultiplicity()[1];
+            Vector multiplicityHeta = KnotValueVectorHeta.RemoveDuplicatesFindMultiplicity()[1];
+
+            int numberOfElementsKsi = singleKnotValuesKsi.Length - 1;
+            int numberOfElementsHeta = singleKnotValuesHeta.Length - 1;
+            if (numberOfElementsKsi * numberOfElementsHeta == 0)
+            {
+                throw new ArgumentException("Number of Elements should be defined before Element Connectivity");
+            }
+
+            for (int i = 0; i < numberOfElementsKsi; i++)
+            {
+                for (int j = 0; j < numberOfElementsHeta; j++)
+                {
+                    IList<Knot> knotsOfElement = new List<Knot>
+                    {
+                        knots[i * singleKnotValuesHeta.Length + j],
+                        knots[i * singleKnotValuesHeta.Length + j + 1],
+                        knots[(i + 1) * singleKnotValuesHeta.Length + j],
+                        knots[(i + 1) * singleKnotValuesHeta.Length + j + 1]
+                    };
+
+                    int multiplicityElementKsi = 0;
+                    if (multiplicityKsi[i + 1] - this.DegreeKsi > 0)
+                    {
+                        multiplicityElementKsi = (int)multiplicityKsi[i + 1] - this.DegreeKsi;
+                    }
+
+                    int multiplicityElementHeta = 0;
+                    if (multiplicityHeta[j + 1] - this.DegreeHeta > 0)
+                    {
+                        multiplicityElementHeta = (int)multiplicityHeta[j + 1] - this.DegreeHeta;
+                    }
+
+                    int nurbsSupportKsi = this.DegreeKsi + 1;
+                    int nurbsSupportHeta = this.DegreeHeta + 1;
+
+                    IList<ControlPoint> elementControlPoints = new List<ControlPoint>();
+
+                    for (int k = 0; k < nurbsSupportKsi; k++)
+                    {
+                        for (int l = 0; l < nurbsSupportHeta; l++)
+                        {
+                            int controlPointID = (i + multiplicityElementKsi) * this.NumberOfControlPointsHeta +
+                                                 (j + multiplicityElementHeta) + k * this.NumberOfControlPointsHeta + l;
+                            elementControlPoints.Add(model.ControlPointsDictionary[controlPointID]);
+                        }
+                    }
+
+                    int elementID = i * numberOfElementsHeta + j;
+                    Element element = null;
+
+                    var gauss= new GaussQuadrature();
+                    var gaussPoints = gauss.CalculateElementGaussPoints(DegreeKsi, DegreeHeta, knotsOfElement).ToArray();
+                    var nurbs = new Nurbs2D(DegreeKsi, KnotValueVectorKsi.CopyToArray(),
+                        DegreeHeta, KnotValueVectorHeta.CopyToArray(),
+                        elementControlPoints.ToArray(), gaussPoints);
+                    switch (formulation)
+                    {
+                        case GeometricalFormulation.Linear:
+                            element = new Element
+                            {
+                                ID = elementID,
+                                Patch = model.PatchesDictionary[0],
+                                ElementType = new KirchhoffLoveShell(_sectionMaterial, nurbs, gaussPoints, Thickness)
+                            };
+                            element.AddKnots(knotsOfElement);
+                            element.AddControlPoints(elementControlPoints);
+                            break;
+                        case GeometricalFormulation.NonLinear:
+                            element = new Element()
+                            {
+                                ID = elementID,
+                                Patch = model.PatchesDictionary[0],
+                                ElementType = new KirchhoffLoveShellNL(_material,
+                                    knotsOfElement, nurbs, elementControlPoints, model.PatchesDictionary[0], Thickness,
+                                    DegreeKsi, DegreeHeta)
+                                {
+                                    ID = elementID,
+                                }
+                            };
+                            element.AddKnots(knotsOfElement);
+                            element.AddControlPoints(elementControlPoints);
+                            break;
+                        case GeometricalFormulation.SectionNonLinear:
+                            throw new NotImplementedException();
+                            //element = new NurbsKirchhoffLoveShellElementSectionNL(_material,knotsOfElement.ToArray(), elementControlPoints, nurbs, model.PatchesDictionary[0],Thickness,DegreeKsi, DegreeHeta)
+                            // {
+                            //    ID = elementID,
+                            //    ElementType = new NurbsKirchhoffLoveShellElementSectionNL(_material, knotsOfElement.ToArray(), elementControlPoints, nurbs, model.PatchesDictionary[0], Thickness, DegreeKsi, DegreeHeta)
+                            //};
+                            //break;
+                    }
+                    model.PatchesDictionary[0].Elements.Add(element);
+                }
+            }
+        }
+
+
+        private static List<Knot> CreateShellKnots(Vector singleKnotValuesKsi, Vector singleKnotValuesHeta)
+        {
+            List<Knot> knots = new List<Knot>();
+
+            int id = 0;
+            for (int i = 0; i < singleKnotValuesKsi.Length; i++)
+            {
+                for (int j = 0; j < singleKnotValuesHeta.Length; j++)
+                {
+                    knots.Add(new Knot() { ID = id, Ksi = singleKnotValuesKsi[i], Heta = singleKnotValuesHeta[j], Zeta = 0.0 });
+                    id++;
+                }
+            }
+
+            return knots;
+        }
+
+
+        
+
+    }
 }

@@ -18,14 +18,17 @@ namespace ISAAR.MSolve.IGA.Entities
         private readonly Dictionary<int, Edge> edgesDictionary = new Dictionary<int, Edge>();
         private readonly Dictionary<int, Face> facesDictionary = new Dictionary<int, Face>();
 
+        private readonly List<ControlPoint> controlPoints = new List<ControlPoint>();
 
         public Table<INode, IDofType, double> Constraints { get; } = new Table<INode, IDofType, double>();
 
-        public Dictionary<int, ICollocationElement> Elements { get; } = new Dictionary<int, ICollocationElement>();
+        IReadOnlyList<IElement> ISubdomain.Elements => Elements;
+        public List<ICollocationElement> Elements { get; } = new List<ICollocationElement>();
 
         public int ID { get; }
 
-        public SortedDictionary<int, ControlPoint> ControlPoints { get; } = new SortedDictionary<int, ControlPoint>();
+        IReadOnlyList<INode> ISubdomain.Nodes => controlPoints;
+        public IReadOnlyList<ControlPoint> ControlPoints => controlPoints;
 
         public ISubdomainConstrainedDofOrdering ConstrainedDofOrdering { get; set; }
         public ISubdomainFreeDofOrdering FreeDofOrdering { get; set; }
@@ -33,7 +36,7 @@ namespace ISAAR.MSolve.IGA.Entities
         public Vector Forces { get; set; }
 
         public bool StiffnessModified { get; set; }
-        public bool ConnectivityModified { get; set; } = true; // At first it is modified
+        public bool ConnectivityModified { get; set; }
 
         public Table<ControlPoint, IDofType, double> ControlPointLoads { get; set; }
 
@@ -47,11 +50,12 @@ namespace ISAAR.MSolve.IGA.Entities
             get { return facesDictionary; }
         }
 
-        public List<Load> NodalLoads { get; } = new List<Load>();
-
-        public int NumElements => Elements.Count;
-        public int NumNodalLoads => NodalLoads.Count;
-        public int NumNodes => ControlPoints.Count;
+        public double[] CalculateElementIncrementalConstraintDisplacements(IElement element, double constraintScalingFactor)
+        {
+            var elementNodalDisplacements = new double[FreeDofOrdering.CountElementDofs(element)];
+            ApplyConstraintDisplacements(element, elementNodalDisplacements, Constraints);
+            return elementNodalDisplacements;
+        }
 
         private static void ApplyConstraintDisplacements(IElement element, double[] elementNodalDisplacements,
             Table<INode, IDofType, double> constraints)
@@ -96,31 +100,20 @@ namespace ISAAR.MSolve.IGA.Entities
             //foreach (Element element in Elements) element.ElementType.ClearMaterialStresses();
         }
 
-        public void ConnectDataStructures()
-        {
-            DefineControlPointsFromElements();
-
-            foreach (Element element in Elements.Values)
-            {
-                foreach (ControlPoint node in element.ControlPoints) node.ElementsDictionary[element.ID] = element;
-            }
-        }
-
         public void DefineControlPointsFromElements()
         {
-            foreach (Element element in Elements.Values)
+            var cpComparer = Comparer<ControlPoint>.Create((node1, node2) => node1.ID - node2.ID);
+            var cpSet = new SortedSet<ControlPoint>(cpComparer);
+            foreach (Element element in Elements)
             {
-                foreach (ControlPoint node in element.ControlPoints) ControlPoints[node.ID] = node;
+                foreach (ControlPoint node in element.ControlPoints) cpSet.Add(node);
             }
+            controlPoints.AddRange(cpSet);
         }
-
-        public IEnumerable<IElement> EnumerateElements() => Elements.Values;
-        public IEnumerable<INodalLoad> EnumerateNodalLoads() => NodalLoads;
-        public IEnumerable<INode> EnumerateNodes() => ControlPoints.Values;
 
         public void ExtractConstraintsFromGlobal(Table<INode, IDofType, double> globalConstraints)
         {
-            foreach (INode controlPoint in EnumerateNodes())
+            foreach (ControlPoint controlPoint in ControlPoints)
             {
                 bool isControlPointConstrained = globalConstraints.TryGetDataOfRow(controlPoint,
                     out IReadOnlyDictionary<IDofType, double> constraintsOfNode);
@@ -141,13 +134,10 @@ namespace ISAAR.MSolve.IGA.Entities
             //}
         }
 
-        public IElement GetElement(int elementID) => Elements[elementID];
-        public INode GetNode(int nodeID) => ControlPoints[nodeID];
-
         public IVector GetRhsFromSolution(IVectorView solution, IVectorView dSolution)
         {
             var forces = Vector.CreateZero(FreeDofOrdering.NumFreeDofs); //TODO: use Vector
-            foreach (Element element in Elements.Values)
+            foreach (Element element in Elements)
             {
                 double[] localSolution = CalculateElementDisplacements(element, solution);
                 double[] localdSolution = CalculateElementDisplacements(element, dSolution);
@@ -163,7 +153,7 @@ namespace ISAAR.MSolve.IGA.Entities
         public void ResetMaterialsModifiedProperty()
         {
             this.StiffnessModified = false;
-            foreach (Element element in Elements.Values) element.ElementType.ResetMaterialModified();
+            foreach (Element element in Elements) element.ElementType.ResetMaterialModified();
 
         }
 
@@ -171,7 +161,7 @@ namespace ISAAR.MSolve.IGA.Entities
 
         public void SaveMaterialState()
         {
-            //foreach (Element element in Elements.Values) element.ElementType.SaveMaterialState();
+            //foreach (Element element in Elements) element.ElementType.SaveMaterialState();
         }
 
         #region PatchData
@@ -359,7 +349,7 @@ namespace ISAAR.MSolve.IGA.Entities
 
                         foreach (var point in elementCollocationPoints)
                         {
-                            if (Elements.Any(e => e.Key == point.ID)) continue;
+                            if (Elements.Any(e => e.ID == point.ID)) continue;
                             var element = new NURBSElement3DCollocation
                             {
                                 ID = point.ID,
@@ -369,15 +359,15 @@ namespace ISAAR.MSolve.IGA.Entities
                             };
                             element.AddKnots(knotsOfElement);
                             element.AddControlPoints(elementControlPoints.ToList<ControlPoint>());
-                            Elements.Add(element.ID, element);
+                            Elements.Add(element);
                         }
                     }
                 }
             }
 
-            var orderedElements = Elements.Values.OrderBy(e => ((ICollocationElement)e).CollocationPoint.ID).ToList();
+            var orderedElements = Elements.OrderBy(e => ((ICollocationElement)e).CollocationPoint.ID).ToList();
             Elements.Clear();
-            foreach (var element in orderedElements) Elements.Add(element.ID, element);
+            Elements.AddRange(orderedElements);
 
             #endregion
 
@@ -486,7 +476,7 @@ namespace ISAAR.MSolve.IGA.Entities
 
                     foreach (var point in elementCollocationPoints)
                     {
-                        if (Elements.Any(e => e.Key == point.ID)) continue;
+                        if (Elements.Any(e => e.ID == point.ID)) continue;
                         var element = new NURBSElement2DCollocation
                         {
                             ID = point.ID,
@@ -496,28 +486,19 @@ namespace ISAAR.MSolve.IGA.Entities
                         };
                         element.AddKnots(knotsOfElement);
                         element.AddControlPoints(elementControlPoints.ToList<ControlPoint>());
-                        Elements.Add(element.ID, element);
+                        Elements.Add(element);
                     }
                 }
             }
 
-            var orderedElements = Elements.Values.OrderBy(e => ((ICollocationElement)e).CollocationPoint.ID).ToList();
+            var orderedElements = Elements.OrderBy(e => ((ICollocationElement)e).CollocationPoint.ID).ToList();
             Elements.Clear();
-            foreach (var element in orderedElements) Elements.Add(element.ID, element);
+            Elements.AddRange(orderedElements);
 
 
             #endregion
         }
 
-        public void CalculateStressesOnly(IVectorView solution, IVectorView dSolution)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IVector CalculateRHSonly(IVectorView solution, IVectorView dSolution)
-        {
-            throw new NotImplementedException();
-        }
     }
 
 }

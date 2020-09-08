@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ISAAR.MSolve.IGA.Elements;
+using ISAAR.MSolve.IGA.Elements.Continuum;
 using ISAAR.MSolve.IGA.Entities;
-using ISAAR.MSolve.IGA.Problems.Structural.Elements;
-using ISAAR.MSolve.IGA.Problems.SupportiveClasses;
+using ISAAR.MSolve.IGA.SupportiveClasses;
 using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using Xunit;
 
 namespace ISAAR.MSolve.IGA.Tests
 {
-	public class Nurbs3D
+	public class Nurbs3DTests
 	{
 		private List<ControlPoint> ElementControlPoints()
 		{
@@ -115,43 +115,52 @@ namespace ISAAR.MSolve.IGA.Tests
 			};
 		}
 
-		private Vector KnotValueVectorKsi()
+		private double[] KnotValueVectorKsi()
 		{
-			return Vector.CreateFromArray(new double[]{ 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0 });
+			return new double[]{ 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0 };
 		}
 
-		private Vector KnotValueVectorHeta()
+		private double[] KnotValueVectorHeta()
 		{
-			return Vector.CreateFromArray(new double[]{ 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0 });
+			return new double[]{ 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0 };
 		}
 
-		private Vector KnotValueVectorZeta()
+		private double[] KnotValueVectorZeta()
 		{
-			return Vector.CreateFromArray(new double[]
+			return new double[]
 			{
 				0.0, 0.0, 0.0, 0.0, 0.166666666666667, 0.166666666666667, 0.333333333333333, 0.333333333333333, 0.5,
 				0.5, 0.5, 0.666666666666667, 0.666666666666667, 0.833333333333333, 0.833333333333333, 1.0, 1.0, 1.0, 1.0
-			});
+			};
 		}
 
-		private NURBSElement3D Element
+		private ContinuumElement3D Element
 		{
 			get
 			{
-				var element = new NURBSElement3D();
+                var degreeKsi = 3;
+                var degreeHeta = 3;
+                var degreeZeta = 3;
+                var numberOfControlPointsKsi = 6;
+                var numberOfControlPointsHeta = 4;
+                var numberOfControlPointsZeta = 15;
+                var knotValueVectorKsi = KnotValueVectorKsi();
+                var knotValueVectorHeta = KnotValueVectorHeta();
+                var knotValueVectorZeta = KnotValueVectorZeta();
+
+				var gauss= new GaussQuadrature();
+                var gaussPoints=gauss.CalculateElementGaussPoints(degreeKsi, degreeHeta, degreeZeta, ElementKnot());
+
+				var nurbs= new Nurbs3D(numberOfControlPointsKsi, numberOfControlPointsHeta, numberOfControlPointsZeta,
+                    degreeKsi, degreeHeta, degreeZeta, knotValueVectorKsi, knotValueVectorHeta, knotValueVectorZeta,
+                    ElementControlPoints().ToArray(), gaussPoints);
+				var element = new ContinuumElement3D(null,nurbs, gaussPoints);
 				var patch = new Patch();
 				foreach (var controlPoint in ElementControlPoints())
 					element.ControlPointsDictionary.Add(controlPoint.ID, controlPoint);
 				foreach (var knot in ElementKnot())
 					element.KnotsDictionary.Add(knot.ID, knot);
-				patch.DegreeKsi = 3;
-				patch.DegreeHeta = 3;
-				patch.DegreeZeta = 3;
-				patch.NumberOfControlPointsHeta = 4;
-				patch.NumberOfControlPointsZeta = 15;
-				patch.KnotValueVectorKsi = KnotValueVectorKsi();
-				patch.KnotValueVectorHeta = KnotValueVectorHeta();
-				patch.KnotValueVectorZeta = KnotValueVectorZeta();
+				
 				element.Patch = patch;
 				return element;
 			}
@@ -449,18 +458,13 @@ namespace ISAAR.MSolve.IGA.Tests
 		public void TestShapeNurbs3DPartitionOfUnity()
 		{
 			var element = Element;
-			GaussQuadrature gauss = new GaussQuadrature();
-			var gaussPoints=gauss.CalculateElementGaussPoints(element.Patch.DegreeKsi, element.Patch.DegreeHeta,
-				element.Patch.DegreeZeta, element.Knots);
-			var nurbs3D = new NURBS3D(element.Patch.NumberOfControlPointsKsi, element.Patch.NumberOfControlPointsHeta, element.Patch.NumberOfControlPointsZeta,
-				element.Patch.DegreeKsi, element.Patch.DegreeHeta, element.Patch.DegreeZeta,element.Patch.KnotValueVectorKsi, element.Patch.KnotValueVectorHeta, element.Patch.KnotValueVectorZeta,
-				element.ControlPoints.ToArray(), gaussPoints);
+            var nurbs3D = element._shapeFunctions;
 
-			for (var p = 0; p < nurbs3D.NurbsValues.NumColumns; p++)
+			for (var p = 0; p < nurbs3D.Values.GetLength(1); p++)
 			{
 				var sum = 0.0;
-				for (var f = 0; f < nurbs3D.NurbsValues.NumRows; f++)
-					sum += nurbs3D.NurbsValues[f, p];
+				for (var f = 0; f < nurbs3D.Values.GetLength(0); f++)
+					sum += nurbs3D.Values[f, p];
 				Assert.True(Utilities.AreValuesEqual(1.0, sum, Tolerance));
 			}
 		}
@@ -469,18 +473,13 @@ namespace ISAAR.MSolve.IGA.Tests
 		public void TestShapeNurbs3DValues()
 		{
 			var element = Element;
-			GaussQuadrature gauss = new GaussQuadrature();
-			var gaussPoints = gauss.CalculateElementGaussPoints(element.Patch.DegreeKsi, element.Patch.DegreeHeta,
-				element.Patch.DegreeZeta, element.Knots);
-			var nurbs3D = new NURBS3D(element.Patch.NumberOfControlPointsKsi, element.Patch.NumberOfControlPointsHeta, element.Patch.NumberOfControlPointsZeta,
-				element.Patch.DegreeKsi, element.Patch.DegreeHeta, element.Patch.DegreeZeta, element.Patch.KnotValueVectorKsi, element.Patch.KnotValueVectorHeta, element.Patch.KnotValueVectorZeta,
-				element.ControlPoints.ToArray(), gaussPoints);
+            var nurbs3D = element._shapeFunctions;
 
 			for (var i = 0; i < 64; i++)
 			{
 				for (var j = 0; j < 64; j++)
 				{
-					Assert.True(Utilities.AreValuesEqual(_nurbsExpectedValues[i, j], nurbs3D.NurbsValues[i, j],
+					Assert.True(Utilities.AreValuesEqual(_nurbsExpectedValues[i, j], nurbs3D.Values[i, j],
 						Tolerance));
 				}
 			}
@@ -491,18 +490,13 @@ namespace ISAAR.MSolve.IGA.Tests
 		public void TestShapeNurbs3DDerivativeValuesKsi()
 		{
 			var element = Element;
-			GaussQuadrature gauss = new GaussQuadrature();
-			var gaussPoints = gauss.CalculateElementGaussPoints(element.Patch.DegreeKsi, element.Patch.DegreeHeta,
-				element.Patch.DegreeZeta, element.Knots);
-			var nurbs3D = new NURBS3D(element.Patch.NumberOfControlPointsKsi, element.Patch.NumberOfControlPointsHeta, element.Patch.NumberOfControlPointsZeta,
-				element.Patch.DegreeKsi, element.Patch.DegreeHeta, element.Patch.DegreeZeta, element.Patch.KnotValueVectorKsi, element.Patch.KnotValueVectorHeta, element.Patch.KnotValueVectorZeta,
-				element.ControlPoints.ToArray(), gaussPoints);
+            var nurbs3D = element._shapeFunctions;
 
 			for (var i = 0; i < 64; i++)
 			{
 				for (var j = 0; j < 64; j++)
 				{
-					Assert.True(Utilities.AreValuesEqual(_nurbsExpectedDerivativeValuesKsi[i, j], nurbs3D.NurbsDerivativeValuesKsi[i, j],
+					Assert.True(Utilities.AreValuesEqual(_nurbsExpectedDerivativeValuesKsi[i, j], nurbs3D.DerivativeValuesKsi[i, j],
 						Tolerance));
 				}
 			}
@@ -512,18 +506,13 @@ namespace ISAAR.MSolve.IGA.Tests
 		public void TestShapeNurbs3DDerivativeValuesHeta()
 		{
 			var element = Element;
-			GaussQuadrature gauss = new GaussQuadrature();
-			var gaussPoints = gauss.CalculateElementGaussPoints(element.Patch.DegreeKsi, element.Patch.DegreeHeta,
-				element.Patch.DegreeZeta, element.Knots);
-			var nurbs3D = new NURBS3D(element.Patch.NumberOfControlPointsKsi, element.Patch.NumberOfControlPointsHeta, element.Patch.NumberOfControlPointsZeta,
-				element.Patch.DegreeKsi, element.Patch.DegreeHeta, element.Patch.DegreeZeta, element.Patch.KnotValueVectorKsi, element.Patch.KnotValueVectorHeta, element.Patch.KnotValueVectorZeta,
-				element.ControlPoints.ToArray(), gaussPoints);
+            var nurbs3D = element._shapeFunctions;
 
 			for (var i = 0; i < 64; i++)
 			{
 				for (var j = 0; j < 64; j++)
 				{
-					Assert.True(Utilities.AreValuesEqual(_nurbsExpectedDerivativeValuesHeta[i, j], nurbs3D.NurbsDerivativeValuesHeta[i, j],
+					Assert.True(Utilities.AreValuesEqual(_nurbsExpectedDerivativeValuesHeta[i, j], nurbs3D.DerivativeValuesHeta[i, j],
 						Tolerance));
 				}
 			}
@@ -533,21 +522,130 @@ namespace ISAAR.MSolve.IGA.Tests
 		public void TestShapeNurbs3DDerivativeValuesZeta()
 		{
 			var element = Element;
-			GaussQuadrature gauss = new GaussQuadrature();
-			var gaussPoints = gauss.CalculateElementGaussPoints(element.Patch.DegreeKsi, element.Patch.DegreeHeta,
-				element.Patch.DegreeZeta, element.Knots);
-			var nurbs3D = new NURBS3D(element.Patch.NumberOfControlPointsKsi, element.Patch.NumberOfControlPointsHeta, element.Patch.NumberOfControlPointsZeta,
-				element.Patch.DegreeKsi, element.Patch.DegreeHeta, element.Patch.DegreeZeta, element.Patch.KnotValueVectorKsi, element.Patch.KnotValueVectorHeta, element.Patch.KnotValueVectorZeta,
-				element.ControlPoints.ToArray(), gaussPoints);
+            var nurbs3D = element._shapeFunctions;
 
 			for (var i = 0; i < 64; i++)
 			{
 				for (var j = 0; j < 64; j++)
 				{
-					Assert.True(Utilities.AreValuesEqual(_nurbsExpectedDerivativeValuesZeta[i, j], nurbs3D.NurbsDerivativeValuesZeta[i, j],
+					Assert.True(Utilities.AreValuesEqual(_nurbsExpectedDerivativeValuesZeta[i, j], nurbs3D.DerivativeValuesZeta[i, j],
 						Tolerance));
 				}
 			}
 		}
+
+
+
+		[Fact]
+        public void ExtractShapeFunctions()
+        {
+			var cp= new List<ControlPoint>()
+			{
+				new ControlPoint(){ID=0,X =-1 ,Y=0.0,Z=0.0,WeightFactor =1.0 },
+				new ControlPoint(){ID=1,X = -1,Y=0.0,Z=1.33333333333333,WeightFactor =1.0 },
+				new ControlPoint(){ID=2,X =-1 ,Y=0.0,Z=2.33333333333333,WeightFactor =1.0 },
+				new ControlPoint(){ID=3,X =-1,Y=0.0,Z=3.66666666666667,WeightFactor =1.0 },
+
+				new ControlPoint(){ID=15,X =-2.0 ,Y=0.0,Z=0.0,WeightFactor =1.0 },
+				new ControlPoint(){ID=16,X = -2.0,Y=0.0,Z=1.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=17,X = -2.0,Y=0.0,Z=2.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=18,X = -2.0,Y=0.0,Z=3.66666666666667,WeightFactor = 1.0},
+
+				new ControlPoint(){ID=30,X = -3.0,Y=0.0,Z=0.0,WeightFactor =1.0 },
+				new ControlPoint(){ID=31,X = -3.0,Y=0.0,Z=1.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=32,X = -3.0,Y=0.0,Z=2.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=33,X =-3 ,Y=0.0,Z=3.66666666666667,WeightFactor = 1.0},
+
+				new ControlPoint(){ID=45,X = -4.0,Y=0.0,Z=0.0,WeightFactor = 1.0},
+				new ControlPoint(){ID=46,X = -4.0,Y=0.0,Z=1.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=47,X = -4.0,Y=0.0,Z=2.33333333333333,WeightFactor =1.0 },
+				new ControlPoint(){ID=48,X = -4,Y=0.0,Z=3.66666666666667,WeightFactor = 1.0},
+
+				new ControlPoint(){ID=60,X = -0.902368926666667,Y=0.235702258881312,Z=0.0,WeightFactor = 0.902368926666667},
+				new ControlPoint(){ID=61,X = -0.902368926666667,Y=0.235702258881312,Z=1.20315856888889,WeightFactor = 0.902368926666667},
+				new ControlPoint(){ID=62,X = -0.902368926666667,Y=0.235702258881312,Z=2.10552749555556,WeightFactor = 0.902368926666667},
+				new ControlPoint(){ID=63,X = -0.902368926666667,Y=0.235702258881312,Z=3.30868606444444,WeightFactor = 0.902368926666667},
+
+				new ControlPoint(){ID=75,X = -1.93984208666667,Y=0.501985726293771,Z=0.0,WeightFactor = 0.967456308888889},
+				new ControlPoint(){ID=76,X = -1.93984208666667,Y=0.501985726293771,Z=1.28994174518519,WeightFactor = 0.967456308888889},
+				new ControlPoint(){ID=77,X = -1.93984208666667,Y=0.501985726293771,Z=2.25739805407407,WeightFactor = 0.967456308888889},
+				new ControlPoint(){ID=78,X = -1.93984208666667,Y=0.501985726293771,Z=3.54733979925926,WeightFactor = 0.967456308888889},
+
+				new ControlPoint(){ID=90,X = -2.97238577777778,Y=1.31230719555556,Z=0.0,WeightFactor = 1.0},
+				new ControlPoint(){ID=91,X = -2.97238577777778,Y=1.31230719555556,Z=1.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=92,X = -2.97238577777778,Y=1.31230719555556,Z=2.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=93,X = -2.97238577777778,Y=1.31230719555556,Z=3.66666666666667,WeightFactor = 1.0},
+
+				new ControlPoint(){ID=105,X = -4.0,Y=2.66666666666667,Z=0.0,WeightFactor =1.0 },
+				new ControlPoint(){ID=106,X = -4.0,Y=2.66666666666667,Z=1.33333333333333,WeightFactor =1.0 },
+				new ControlPoint(){ID=107,X = -4.0,Y=2.66666666666667,Z=2.33333333333333,WeightFactor =1.0},
+				new ControlPoint(){ID=108,X = -4.0,Y=2.66666666666667,Z=3.66666666666667,WeightFactor =1.0},
+
+				new ControlPoint(){ID=120,X = -0.770220056386995,Y=0.436886721934974,Z=0.0,WeightFactor = 0.85355339},
+				new ControlPoint(){ID=121,X = -0.770220056386995,Y=0.436886721934974,Z=1.13807118666667,WeightFactor = 0.85355339 },
+				new ControlPoint(){ID=122,X = -0.770220056386995,Y=0.436886721934974,Z=1.99162457666667,WeightFactor = 0.85355339 },
+				new ControlPoint(){ID=123,X = -0.770220056386995,Y=0.436886721934974,Z=3.12969576333333,WeightFactor = 0.85355339},
+
+				new ControlPoint(){ID=135,X = -1.71926689324011,Y=0.943474823978324,Z=0.0,WeightFactor = 0.951184463333333},
+				new ControlPoint(){ID=136,X = -1.71926689324011,Y=0.943474823978324,Z=1.26824595111111,WeightFactor = 0.951184463333333},
+				new ControlPoint(){ID=137,X = -1.71926689324011,Y=0.943474823978324,Z=2.21943041444444,WeightFactor = 0.951184463333333},
+				new ControlPoint(){ID=138,X = -1.71926689324011,Y=0.943474823978324,Z=3.48767636555555,WeightFactor = 0.951184463333333},
+
+				new ControlPoint(){ID=150,X = -2.79586020777778,Y=2.13117925,Z=0.0,WeightFactor = 1.0},
+				new ControlPoint(){ID=151,X = -2.79586020777778,Y=2.13117925,Z=1.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=152,X = -2.79586020777778,Y=2.13117925,Z=2.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=153,X = -2.79586020777778,Y=2.13117925,Z=3.66666666666667,WeightFactor = 1.0},
+
+				new ControlPoint(){ID=165,X = -4.0,Y=4.0,Z=0.0,WeightFactor =1.0 },
+				new ControlPoint(){ID=166,X = -4.0,Y=4.0,Z=1.33333333333333,WeightFactor =1.0},
+				new ControlPoint(){ID=167,X = -4.0,Y=4.0,Z=2.33333333333333,WeightFactor =1.0},
+				new ControlPoint(){ID=168,X = -4.0,Y=4.0,Z=3.66666666666667,WeightFactor =1.0 },
+
+				new ControlPoint(){ID=180,X = -0.436886721934974,Y=0.770220056386995,Z=0.0,WeightFactor = 0.85355339},
+				new ControlPoint(){ID=181,X = -0.436886721934974,Y=0.770220056386995,Z=1.13807118666667,WeightFactor = 0.85355339},
+				new ControlPoint(){ID=182,X = -0.436886721934974,Y=0.770220056386995,Z=1.99162457666667,WeightFactor = 0.85355339},
+				new ControlPoint(){ID=183,X = -0.436886721934974,Y=0.770220056386995,Z=3.12969576333333,WeightFactor = 0.85355339},
+
+				new ControlPoint(){ID=195,X = -0.957281946200547,Y=1.705459762129,Z=0.0,WeightFactor = 0.951184463333333},
+				new ControlPoint(){ID=196,X = -0.957281946200547,Y=1.705459762129,Z=1.26824595111111,WeightFactor = 0.951184463333333},
+				new ControlPoint(){ID=197,X = -0.957281946200547,Y=1.705459762129,Z=2.21943041444444,WeightFactor = 0.951184463333333},
+				new ControlPoint(){ID=198,X = -0.957281946200547,Y=1.705459762129,Z=3.48767636555555,WeightFactor = 0.951184463333333},
+
+				new ControlPoint(){ID=210,X = -2.14498637222222,Y=2.78205307666667,Z=0.0,WeightFactor =1.0 },
+				new ControlPoint(){ID=211,X = -2.14498637222222,Y=2.78205307666667,Z=1.33333333333333,WeightFactor =1.0 },
+				new ControlPoint(){ID=212,X = -2.14498637222222,Y=2.78205307666667,Z=2.33333333333333,WeightFactor =1.0 },
+				new ControlPoint(){ID=213,X = -2.14498637222222,Y=2.78205307666667,Z=3.66666666666667,WeightFactor =1.0 },
+
+				new ControlPoint(){ID=225,X = -4.0,Y=4.0,Z=0.0,WeightFactor = 1.0},
+				new ControlPoint(){ID=226,X = -4.0,Y=4.0,Z=1.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=227,X = -4.0,Y=4.0,Z=2.33333333333333,WeightFactor = 1.0},
+				new ControlPoint(){ID=228,X = -4.0,Y=4.0,Z=3.66666666666667,WeightFactor = 1.0}
+			};
+
+            var degreeKsi = 3;
+            var degreeHeta = 2;
+            var degreeZeta = 4;
+            var numberOfControlPointsKsi = 5;
+            var numberOfControlPointsHeta = 5;
+            var numberOfControlPointsZeta = 8;
+            var knotValueVectorKsi = new double[]{0, 0, 0, 0, 1, 2, 2, 2, 2};
+            var knotValueVectorHeta = new double[] {0, 0, 0, 1, 2, 3, 3, 3};
+            var knotValueVectorZeta = new double[] {0, 0, 0, 0, 0, 1, 2, 3, 4, 4, 4, 4, 4};
+
+            var gauss= new GaussQuadrature();
+            var gaussPoints=gauss.CalculateElementGaussPoints(degreeKsi, degreeHeta, degreeZeta, ElementKnot());
+
+            var nurbs= new Nurbs3D(numberOfControlPointsKsi, numberOfControlPointsHeta, numberOfControlPointsZeta,
+                degreeKsi, degreeHeta, degreeZeta, knotValueVectorKsi, knotValueVectorHeta, knotValueVectorZeta,
+                ElementControlPoints().ToArray(), gaussPoints);
+            var element = new ContinuumElement3D(null,nurbs, gaussPoints);
+            var patch = new Patch();
+            foreach (var controlPoint in ElementControlPoints())
+                element.ControlPointsDictionary.Add(controlPoint.ID, controlPoint);
+            foreach (var knot in ElementKnot())
+                element.KnotsDictionary.Add(knot.ID, knot);
+				
+            element.Patch = patch;
+        }
 	}
 }

@@ -1,24 +1,35 @@
-﻿using System.IO;
+using System.IO;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.IGA.Elements;
 using ISAAR.MSolve.IGA.Entities;
+using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 
 namespace ISAAR.MSolve.IGA.Postprocessing
 {
-
-    public enum TSplineShellType
+    /// <summary>
+	/// Enumeration containing different types of T-Spline shell elements.
+	/// </summary>
+	public enum TSplineShellType
 	{
 		Linear, Section, Thickness
 	}
 
+	/// <summary>
+	/// Paraview file  generator for T-Spline shell geometries.
+	/// </summary>
 	public class ParaviewTsplineShells
 	{
-		private Model _model;
-		private IVectorView _solution;
-		private string _filename;
+		private readonly string _filename;
+		private readonly Model _model;
+		private readonly IVectorView _solution;
 
-
+		/// <summary>
+		/// Defines a Paraview FileWriter.
+		/// </summary>
+		/// <param name="model">An isogeometric <see cref="Model"/>.</param>
+		/// <param name="solution">An <see cref="IVectorView"/> containing the solution of the linear system.</param>
+		/// <param name="filename">The name of the paraview file to be generated.</param>
 		public ParaviewTsplineShells(Model model, IVectorView solution, string filename)
 		{
 			_model = model;
@@ -26,34 +37,18 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 			_filename = filename;
 		}
 
-		public void CreateParaviewFile(TSplineShellType shellType=TSplineShellType.Linear)
+		/// <summary>
+		/// Creates Paraview File of the T-Splines shells geometry.
+		/// </summary>
+		public void CreateParaviewFile(TSplineShellType shellType = TSplineShellType.Linear)
 		{
 			var projectiveControlPoints = CalculateProjectiveControlPoints();
 			var numberOfPointsPerElement = 4;
-			var nodes = new double[_model.NumElements * numberOfPointsPerElement, 3];
+			var nodes = new double[_model.Elements.Count * numberOfPointsPerElement, 3];
 			var pointIndex = 0;
-			foreach (var element in _model.ElementsDictionary.Values)
+			foreach (var element in _model.Elements)
 			{
-				//double[,] elementPoints;
-				//switch (shellType)
-				//{
-				//	case TSplineShellType.Thickness:
-				//		elementPoints =
-				//			(element as TSplineKirchhoffLoveShellElementMaterial).CalculatePointsForPostProcessing(
-				//				element as TSplineKirchhoffLoveShellElementMaterial);
-				//		break;
-				//	case TSplineShellType.Section:
-				//		elementPoints =
-				//			(element as TSplineKirchhoffLoveShellSectionElement).CalculatePointsForPostProcessing(
-				//				element as TSplineKirchhoffLoveShellSectionElement);
-				//		break;
-				//	default:
-				//		elementPoints =
-				//			(element as TSplineKirchhoffLoveShellSectionElement).CalculatePointsForPostProcessing(
-				//				element as TSplineKirchhoffLoveShellSectionElement);
-				//		break;
-				//}
-				var tsplineElement = element as TSplineKirchhoffLoveShellElementMaterial;
+				var tsplineElement = element as TSplineKirchhoffLoveShellElement;
 				var elementPoints = tsplineElement.CalculatePointsForPostProcessing(tsplineElement);
 
 				for (int i = 0; i < elementPoints.GetLength(0); i++)
@@ -67,9 +62,9 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 			var elementConnectivity = CreateTsplineConnectivity();
 
 			var pointDisplacements = new double[nodes.GetLength(0), 3];
-			foreach (var element in _model.ElementsDictionary.Values)
+			foreach (var element in _model.Elements)
 			{
-				var localDisplacements = new double[element.ControlPoints.Count, 3];
+				var localDisplacements = Matrix.CreateZero(element.ControlPointsDictionary.Count, 3);
 				var counterCP = 0;
 				foreach (var controlPoint in element.ControlPoints)
 				{
@@ -99,18 +94,15 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 			WriteTSplineShellsFile(nodes, elementConnectivity, pointDisplacements);
 		}
 
-		public void WriteTSplineShellsFile(double[,] nodeCoordinates, int[,] elementConnectivity, double[,] displacements)
+		private void WriteTSplineShellsFile(double[,] nodeCoordinates, int[,] elementConnectivity, double[,] displacements)
 		{
 			var numberOfPoints = nodeCoordinates.GetLength(0);
 			var numberOfCells = elementConnectivity.GetLength(0);
 
-			int numberOfVerticesPerCell = 0;
-			int paraviewCellCode = 0;
+			const int numberOfVerticesPerCell = 4;
+			const int paraviewCellCode = 9;
 
-			numberOfVerticesPerCell = 4;
-			paraviewCellCode = 9;
-
-			using (StreamWriter outputFile = new StreamWriter($"..\\..\\..\\OutputFiles\\{_filename}Paraview.vtu"))
+			using (StreamWriter outputFile = new StreamWriter($"..\\..\\..\\MGroup.IGA.Tests\\OutputFiles\\{_filename}Paraview.vtu"))
 			{
 				outputFile.WriteLine("<?xml version=\"1.0\"?>");
 				outputFile.WriteLine("<VTKFile type=\"UnstructuredGrid\" version=\"0.1\">");
@@ -122,7 +114,6 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 
 				for (int i = 0; i < numberOfPoints; i++)
 					outputFile.WriteLine($"{displacements[i, 0]} {displacements[i, 1]} {displacements[i, 2]}");
-				
 
 				outputFile.WriteLine("</DataArray>");
 				outputFile.WriteLine("</PointData>");
@@ -168,25 +159,10 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 			}
 		}
 
-		private int[,] CreateTsplineConnectivity()
-		{
-			var elementConnectivity = new int[_model.NumElements, 4];
-			var pointCounter = 0;
-			for (int i = 0; i < _model.NumElements; i++)
-			{
-				elementConnectivity[i, 0] = pointCounter++;
-				elementConnectivity[i, 1] = pointCounter++;
-				elementConnectivity[i, 2] = pointCounter++;
-				elementConnectivity[i, 3] = pointCounter++;
-			}
-
-			return elementConnectivity;
-		}
-
 		private double[,] CalculateProjectiveControlPoints()
 		{
 			var projectiveCPs = new double[_model.PatchesDictionary[0].ControlPoints.Count, 4];
-			foreach (var controlPoint in _model.PatchesDictionary[0].ControlPoints.Values)
+			foreach (var controlPoint in _model.PatchesDictionary[0].ControlPoints)
 			{
 				var weight = controlPoint.WeightFactor;
 				projectiveCPs[controlPoint.ID, 0] = controlPoint.X * weight;
@@ -196,6 +172,21 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 			}
 
 			return projectiveCPs;
+		}
+
+		private int[,] CreateTsplineConnectivity()
+		{
+			var elementConnectivity = new int[_model.Elements.Count, 4];
+			var pointCounter = 0;
+			for (int i = 0; i < _model.Elements.Count; i++)
+			{
+				elementConnectivity[i, 0] = pointCounter++;
+				elementConnectivity[i, 1] = pointCounter++;
+				elementConnectivity[i, 2] = pointCounter++;
+				elementConnectivity[i, 3] = pointCounter++;
+			}
+
+			return elementConnectivity;
 		}
 	}
 }

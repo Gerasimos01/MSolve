@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using ISAAR.MSolve.IGA.Elements;
+using ISAAR.MSolve.IGA.Elements.Continuum;
+using ISAAR.MSolve.IGA.Elements.Structural;
 using ISAAR.MSolve.IGA.Entities;
-using ISAAR.MSolve.IGA.Problems.Structural.Elements;
-using ISAAR.MSolve.IGA.Problems.SupportiveClasses;
+using ISAAR.MSolve.IGA.SupportiveClasses;
+using ISAAR.MSolve.IGA.SupportiveClasses.Interpolation;
 using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Materials;
@@ -10,7 +13,7 @@ using Xunit;
 
 namespace ISAAR.MSolve.IGA.Tests
 {
-    public class Nurbs2D
+    public class Nurbs2DTests
 	{
 		private List<ControlPoint> ElementControlPoints()
 		{
@@ -46,30 +49,37 @@ namespace ISAAR.MSolve.IGA.Tests
 			};
 		}
 
-		private Vector KnotValueVector()
+		private double[] KnotValueVector()
 		{
-			return Vector.CreateFromArray(new double[16]
+			return new double[16]
 			{
 				0.0, 0.0, 0.0, 0.0, 0.111111111, 0.22222222, 0.33333333, 0.44444444, 0.55555555, 0.66666666, 0.77777777,
 				0.88888888, 1.0, 1.0, 1.0, 1.0
-			});
+			};
 		}
 
-		private NURBSElement2D Element
+		private ContinuumElement2D Element
 		{
 			get
 			{
-				var element = new NURBSElement2D();
+                var degreeKsi = 3;
+                var degreeHeta = 3;
+                var numberOfControlPointsHeta = 12;
+                var knotValueVectorKsi = KnotValueVector();
+                var knotValueVectorHeta = KnotValueVector();
+				var gauss = new GaussQuadrature();
+                var gaussPoints = gauss.CalculateElementGaussPoints(degreeKsi, degreeHeta, ElementKnot()).ToArray();
+
+                var nurbs = new Nurbs2D(degreeKsi, knotValueVectorKsi, degreeHeta, knotValueVectorHeta,
+                    ElementControlPoints().ToArray(), gaussPoints);
+
+
+				var element = new ContinuumElement2D(null,nurbs, gaussPoints, 1);
 				var patch = new Patch();
 				foreach (var controlPoint in ElementControlPoints())
 					element.ControlPointsDictionary.Add(controlPoint.ID, controlPoint);
 				foreach (var knot in ElementKnot())
 					element.KnotsDictionary.Add(knot.ID, knot);
-				patch.DegreeKsi = 3;
-				patch.DegreeHeta = 3;
-				patch.NumberOfControlPointsHeta = 12;
-				patch.KnotValueVectorKsi = KnotValueVector();
-				patch.KnotValueVectorHeta = KnotValueVector();
 				element.Patch = patch;
 				return element;
 			}
@@ -137,7 +147,7 @@ namespace ISAAR.MSolve.IGA.Tests
 		
 		private const double Tolerance = 1e-14;
 
-		#region ShellElement
+		#region Shell
 		private List<ControlPoint> ShellElementControlPoints()
 		{
 			return new List<ControlPoint>
@@ -168,43 +178,49 @@ namespace ISAAR.MSolve.IGA.Tests
 			};
 		}
 
-		private Vector ShellKnotValueVectorKsi()
+		private double[] ShellKnotValueVectorKsi()
 		{
-			return Vector.CreateFromArray(new double[8]
+			return new double[8]
 			{
 				0, 0, 0, 0, 1, 1, 1, 1
-			});
+			};
 		}
 
-		private Vector ShellKnotValueVectorHeta()
+		private double[] ShellKnotValueVectorHeta()
 		{
-			return Vector.CreateFromArray(new double[6]
+			return new double[6]
 			{
 				0, 0, 0, 1, 1, 1
-			});
+			};
 		}
 
-		private NURBSKirchhoffLoveShellElement ShellElement
+		private KirchhoffLoveShell Shell
 		{
 			get
 			{
-				var element = new NURBSKirchhoffLoveShellElement();
+                var thickness = 1;
+                var degreeKsi = 3;
+                var degreeHeta = 2;
+                var numberOfControlPointsHeta = 3;
+                var knotValueVectorKsi = ShellKnotValueVectorKsi();
+                var knotValueVectorHeta = ShellKnotValueVectorHeta();
+				var gauss= new GaussQuadrature();
+				var gaussPoints = gauss.CalculateElementGaussPoints(degreeKsi, degreeHeta, ShellElementKnot()).ToArray();
+				var nurbs = new Nurbs2D(degreeKsi, knotValueVectorKsi, degreeHeta, knotValueVectorHeta,
+                    ShellElementControlPoints().ToArray(), gaussPoints);
+				var material = new ShellElasticSectionMaterial2D()
+                {
+                    YoungModulus = 100,
+                    PoissonRatio = 0.0
+                };
+				var element = new KirchhoffLoveShell(material,nurbs, gaussPoints, thickness);
 				var patch = new Patch();
-				patch.Material = new ElasticMaterial2D(StressState2D.PlaneStrain)
-				{
-					YoungModulus = 100,
-					PoissonRatio = 0.0
-				};
+				
 				foreach (var controlPoint in ShellElementControlPoints())
 					element.ControlPointsDictionary.Add(controlPoint.ID, controlPoint);
 				foreach (var knot in ShellElementKnot())
 					element.KnotsDictionary.Add(knot.ID, knot);
-				patch.Thickness = 1;
-				patch.DegreeKsi = 3;
-				patch.DegreeHeta = 2;
-				patch.NumberOfControlPointsHeta = 3;
-				patch.KnotValueVectorKsi = ShellKnotValueVectorKsi();
-				patch.KnotValueVectorHeta = ShellKnotValueVectorHeta();
+				
 				element.Patch = patch;
 				return element;
 			}
@@ -266,13 +282,14 @@ namespace ISAAR.MSolve.IGA.Tests
 		public void TestShapeNurbs2DPartitionOfUnity()
 		{
 			var element = Element;
-			var nurbs2D = new NURBS2D(element,element.ControlPoints);
+
+            var nurbs2D = element._shapeFunctions;
 			
 			for (var p = 0; p < 16; p++)
 			{
 				var sum = 0.0;
-				for (var f = 0; f < nurbs2D.NurbsValues.NumRows; f++)
-					sum += nurbs2D.NurbsValues[f, p];
+				for (var f = 0; f < nurbs2D.Values.GetLength(0); f++)
+					sum += nurbs2D.Values[f, p];
 				Assert.True(Utilities.AreValuesEqual(1.0, sum, Tolerance));
 			}
 		}
@@ -281,13 +298,13 @@ namespace ISAAR.MSolve.IGA.Tests
 		public void TestShapeNurbs2DValues()
 		{
 			var element = Element;
-			var nurbs2D = new NURBS2D(element, element.ControlPoints);
+            var nurbs2D = element._shapeFunctions;
 
 			for (var i = 0; i < 16; i++)
 			{
 				for (var j = 0; j < 16; j++)
 				{
-					Assert.True(Utilities.AreValuesEqual(_nurbsExpectedValues[i, j], nurbs2D.NurbsValues[i, j],
+					Assert.True(Utilities.AreValuesEqual(_nurbsExpectedValues[i, j], nurbs2D.Values[i, j],
 						Tolerance));
 				}
 			}
@@ -299,13 +316,13 @@ namespace ISAAR.MSolve.IGA.Tests
 		public void TestShapeNurbs2DDerivativeValuesKsi()
 		{
 			var element = Element;
-			var nurbs2D = new NURBS2D(element, element.ControlPoints);
+            var nurbs2D = element._shapeFunctions;
 
 			for (var i = 0; i < 16; i++)
 			{
 				for (var j = 0; j < 16; j++)
 				{
-					Assert.True(Utilities.AreValuesEqual(_nurbsDerivativeKsiExpectedValues[i, j], nurbs2D.NurbsDerivativeValuesKsi[i, j],
+					Assert.True(Utilities.AreValuesEqual(_nurbsDerivativeKsiExpectedValues[i, j], nurbs2D.DerivativeValuesKsi[i, j],
 						Tolerance));
 				}
 			}
@@ -316,13 +333,13 @@ namespace ISAAR.MSolve.IGA.Tests
 		public void TestShapeNurbs2DDerivativeValuesHeta()
 		{
 			var element = Element;
-			var nurbs2D = new NURBS2D(element, element.ControlPoints);
+            var nurbs2D = element._shapeFunctions;
 
 			for (var i = 0; i < 16; i++)
 			{
 				for (var j = 0; j < 16; j++)
 				{
-					Assert.True(Utilities.AreValuesEqual(_nurbsDerivativeHetaExpectedValues[i, j], nurbs2D.NurbsDerivativeValuesHeta[i, j],
+					Assert.True(Utilities.AreValuesEqual(_nurbsDerivativeHetaExpectedValues[i, j], nurbs2D.DerivativeValuesHeta[i, j],
 						Tolerance));
 				}
 			}
@@ -332,14 +349,15 @@ namespace ISAAR.MSolve.IGA.Tests
 		[Fact]
 		public void TestShapeNurbs2DSecondDerivativeValuesKsi()
 		{
-			var element = ShellElement;
-			var nurbs2D = new NURBS2D(element, element.ControlPoints);
+			var element = Shell;
+            var nurbs2D = element._shapeFunctions;
 
 			for (var i = 0; i < 12; i++)
 			{
 				for (var j = 0; j < 12; j++)
 				{
-					Assert.True(Utilities.AreValuesEqual(_nurbsSecondDerivativesKsiExpectedValues[i, j], nurbs2D.NurbsSecondDerivativeValueKsi[i, j],
+					Assert.True(Utilities.AreValuesEqual(_nurbsSecondDerivativesKsiExpectedValues[i, j], 
+                        nurbs2D.SecondDerivativeValuesKsi[i, j],
 						Tolerance));
 				}
 			}
@@ -349,14 +367,15 @@ namespace ISAAR.MSolve.IGA.Tests
 		[Fact]
 		public void TestShapeNurbs2DSecondDerivativeValuesHeta()
 		{
-			var element = ShellElement;
-			var nurbs2D = new NURBS2D(element, element.ControlPoints);
+			var element = Shell;
+            var nurbs2D = element._shapeFunctions;
 
 			for (var i = 0; i < 12; i++)
 			{
 				for (var j = 0; j < 12; j++)
 				{
-					Assert.True(Utilities.AreValuesEqual(_nurbsSecondDerivativesHetaExpectedValues[i, j], nurbs2D.NurbsSecondDerivativeValueHeta[i, j],
+					Assert.True(Utilities.AreValuesEqual(_nurbsSecondDerivativesHetaExpectedValues[i, j],
+                        nurbs2D.SecondDerivativeValuesHeta[i, j],
 						Tolerance));
 				}
 			}
@@ -366,14 +385,15 @@ namespace ISAAR.MSolve.IGA.Tests
 		[Fact]
 		public void TestShapeNurbs2DSecondDerivativeValuesKsiHeta()
 		{
-			var element = ShellElement;
-			var nurbs2D = new NURBS2D(element, element.ControlPoints);
+			var element = Shell;
+            var nurbs2D = element._shapeFunctions;
 
 			for (var i = 0; i < 12; i++)
 			{
 				for (var j = 0; j < 12; j++)
 				{
-					Assert.True(Utilities.AreValuesEqual(_nurbsSecondDerivativesKsiHetaExpectedValues[i, j], nurbs2D.NurbsSecondDerivativeValueKsiHeta[i, j],
+					Assert.True(Utilities.AreValuesEqual(_nurbsSecondDerivativesKsiHetaExpectedValues[i, j], 
+                        nurbs2D.SecondDerivativeValuesKsiHeta[i, j],
 						Tolerance));
 				}
 			}

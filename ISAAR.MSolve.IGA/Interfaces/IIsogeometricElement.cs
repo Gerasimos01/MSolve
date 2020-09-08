@@ -1,35 +1,34 @@
-﻿using System;
 using System.Collections.Generic;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.IGA.Entities;
-using ISAAR.MSolve.IGA.Entities.Loads;
+using ISAAR.MSolve.LinearAlgebra.Matrices;
 
 namespace ISAAR.MSolve.IGA.Interfaces
 {
-
-    public interface IIsogeometricElement: IElementType
+    /// <summary>
+	/// Isogeometric element interface. Implements <see cref="IElementType"/>.
+	/// </summary>
+	public interface IIsogeometricElement : IElementType
 	{
-        int ID { get; }
-        ElementDimensions ElementDimensions { get; }
-        IElementDofEnumerator DofEnumerator { get; set; }
-        //IList<IList<DOFType>> GetElementDOFTypes(IElement element);
-        bool MaterialModified { get; }
-        //IMatrix2D StiffnessMatrix(Element element);
-        //IMatrix2D MassMatrix(Element element);
-        //IMatrix2D DampingMatrix(Element element);
-        Dictionary<int, double> CalculateLoadingCondition(Element element,Edge edge, NeumannBoundaryCondition neumann);
-        Dictionary<int, double> CalculateLoadingCondition(Element element, Face face, NeumannBoundaryCondition neumann);
-        Dictionary<int, double> CalculateLoadingCondition(Element element, Edge edge, PressureBoundaryCondition pressure);
-        Dictionary<int, double> CalculateLoadingCondition(Element element, Face face, PressureBoundaryCondition pressure);
-        void ResetMaterialModified();
-        Tuple<double[], double[]> CalculateStresses(Element element, double[] localDisplacements, double[] localdDisplacements);
-        double[] CalculateForces(Element element, double[] localDisplacements, double[] localdDisplacements);
-        double[] CalculateForcesForLogging(Element element, double[] localDisplacements);
-		double[,] CalculateDisplacementsForPostProcessing(Element element, double[,] localDisplacements);
-        //double[] CalculateAccelerationForces(Element element, IList<MassAccelerationLoad> loads);
-        //void SaveMaterialState();
-        void ClearMaterialState();
+		/// <summary>
+		/// Retries the element dimensions.
+		/// </summary>
+		ElementDimensions ElementDimensions { get; }
 
-        //void ClearMaterialStresses();
+		/// <summary>
+		/// Retrieves the element ID.
+		/// </summary>
+		int ID { get; }
+
+		/// <summary>
+		/// Calculates the knot displacements for post-processing with Paraview.
+		/// </summary>
+		/// <param name="element">An isogeometric <see cref="Element"/>.</param>
+		/// <param name="localDisplacements">A <see cref="Matrix"/> containing the displacements for the degrees of freedom of the element.</param>
+		/// <returns>A <see cref="double"/> array calculating the displacement of the element Knots'.
+		/// The rows of the matrix denote the knot numbering while the columns the displacements for each degree of freedom.</returns>
+		double[,] CalculateDisplacementsForPostProcessing(Element element, Matrix localDisplacements);
+
+        double[,] CalculatePointsForPostProcessing(Element element);
     }
 }

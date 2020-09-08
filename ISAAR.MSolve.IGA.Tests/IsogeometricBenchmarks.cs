@@ -1,12 +1,22 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using ISAAR.MSolve.Analyzers;
 using ISAAR.MSolve.Discretization;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.IGA.Elements;
+using ISAAR.MSolve.IGA.Elements.Structural;
 using ISAAR.MSolve.IGA.Entities;
-using ISAAR.MSolve.IGA.Entities.Loads;
-using ISAAR.MSolve.IGA.Postprocessing;
+using ISAAR.MSolve.IGA.Geometry;
+using ISAAR.MSolve.IGA.Geometry.NurbsMesh;
+using ISAAR.MSolve.IGA.Loading;
+using ISAAR.MSolve.IGA.Loading.LineLoads;
+using ISAAR.MSolve.IGA.Loading.LoadElementFactories;
+using ISAAR.MSolve.IGA.Loading.NodalLoads;
 using ISAAR.MSolve.IGA.Readers;
+using ISAAR.MSolve.IGA.SupportiveClasses;
+using ISAAR.MSolve.IGA.SupportiveClasses.Interpolation;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Materials;
 using ISAAR.MSolve.Problems;
@@ -16,7 +26,9 @@ using ISAAR.MSolve.Solvers.Ordering;
 using ISAAR.MSolve.Solvers.Ordering.Reordering;
 using MathNet.Numerics.Data.Matlab;
 using MathNet.Numerics.LinearAlgebra;
+using Newtonsoft.Json;
 using Xunit;
+using JsonModelReader = ISAAR.MSolve.IGA.Readers.JsonModelReader;
 
 namespace ISAAR.MSolve.IGA.Tests
 {
@@ -25,32 +37,28 @@ namespace ISAAR.MSolve.IGA.Tests
 		[Fact]
 		public void IsogeometricQuadraticCantilever2D()
 		{
-			// Model
-			Model model = new Model();
-			ModelCreator modelCreator = new ModelCreator(model);
-			string filename = "..\\..\\..\\InputFiles\\Cantilever2D.txt";
-			IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filename);
-			modelReader.CreateModelFromFile();
+            var material = new ElasticMaterial2D(StressState2D.PlaneStress)
+            {
+                YoungModulus = 100000,
+                PoissonRatio = 0.3
+            };
+            var filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", "Cantilever2D.json");
+            var jsonReader = new JsonModelReader(filepath, material);
 
-			// Forces and Boundary Conditions
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[1].ControlPointsDictionary
-				.Values)
-				model.Loads.Add(new Load()
-				{
-					Amount = -100,
-					ControlPoint = model.ControlPointsDictionary[controlPoint.ID],
-					DOF = StructuralDof.TranslationY
-				});
+            var (geometry, model)=jsonReader.ReadGeometryAndCreateModel();
+            for (int i = 54; i < 60; i++)
+            {
+				model.Loads.Add(new NodalLoad(model.ControlPointsDictionary[i],StructuralDof.TranslationY,-100));
+            }
 
-			// Boundary Conditions - Dirichlet
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() {DOF = StructuralDof.TranslationX});
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-			}
+            // Boundary Conditions - Dirichlet
+            for (int i = 0; i < 6; i++)
+            {
+                model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+                model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+            }
 
-			var solverBuilder = new DenseMatrixSolver.Builder();
+            var solverBuilder = new DenseMatrixSolver.Builder();
 			solverBuilder.DofOrderer = new DofOrderer(
 				new NodeMajorDofOrderingStrategy(), new NullReordering());
 			ISolver solver = solverBuilder.BuildSolver(model);
@@ -111,52 +119,44 @@ namespace ISAAR.MSolve.IGA.Tests
 				Assert.Equal(displacementVectorExpected[i], solver.LinearSystems[0].Solution[i], 6);
 		}
 
+		
 		[Fact]
-		public void IsogeometricQuadraticCantilever2DWithDistributedLoad()
-		{
-			// Model
-			Model model = new Model();
-			ModelCreator modelCreator = new ModelCreator(model);
-			var filename = "Cantilever2D";
-			string filepath =$"..\\..\\..\\InputFiles\\{filename}.txt";
-			IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filepath);
-			modelReader.CreateModelFromFile();
+        public void IsogeometricQuadraticCantilever2DWithDistributedLoad()
+        {
+            var material = new ElasticMaterial2D(StressState2D.PlaneStress)
+            {
+                YoungModulus = 100000,
+                PoissonRatio = 0.3
+            };
+            var filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", "Cantilever2D.json");
+            var jsonReader = new JsonModelReader(filepath, material);
 
-			// Forces and Boundary Conditions
-			Value verticalDistributedLoad = delegate(double x, double y, double z)
-			{
-				return new double[] {0, -100, 0};
-			};
-			model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions
-				.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
+            var (geometry, model)=jsonReader.ReadGeometryAndCreateModel();
+            var rightEdgeLoads=geometry.NurbsSurfacePatches[0]
+                .CreateLoadForEdge(model,NurbsSurfaceEdges.Right, new DistributedLineLoad2D(0, -100));
+            foreach (var load in rightEdgeLoads)
+            {
+                model.Loads.Add(load);
+            }
+            geometry.NurbsSurfacePatches[0].ConstraintDofsOfEdge(model, NurbsSurfaceEdges.Left, new List<IDofType>()
+            {
+                StructuralDof.TranslationX, StructuralDof.TranslationY
+            });
+			
+            var solverBuilder = new SkylineSolver.Builder();
+            ISolver solver = solverBuilder.BuildSolver(model);
 
-			// Boundary Conditions - Dirichlet
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() {DOF = StructuralDof.TranslationX});
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-			}
+            // Structural problem provider
+            var provider = new ProblemStructural(model, solver);
 
-			var solverBuilder = new SkylineSolver.Builder();
-			ISolver solver = solverBuilder.BuildSolver(model);
+            // Linear static analysis
+            var childAnalyzer = new LinearAnalyzer(model, solver, provider);
+            var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
-			// Structural problem provider
-			var provider = new ProblemStructural(model, solver);
+            // Run the analysis
+            parentAnalyzer.Initialize();
+            parentAnalyzer.Solve();
 
-			// Linear static analysis
-			var childAnalyzer = new LinearAnalyzer(model, solver, provider);
-			var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
-
-			// Run the analysis
-			parentAnalyzer.Initialize();
-			parentAnalyzer.Solve();
-
-			var paraviewOutput = new ParaviewNurbs2D(model,solver.LinearSystems[0].Solution, filename);
-			paraviewOutput.CreateParaview2DFile();
-
-
-			//Test for Load Vector
 			double[] loadVectorExpected =
 			{
 				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -203,35 +203,47 @@ namespace ISAAR.MSolve.IGA.Tests
 			};
 			for (int i = 0; i < displacementVectorExpected.Length; i++)
 				Assert.Equal(displacementVectorExpected[i], solver.LinearSystems[0].Solution[i], 6);
-		}
+        }
 
 		[Fact]
 		public void IsogeometricPlateTension()
 		{
-			// Model
+            var material = new ElasticMaterial2D(StressState2D.PlaneStrain)
+            {
+                YoungModulus = 10000,
+                PoissonRatio = 0.3
+            };
+            var filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", "PlateTension.json");
+            var jsonReader = new JsonModelReader(filepath, material);
+
+            var (geometry, model)=jsonReader.ReadGeometryAndCreateModel();
 			
-			Model model = new Model();
-			ModelCreator modelCreator = new ModelCreator(model);
-			string filename = "..\\..\\..\\InputFiles\\PlateTension.txt";
-			IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filename);
-			modelReader.CreateModelFromFile();
+            var rightEdgeLoads=geometry.NurbsSurfacePatches[0].CreateLoadForEdge(model,NurbsSurfaceEdges.Right, new DistributedLineLoad2D(100,0));
+            foreach (var load in rightEdgeLoads)
+            {
+                model.Loads.Add(load);
+            }
+            geometry.NurbsSurfacePatches[0].ConstraintDofsOfEdge(model, NurbsSurfaceEdges.Left, new List<IDofType>()
+            {
+                StructuralDof.TranslationX
+            });
 
 			// Forces and Boundary Conditions
-			Value horizontalDistributedLoad = delegate(double x, double y, double z)
-			{
-				return new double[] {100, 0, 0};
-			};
-			model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions
-				.Add(new NeumannBoundaryCondition(horizontalDistributedLoad));
+			//Value horizontalDistributedLoad = delegate(double x, double y, double z)
+			//{
+			//	return new double[] {100, 0, 0};
+			//};
+			//model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions
+			//	.Add(new NeumannBoundaryCondition(horizontalDistributedLoad));
 
-			// Boundary Conditions - Dirichlet
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() {DOF = StructuralDof.TranslationX});
-			}
+			//// Boundary Conditions - Dirichlet
+			//foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
+			//	.Values)
+			//{
+			//	model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() {DOF = StructuralDof.TranslationX});
+			//}
 
-			model.ControlPointsDictionary[0].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+			model.ControlPointsDictionary[0].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
 
 			var solverBuilder = new DenseMatrixSolver.Builder();
 			solverBuilder.DofOrderer = new DofOrderer(
@@ -309,45 +321,66 @@ namespace ISAAR.MSolve.IGA.Tests
 		[Fact]
 		public void IsogeometricPlaneStrainMixedBC()
 		{
-			// Model
-			
-			Model model = new Model();
-			ModelCreator modelCreator = new ModelCreator(model);
-			string filename = "..\\..\\..\\InputFiles\\SquareMixedBC.txt";
-			IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filename);
-			modelReader.CreateModelFromFile();
+            var material = new ElasticMaterial2D(StressState2D.PlaneStrain)
+            {
+                YoungModulus = 1,
+                PoissonRatio = 0.3
+            };
+            var filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", "SquareMixedBC.json");
+            var jsonReader = new JsonModelReader(filepath, material);
 
-			// Forces and Boundary Conditions
-			//model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions.Add(new PressureBoundaryCondition(0.3));
-			//model.PatchesDictionary[0].EdgesDictionary[3].LoadingConditions.Add(new PressureBoundaryCondition(0.3));
-			Value horizontalDistributedLoad = delegate(double x, double y, double z)
-			{
-				return new double[] {-0.30, 0, 0};
-			};
-			model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions
-				.Add(new NeumannBoundaryCondition(horizontalDistributedLoad));
+            var (geometry, model)=jsonReader.ReadGeometryAndCreateModel();
 
-			Value verticalDistributedLoad = delegate(double x, double y, double z)
-			{
-				return new double[] {0, -0.3, 0};
-			};
-			model.PatchesDictionary[0].EdgesDictionary[3].LoadingConditions
-				.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
+            var rightEdgeLoads=geometry.NurbsSurfacePatches[0]
+                .CreateLoadForEdge(model,NurbsSurfaceEdges.Right, new DistributedLineLoad2D(-0.3,0));
+            foreach (var load in rightEdgeLoads)
+                model.Loads.Add(load);
 
-			// Boundary Conditions - Dirichlet
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() {DOF = StructuralDof.TranslationX});
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-			}
+            var topEdgeLoads=geometry.NurbsSurfacePatches[0]
+                .CreateLoadForEdge(model,NurbsSurfaceEdges.Top, new DistributedLineLoad2D(0,-0.3));
+            foreach (var load in topEdgeLoads)
+                model.Loads.Add(load);
 
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[2].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationX });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-			}
+            geometry.NurbsSurfacePatches[0].ConstraintDofsOfEdge(model, NurbsSurfaceEdges.Left, new List<IDofType>()
+            {
+                StructuralDof.TranslationX, StructuralDof.TranslationY
+            });
+            geometry.NurbsSurfacePatches[0].ConstraintDofsOfEdge(model, NurbsSurfaceEdges.Bottom, new List<IDofType>()
+            {
+                StructuralDof.TranslationX, StructuralDof.TranslationY
+            });
+
+
+
+
+			//Value horizontalDistributedLoad = delegate(double x, double y, double z)
+			//{
+			//	return new double[] {-0.30, 0, 0};
+			//};
+			//model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions
+			//	.Add(new NeumannBoundaryCondition(horizontalDistributedLoad));
+
+			//Value verticalDistributedLoad = delegate(double x, double y, double z)
+			//{
+			//	return new double[] {0, -0.3, 0};
+			//};
+			//model.PatchesDictionary[0].EdgesDictionary[3].LoadingConditions
+			//	.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
+
+			//// Boundary Conditions - Dirichlet
+			//foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
+			//	.Values)
+			//{
+			//	model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() {DOF = StructuralDof.TranslationX});
+			//	model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+			//}
+
+			//foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[2].ControlPointsDictionary
+			//	.Values)
+			//{
+			//	model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+			//	model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+			//}
 		
 
 			// Solvers
@@ -611,256 +644,257 @@ namespace ISAAR.MSolve.IGA.Tests
 				-0.00833333333333334,
 			};
 
+
 			for (int i = 0; i < forceVectorExpected.Length; i++)
 				Assert.Equal(forceVectorExpected[i], model.PatchesDictionary[0].Forces[i], 7);
 
 			#region expectedDisplacement
 
-			var displacementVectorExpected = new double[]
-			{
-				-0.00314820363909275,
-				-0.00314820363909275,
-				-0.00379395242120674,
-				-0.00474046877963962,
-				-0.00527896515562401,
-				-0.00627080476725420,
-				-0.00611202232103848,
-				-0.00732618402014196,
-				-0.00671664390713507,
-				-0.00830517563434155,
-				-0.00750778852140214,
-				-0.00921569343748655,
-				-0.00711656646035208,
-				-0.0104552048087267,
-				-0.00857783159759678,
-				-0.0115132239445180,
-				-0.00447714927679477,
-				-0.0142326173251668,
-				-0.00896507378072984,
-				-0.0172326398522936,
-				0.0165696344045362,
-				-0.0344920417612453,
-				-0.00474046877963962,
-				-0.00379395242120674,
-				-0.0106163667467970,
-				-0.0106163667467970,
-				-0.0145901385325659,
-				-0.0159579381873314,
-				-0.0175798662746167,
-				-0.0200752820397931,
-				-0.0197642416239734,
-				-0.0232933594058257,
-				-0.0209594659687415,
-				-0.0269739141344681,
-				-0.0221701240269120,
-				-0.0304381009757610,
-				-0.0204015380221106,
-				-0.0372162332314755,
-				-0.0190262809325074,
-				-0.0451261112082839,
-				0.000524263735174436,
-				-0.0646122725733136,
-				0.0134058371171140,
-				-0.0674237539857168,
-				-0.00627080476725419,
-				-0.00527896515562400,
-				-0.0159579381873313,
-				-0.0145901385325660,
-				-0.0255583394854834,
-				-0.0255583394854834,
-				-0.0320458295432382,
-				-0.0340345779839745,
-				-0.0364394696445877,
-				-0.0416128738023956,
-				-0.0392520264843806,
-				-0.0489264479827333,
-				-0.0394128785675202,
-				-0.0579962012559210,
-				-0.0375262954335112,
-				-0.0685615165413566,
-				-0.0269408733978005,
-				-0.0856583155480079,
-				-0.0140932604372300,
-				-0.0958837290337786,
-				-0.00425322389965576,
-				-0.102864805751424,
-				-0.00732618402014194,
-				-0.00611202232103848,
-				-0.0200752820397931,
-				-0.0175798662746167,
-				-0.0340345779839744,
-				-0.0320458295432382,
-				-0.0442399103415714,
-				-0.0442399103415714,
-				-0.0511182027891641,
-				-0.0551752972826913,
-				-0.0547664019599041,
-				-0.0662589972721233,
-				-0.0554544754480729,
-				-0.0781539846420991,
-				-0.0514092081933032,
-				-0.0928498000772380,
-				-0.0427832850822321,
-				-0.108645057746992,
-				-0.0311333714176029,
-				-0.120963904936585,
-				-0.0251089003632628,
-				-0.125275523366600,
-				-0.00830517563434156,
-				-0.00671664390713508,
-				-0.0232933594058256,
-				-0.0197642416239734,
-				-0.0416128738023955,
-				-0.0364394696445877,
-				-0.0551752972826911,
-				-0.0511182027891642,
-				-0.0644659012290671,
-				-0.0644659012290672,
-				-0.0694887264699124,
-				-0.0777115338314980,
-				-0.0702085098844087,
-				-0.0920154063898269,
-				-0.0670415920146972,
-				-0.107342294443253,
-				-0.0590775341097851,
-				-0.124438661501351,
-				-0.0522405165453920,
-				-0.134720354624928,
-				-0.0486371118189779,
-				-0.139962781550140,
-				-0.00921569343748652,
-				-0.00750778852140214,
-				-0.0269739141344680,
-				-0.0209594659687415,
-				-0.0489264479827331,
-				-0.0392520264843806,
-				-0.0662589972721231,
-				-0.0547664019599042,
-				-0.0777115338314978,
-				-0.0694887264699125,
-				-0.0840291771115493,
-				-0.0840291771115496,
-				-0.0855834304606439,
-				-0.0992380743950709,
-				-0.0829894406989148,
-				-0.115516212797889,
-				-0.0776932540445211,
-				-0.131918682864287,
-				-0.0732614094641817,
-				-0.142841837190617,
-				-0.0714730797892666,
-				-0.147708704990261,
-				-0.0104552048087266,
-				-0.00711656646035210,
-				-0.0304381009757609,
-				-0.0221701240269120,
-				-0.0579962012559208,
-				-0.0394128785675203,
-				-0.0781539846420988,
-				-0.0554544754480730,
-				-0.0920154063898266,
-				-0.0702085098844090,
-				-0.0992380743950705,
-				-0.0855834304606441,
-				-0.101501531630957,
-				-0.101501531630958,
-				-0.0999370644850315,
-				-0.118017394845313,
-				-0.0962343442201912,
-				-0.134878482285728,
-				-0.0940899630707035,
-				-0.145633866412365,
-				-0.0936977503670338,
-				-0.150902312951907,
-				-0.0115132239445179,
-				-0.00857783159759677,
-				-0.0372162332314754,
-				-0.0204015380221106,
-				-0.0685615165413564,
-				-0.0375262954335112,
-				-0.0928498000772377,
-				-0.0514092081933034,
-				-0.107342294443253,
-				-0.0670415920146973,
-				-0.115516212797889,
-				-0.0829894406989151,
-				-0.118017394845313,
-				-0.0999370644850319,
-				-0.117164741332239,
-				-0.117164741332239,
-				-0.114732961045519,
-				-0.134270598345563,
-				-0.113764345865824,
-				-0.145437001617946,
-				-0.114021716983238,
-				-0.150889885103904,
-				-0.0142326173251668,
-				-0.00447714927679481,
-				-0.0451261112082838,
-				-0.0190262809325074,
-				-0.0856583155480077,
-				-0.0269408733978006,
-				-0.108645057746992,
-				-0.0427832850822322,
-				-0.124438661501351,
-				-0.0590775341097853,
-				-0.131918682864286,
-				-0.0776932540445212,
-				-0.134878482285727,
-				-0.0962343442201915,
-				-0.134270598345562,
-				-0.114732961045519,
-				-0.132671391727535,
-				-0.132671391727535,
-				-0.132190010013491,
-				-0.144083210808925,
-				-0.132499710574820,
-				-0.149832975007404,
-				-0.0172326398522934,
-				-0.00896507378072984,
-				-0.0646122725733136,
-				0.000524263735174192,
-				-0.0958837290337782,
-				-0.0140932604372301,
-				-0.120963904936585,
-				-0.0311333714176032,
-				-0.134720354624928,
-				-0.0522405165453921,
-				-0.142841837190616,
-				-0.0732614094641819,
-				-0.145633866412364,
-				-0.0940899630707035,
-				-0.145437001617945,
-				-0.113764345865824,
-				-0.144083210808926,
-				-0.132190010013491,
-				-0.143845673350073,
-				-0.143845673350073,
-				-0.143883483258064,
-				-0.149631002634067,
-				-0.0344920417612453,
-				0.0165696344045361,
-				-0.0674237539857166,
-				0.0134058371171139,
-				-0.102864805751424,
-				-0.00425322389965601,
-				-0.125275523366599,
-				-0.0251089003632630,
-				-0.139962781550140,
-				-0.0486371118189782,
-				-0.147708704990260,
-				-0.0714730797892668,
-				-0.150902312951907,
-				-0.0936977503670341,
-				-0.150889885103902,
-				-0.114021716983238,
-				-0.149832975007405,
-				-0.132499710574819,
-				-0.149631002634066,
-				-0.143883483258064,
-				-0.149670908292985,
-				-0.149670908292985,
-			};
+            var displacementVectorExpected = new double[]
+            {
+                -0.00314820363909275,
+                -0.00314820363909275,
+                -0.00379395242120674,
+                -0.00474046877963962,
+                -0.00527896515562401,
+                -0.00627080476725420,
+                -0.00611202232103848,
+                -0.00732618402014196,
+                -0.00671664390713507,
+                -0.00830517563434155,
+                -0.00750778852140214,
+                -0.00921569343748655,
+                -0.00711656646035208,
+                -0.0104552048087267,
+                -0.00857783159759678,
+                -0.0115132239445180,
+                -0.00447714927679477,
+                -0.0142326173251668,
+                -0.00896507378072984,
+                -0.0172326398522936,
+                0.0165696344045362,
+                -0.0344920417612453,
+                -0.00474046877963962,
+                -0.00379395242120674,
+                -0.0106163667467970,
+                -0.0106163667467970,
+                -0.0145901385325659,
+                -0.0159579381873314,
+                -0.0175798662746167,
+                -0.0200752820397931,
+                -0.0197642416239734,
+                -0.0232933594058257,
+                -0.0209594659687415,
+                -0.0269739141344681,
+                -0.0221701240269120,
+                -0.0304381009757610,
+                -0.0204015380221106,
+                -0.0372162332314755,
+                -0.0190262809325074,
+                -0.0451261112082839,
+                0.000524263735174436,
+                -0.0646122725733136,
+                0.0134058371171140,
+                -0.0674237539857168,
+                -0.00627080476725419,
+                -0.00527896515562400,
+                -0.0159579381873313,
+                -0.0145901385325660,
+                -0.0255583394854834,
+                -0.0255583394854834,
+                -0.0320458295432382,
+                -0.0340345779839745,
+                -0.0364394696445877,
+                -0.0416128738023956,
+                -0.0392520264843806,
+                -0.0489264479827333,
+                -0.0394128785675202,
+                -0.0579962012559210,
+                -0.0375262954335112,
+                -0.0685615165413566,
+                -0.0269408733978005,
+                -0.0856583155480079,
+                -0.0140932604372300,
+                -0.0958837290337786,
+                -0.00425322389965576,
+                -0.102864805751424,
+                -0.00732618402014194,
+                -0.00611202232103848,
+                -0.0200752820397931,
+                -0.0175798662746167,
+                -0.0340345779839744,
+                -0.0320458295432382,
+                -0.0442399103415714,
+                -0.0442399103415714,
+                -0.0511182027891641,
+                -0.0551752972826913,
+                -0.0547664019599041,
+                -0.0662589972721233,
+                -0.0554544754480729,
+                -0.0781539846420991,
+                -0.0514092081933032,
+                -0.0928498000772380,
+                -0.0427832850822321,
+                -0.108645057746992,
+                -0.0311333714176029,
+                -0.120963904936585,
+                -0.0251089003632628,
+                -0.125275523366600,
+                -0.00830517563434156,
+                -0.00671664390713508,
+                -0.0232933594058256,
+                -0.0197642416239734,
+                -0.0416128738023955,
+                -0.0364394696445877,
+                -0.0551752972826911,
+                -0.0511182027891642,
+                -0.0644659012290671,
+                -0.0644659012290672,
+                -0.0694887264699124,
+                -0.0777115338314980,
+                -0.0702085098844087,
+                -0.0920154063898269,
+                -0.0670415920146972,
+                -0.107342294443253,
+                -0.0590775341097851,
+                -0.124438661501351,
+                -0.0522405165453920,
+                -0.134720354624928,
+                -0.0486371118189779,
+                -0.139962781550140,
+                -0.00921569343748652,
+                -0.00750778852140214,
+                -0.0269739141344680,
+                -0.0209594659687415,
+                -0.0489264479827331,
+                -0.0392520264843806,
+                -0.0662589972721231,
+                -0.0547664019599042,
+                -0.0777115338314978,
+                -0.0694887264699125,
+                -0.0840291771115493,
+                -0.0840291771115496,
+                -0.0855834304606439,
+                -0.0992380743950709,
+                -0.0829894406989148,
+                -0.115516212797889,
+                -0.0776932540445211,
+                -0.131918682864287,
+                -0.0732614094641817,
+                -0.142841837190617,
+                -0.0714730797892666,
+                -0.147708704990261,
+                -0.0104552048087266,
+                -0.00711656646035210,
+                -0.0304381009757609,
+                -0.0221701240269120,
+                -0.0579962012559208,
+                -0.0394128785675203,
+                -0.0781539846420988,
+                -0.0554544754480730,
+                -0.0920154063898266,
+                -0.0702085098844090,
+                -0.0992380743950705,
+                -0.0855834304606441,
+                -0.101501531630957,
+                -0.101501531630958,
+                -0.0999370644850315,
+                -0.118017394845313,
+                -0.0962343442201912,
+                -0.134878482285728,
+                -0.0940899630707035,
+                -0.145633866412365,
+                -0.0936977503670338,
+                -0.150902312951907,
+                -0.0115132239445179,
+                -0.00857783159759677,
+                -0.0372162332314754,
+                -0.0204015380221106,
+                -0.0685615165413564,
+                -0.0375262954335112,
+                -0.0928498000772377,
+                -0.0514092081933034,
+                -0.107342294443253,
+                -0.0670415920146973,
+                -0.115516212797889,
+                -0.0829894406989151,
+                -0.118017394845313,
+                -0.0999370644850319,
+                -0.117164741332239,
+                -0.117164741332239,
+                -0.114732961045519,
+                -0.134270598345563,
+                -0.113764345865824,
+                -0.145437001617946,
+                -0.114021716983238,
+                -0.150889885103904,
+                -0.0142326173251668,
+                -0.00447714927679481,
+                -0.0451261112082838,
+                -0.0190262809325074,
+                -0.0856583155480077,
+                -0.0269408733978006,
+                -0.108645057746992,
+                -0.0427832850822322,
+                -0.124438661501351,
+                -0.0590775341097853,
+                -0.131918682864286,
+                -0.0776932540445212,
+                -0.134878482285727,
+                -0.0962343442201915,
+                -0.134270598345562,
+                -0.114732961045519,
+                -0.132671391727535,
+                -0.132671391727535,
+                -0.132190010013491,
+                -0.144083210808925,
+                -0.132499710574820,
+                -0.149832975007404,
+                -0.0172326398522934,
+                -0.00896507378072984,
+                -0.0646122725733136,
+                0.000524263735174192,
+                -0.0958837290337782,
+                -0.0140932604372301,
+                -0.120963904936585,
+                -0.0311333714176032,
+                -0.134720354624928,
+                -0.0522405165453921,
+                -0.142841837190616,
+                -0.0732614094641819,
+                -0.145633866412364,
+                -0.0940899630707035,
+                -0.145437001617945,
+                -0.113764345865824,
+                -0.144083210808926,
+                -0.132190010013491,
+                -0.143845673350073,
+                -0.143845673350073,
+                -0.143883483258064,
+                -0.149631002634067,
+                -0.0344920417612453,
+                0.0165696344045361,
+                -0.0674237539857166,
+                0.0134058371171139,
+                -0.102864805751424,
+                -0.00425322389965601,
+                -0.125275523366599,
+                -0.0251089003632630,
+                -0.139962781550140,
+                -0.0486371118189782,
+                -0.147708704990260,
+                -0.0714730797892668,
+                -0.150902312951907,
+                -0.0936977503670341,
+                -0.150889885103902,
+                -0.114021716983238,
+                -0.149832975007405,
+                -0.132499710574819,
+                -0.149631002634066,
+                -0.143883483258064,
+                -0.149670908292985,
+                -0.149670908292985,
+            };
 
 			for (int i = 0; i < displacementVectorExpected.Length; i++)
 				Assert.Equal(displacementVectorExpected[i], solver.LinearSystems[0].Solution[i], 7);
@@ -899,87 +933,74 @@ namespace ISAAR.MSolve.IGA.Tests
 			};
 		}
 
-		private Vector KnotValueVectorKsi()
+		private double[] KnotValueVectorKsi()
 		{
-			return Vector.CreateFromArray(new double[8]
+			return new double[8]
 			{
 				0, 0, 0, 0, 1, 1, 1, 1
-			});
+			};
 		}
 
-		private Vector KnotValueVectorHeta()
+		private double[] KnotValueVectorHeta()
 		{
-			return Vector.CreateFromArray(new double[6]
+			return new double[6]
 			{
 				0, 0, 0, 1, 1, 1
-			});
+			};
 		}
 
-		private NURBSKirchhoffLoveShellElement Element
+		private KirchhoffLoveShell Element
 		{
 			get
 			{
-				var element = new NURBSKirchhoffLoveShellElement();
-				var patch = new Patch();
-				patch.Material = new ElasticMaterial2D(StressState2D.PlaneStrain)
-				{
-					YoungModulus = 100,
-					PoissonRatio = 0.0
+                var thickness = 1;
+                var degreeKsi = 3;
+                var degreeHeta = 2;
+                var numberOfControlPointsHeta = 3;
+                var knotValueVectorKsi = KnotValueVectorKsi();
+                var knotValueVectorHeta = KnotValueVectorHeta();
+
+                var gauss = new GaussQuadrature();
+                var gaussPoints = gauss.CalculateElementGaussPoints(degreeKsi, degreeHeta, ElementKnot()).ToArray();
+				var nurbs = new Nurbs2D(degreeKsi, knotValueVectorKsi, degreeHeta, knotValueVectorHeta,
+                    ElementControlPoints().ToArray(), gaussPoints);
+				var material= new ShellElasticSectionMaterial2D()
+                {
+                    YoungModulus = 100,
+                    PoissonRatio = 0.0
 				};
+				var element = new KirchhoffLoveShell(material,nurbs,gaussPoints,thickness);
+				var patch = new Patch();
 				foreach (var controlPoint in ElementControlPoints())
 					element.ControlPointsDictionary.Add(controlPoint.ID, controlPoint);
 				foreach (var knot in ElementKnot())
 					element.KnotsDictionary.Add(knot.ID, knot);
 				element.ElementType = element;
-				patch.Thickness = 1;
-				patch.DegreeKsi = 3;
-				patch.DegreeHeta = 2;
-				patch.NumberOfControlPointsHeta = 3;
-				patch.KnotValueVectorKsi = KnotValueVectorKsi();
-				patch.KnotValueVectorHeta = KnotValueVectorHeta();
+				
 				element.Patch = patch;
 				return element;
 			}
 		}
 		#endregion
-		
+
+
 		//[Fact]
 		public void IsogeometricHorseshoe3D()
 		{
-			
-			Model model = new Model();
-			ModelCreator modelCreator = new ModelCreator(model);
-			string filename = "..\\..\\..\\InputFiles\\Horseshoe.txt";
-			IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filename);
+            Model model = new Model();
+			string filename = Path.Combine(Directory.GetCurrentDirectory(),"InputFiles","Cube3D.txt");
+			IsogeometricReader modelReader = new IsogeometricReader(filename,null,new ElasticMaterial3D()
+            {
+				YoungModulus = 1.0,
+				PoissonRatio = 0.3
+            });
+			//TODO: Find out why no subdomains are created
 			modelReader.CreateModelFromFile();
 
-			// Forces and Boundary Conditions
-			Value verticalDistributedLoad = delegate (double x, double y, double z)
-			{
-				return new double[] { 0, 0, 0.1 };
-			};
-			model.PatchesDictionary[0].FacesDictionary[0].LoadingConditions.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
-			model.PatchesDictionary[0].FacesDictionary[1].LoadingConditions.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
-			model.PatchesDictionary[0].FacesDictionary[4].LoadingConditions.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
-			model.PatchesDictionary[0].FacesDictionary[5].LoadingConditions.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
-
-
 			// Boundary Conditions - Dirichlet
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].FacesDictionary[2].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() {DOF = StructuralDof.TranslationX});
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
-			}
-
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].FacesDictionary[3].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationX });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
-			}
+			
+            //model.ControlPointsDictionary.Last().Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+			//model.Loads.Add(new Load(){Amount = 100, DOF = StructuralDof.TranslationX, Node = model.PatchesDictionary[0].ControlPoints.Last()});
 
 			// Solvers
 			var solverBuilder = new SkylineSolver.Builder();
@@ -998,800 +1019,794 @@ namespace ISAAR.MSolve.IGA.Tests
 
 			Matrix<double> forceVectorExpected = MatlabReader.Read<double>("..\\..\\..\\InputFiles\\Horseshoe.mat", "forceVector");
 
-			for (int i = 0; i < forceVectorExpected.RowCount; i++)
-				Assert.Equal(forceVectorExpected.At(i, 0), model.PatchesDictionary[0].Forces[i], 7);
-
-			Matrix<double> displacementVectorExpected = MatlabReader.Read<double>("..\\..\\..\\InputFiles\\Horseshoe.mat", "displacementVector");
-
-			for (int i = 0; i < displacementVectorExpected.RowCount; i++)
-				Assert.Equal(displacementVectorExpected.At(i, 0), solver.LinearSystems[0].Solution[i], 7);
 
 		}
 		
-		//[Fact]
-		public void IsogeometricPlaneStrainRing()
-		{
-			
-			Model model = new Model();
-			ModelCreator modelCreator = new ModelCreator(model);
-			string filename = "..\\..\\..\\InputFiles\\SquareMixedBC.txt";
-			IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filename);
-			modelReader.CreateModelFromFile();
-
-			// Forces and Boundary Conditions
-			//model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions.Add(new PressureBoundaryCondition(0.3));
-			//model.PatchesDictionary[0].EdgesDictionary[3].LoadingConditions.Add(new PressureBoundaryCondition(0.3));
-			Value horizontalDistributedLoad = delegate (double x, double y, double z)
-			{
-				return new double[] { -0.30, 0, 0 };
-			};
-			model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions
-				.Add(new NeumannBoundaryCondition(horizontalDistributedLoad));
-
-			Value verticalDistributedLoad = delegate (double x, double y, double z)
-			{
-				return new double[] { 0, -0.3, 0 };
-			};
-			model.PatchesDictionary[0].EdgesDictionary[3].LoadingConditions
-				.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
-
-			// Boundary Conditions - Dirichlet
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() {DOF = StructuralDof.TranslationX});
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-			}
-
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[2].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationX });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-			}
-
-			// Solvers
-			var solverBuilder = new SkylineSolver.Builder();
-			ISolver solver = solverBuilder.BuildSolver(model);
-
-			// Structural problem provider
-			var provider = new ProblemStructural(model, solver);
-
-			// Linear static analysis
-			var childAnalyzer = new LinearAnalyzer(model, solver, provider);
-			var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
-
-			// Run the analysis
-			parentAnalyzer.Initialize();
-			parentAnalyzer.Solve();
-
-			var forceVectorExpected = new double[]
-			{
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				-0.0166666666666667,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				-0.0250000000000000,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				-0.0333333333333333,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				-0.0333333333333333,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				-0.0333333333333333,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				-0.0333333333333333,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				-0.0333333333333333,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				-0.0333333333333333,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				-0.0250000000000000,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				-0.0166666666666667,
-				-0.0166666666666667,
-				0,
-				-0.0250000000000000,
-				0,
-				-0.0333333333333333,
-				0,
-				-0.0333333333333333,
-				0,
-				-0.0333333333333333,
-				0,
-				-0.0333333333333333,
-				0,
-				-0.0333333333333333,
-				0,
-				-0.0333333333333333,
-				0,
-				-0.0250000000000000,
-				0,
-				-0.0166666666666667,
-				0,
-				-0.00833333333333334,
-				-0.00833333333333334,
-			};
-
-			for (int i = 0; i < forceVectorExpected.Length; i++)
-				Assert.Equal(forceVectorExpected[i], model.PatchesDictionary[0].Forces[i], 7);
-
-			#region expectedDisplacement
-
-			var displacementVectorExpected = new double[]
-			{
-				-0.00314820363909275,
-				-0.00314820363909275,
-				-0.00379395242120674,
-				-0.00474046877963962,
-				-0.00527896515562401,
-				-0.00627080476725420,
-				-0.00611202232103848,
-				-0.00732618402014196,
-				-0.00671664390713507,
-				-0.00830517563434155,
-				-0.00750778852140214,
-				-0.00921569343748655,
-				-0.00711656646035208,
-				-0.0104552048087267,
-				-0.00857783159759678,
-				-0.0115132239445180,
-				-0.00447714927679477,
-				-0.0142326173251668,
-				-0.00896507378072984,
-				-0.0172326398522936,
-				0.0165696344045362,
-				-0.0344920417612453,
-				-0.00474046877963962,
-				-0.00379395242120674,
-				-0.0106163667467970,
-				-0.0106163667467970,
-				-0.0145901385325659,
-				-0.0159579381873314,
-				-0.0175798662746167,
-				-0.0200752820397931,
-				-0.0197642416239734,
-				-0.0232933594058257,
-				-0.0209594659687415,
-				-0.0269739141344681,
-				-0.0221701240269120,
-				-0.0304381009757610,
-				-0.0204015380221106,
-				-0.0372162332314755,
-				-0.0190262809325074,
-				-0.0451261112082839,
-				0.000524263735174436,
-				-0.0646122725733136,
-				0.0134058371171140,
-				-0.0674237539857168,
-				-0.00627080476725419,
-				-0.00527896515562400,
-				-0.0159579381873313,
-				-0.0145901385325660,
-				-0.0255583394854834,
-				-0.0255583394854834,
-				-0.0320458295432382,
-				-0.0340345779839745,
-				-0.0364394696445877,
-				-0.0416128738023956,
-				-0.0392520264843806,
-				-0.0489264479827333,
-				-0.0394128785675202,
-				-0.0579962012559210,
-				-0.0375262954335112,
-				-0.0685615165413566,
-				-0.0269408733978005,
-				-0.0856583155480079,
-				-0.0140932604372300,
-				-0.0958837290337786,
-				-0.00425322389965576,
-				-0.102864805751424,
-				-0.00732618402014194,
-				-0.00611202232103848,
-				-0.0200752820397931,
-				-0.0175798662746167,
-				-0.0340345779839744,
-				-0.0320458295432382,
-				-0.0442399103415714,
-				-0.0442399103415714,
-				-0.0511182027891641,
-				-0.0551752972826913,
-				-0.0547664019599041,
-				-0.0662589972721233,
-				-0.0554544754480729,
-				-0.0781539846420991,
-				-0.0514092081933032,
-				-0.0928498000772380,
-				-0.0427832850822321,
-				-0.108645057746992,
-				-0.0311333714176029,
-				-0.120963904936585,
-				-0.0251089003632628,
-				-0.125275523366600,
-				-0.00830517563434156,
-				-0.00671664390713508,
-				-0.0232933594058256,
-				-0.0197642416239734,
-				-0.0416128738023955,
-				-0.0364394696445877,
-				-0.0551752972826911,
-				-0.0511182027891642,
-				-0.0644659012290671,
-				-0.0644659012290672,
-				-0.0694887264699124,
-				-0.0777115338314980,
-				-0.0702085098844087,
-				-0.0920154063898269,
-				-0.0670415920146972,
-				-0.107342294443253,
-				-0.0590775341097851,
-				-0.124438661501351,
-				-0.0522405165453920,
-				-0.134720354624928,
-				-0.0486371118189779,
-				-0.139962781550140,
-				-0.00921569343748652,
-				-0.00750778852140214,
-				-0.0269739141344680,
-				-0.0209594659687415,
-				-0.0489264479827331,
-				-0.0392520264843806,
-				-0.0662589972721231,
-				-0.0547664019599042,
-				-0.0777115338314978,
-				-0.0694887264699125,
-				-0.0840291771115493,
-				-0.0840291771115496,
-				-0.0855834304606439,
-				-0.0992380743950709,
-				-0.0829894406989148,
-				-0.115516212797889,
-				-0.0776932540445211,
-				-0.131918682864287,
-				-0.0732614094641817,
-				-0.142841837190617,
-				-0.0714730797892666,
-				-0.147708704990261,
-				-0.0104552048087266,
-				-0.00711656646035210,
-				-0.0304381009757609,
-				-0.0221701240269120,
-				-0.0579962012559208,
-				-0.0394128785675203,
-				-0.0781539846420988,
-				-0.0554544754480730,
-				-0.0920154063898266,
-				-0.0702085098844090,
-				-0.0992380743950705,
-				-0.0855834304606441,
-				-0.101501531630957,
-				-0.101501531630958,
-				-0.0999370644850315,
-				-0.118017394845313,
-				-0.0962343442201912,
-				-0.134878482285728,
-				-0.0940899630707035,
-				-0.145633866412365,
-				-0.0936977503670338,
-				-0.150902312951907,
-				-0.0115132239445179,
-				-0.00857783159759677,
-				-0.0372162332314754,
-				-0.0204015380221106,
-				-0.0685615165413564,
-				-0.0375262954335112,
-				-0.0928498000772377,
-				-0.0514092081933034,
-				-0.107342294443253,
-				-0.0670415920146973,
-				-0.115516212797889,
-				-0.0829894406989151,
-				-0.118017394845313,
-				-0.0999370644850319,
-				-0.117164741332239,
-				-0.117164741332239,
-				-0.114732961045519,
-				-0.134270598345563,
-				-0.113764345865824,
-				-0.145437001617946,
-				-0.114021716983238,
-				-0.150889885103904,
-				-0.0142326173251668,
-				-0.00447714927679481,
-				-0.0451261112082838,
-				-0.0190262809325074,
-				-0.0856583155480077,
-				-0.0269408733978006,
-				-0.108645057746992,
-				-0.0427832850822322,
-				-0.124438661501351,
-				-0.0590775341097853,
-				-0.131918682864286,
-				-0.0776932540445212,
-				-0.134878482285727,
-				-0.0962343442201915,
-				-0.134270598345562,
-				-0.114732961045519,
-				-0.132671391727535,
-				-0.132671391727535,
-				-0.132190010013491,
-				-0.144083210808925,
-				-0.132499710574820,
-				-0.149832975007404,
-				-0.0172326398522934,
-				-0.00896507378072984,
-				-0.0646122725733136,
-				0.000524263735174192,
-				-0.0958837290337782,
-				-0.0140932604372301,
-				-0.120963904936585,
-				-0.0311333714176032,
-				-0.134720354624928,
-				-0.0522405165453921,
-				-0.142841837190616,
-				-0.0732614094641819,
-				-0.145633866412364,
-				-0.0940899630707035,
-				-0.145437001617945,
-				-0.113764345865824,
-				-0.144083210808926,
-				-0.132190010013491,
-				-0.143845673350073,
-				-0.143845673350073,
-				-0.143883483258064,
-				-0.149631002634067,
-				-0.0344920417612453,
-				0.0165696344045361,
-				-0.0674237539857166,
-				0.0134058371171139,
-				-0.102864805751424,
-				-0.00425322389965601,
-				-0.125275523366599,
-				-0.0251089003632630,
-				-0.139962781550140,
-				-0.0486371118189782,
-				-0.147708704990260,
-				-0.0714730797892668,
-				-0.150902312951907,
-				-0.0936977503670341,
-				-0.150889885103902,
-				-0.114021716983238,
-				-0.149832975007405,
-				-0.132499710574819,
-				-0.149631002634066,
-				-0.143883483258064,
-				-0.149670908292985,
-				-0.149670908292985,
-			};
-
-			for (int i = 0; i < displacementVectorExpected.Length; i++)
-				Assert.Equal(displacementVectorExpected[i], solver.LinearSystems[0].Solution[i], 7);
-
-			#endregion
-		}
 
 		//[Fact]
-		public void IsogeometricPlateWithHole()
-		{
-			// Model
-			
-			Model model = new Model();
-			ModelCreator modelCreator = new ModelCreator(model);
-			string filename = "..\\..\\..\\IGA\\InputFiles\\PlateTension.txt";
-			IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filename);
-			modelReader.CreateModelFromFile();
+		//public void IsogeometricPlaneStrainRing()
+		//{
 
-			// Forces and Boundary Conditions
-			Value horizontalDistributedLoad = delegate (double x, double y, double z)
-			{
-				return new double[] { 100, 0, 0 };
-			};
-			model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions
-				.Add(new NeumannBoundaryCondition(horizontalDistributedLoad));
+		//	Model model = new Model();
+		//	ModelCreator modelCreator = new ModelCreator(model);
+		//	string filename = "..\\..\\..\\InputFiles\\SquareMixedBC.txt";
+		//	IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filename);
+		//	modelReader.CreateModelFromFile();
 
-			// Boundary Conditions - Dirichlet
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-			}
+		//	// Forces and Boundary Conditions
+		//	//model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions.Add(new PressureBoundaryCondition(0.3));
+		//	//model.PatchesDictionary[0].EdgesDictionary[3].LoadingConditions.Add(new PressureBoundaryCondition(0.3));
+		//	Value horizontalDistributedLoad = delegate (double x, double y, double z)
+		//	{
+		//		return new double[] { -0.30, 0, 0 };
+		//	};
+		//	model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions
+		//		.Add(new NeumannBoundaryCondition(horizontalDistributedLoad));
 
-			model.ControlPointsDictionary[0].Constrains.Add(new Constraint() {DOF = StructuralDof.TranslationY});
-			
-			// Solvers
-			var solverBuilder = new SkylineSolver.Builder();
-			ISolver solver = solverBuilder.BuildSolver(model);
+		//	Value verticalDistributedLoad = delegate (double x, double y, double z)
+		//	{
+		//		return new double[] { 0, -0.3, 0 };
+		//	};
+		//	model.PatchesDictionary[0].EdgesDictionary[3].LoadingConditions
+		//		.Add(new NeumannBoundaryCondition(verticalDistributedLoad));
 
-			// Structural problem provider
-			var provider = new ProblemStructural(model, solver);
+		//	// Boundary Conditions - Dirichlet
+		//	foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
+		//		.Values)
+		//	{
+		//		model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() {DOF = StructuralDof.TranslationX});
+		//		model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+		//	}
 
-			// Linear static analysis
-			var childAnalyzer = new LinearAnalyzer(model, solver, provider);
-			var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
+		//	foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[2].ControlPointsDictionary
+		//		.Values)
+		//	{
+		//		model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+		//		model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+		//	}
 
-			// Run the analysis
-			parentAnalyzer.Initialize();
-			parentAnalyzer.Solve();
+		//	// Solvers
+		//	var solverBuilder = new SkylineSolver.Builder();
+		//	ISolver solver = solverBuilder.BuildSolver(model);
 
-			double[] forceVectorExpected =
-			{
-			};
-			for (int i = 0; i < forceVectorExpected.Length; i++)
-				Assert.Equal(forceVectorExpected[i], model.PatchesDictionary[0].Forces[i], 8);
+		//	// Structural problem provider
+		//	var provider = new ProblemStructural(model, solver);
 
-			#region expectedDisplacement
+		//	// Linear static analysis
+		//	var childAnalyzer = new LinearAnalyzer(model, solver, provider);
+		//	var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
-			double[] displacementVectorExpected =
-			{
-			};
-			for (int i = 0; i < displacementVectorExpected.Length; i++)
-				Assert.Equal(displacementVectorExpected[i], solver.LinearSystems[0].Solution[i], 4);
+		//	// Run the analysis
+		//	parentAnalyzer.Initialize();
+		//	parentAnalyzer.Solve();
 
-			#endregion
-		}
+		//	var forceVectorExpected = new double[]
+		//	{
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		-0.0166666666666667,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		-0.0250000000000000,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		-0.0250000000000000,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		0,
+		//		-0.0166666666666667,
+		//		-0.0166666666666667,
+		//		0,
+		//		-0.0250000000000000,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		-0.0333333333333333,
+		//		0,
+		//		-0.0250000000000000,
+		//		0,
+		//		-0.0166666666666667,
+		//		0,
+		//		-0.00833333333333334,
+		//		-0.00833333333333334,
+		//	};
+
+		//	for (int i = 0; i < forceVectorExpected.Length; i++)
+		//		Assert.Equal(forceVectorExpected[i], model.PatchesDictionary[0].Forces[i], 7);
+
+		//	#region expectedDisplacement
+
+		//	var displacementVectorExpected = new double[]
+		//	{
+		//		-0.00314820363909275,
+		//		-0.00314820363909275,
+		//		-0.00379395242120674,
+		//		-0.00474046877963962,
+		//		-0.00527896515562401,
+		//		-0.00627080476725420,
+		//		-0.00611202232103848,
+		//		-0.00732618402014196,
+		//		-0.00671664390713507,
+		//		-0.00830517563434155,
+		//		-0.00750778852140214,
+		//		-0.00921569343748655,
+		//		-0.00711656646035208,
+		//		-0.0104552048087267,
+		//		-0.00857783159759678,
+		//		-0.0115132239445180,
+		//		-0.00447714927679477,
+		//		-0.0142326173251668,
+		//		-0.00896507378072984,
+		//		-0.0172326398522936,
+		//		0.0165696344045362,
+		//		-0.0344920417612453,
+		//		-0.00474046877963962,
+		//		-0.00379395242120674,
+		//		-0.0106163667467970,
+		//		-0.0106163667467970,
+		//		-0.0145901385325659,
+		//		-0.0159579381873314,
+		//		-0.0175798662746167,
+		//		-0.0200752820397931,
+		//		-0.0197642416239734,
+		//		-0.0232933594058257,
+		//		-0.0209594659687415,
+		//		-0.0269739141344681,
+		//		-0.0221701240269120,
+		//		-0.0304381009757610,
+		//		-0.0204015380221106,
+		//		-0.0372162332314755,
+		//		-0.0190262809325074,
+		//		-0.0451261112082839,
+		//		0.000524263735174436,
+		//		-0.0646122725733136,
+		//		0.0134058371171140,
+		//		-0.0674237539857168,
+		//		-0.00627080476725419,
+		//		-0.00527896515562400,
+		//		-0.0159579381873313,
+		//		-0.0145901385325660,
+		//		-0.0255583394854834,
+		//		-0.0255583394854834,
+		//		-0.0320458295432382,
+		//		-0.0340345779839745,
+		//		-0.0364394696445877,
+		//		-0.0416128738023956,
+		//		-0.0392520264843806,
+		//		-0.0489264479827333,
+		//		-0.0394128785675202,
+		//		-0.0579962012559210,
+		//		-0.0375262954335112,
+		//		-0.0685615165413566,
+		//		-0.0269408733978005,
+		//		-0.0856583155480079,
+		//		-0.0140932604372300,
+		//		-0.0958837290337786,
+		//		-0.00425322389965576,
+		//		-0.102864805751424,
+		//		-0.00732618402014194,
+		//		-0.00611202232103848,
+		//		-0.0200752820397931,
+		//		-0.0175798662746167,
+		//		-0.0340345779839744,
+		//		-0.0320458295432382,
+		//		-0.0442399103415714,
+		//		-0.0442399103415714,
+		//		-0.0511182027891641,
+		//		-0.0551752972826913,
+		//		-0.0547664019599041,
+		//		-0.0662589972721233,
+		//		-0.0554544754480729,
+		//		-0.0781539846420991,
+		//		-0.0514092081933032,
+		//		-0.0928498000772380,
+		//		-0.0427832850822321,
+		//		-0.108645057746992,
+		//		-0.0311333714176029,
+		//		-0.120963904936585,
+		//		-0.0251089003632628,
+		//		-0.125275523366600,
+		//		-0.00830517563434156,
+		//		-0.00671664390713508,
+		//		-0.0232933594058256,
+		//		-0.0197642416239734,
+		//		-0.0416128738023955,
+		//		-0.0364394696445877,
+		//		-0.0551752972826911,
+		//		-0.0511182027891642,
+		//		-0.0644659012290671,
+		//		-0.0644659012290672,
+		//		-0.0694887264699124,
+		//		-0.0777115338314980,
+		//		-0.0702085098844087,
+		//		-0.0920154063898269,
+		//		-0.0670415920146972,
+		//		-0.107342294443253,
+		//		-0.0590775341097851,
+		//		-0.124438661501351,
+		//		-0.0522405165453920,
+		//		-0.134720354624928,
+		//		-0.0486371118189779,
+		//		-0.139962781550140,
+		//		-0.00921569343748652,
+		//		-0.00750778852140214,
+		//		-0.0269739141344680,
+		//		-0.0209594659687415,
+		//		-0.0489264479827331,
+		//		-0.0392520264843806,
+		//		-0.0662589972721231,
+		//		-0.0547664019599042,
+		//		-0.0777115338314978,
+		//		-0.0694887264699125,
+		//		-0.0840291771115493,
+		//		-0.0840291771115496,
+		//		-0.0855834304606439,
+		//		-0.0992380743950709,
+		//		-0.0829894406989148,
+		//		-0.115516212797889,
+		//		-0.0776932540445211,
+		//		-0.131918682864287,
+		//		-0.0732614094641817,
+		//		-0.142841837190617,
+		//		-0.0714730797892666,
+		//		-0.147708704990261,
+		//		-0.0104552048087266,
+		//		-0.00711656646035210,
+		//		-0.0304381009757609,
+		//		-0.0221701240269120,
+		//		-0.0579962012559208,
+		//		-0.0394128785675203,
+		//		-0.0781539846420988,
+		//		-0.0554544754480730,
+		//		-0.0920154063898266,
+		//		-0.0702085098844090,
+		//		-0.0992380743950705,
+		//		-0.0855834304606441,
+		//		-0.101501531630957,
+		//		-0.101501531630958,
+		//		-0.0999370644850315,
+		//		-0.118017394845313,
+		//		-0.0962343442201912,
+		//		-0.134878482285728,
+		//		-0.0940899630707035,
+		//		-0.145633866412365,
+		//		-0.0936977503670338,
+		//		-0.150902312951907,
+		//		-0.0115132239445179,
+		//		-0.00857783159759677,
+		//		-0.0372162332314754,
+		//		-0.0204015380221106,
+		//		-0.0685615165413564,
+		//		-0.0375262954335112,
+		//		-0.0928498000772377,
+		//		-0.0514092081933034,
+		//		-0.107342294443253,
+		//		-0.0670415920146973,
+		//		-0.115516212797889,
+		//		-0.0829894406989151,
+		//		-0.118017394845313,
+		//		-0.0999370644850319,
+		//		-0.117164741332239,
+		//		-0.117164741332239,
+		//		-0.114732961045519,
+		//		-0.134270598345563,
+		//		-0.113764345865824,
+		//		-0.145437001617946,
+		//		-0.114021716983238,
+		//		-0.150889885103904,
+		//		-0.0142326173251668,
+		//		-0.00447714927679481,
+		//		-0.0451261112082838,
+		//		-0.0190262809325074,
+		//		-0.0856583155480077,
+		//		-0.0269408733978006,
+		//		-0.108645057746992,
+		//		-0.0427832850822322,
+		//		-0.124438661501351,
+		//		-0.0590775341097853,
+		//		-0.131918682864286,
+		//		-0.0776932540445212,
+		//		-0.134878482285727,
+		//		-0.0962343442201915,
+		//		-0.134270598345562,
+		//		-0.114732961045519,
+		//		-0.132671391727535,
+		//		-0.132671391727535,
+		//		-0.132190010013491,
+		//		-0.144083210808925,
+		//		-0.132499710574820,
+		//		-0.149832975007404,
+		//		-0.0172326398522934,
+		//		-0.00896507378072984,
+		//		-0.0646122725733136,
+		//		0.000524263735174192,
+		//		-0.0958837290337782,
+		//		-0.0140932604372301,
+		//		-0.120963904936585,
+		//		-0.0311333714176032,
+		//		-0.134720354624928,
+		//		-0.0522405165453921,
+		//		-0.142841837190616,
+		//		-0.0732614094641819,
+		//		-0.145633866412364,
+		//		-0.0940899630707035,
+		//		-0.145437001617945,
+		//		-0.113764345865824,
+		//		-0.144083210808926,
+		//		-0.132190010013491,
+		//		-0.143845673350073,
+		//		-0.143845673350073,
+		//		-0.143883483258064,
+		//		-0.149631002634067,
+		//		-0.0344920417612453,
+		//		0.0165696344045361,
+		//		-0.0674237539857166,
+		//		0.0134058371171139,
+		//		-0.102864805751424,
+		//		-0.00425322389965601,
+		//		-0.125275523366599,
+		//		-0.0251089003632630,
+		//		-0.139962781550140,
+		//		-0.0486371118189782,
+		//		-0.147708704990260,
+		//		-0.0714730797892668,
+		//		-0.150902312951907,
+		//		-0.0936977503670341,
+		//		-0.150889885103902,
+		//		-0.114021716983238,
+		//		-0.149832975007405,
+		//		-0.132499710574819,
+		//		-0.149631002634066,
+		//		-0.143883483258064,
+		//		-0.149670908292985,
+		//		-0.149670908292985,
+		//	};
+
+		//	for (int i = 0; i < displacementVectorExpected.Length; i++)
+		//		Assert.Equal(displacementVectorExpected[i], solver.LinearSystems[0].Solution[i], 7);
+
+		//	#endregion
+		//}
 
 		//[Fact]
-		public void IsogeometricCurvedBeamBenchmark()
-		{
-			// Model
-			
-			Model model = new Model();
-			ModelCreator modelCreator = new ModelCreator(model);
-			string filename = "..\\..\\..\\InputFiles\\CurvedBeam.txt";
-			IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filename);
-			modelReader.CreateModelFromFile();
+		//public void IsogeometricPlateWithHole()
+		//{
+		//	// Model
 
-			// Forces and Boundary Conditions
-			model.PatchesDictionary[0].EdgesDictionary[0].LoadingConditions
-				.Add(new PressureBoundaryCondition(30000));
+		//	Model model = new Model();
+		//	ModelCreator modelCreator = new ModelCreator(model);
+		//	string filename = "..\\..\\..\\IGA\\InputFiles\\PlateTension.txt";
+		//	IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filename);
+		//	modelReader.CreateModelFromFile();
 
-			// Boundary Conditions - Dirichlet
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-			}
+		//	// Forces and Boundary Conditions
+		//	Value horizontalDistributedLoad = delegate (double x, double y, double z)
+		//	{
+		//		return new double[] { 100, 0, 0 };
+		//	};
+		//	model.PatchesDictionary[0].EdgesDictionary[1].LoadingConditions
+		//		.Add(new NeumannBoundaryCondition(horizontalDistributedLoad));
 
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[1].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationX });
-			}
+		//	// Boundary Conditions - Dirichlet
+		//	foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
+		//		.Values)
+		//	{
+		//		model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+		//	}
 
-			// Solvers
-			var solverBuilder = new SkylineSolver.Builder();
-			ISolver solver = solverBuilder.BuildSolver(model);
+		//	model.ControlPointsDictionary[0].Constraints.Add(new Constraint() {DOF = StructuralDof.TranslationY});
 
-			// Structural problem provider
-			var provider = new ProblemStructural(model, solver);
+		//	// Solvers
+		//	var solverBuilder = new SkylineSolver.Builder();
+		//	ISolver solver = solverBuilder.BuildSolver(model);
 
-			// Linear static analysis
-			var childAnalyzer = new LinearAnalyzer(model, solver, provider);
-			var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
+		//	// Structural problem provider
+		//	var provider = new ProblemStructural(model, solver);
 
-			// Run the analysis
-			parentAnalyzer.Initialize();
-			parentAnalyzer.Solve();
+		//	// Linear static analysis
+		//	var childAnalyzer = new LinearAnalyzer(model, solver, provider);
+		//	var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
-			Matrix<double> forceVectorExpected= MatlabReader.Read<double>("CurvedBeam.mat", "forceVector");
-			
-			for (int i = 0; i < forceVectorExpected.RowCount; i++)
-				Assert.Equal(forceVectorExpected.At(i,0), model.PatchesDictionary[0].Forces[i], 7);
+		//	// Run the analysis
+		//	parentAnalyzer.Initialize();
+		//	parentAnalyzer.Solve();
 
-			Matrix<double> displacementVectorExpected = MatlabReader.Read<double>("CurvedBeam.mat", "forceVector");
+		//	double[] forceVectorExpected =
+		//	{
+		//	};
+		//	for (int i = 0; i < forceVectorExpected.Length; i++)
+		//		Assert.Equal(forceVectorExpected[i], model.PatchesDictionary[0].Forces[i], 8);
 
-			for (int i = 0; i < displacementVectorExpected.RowCount; i++)
-				Assert.Equal(displacementVectorExpected.At(i,0), solver.LinearSystems[0].Solution[i], 7);
-		}
+		//	#region expectedDisplacement
 
-		
-		//[Fact]
-		public void IsogeometricBeam3D()
-		{
-			
-			Model model = new Model();
-			ModelCreator modelCreator = new ModelCreator(model);
-			string filename = "Beam3D";
-			string filepath= $"..\\..\\..\\InputFiles\\{filename}.txt";
-			IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filepath);
-			modelReader.CreateModelFromFile();
+		//	double[] displacementVectorExpected =
+		//	{
+		//	};
+		//	for (int i = 0; i < displacementVectorExpected.Length; i++)
+		//		Assert.Equal(displacementVectorExpected[i], solver.LinearSystems[0].Solution[i], 4);
 
-			// Forces and Boundary Conditions
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].FacesDictionary[1].ControlPointsDictionary
-				.Values)
-			{
-				model.Loads.Add(new Load()
-				{
-					Amount = -100,
-					ControlPoint = model.ControlPointsDictionary[controlPoint.ID],
-					DOF = StructuralDof.TranslationZ
-				});
-			}
-
-
-			// Boundary Conditions - Dirichlet
-			foreach (ControlPoint controlPoint in model.PatchesDictionary[0].FacesDictionary[0].ControlPointsDictionary
-				.Values)
-			{
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() {DOF = StructuralDof.TranslationX});
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-				model.ControlPointsDictionary[controlPoint.ID].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
-			}
-
-			// Solvers
-			var solverBuilder = new SkylineSolver.Builder();
-			ISolver solver = solverBuilder.BuildSolver(model);
-
-			// Structural problem provider
-			var provider = new ProblemStructural(model, solver);
-
-			// Linear static analysis
-			var childAnalyzer = new LinearAnalyzer(model, solver, provider);
-			var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
-
-			// Run the analysis
-			parentAnalyzer.Initialize();
-			parentAnalyzer.Solve();
-
-			var paraview= new ParaviewNurbs3D(model, solver.LinearSystems[0].Solution, filename);
-			paraview.CreateParaviewFile();
-			//Matrix<double> forceVectorExpected = MatlabReader.Read<double>("..\\..\\..\\InputFiles\\Beam3D.mat", "forceVector");
-
-			//for (int i = 0; i < forceVectorExpected.RowCount; i++)
-			//	Assert.True(Utilities.AreValuesEqual(forceVectorExpected.At(i, 0), model.PatchesDictionary[0].Forces[i], 1e-2));
-
-			//Matrix<double> displacementVectorExpected = MatlabReader.Read<double>("..\\..\\..\\InputFiles\\Beam3D.mat", "displacementVector");
-
-			//for (int i = 0; i < displacementVectorExpected.RowCount; i++)
-			//	Assert.True(Utilities.AreValuesEqual(displacementVectorExpected.At(i, 0), linearSystems[0].Solution[i], 1e-2));
-		}
+		//	#endregion
+		//}
 
 		//[Fact]
-		public void TSplinesShellsBenchmark()
-		{
-			
-			Model model = new Model();
-			string filename = "..\\..\\..\\InputFiles\\surface.iga";
-			IGAFileReader modelReader = new IGAFileReader(model, filename);
-			modelReader.CreateTSplineShellsModelFromFile();
+		//public void IsogeometricCurvedBeamBenchmark()
+		//{
+		//	// Model
 
-			model.PatchesDictionary[0].Material = new ElasticMaterial2D(StressState2D.PlaneStress)
-			{
-				PoissonRatio = 0.3,
-				YoungModulus = 10e6
-			};
-			model.PatchesDictionary[0].Thickness = 0.1;
+		//	Model model = new Model();
+		//	ModelCreator modelCreator = new ModelCreator(model);
+		//	string filename = "..\\..\\..\\InputFiles\\CurvedBeam.txt";
+		//	IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filename);
+		//	modelReader.CreateModelFromFile();
 
-			for (int i = 0; i < 100; i++)
-			{
-				model.ControlPointsDictionary[i].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationX });
-				model.ControlPointsDictionary[i].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-				model.ControlPointsDictionary[i].Constrains.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
-			}
+		//	// Forces and Boundary Conditions
+		//	model.PatchesDictionary[0].EdgesDictionary[0].LoadingConditions
+		//		.Add(new PressureBoundaryCondition(30000));
 
-			for (int i = 0; i < model.NumNodes - 100; i++)
-			{
-				model.Loads.Add(new Load()
-				{
-					Amount = -1000,
-					ControlPoint = model.ControlPointsDictionary[i],
-					DOF = StructuralDof.TranslationY
-				});
-			}
+		//	// Boundary Conditions - Dirichlet
+		//	foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[0].ControlPointsDictionary
+		//		.Values)
+		//	{
+		//		model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+		//	}
+
+		//	foreach (ControlPoint controlPoint in model.PatchesDictionary[0].EdgesDictionary[1].ControlPointsDictionary
+		//		.Values)
+		//	{
+		//		model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+		//	}
+
+		//	// Solvers
+		//	var solverBuilder = new SkylineSolver.Builder();
+		//	ISolver solver = solverBuilder.BuildSolver(model);
+
+		//	// Structural problem provider
+		//	var provider = new ProblemStructural(model, solver);
+
+		//	// Linear static analysis
+		//	var childAnalyzer = new LinearAnalyzer(model, solver, provider);
+		//	var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
+
+		//	// Run the analysis
+		//	parentAnalyzer.Initialize();
+		//	parentAnalyzer.Solve();
+
+		//	Matrix<double> forceVectorExpected= MatlabReader.Read<double>("CurvedBeam.mat", "forceVector");
+
+		//	for (int i = 0; i < forceVectorExpected.RowCount; i++)
+		//		Assert.Equal(forceVectorExpected.At(i,0), model.PatchesDictionary[0].Forces[i], 7);
+
+		//	Matrix<double> displacementVectorExpected = MatlabReader.Read<double>("CurvedBeam.mat", "forceVector");
+
+		//	for (int i = 0; i < displacementVectorExpected.RowCount; i++)
+		//		Assert.Equal(displacementVectorExpected.At(i,0), solver.LinearSystems[0].Solution[i], 7);
+		//}
 
 
-			// Solvers
-			var solverBuilder = new SkylineSolver.Builder();
-			ISolver solver = solverBuilder.BuildSolver(model);
+		//[Fact]
+		//public void IsogeometricBeam3D()
+		//{
 
-			// Structural problem provider
-			var provider = new ProblemStructural(model, solver);
+		//	Model model = new Model();
+		//	//ModelCreator modelCreator = new ModelCreator(model);
+		//	string filename = "Beam3D";
+		//	string filepath= $"..\\..\\..\\InputFiles\\{filename}.txt";
+		//	IsogeometricReader modelReader = new IsogeometricReader(modelCreator, filepath);
+		//	modelReader.CreateModelFromFile();
 
-			// Linear static analysis
-			var childAnalyzer = new LinearAnalyzer(model, solver, provider);
-			var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
+		//	// Forces and Boundary Conditions
+		//	foreach (ControlPoint controlPoint in model.PatchesDictionary[0].FacesDictionary[1].ControlPointsDictionary
+		//		.Values)
+		//	{
+		//		model.Loads.Add(new Load()
+		//		{
+		//			Amount = -100,
+		//			Node = model.ControlPoints.ToList()[controlPoint.ID],
+		//			DOF = StructuralDof.TranslationZ
+		//		});
+		//	}
 
-			// Run the analysis
-			parentAnalyzer.Initialize();
-			parentAnalyzer.Solve();
-		}
+
+		//	// Boundary Conditions - Dirichlet
+		//	foreach (ControlPoint controlPoint in model.PatchesDictionary[0].FacesDictionary[0].ControlPointsDictionary
+		//		.Values)
+		//	{
+		//		model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() {DOF = StructuralDof.TranslationX});
+		//		model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+		//		model.ControlPointsDictionary[controlPoint.ID].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
+		//	}
+
+		//	// Solvers
+		//	var solverBuilder = new SkylineSolver.Builder();
+		//	ISolver solver = solverBuilder.BuildSolver(model);
+
+		//	// Structural problem provider
+		//	var provider = new ProblemStructural(model, solver);
+
+		//	// Linear static analysis
+		//	var childAnalyzer = new LinearAnalyzer(model, solver, provider);
+		//	var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
+
+		//	// Run the analysis
+		//	parentAnalyzer.Initialize();
+		//	parentAnalyzer.Solve();
+
+		//	//var paraview= new ParaviewNurbs3D(model, solver.LinearSystems[0].Solution, filename);
+		//	//paraview.CreateParaviewFile();
+		//	//Matrix<double> forceVectorExpected = MatlabReader.Read<double>("..\\..\\..\\InputFiles\\Beam3D.mat", "forceVector");
+
+		//	//for (int i = 0; i < forceVectorExpected.RowCount; i++)
+		//	//	Assert.True(Utilities.AreValuesEqual(forceVectorExpected.At(i, 0), model.PatchesDictionary[0].Forces[i], 1e-2));
+
+		//	//Matrix<double> displacementVectorExpected = MatlabReader.Read<double>("..\\..\\..\\InputFiles\\Beam3D.mat", "displacementVector");
+
+		//	//for (int i = 0; i < displacementVectorExpected.RowCount; i++)
+		//	//	Assert.True(Utilities.AreValuesEqual(displacementVectorExpected.At(i, 0), linearSystems[0].Solution[i], 1e-2));
+		//}
+
+		//[Fact]
+		//public void TSplinesShellsBenchmark()
+		//{
+
+		//	Model model = new Model();
+		//	string filename = "..\\..\\..\\InputFiles\\surface.iga";
+		//	var modelReader = new IgaFileReader(model, filename);
+		//	modelReader.CreateTSplineShellsModelFromFile();
+
+		//	model.PatchesDictionary[0].Material = new ElasticMaterial2D(StressState2D.PlaneStress)
+		//	{
+		//		PoissonRatio = 0.3,
+		//		YoungModulus = 10e6
+		//	};
+		//	model.PatchesDictionary[0].Thickness = 0.1;
+
+		//	for (int i = 0; i < 100; i++)
+		//	{
+		//		model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
+		//		model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
+		//		model.ControlPointsDictionary[i].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
+		//	}
+
+		//	for (int i = 0; i < model.ControlPoints.Count() - 100; i++)
+		//	{
+		//		model.Loads.Add(new Load()
+		//		{
+		//			Amount = -1000,
+		//			Node = model.ControlPointsDictionary[i],
+		//			DOF = StructuralDof.TranslationY
+		//		});
+		//	}
+
+
+		//	// Solvers
+		//	var solverBuilder = new SkylineSolver.Builder();
+		//	ISolver solver = solverBuilder.BuildSolver(model);
+
+		//	// Structural problem provider
+		//	var provider = new ProblemStructural(model, solver);
+
+		//	// Linear static analysis
+		//	var childAnalyzer = new LinearAnalyzer(model, solver, provider);
+		//	var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
+
+		//	// Run the analysis
+		//	parentAnalyzer.Initialize();
+		//	parentAnalyzer.Solve();
+		//}
 	}
 }

@@ -1,7 +1,9 @@
 ﻿using System.IO;
+using System.Linq;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
 using ISAAR.MSolve.IGA.Elements;
 using ISAAR.MSolve.IGA.Entities;
+using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.Solvers.LinearSystems;
 
 namespace ISAAR.MSolve.IGA.Postprocessing
@@ -23,9 +25,9 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 		{
 			var projectiveControlPoints = CalculateProjectiveControlPoints();
 			var numberOfPointsPerElement = 4;
-			var nodes = new double[_model.NumElements * numberOfPointsPerElement, 2];
+			var nodes = new double[_model.Elements.Count * numberOfPointsPerElement, 2];
 			var pointIndex = 0;
-			foreach (var element in _model.ElementsDictionary.Values)
+			foreach (var element in _model.Elements)
 			{
 				var tsplineElement = element as TSplineKirchhoffLoveShellElement;
 				var elementPoints = tsplineElement.CalculatePointsForPostProcessing(tsplineElement);
@@ -39,9 +41,9 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 			var elementConnectivity = CreateTsplineConnectivity();
 
 			var pointDisplacements = new double[nodes.GetLength(0), 2];
-			foreach (var element in _model.ElementsDictionary.Values)
+			foreach (var element in _model.Elements)
 			{
-				var localDisplacements = new double[element.ControlPoints.Count, 2];
+				var localDisplacements = new double[element.ControlPoints.Count(), 2];
 				var counterCP = 0;
 				foreach (var controlPoint in element.ControlPoints)
 				{
@@ -54,7 +56,7 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 					localDisplacements[counterCP, 0] = (dofX == -1) ? 0.0 : _linearSystem.Solution[dofX];
 					localDisplacements[counterCP++, 1] = (dofY == -1) ? 0.0 : _linearSystem.Solution[dofY];
 				}
-				var elementKnotDisplacements = element.ElementType.CalculateDisplacementsForPostProcessing(element, localDisplacements);
+				var elementKnotDisplacements = element.ElementType.CalculateDisplacementsForPostProcessing(element, Matrix.CreateFromArray(localDisplacements));
 				for (int i = 0; i < elementConnectivity.GetLength(1); i++)
 				{
 					var knotConnectivity = elementConnectivity[element.ID, i];
@@ -137,9 +139,9 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 
 		private int[,] CreateTsplineConnectivity()
 		{
-			var elementConnectivity = new int[_model.NumElements, 4];
+			var elementConnectivity = new int[_model.Elements.Count, 4];
 			var pointCounter = 0;
-			for (int i = 0; i < _model.NumElements; i++)
+			for (int i = 0; i < _model.Elements.Count; i++)
 			{
 				elementConnectivity[i, 0] = pointCounter++;
 				elementConnectivity[i, 1] = pointCounter++;
@@ -153,7 +155,7 @@ namespace ISAAR.MSolve.IGA.Postprocessing
 		private double[,] CalculateProjectiveControlPoints()
 		{
 			var projectiveCPs = new double[_model.PatchesDictionary[0].ControlPoints.Count, 4];
-			foreach (var controlPoint in _model.PatchesDictionary[0].ControlPoints.Values)
+			foreach (var controlPoint in _model.PatchesDictionary[0].ControlPoints)
 			{
 				var weight = controlPoint.WeightFactor;
 				projectiveCPs[controlPoint.ID, 0] = controlPoint.X * weight;
