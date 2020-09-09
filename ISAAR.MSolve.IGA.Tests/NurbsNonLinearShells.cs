@@ -241,14 +241,14 @@ namespace ISAAR.MSolve.IGA.Tests
 
             model.Loads.Add(new Load()
             {
-                Amount = -400,
+                Amount = -200,
                 Node = model.ControlPoints.ToList()[0],
                 DOF = StructuralDof.TranslationX
             });
 
             model.Loads.Add(new Load()
             {
-                Amount = 400,
+                Amount = 200,
                 Node = model.ControlPoints.ToList()[240],
                 DOF = StructuralDof.TranslationY
             });
@@ -286,13 +286,13 @@ namespace ISAAR.MSolve.IGA.Tests
             var provider = new ProblemStructural(model, solver);
 
             // Linear static analysis
-            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, 500);
+            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, 20);
             var childAnalyzer = newtonRaphsonBuilder.Build();
             var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
-            var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 500,
+            var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 20,
                 model.ControlPoints.ToList()[0], StructuralDof.TranslationX, "PinchedHemisphereNegativeLoadNode.txt");
-            var loggerB = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 500,
+            var loggerB = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 20,
                 model.ControlPoints.ToList()[240], StructuralDof.TranslationY, "PinchedHemispherePositiveLoadNode.txt");
             childAnalyzer.IncrementalLogs.Add(0, loggerA);
             childAnalyzer.IncrementalLogs.Add(1, loggerB);

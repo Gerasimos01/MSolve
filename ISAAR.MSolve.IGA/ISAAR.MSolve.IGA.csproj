@@ -14,6 +14,7 @@
     <Compile Remove="Entities\CollocationPoint.cs" />
     <Compile Remove="Entities\CollocationPoint3D.cs" />
     <Compile Remove="Entities\ControlPoint_v2.cs" />
+    <Compile Remove="Entities\Load.cs" />
   </ItemGroup>
 
   <ItemGroup>
