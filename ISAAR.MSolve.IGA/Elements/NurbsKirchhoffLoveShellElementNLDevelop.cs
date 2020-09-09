@@ -431,6 +431,13 @@ namespace ISAAR.MSolve.IGA.Elements
                         //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, Gi, F_3D);
                         (double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, _ ,_ , double[,] ei, double[,] F_rve ) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
 
+                        if (j == ElementStiffnesses.gpNumberToCheck && i1==0)
+                        {
+                            bool run_ch_tensors_example = true;
+                            if (run_ch_tensors_example)
+                            { (double[,] GL_transformed, double[,] spk_transformed) = CalculateExampleTensorsForcheck(G1, G2, a3_init,strainToCheck,stressTocheck1,g1,g2, a3, tgi,G_i); }
+                        }
+
                         if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
                         {
                             if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = true; }
@@ -441,7 +448,7 @@ namespace ISAAR.MSolve.IGA.Elements
                             ElementStiffnesses.ProccessVariable(30, /*dFPK_3D_dr_vec*/ FPK_3D_vec, false);
                             ElementStiffnesses.ProccessVariable(33, /*dFPK_3D_dr_vec*/ FPK_3D_vec, false);
 
-                            ElementStiffnesses.ProccessVariable(31,new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }, false);
+                            ElementStiffnesses.ProccessVariable(31, new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }, false);
 
                             ElementStiffnesses.ProccessVariable(32, new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }, false);
 
@@ -853,10 +860,31 @@ namespace ISAAR.MSolve.IGA.Elements
 
                     material.UpdateMaterial(gpStrain);
                 }
+
+                if (j == ElementStiffnesses.gpNumberToCheck)
+                {
+                    var keyValuePair = materialsAtThicknessGP[midsurfaceGP[j]].ElementAt(0);
+
+                    var thicknessPoint = keyValuePair.Key;
+                    var material = keyValuePair.Value;
+                    var gpStrain = new double[bendingStrain.Length];
+                    var z = thicknessPoint.Zeta;
+                    for (var i = 0; i < bendingStrain.Length; i++)
+                    {
+                        gpStrain[i] += membraneStrain[i] + bendingStrain[i] * z;
+                    }
+
+                    gpStrain.CopyTo(strainToCheck, 0);
+                    material.Stresses.CopyTo(stressTocheck1, 0);
+                }
             }
 
             return new Tuple<double[], double[]>(new double[0], new double[0]);
         }
+
+        double[] strainToCheck;
+        double[] stressTocheck1;
+
 
         public Dictionary<int, double> CalculateSurfaceDistributedLoad(Element element, IDofType loadedDof,
             double loadMagnitude)
