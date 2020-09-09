@@ -894,7 +894,7 @@ namespace ISAAR.MSolve.Materials
 
             double[] G_1__Ei =new double[] {G_1[0]*Ei[0,0]+G_1[1]*Ei[1,0]+G_1[2]*Ei[2,0],G_1[0]*Ei[0,1]+G_1[1]*Ei[1,1]+G_1[2]*Ei[2,1],G_1[0]*Ei[0,2]+G_1[1]*Ei[1,2]+G_1[2]*Ei[2,2]};
             double[] G_2__Ei =new double[] {G_2[0]*Ei[0,0]+G_2[1]*Ei[1,0]+G_2[2]*Ei[2,0],G_2[0]*Ei[0,1]+G_2[1]*Ei[1,1]+G_2[2]*Ei[2,1],G_2[0]*Ei[0,2]+G_2[1]*Ei[1,2]+G_2[2]*Ei[2,2]};
-            double[] G_3__Ei =new double[] {G_3[0]*Ei[0,0]+G_3[1]*Ei[1,0]+G_3[2]*Ei[2,0],G_3[0]*Ei[0,1]+G_3[1]*Ei[1,1]+G_3[2]*Ei[2,1],G_3[0]*Ei[0,2]+G_3[1]*Ei[1,2]+G_3[2]*ei[2,2]};
+            double[] G_3__Ei =new double[] {G_3[0]*Ei[0,0]+G_3[1]*Ei[1,0]+G_3[2]*Ei[2,0],G_3[0]*Ei[0,1]+G_3[1]*Ei[1,1]+G_3[2]*Ei[2,1],G_3[0]*Ei[0,2]+G_3[1]*Ei[1,2]+G_3[2]*Ei[2,2]};
 
             double[,] F = CaclculateDefGrad3D(g1__ei, g2__ei, g3__ei, G_1__Ei, G_2__Ei, G_3__Ei);
 

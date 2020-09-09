@@ -134,8 +134,8 @@ namespace ISAAR.MSolve.IGA.Elements
             var BendingMoments = new Forces();
 
             var forcesDevelop = new double[shellElement.ControlPointsDictionary.Count * 3];
+            var ch_forcesDevelop = new double[shellElement.ControlPointsDictionary.Count * 3];
 
-            
 
             for (int j = 0; j < gaussPoints.Length; j++)
             {
@@ -415,6 +415,13 @@ namespace ISAAR.MSolve.IGA.Elements
                                                             { g1[2]*G_1[0]+g2[2]*G_2[0], g1[2]*G_1[1]+g2[2]*G_2[1], g1[2]*G_1[2]+g2[2]*G_2[2] },
                         };
 
+                        //double[,] ch_F_3D = new double[3, 3] { { g1[0]*G_1[0]+g2[0]*G_2[0]+a3[0]*G_3[0], g1[0]*G_1[1]+g2[0]*G_2[1]+a3[0]*G_3[1], g1[0]*G_1[2]+g2[0]*G_2[2]+a3[0]*G_3[0] },
+                        //                                       { g1[1]*G_1[0]+g2[1]*G_2[0]+a3[1]*G_3[0], g1[1]*G_1[1]+g2[1]*G_2[1]+a3[1]*G_3[1], g1[1]*G_1[2]+g2[1]*G_2[2]+a3[1]*G_3[0] },
+                        //                                       { g1[2]*G_1[0]+g2[2]*G_2[0]+a3[2]*G_3[0], g1[2]*G_1[1]+g2[2]*G_2[1]+a3[2]*G_3[1], g1[2]*G_1[2]+g2[2]*G_2[2]+a3[2]*G_3[0] },
+                        //};
+
+                        double[,] ch_F_3D = Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }, g1, g2, a3, G_1, G_2, G_3);
+
                         if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
                         {
                             if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = true; }
@@ -468,6 +475,20 @@ namespace ISAAR.MSolve.IGA.Elements
                                                                  { dg1_dr[1]*G_1[0]+dg2_dr[1]*G_2[0], dg1_dr[1]*G_1[1]+dg2_dr[1]*G_2[1], dg1_dr[1]*G_1[2]+dg2_dr[1]*G_2[2] },
                                                                  { dg1_dr[2]*G_1[0]+dg2_dr[2]*G_2[0], dg1_dr[2]*G_1[1]+dg2_dr[2]*G_2[1], dg1_dr[2]*G_1[2]+dg2_dr[2]*G_2[2] }, };
 
+                            #region prosthiki
+                            Vector da3_dr = CalculateDerivativeOfVectorNormalised(a3_tilde, Vector.CreateFromArray(da3tilde_dr[r1]));
+
+                            //double[,] ch_dF_3D_dr = new double[3, 3] { { dg1_dr[0]*G_1[0]+dg2_dr[0]*G_2[0]+da3_dr[0]*G_3[0], dg1_dr[0]*G_1[1]+dg2_dr[0]*G_2[1]+da3_dr[0]*G_3[1], dg1_dr[0]*G_1[2]+dg2_dr[0]*G_2[2]+da3_dr[0]*G_3[2] },
+                            //                                        { dg1_dr[1]*G_1[0]+dg2_dr[1]*G_2[0]+da3_dr[1]*G_3[0], dg1_dr[1]*G_1[1]+dg2_dr[1]*G_2[1]+da3_dr[1]*G_3[1], dg1_dr[1]*G_1[2]+dg2_dr[1]*G_2[2]+da3_dr[1]*G_3[2] },
+                            //                                        { dg1_dr[2]*G_1[0]+dg2_dr[2]*G_2[0]+da3_dr[2]*G_3[0], dg1_dr[2]*G_1[1]+dg2_dr[2]*G_2[1]+da3_dr[2]*G_3[1], dg1_dr[2]*G_1[2]+dg2_dr[2]*G_2[2]+da3_dr[2]*G_3[2] }, };
+
+                            
+
+                            double[,] ch_dF_3D_dr = Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }, dg1_dr, dg2_dr, da3_dr, G_1, G_2, G_3);
+
+                            double[] ch_dF_3D_dr_vec = { ch_dF_3D_dr[0, 0], ch_dF_3D_dr[1, 1], ch_dF_3D_dr[2, 2], ch_dF_3D_dr[0, 1], ch_dF_3D_dr[1, 2], ch_dF_3D_dr[2, 0], ch_dF_3D_dr[0, 2], ch_dF_3D_dr[1, 0], ch_dF_3D_dr[2, 1] };
+                            #endregion
+
                             double[] dF_3D_dr_vec = { dF_3D_dr[0, 0], dF_3D_dr[1, 1], dF_3D_dr[2, 2], dF_3D_dr[0, 1], dF_3D_dr[1, 2], dF_3D_dr[2, 0], dF_3D_dr[0, 2], dF_3D_dr[1, 0], dF_3D_dr[2, 1] };
 
                             if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
@@ -480,6 +501,8 @@ namespace ISAAR.MSolve.IGA.Elements
 
                                 forcesDevelop[3 * i + r1] += FPK_3D_vec[i2] * dF_3D_dr_vec[i2] * wfactor * w;
                                 forcesDevelopGp[3 * i + r1] += FPK_3D_vec[i2] * dF_3D_dr_vec[i2] * wfactor * w;
+
+                                ch_forcesDevelop[3 * i + r1] += FPK_3D_vec[i2] * ch_dF_3D_dr_vec[i2] * wfactor * w;
                             }
 
                             if ((j == ElementStiffnesses.gpNumberToCheck)&&(i==0)&&(r1==1)&&(i1==0))
@@ -510,7 +533,7 @@ namespace ISAAR.MSolve.IGA.Elements
             }
 
             if (runNewForces)
-            { return forcesDevelop; }
+            { return ch_forcesDevelop; }
             else
             {
                 return elementNodalForces;
@@ -2047,6 +2070,110 @@ namespace ISAAR.MSolve.IGA.Elements
             double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPK_2D_in_normalised, cartes_to_Gi, cartes_to_tgi);// 1);
 
             
+
+            return FPK_3D;
+        }
+
+        private double[,] Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(double[,] eye3, Vector dg1_dr, Vector dg2_dr, Vector da3_dr, double[] G_1, double[] G_2, double[] G_3)
+        {
+            double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
+
+            #region create and normalise ei
+            double[,] ei = new double[3, 3];
+            double norm_e1 = dg1_dr[0] * dg1_dr[0] + dg1_dr[1] * dg1_dr[1] + dg1_dr[2] * dg1_dr[2];
+            norm_e1 = Math.Sqrt(norm_e1);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 0] = dg1_dr[i2] / norm_e1;
+            }
+
+            double norm_e2 = dg2_dr[0] * dg2_dr[0] + dg2_dr[1] * dg2_dr[1] + dg2_dr[2] * dg2_dr[2];
+            norm_e2 = Math.Sqrt(norm_e2);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 1] = dg2_dr[i2] / norm_e2;
+            }
+
+            double norm_e3 = da3_dr[0] * da3_dr[0] + da3_dr[1] * da3_dr[1] + da3_dr[2] * da3_dr[2];
+            norm_e3 = Math.Sqrt(norm_e3);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 2] = da3_dr[i2] / norm_e3;
+            }
+            #endregion
+
+            #region adapt FPK_2D for normalisation of basis vectors
+
+            double coef1 = 0;
+            double coef2 = 0;
+            double[,] FPK_2D_in_normalised = new double[3, 3];
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                if (i1 == 0) { coef1 = norm_e1; }
+                else if (i1 == 1) { coef1 = norm_e2; }
+                else if (i1 == 2) { coef1 = norm_e3; }
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    //if (i2 == 0) { coef2 = norm_e1; }
+                    //else if (i2 == 1) { coef2 = norm_e2; }
+
+                    //FPK_2D_in_normalised[i1, i2] = FPK_2D[i1, i2] * coef1 * coef2;
+                    FPK_2D_in_normalised[i1, i2] = eye[i1, i2] * coef1;// * coef2;
+                }
+            }
+            #endregion
+
+            #region create and normalise Ei
+            double[,] Ei = new double[3, 3];
+            double norm_E1 = G_1[0] * G_1[0] + G_1[1] * G_1[1] + G_1[2] * G_1[2];
+            norm_E1 = Math.Sqrt(norm_E1);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                Ei[i2, 0] = G_1[i2] / norm_E1;
+            }
+
+            double norm_E2 = G_2[0] * G_2[0] + G_2[1] * G_2[1] + G_2[2] * G_2[2];
+            norm_E2 = Math.Sqrt(norm_E2);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                Ei[i2, 1] = G_2[i2] / norm_E2;
+            }
+
+            double norm_E3 = G_3[0] * G_3[0] + G_3[1] * G_3[1] + G_3[2] * G_3[2];
+            norm_E3 = Math.Sqrt(norm_E3);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                Ei[i2, 2] = G_3[i2] / norm_E3;
+            }
+            #endregion
+
+            #region adapt FPK_2D for normalisation of basis vectors
+
+            //double coef1 = 0;
+            //double coef2 = 0;
+            //double[,] FPK_2D_in_normalised = new double[3, 3];
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    if (i2 == 0) { coef2 = norm_E1; }
+                    else if (i2 == 1) { coef2 = norm_E2; }
+                    else if (i2 == 2) { coef2 = norm_E3; }
+
+                    //FPK_2D_in_normalised[i1, i2] = FPK_2D[i1, i2] * coef1 * coef2;
+                    FPK_2D_in_normalised[i1, i2] = FPK_2D_in_normalised[i1, i2]  * coef2;
+                }
+            }
+            #endregion
+
+
+            var cartes_to_Gi = CalculateRotationMatrix(Ei, eye);
+            var cartes_to_tgi = CalculateRotationMatrix(ei, eye);
+
+            double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPK_2D_in_normalised, cartes_to_Gi, cartes_to_tgi);// 1);
+
+
 
             return FPK_3D;
         }
