@@ -424,7 +424,7 @@ namespace ISAAR.MSolve.IGA.Tests
             var filename = "PinchedSemiCylindricalShell";
             var filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", $"{filename}.txt");
             IsogeometricShellReader modelReader = new IsogeometricShellReader(model, filepath);
-            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinear);
+            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinearDevelop);
 
             model.Loads.Add(new Load()
             {
