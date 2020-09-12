@@ -112,7 +112,7 @@ namespace ISAAR.MSolve.IGA.Elements
             return knotDisplacements;
         }
 
-        public static bool runNewForces = true;
+        public static bool runNewForces = false;
 
         public double[] CalculateForces(IElement element, double[] localDisplacements, double[] localdDisplacements)
         {
@@ -415,12 +415,16 @@ namespace ISAAR.MSolve.IGA.Elements
                                                             { g1[2]*G_1[0]+g2[2]*G_2[0], g1[2]*G_1[1]+g2[2]*G_2[1], g1[2]*G_1[2]+g2[2]*G_2[2] },
                         };
 
-                        //double[,] ch_F_3D = new double[3, 3] { { g1[0]*G_1[0]+g2[0]*G_2[0]+a3[0]*G_3[0], g1[0]*G_1[1]+g2[0]*G_2[1]+a3[0]*G_3[1], g1[0]*G_1[2]+g2[0]*G_2[2]+a3[0]*G_3[0] },
-                        //                                       { g1[1]*G_1[0]+g2[1]*G_2[0]+a3[1]*G_3[0], g1[1]*G_1[1]+g2[1]*G_2[1]+a3[1]*G_3[1], g1[1]*G_1[2]+g2[1]*G_2[2]+a3[1]*G_3[0] },
-                        //                                       { g1[2]*G_1[0]+g2[2]*G_2[0]+a3[2]*G_3[0], g1[2]*G_1[1]+g2[2]*G_2[1]+a3[2]*G_3[1], g1[2]*G_1[2]+g2[2]*G_2[2]+a3[2]*G_3[0] },
-                        //};
+                        double[,] ch_F_3D__2 = new double[3, 3] { { g1[0]*G_1[0]+g2[0]*G_2[0]+a3[0]*G_3[0], g1[0]*G_1[1]+g2[0]*G_2[1]+a3[0]*G_3[1], g1[0]*G_1[2]+g2[0]*G_2[2]+a3[0]*G_3[0] },
+                                                               { g1[1]*G_1[0]+g2[1]*G_2[0]+a3[1]*G_3[0], g1[1]*G_1[1]+g2[1]*G_2[1]+a3[1]*G_3[1], g1[1]*G_1[2]+g2[1]*G_2[2]+a3[1]*G_3[0] },
+                                                               { g1[2]*G_1[0]+g2[2]*G_2[0]+a3[2]*G_3[0], g1[2]*G_1[1]+g2[2]*G_2[1]+a3[2]*G_3[1], g1[2]*G_1[2]+g2[2]*G_2[2]+a3[2]*G_3[0] },
+                        };
 
                         double[,] ch_F_3D = Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }, g1, g2, a3, G_1, G_2, G_3);
+
+                        double[,] ch_GL_3D = transformations.Transform3DDefGradToGL(ch_F_3D);
+
+                        double[,] ch_GL_3D__2 = transformations.Transform3DDefGradToGL(ch_F_3D__2);
 
                         if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
                         {
@@ -436,13 +440,17 @@ namespace ISAAR.MSolve.IGA.Elements
 
                         //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, G_i, F_3D);
                         //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, Gi, F_3D);
-                        (double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, _ ,_ , double[,] ei, double[,] F_rve ) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
+                        (double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, _ ,_ , double[,] ei, double[,] F_rve, double[,] GL3D, double[,]  SPKMat3D, double[,] ch01_GL_3D, double[,] ch01_SPKMat_3D, double[,] FPK_3D_tr_basis) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
 
-                        if (j == ElementStiffnesses.gpNumberToCheck && i1==0)
+                        bool run_ch_tensors_example = true;
+                        if (j == ElementStiffnesses.gpNumberToCheck && i1 == 2 && run_ch_tensors_example)
                         {
-                            bool run_ch_tensors_example = true;
-                            if (run_ch_tensors_example)
-                            { (double[,] GL_transformed, double[,] spk_transformed) = CalculateExampleTensorsForcheck(G1, G2, a3_init,strainToCheck,stressTocheck1,g1,g2, a3, tgi,G_i); }
+                            
+                            
+                            double[,] strain3D = Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(new double[,] { { strainToCheck[0], 0.5 * strainToCheck[2], 0 }, { 0.5 * strainToCheck[2], strainToCheck[1], 0 }, { 0, 0, 0 } },
+                                 Vector.CreateFromArray(G_1), Vector.CreateFromArray(G_2), Vector.CreateFromArray(G_3), G_1, G_2, G_3);
+                            double[,] stress3D = Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(new double[,] { { stressTocheck1[0], stressTocheck1[2], 0 }, {  stressTocheck1[2], stressTocheck1[1], 0 }, { 0, 0, 0 } },
+                                 G1, G2, a3_init, G1.CopyToArray(), G2.CopyToArray(), a3.CopyToArray());
                         }
 
                         if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
@@ -886,7 +894,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
                 if (j == ElementStiffnesses.gpNumberToCheck)
                 {
-                    var keyValuePair = materialsAtThicknessGP[midsurfaceGP[j]].ElementAt(0);
+                    var keyValuePair = materialsAtThicknessGP[midsurfaceGP[j]].ElementAt(2);
 
                     var thicknessPoint = keyValuePair.Key;
                     var material = keyValuePair.Value;
@@ -905,8 +913,8 @@ namespace ISAAR.MSolve.IGA.Elements
             return new Tuple<double[], double[]>(new double[0], new double[0]);
         }
 
-        double[] strainToCheck;
-        double[] stressTocheck1;
+        double[] strainToCheck= new double[3];
+        double[] stressTocheck1 = new double[6];
 
 
         public Dictionary<int, double> CalculateSurfaceDistributedLoad(Element element, IDofType loadedDof,
@@ -1335,7 +1343,9 @@ namespace ISAAR.MSolve.IGA.Elements
 
                         //(Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1]) = transformations.CalculateTransformations(tgi, G_i, F_3D);
                         //(Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1]) = transformations.CalculateTransformations(tgi, Gi, F_3D);
-                        (Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1], FPK_2D_ofGPs[i1], Ei_of_Gps[i1], Aijkl_2D_ofGPs[i1], ei_of_Gps[i1], _ ) = transformations.CalculateTransformationsV2(g1,g2,a3, G1,G2,a3_init,G_1,G_2,G_3);
+                        double[,] GL3D; double[,] SPKMat3D;
+                        double[,] ch01_GL_3D; double[,] ch01_SPKMat_3D;
+                        (Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1], FPK_2D_ofGPs[i1], Ei_of_Gps[i1], Aijkl_2D_ofGPs[i1], ei_of_Gps[i1], _,  GL3D,  SPKMat3D, ch01_GL_3D, ch01_SPKMat_3D, _) = transformations.CalculateTransformationsV2(g1,g2,a3, G1,G2,a3_init,G_1,G_2,G_3);
 
                     }
                     #endregion
@@ -2076,7 +2086,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
         private double[,] Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(double[,] eye3, Vector dg1_dr, Vector dg2_dr, Vector da3_dr, double[] G_1, double[] G_2, double[] G_3)
         {
-            double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
+            //double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
 
             #region create and normalise ei
             double[,] ei = new double[3, 3];
@@ -2118,7 +2128,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     //else if (i2 == 1) { coef2 = norm_e2; }
 
                     //FPK_2D_in_normalised[i1, i2] = FPK_2D[i1, i2] * coef1 * coef2;
-                    FPK_2D_in_normalised[i1, i2] = eye[i1, i2] * coef1;// * coef2;
+                    FPK_2D_in_normalised[i1, i2] = eye3[i1, i2] * coef1;// * coef2;
                 }
             }
             #endregion
@@ -2167,7 +2177,7 @@ namespace ISAAR.MSolve.IGA.Elements
             }
             #endregion
 
-
+            double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
             var cartes_to_Gi = CalculateRotationMatrix(Ei, eye);
             var cartes_to_tgi = CalculateRotationMatrix(ei, eye);
 
@@ -2178,6 +2188,8 @@ namespace ISAAR.MSolve.IGA.Elements
             return FPK_3D;
         }
 
+
+        
         private Vector CalculateDerivativeOfVectorNormalised(Vector g1, Vector dg1_dr)
         {
             double norm = g1.Norm2();

@@ -531,6 +531,37 @@ namespace ISAAR.MSolve.Materials
 
         }
 
+        public double[,] Transform3DDefGradToGL(double[,] F)
+        {
+            //double[,] GL = new double[2, 2];
+
+            double[,] FtrF = new double[3,3];
+
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    for (int k1 = 0; k1 < 3; k1++)
+                    {
+                        FtrF[i1, i2] += F[k1, i1] * F[k1, i2];
+                    }
+                }
+            }
+
+            FtrF[0, 0] += -1;
+            FtrF[1, 1] += -1;
+
+            FtrF[2,2] += -1;
+
+            var GL = new double[3,3] { { 0.5 * FtrF[0, 0], 0.5 * FtrF[0, 1],  0.5 * FtrF[0, 2] }, { 0.5 * FtrF[1, 0], 0.5 * FtrF[1, 1],  0.5 * FtrF[1, 2] },
+             { 0.5 * FtrF[2,0], 0.5 * FtrF[2, 1],  0.5 * FtrF[2, 2] }};
+
+            //double[] GLvec = new double[3] { GL[0, 0], GL[1, 1], 2 * GL[1, 0], };
+
+            return GL;
+
+        }
+
         public (double[], double[,]) CalculateSPK(double[] GLvec)
         {
             var OriginalConstitutiveMatrix = new double[3, 3];
@@ -855,7 +886,7 @@ namespace ISAAR.MSolve.Materials
 			set { throw new InvalidOperationException(); }
 		}
 
-        public (double[,] ,double[], double[,],double[,], double[,], double[,], double[,] ) CalculateTransformationsV2(Vector g1, Vector g2, Vector g3, Vector G1, Vector G2, Vector G3, double[] G_1, double[] G_2, double[] G_3)
+        public (double[,] ,double[], double[,],double[,], double[,], double[,], double[,], double[,], double[,], double[,], double[,], double[,] ) CalculateTransformationsV2(Vector g1, Vector g2, Vector g3, Vector G1, Vector G2, Vector G3, double[] G_1, double[] G_2, double[] G_3)
         {
             double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
             double[,] tgi = new double[3, 3] { { g1[0], g2[0], g3[0] }, { g1[1], g2[1], g3[1] }, { g1[2], g2[2], g3[2] } };
@@ -920,8 +951,25 @@ namespace ISAAR.MSolve.Materials
             FPKrve = new double[3, 3] { { FPKrve[0, 0], FPKrve[0, 1], 0 }, { FPKrve[1, 0], FPKrve[1, 1], 0 }, { 0, 0, 0 } };
             double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPKrve, cartes_to_Gi, cartes_to_tgi);// 1);
 
+            double[,] FPK_3D_tr_basis = Transform_FPK_rve_To_FPK_3D(FPKrve,  cartes_to_tgi, cartes_to_Gi);// 1); 
+
             var ch01_FPK_3D = Calculate3DtensorFrom2D(new double[2, 2] { { FPKrve[0, 0], FPKrve[0, 1] }, { FPKrve[1, 0], FPKrve[1, 1] } }, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }),
             Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
+
+            var ch01_GL_3D = Calculate3DtensorFrom2D(new double[2, 2] { { GLvec[0], 0.5* GLvec[2] }, { 0.5* GLvec[2], GLvec[1] } }, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }),
+            Ei);
+            var ch01_SPKMat_3D = Calculate3DtensorFrom2D(SPKMat, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }),
+            Ei);
+
+            var GL_exte =  new double[3, 3] { { GLvec[0], 0.5 * GLvec[2], 0 }, { 0.5 * GLvec[2], GLvec[1], 0 }, { 0, 0, 0 } };
+
+            var SPK_exte = new double[3, 3] { { SPKvec[0], SPKvec[2], 0 }, { SPKvec[2], SPKvec[1], 0 }, { 0, 0, 0 } };
+
+            var GL3D = Transform_FPK_rve_To_FPK_3D(GL_exte, cartes_to_Gi, cartes_to_tgi);
+
+            var SPKMat3D = Transform_FPK_rve_To_FPK_3D(SPK_exte, cartes_to_Gi, cartes_to_tgi);
+            
+
 
             var Qpi = CalculateRotationMatrix(eye, tgi);
             var Qqj = CalculateRotationMatrix(eye, Gi);
@@ -933,7 +981,7 @@ namespace ISAAR.MSolve.Materials
 
             double[] FPK_3D_vec = new double[9] { FPK_3D[0, 0], FPK_3D[1, 1], FPK_3D[2, 2], FPK_3D[0, 1], FPK_3D[1, 2], FPK_3D[2, 0], FPK_3D[0, 2], FPK_3D[1, 0], FPK_3D[2, 1] };
 
-            return (Aijkl_3D, FPK_3D_vec, FPKrve,Ei, Aijkl_rve, ei , F_rve );
+            return (Aijkl_3D, FPK_3D_vec, FPKrve,Ei, Aijkl_rve, ei , F_rve, GL3D, SPKMat3D, ch01_GL_3D, ch01_SPKMat_3D, FPK_3D_tr_basis);
         }
 
         private double[,] CaclculateDefGrad3D(double[] g1__ei, double[] g2__ei, double[] g3__ei, double[] G_1__Ei, double[] G_2__Ei, double[] G_3__Ei)
