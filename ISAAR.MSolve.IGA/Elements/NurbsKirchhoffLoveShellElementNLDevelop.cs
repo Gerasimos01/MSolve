@@ -112,7 +112,7 @@ namespace ISAAR.MSolve.IGA.Elements
             return knotDisplacements;
         }
 
-        public static bool runNewForces = true;
+        public static bool runNewForces = false;
 
         public double[] CalculateForces(IElement element, double[] localDisplacements, double[] localdDisplacements)
         {
