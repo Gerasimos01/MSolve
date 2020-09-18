@@ -135,7 +135,440 @@ namespace ISAAR.MSolve.IGA.Elements
 
             var forcesDevelop = new double[shellElement.ControlPointsDictionary.Count * 3];
 
-            
+
+
+            for (int j = 0; j < gaussPoints.Length; j++)
+            {
+
+                CalculateJacobian(newControlPoints, nurbs, j, jacobianMatrix);
+
+                var hessianMatrix = CalculateHessian(newControlPoints, nurbs, j);
+
+                var surfaceBasisVector1 = CalculateSurfaceBasisVector1(jacobianMatrix, 0);
+
+                var surfaceBasisVector2 = CalculateSurfaceBasisVector1(jacobianMatrix, 1);
+
+                var surfaceBasisVector3 = new[]
+                {
+                    surfaceBasisVector1[1] * surfaceBasisVector2[2] - surfaceBasisVector1[2] * surfaceBasisVector2[1],
+                    surfaceBasisVector1[2] * surfaceBasisVector2[0] - surfaceBasisVector1[0] * surfaceBasisVector2[2],
+                    surfaceBasisVector1[0] * surfaceBasisVector2[1] - surfaceBasisVector1[1] * surfaceBasisVector2[0],
+                    };
+
+                var J1 = Math.Sqrt(surfaceBasisVector3[0] * surfaceBasisVector3[0] +
+                                   surfaceBasisVector3[1] * surfaceBasisVector3[1] +
+                                   surfaceBasisVector3[2] * surfaceBasisVector3[2]);
+
+                surfaceBasisVector3[0] /= J1;
+                surfaceBasisVector3[1] /= J1;
+                surfaceBasisVector3[2] /= J1;
+
+
+                var surfaceBasisVectorDerivative1 = CalculateSurfaceBasisVector1(hessianMatrix, 0);
+                var surfaceBasisVectorDerivative2 = CalculateSurfaceBasisVector1(hessianMatrix, 1);
+                var surfaceBasisVectorDerivative12 = CalculateSurfaceBasisVector1(hessianMatrix, 2);
+
+                var wfactor = InitialJ1[j] * gaussPoints[j].WeightFactor;
+
+                if (!runNewForces)
+                {
+                    CalculateMembraneDeformationMatrix(numberOfControlPoints, nurbs, j, surfaceBasisVector1,
+                        surfaceBasisVector2, Bmembrane);
+                    CalculateBendingDeformationMatrix(numberOfControlPoints, surfaceBasisVector3, nurbs, j,
+                        surfaceBasisVector2,
+                        surfaceBasisVectorDerivative1, surfaceBasisVector1, J1, surfaceBasisVectorDerivative2,
+                        surfaceBasisVectorDerivative12, Bbending);
+
+
+                    //IntegratedStressesOverThickness(gaussPoints[j], ref MembraneForces, ref BendingMoments);
+
+                    var thicknessPoints1 = thicknessIntegrationPoints[gaussPoints[j]];
+
+                    for (int j1 = 0; j1 < thicknessPoints1.Count; j1++)
+                    {
+                        var thicknessPoint = thicknessPoints1[j1];
+                        var material = materialsAtThicknessGP[gaussPoints[j]][thicknessPoints1[j1]];
+                        var w = thicknessPoint.WeightFactor;
+                        var z = thicknessPoint.Zeta;
+                        MembraneForces.v0 += material.Stresses[0] * w;
+                        MembraneForces.v1 += material.Stresses[1] * w;
+                        MembraneForces.v2 += material.Stresses[2] * w;
+
+                        BendingMoments.v0 += material.Stresses[0] * w * z;
+                        BendingMoments.v1 += material.Stresses[1] * w * z;
+                        BendingMoments.v2 += material.Stresses[2] * w * z;
+
+                        for (int j2 = 0; j2 < Bmembrane.GetLength(1); j2++)
+                        {
+                            //elementNodalForces[j2] +=
+                            //    (Bmembrane[0, j2] * MembraneForces.v0 * wfactor + Bbending[0, j2] * BendingMoments.v0 * wfactor) +
+                            //    (Bmembrane[1, j2] * MembraneForces.v1 * wfactor + Bbending[1, j2] * BendingMoments.v1 * wfactor) +
+                            //    (Bmembrane[2, j2] * MembraneForces.v2 * wfactor + Bbending[2, j2] * BendingMoments.v2 * wfactor);
+
+                            double[] strainVar = new double[] { Bmembrane[0, j2] + z * Bbending[0, j2] ,
+                            Bmembrane[1, j2] + z * Bbending[1, j2],
+                            Bmembrane[2, j2] + z * Bbending[2, j2],
+                            };
+
+                            for (int j3 = 0; j3 < 3; j3++)
+                            {
+
+                                elementNodalForces[j2] += strainVar[j3] * material.Stresses[j3] * wfactor * w;
+                            }
+
+                        }
+                    }
+
+
+
+                    if (j == ElementStiffnesses.gpNumberToCheck)
+                    {
+                        var Bmem_matrix = Matrix.CreateFromArray(Bmembrane);
+                        var Bben_matrix = Matrix.CreateFromArray(Bbending);
+                        for (int i1 = 0; i1 < Bmembrane.GetLength(1); i1++)
+                        {
+                            ElementStiffnesses.ProccessVariable(4, Bmem_matrix.GetColumn(i1).CopyToArray(), true, i1);
+                            ElementStiffnesses.ProccessVariable(5, Bben_matrix.GetColumn(i1).CopyToArray(), true, i1);
+
+                        }
+                    }
+                    if (j == ElementStiffnesses.gpNumberToCheck)
+                    {
+                        for (int i = 0; i < _controlPoints.Length; i++)
+                        {
+                            var a1r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesKsi[i, j]);
+                            var a2r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesHeta[i, j]);
+
+                            for (int i1 = 0; i1 < 3; i1++)
+                            {
+                                ElementStiffnesses.ProccessVariable(6, a1r.GetColumn(i1).CopyToArray(), true, 3 * i + i1);
+                                ElementStiffnesses.ProccessVariable(7, a2r.GetColumn(i1).CopyToArray(), true, 3 * i + i1);
+                            }
+                        }
+                    }
+
+
+                    //for (int i = 0; i < Bmembrane.GetLength(1); i++)
+                    //{
+                    //    elementNodalForces[i] +=
+                    //        (Bmembrane[0, i] * MembraneForces.v0 * wfactor + Bbending[0, i] * BendingMoments.v0 * wfactor) +
+                    //        (Bmembrane[1, i] * MembraneForces.v1 * wfactor + Bbending[1, i] * BendingMoments.v1 * wfactor) +
+                    //        (Bmembrane[2, i] * MembraneForces.v2 * wfactor + Bbending[2, i] * BendingMoments.v2 * wfactor);
+
+                    //    if ((ElementStiffnesses.saveForcesState1 | ElementStiffnesses.saveForcesState2s) | ElementStiffnesses.saveForcesState0)
+                    //    {
+                    //        elementNodalMembraneForces[i] +=
+                    //         (Bmembrane[0, i] * MembraneForces.v0 * wfactor) +
+                    //         (Bmembrane[1, i] * MembraneForces.v1 * wfactor) +
+                    //         (Bmembrane[2, i] * MembraneForces.v2 * wfactor);
+
+                    //        elementNodalBendingForces[i] +=
+                    //         (Bbending[0, i] * BendingMoments.v0 * wfactor) +
+                    //         (Bbending[1, i] * BendingMoments.v1 * wfactor) +
+                    //         (Bbending[2, i] * BendingMoments.v2 * wfactor);
+                    //    }
+                    //}
+
+                    if (j == ElementStiffnesses.gpNumberToCheck)
+                    {
+                        if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = true; }
+
+                        ElementStiffnesses.ProccessVariable(8, surfaceBasisVector3, false);
+                        //ElementStiffnesses.ProccessVariable(9, surfaceBasisVector2, false);
+                        ElementStiffnesses.ProccessVariable(10, new double[] { surfaceBasisVector3[0] * J1, surfaceBasisVector3[1] * J1, surfaceBasisVector3[2] * J1 }, false);
+
+                        if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = false; }
+                    }
+
+                }
+
+
+                #region develop formulation
+                var forcesDevelopGp = new double[shellElement.ControlPointsDictionary.Count * 3];
+
+                var thicknessGPoints = thicknessIntegrationPoints[gaussPoints[j]];
+                var materialpoint = materialsAtThicknessGP[gaussPoints[j]][thicknessGPoints[0]];
+                var transformations = new ShellElasticMaterial2DtransformationbDefGrad() { YoungModulus = materialpoint.YoungModulus, PoissonRatio = materialpoint.PoissonRatio };
+
+
+                var elementControlPoints = CurrentControlPoint(_controlPoints);
+
+                var a11 = Vector.CreateFromArray(surfaceBasisVectorDerivative1);
+                var a22 = Vector.CreateFromArray(surfaceBasisVectorDerivative2);
+                var a12 = Vector.CreateFromArray(surfaceBasisVectorDerivative12);
+                var a1 = Vector.CreateFromArray(surfaceBasisVector1);
+                var a2 = Vector.CreateFromArray(surfaceBasisVector2);
+                var a3 = Vector.CreateFromArray(surfaceBasisVector3); // einai to mono pou einai normalised
+                Vector a3_tilde = a3.Scale(J1);
+
+                (Vector da3tilde_dksi, Vector da3tilde_dheta, double da3norm_dksi, double da3norm_dheta, Vector da3_dksi, Vector da3_dheta) =
+                    Calculate_da3tilde_dksi_524_525_526_b(a1, a2, a11, a22, a12, a3, J1);
+
+                if (j == ElementStiffnesses.gpNumberToCheck)
+                {
+                    if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = true; }
+                    ElementStiffnesses.ProccessVariable(11, new double[] { J1 }, false);
+                    ElementStiffnesses.ProccessVariable(12, da3tilde_dksi.CopyToArray(), false);
+                    ElementStiffnesses.ProccessVariable(13, da3tilde_dheta.CopyToArray(), false);
+                    ElementStiffnesses.ProccessVariable(14, new double[] { da3norm_dksi }, false);
+                    ElementStiffnesses.ProccessVariable(15, new double[] { da3norm_dheta }, false);
+                    ElementStiffnesses.ProccessVariable(16, da3_dksi.CopyToArray(), false);
+                    ElementStiffnesses.ProccessVariable(17, da3_dheta.CopyToArray(), false);
+                    if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = false; }
+                }
+
+                #region original Config
+                var originalControlPoints = shellElement.ControlPoints.ToArray();
+                var originalHessianMatrix = CalculateHessian(originalControlPoints, nurbs, j);
+                double[,] jacobian_init = new double[3, 3];
+                CalculateJacobian(originalControlPoints, nurbs, j, jacobian_init);
+                var a1_init = Vector.CreateFromArray(CalculateSurfaceBasisVector1(jacobian_init, 0));
+                var a2_init = Vector.CreateFromArray(CalculateSurfaceBasisVector1(jacobian_init, 1));
+                var a3_init = Vector.CreateFromArray(new double[3]
+                {
+                    a1_init[1] * a2_init[2] - a1_init[2] * a2_init[1],
+                    a1_init[2] * a2_init[0] - a1_init[0] * a2_init[2],
+                    a1_init[0] * a2_init[1] - a1_init[1] * a2_init[0]
+                });
+
+                var J1_init = Math.Sqrt(a3_init[0] * a3_init[0] +
+                                        a3_init[1] * a3_init[1] +
+                                        a3_init[2] * a3_init[2]);
+
+                a3_init[0] /= J1_init;
+                a3_init[1] /= J1_init;
+                a3_init[2] /= J1_init;
+
+                var a11_init = Vector.CreateFromArray(CalculateSurfaceBasisVector1(originalHessianMatrix, 0));
+                var a22_init = Vector.CreateFromArray(CalculateSurfaceBasisVector1(originalHessianMatrix, 1));
+                var a12_init = Vector.CreateFromArray(CalculateSurfaceBasisVector1(originalHessianMatrix, 2));
+                #endregion
+
+                (Vector da3tilde_dksi_init, Vector da3tilde_dheta_init, double da3norm_dksi_init, double da3norm_dheta_init, Vector da3_dksi_init, Vector da3_dheta_init) =
+                    Calculate_da3tilde_dksi_524_525_526_b(a1_init, a2_init, a11_init, a22_init, a12_init, a3_init, J1_init);
+                var thicknessPoints = thicknessIntegrationPoints[gaussPoints[j]];
+                double[,] forceIntegration = new double[thicknessGPoints.Count(), 3]; //[thickness,dof]
+                double[,] thicknesCoeffs = new double[thicknessGPoints.Count(), 3]; //[thickness,dof]
+                for (int i1 = 0; i1 < thicknessPoints.Count; i1++)
+                {
+                    var thicknessPoint = thicknessPoints[i1];
+                    var material = materialsAtThicknessGP[gaussPoints[j]][thicknessPoints[i1]];
+                    var w = thicknessPoint.WeightFactor;
+                    var z = thicknessPoint.Zeta;
+                    //MembraneForces.v0 += material.Stresses[0] * w;
+                    //MembraneForces.v1 += material.Stresses[1] * w;
+                    //MembraneForces.v2 += material.Stresses[2] * w;
+
+                    //BendingMoments.v0 -= material.Stresses[0] * w * z;
+                    //BendingMoments.v1 -= material.Stresses[1] * w * z;
+                    //BendingMoments.v2 -= material.Stresses[2] * w * z;
+
+                    //for (int r1 = 0; r1 < 3; r1++)
+                    //{
+                    //    Vector dg1_dr = a1r.GetColumn(r1) - da3_dksidr[r1].Scale(z);
+                    //    Vector dg2_dr = a2r.GetColumn(r1) - da3_dhetadr[r1].Scale(z);
+                    //}
+
+                    // (14) 
+                    Vector G1 = a1_init + da3_dksi_init.Scale(z);
+                    Vector G2 = a2_init + da3_dheta_init.Scale(z);
+
+                    //double G1_norm_sqred = G1.DotProduct(G1);
+                    //double G2_norm_sqred = G2.DotProduct(G2);
+                    double G3_norm_sqred = a3.DotProduct(a3);
+
+                    //double[] G_1 = new double[3] { G1[0] / G1_norm_sqred, G1[1] / G1_norm_sqred, G1[2] / G1_norm_sqred };
+                    //double[] G_2 = new double[3] { G2[0] / G2_norm_sqred, G2[1] / G2_norm_sqred, G2[2] / G2_norm_sqred };
+                    (double[] G_1, double[] G_2, double[] G_3) = CalculateContravariants(G1, G2, a3_init);
+
+                    Vector g1 = a1 + da3_dksi.Scale(z);
+                    Vector g2 = a2 + da3_dheta.Scale(z);
+
+                    double[,] F_3D = new double[3, 3] { { g1[0]*G_1[0]+g2[0]*G_2[0], g1[0]*G_1[1]+g2[0]*G_2[1], g1[0]*G_1[2]+g2[0]*G_2[2] },
+                                                            { g1[1]*G_1[0]+g2[1]*G_2[0], g1[1]*G_1[1]+g2[1]*G_2[1], g1[1]*G_1[2]+g2[1]*G_2[2] },
+                                                            { g1[2]*G_1[0]+g2[2]*G_2[0], g1[2]*G_1[1]+g2[2]*G_2[1], g1[2]*G_1[2]+g2[2]*G_2[2] },
+                        };
+
+                    if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
+                    {
+                        if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = true; }
+                        double[] F_3D_vec = { F_3D[0, 0], F_3D[1, 1], F_3D[2, 2], F_3D[0, 1], F_3D[1, 2], F_3D[2, 0], F_3D[0, 2], F_3D[1, 0], F_3D[2, 1] };//  .
+                        ElementStiffnesses.ProccessVariable(18, F_3D_vec, false);
+                        if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = false; }
+                    }
+
+                    double[,] tgi = new double[3, 3] { { g1[0], g2[0], a3[0] }, { g1[1], g2[1], a3[1] }, { g1[2], g2[2], a3[2] } };
+                    double[,] G_i = new double[3, 3] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } };
+                    double[,] Gi = new double[3, 3] { { G1[0], G2[0], a3_init[0] }, { G1[1], G2[1], a3_init[1] }, { G1[2], G2[2], a3_init[2] } };
+
+                    //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, G_i, F_3D);
+                    //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, Gi, F_3D);
+                    (double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, _, _, double[,] ei, double[,] F_rve) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
+
+                    if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
+                    {
+                        if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = true; }
+
+                        //ElementStiffnesses.ProccessVariable(8, surfaceBasisVector3, false);
+                        ElementStiffnesses.ProccessVariable(28, /*dF2D_coefs_dr_vec  */ new double[] { F_rve[0, 0], F_rve[1, 1], F_rve[0, 1], F_rve[1, 0] }, false);
+                        ElementStiffnesses.ProccessVariable(29, /*dFPK2D_coefs_dr_vec*/ new double[] { FPK_2D[0, 0], FPK_2D[1, 1], FPK_2D[0, 1], FPK_2D[1, 0] }, false);
+                        ElementStiffnesses.ProccessVariable(30, /*dFPK_3D_dr_vec*/ FPK_3D_vec, false);
+                        ElementStiffnesses.ProccessVariable(33, /*dFPK_3D_dr_vec*/ FPK_3D_vec, false);
+
+                        ElementStiffnesses.ProccessVariable(31, new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }, false);
+
+                        ElementStiffnesses.ProccessVariable(32, new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }, false);
+
+                        if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = false; }
+                    }
+
+                    for (int i = 0; i < elementControlPoints.Length; i++)
+                    {
+                        var a1r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesKsi[i, j]);
+                        var a2r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesHeta[i, j]);
+                        var a11r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsSecondDerivativeValueKsi[i, j]);
+                        var a22r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsSecondDerivativeValueHeta[i, j]);
+                        var a12r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsSecondDerivativeValueKsiHeta[i, j]);
+
+                        //var a3r = new a3r();
+                        var dksi_r = nurbs.NurbsDerivativeValuesKsi[i, j];
+                        var dheta_r = nurbs.NurbsDerivativeValuesHeta[i, j];
+                        //CalculateA3r(surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3, dksi_r,
+                        //    dheta_r, J1, ref a3r); //gia to a3r
+
+
+                        //5.24
+                        var da3tilde_dr = new double[3][];
+                        Calculate_da3tilde_dr(a1, a2, dksi_r, dheta_r, da3tilde_dr);
+
+                        //5.25
+                        double[] dnorma3_dr = new double[3];
+                        a3_tilde = Vector.CreateFromArray(CalculateTerm525(a3, J1, dnorma3_dr, da3tilde_dr));
+
+                        //5.30 b
+                        (Vector[] da3tilde_dksidr, Vector[] da3tilde_dhetadr) = Calculate_da3tilde_dksidr(a1r, a2r, a11r, a22r, a12r, a1, a2, a11, a22, a12);
+
+                        //5.31 b
+                        (double[] da3norm_dksidr, double[] da3norm_dhetadr) = Calculate_da3norm_dksidr(da3tilde_dksidr, da3tilde_dhetadr,
+                            a3_tilde, da3tilde_dksi, da3tilde_dheta, da3tilde_dr, J1);
+
+                        //5.32 b
+                        (Vector[] da3_dksidr, Vector[] da3_dhetadr) = Calculate_da3_dksidr(da3tilde_dksidr, da3tilde_dhetadr, da3tilde_dksi, da3tilde_dheta,
+                            dnorma3_dr, a3_tilde, da3norm_dksidr, da3norm_dhetadr, da3norm_dksi, da3norm_dheta, J1, da3tilde_dr);
+
+                        if (j == ElementStiffnesses.gpNumberToCheck)
+                        {
+                            // conrol point einai to iota
+                            //var a1r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesKsi[i, j]);
+                            //var a2r = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesHeta[i, j]);
+
+
+
+                            //for (int i1 = 0; i1 < 3; i1++)
+                            //{
+                            //    ElementStiffnesses.ProccessVariable(11, new double[1] { dnorma3_dr[i1] }, true, 3 * i + i1);
+                            //    ElementStiffnesses.ProccessVariable(12, da3tilde_dksidr[i1].CopyToArray(), true, 3 * i + i1);
+                            //    ElementStiffnesses.ProccessVariable(13, da3tilde_dhetadr[i1].CopyToArray(), true, 3 * i + i1);
+                            //    ElementStiffnesses.ProccessVariable(14, new double[1] { da3norm_dksidr[i1] }, true, 3 * i + i1);
+                            //    ElementStiffnesses.ProccessVariable(15, new double[1] { da3norm_dhetadr[i1] }, true, 3 * i + i1);
+                            //    ElementStiffnesses.ProccessVariable(16, da3_dksidr[i1].CopyToArray(), true, 3 * i + i1);
+                            //    ElementStiffnesses.ProccessVariable(17, da3_dhetadr[i1].CopyToArray(), true, 3 * i + i1);
+                            //}
+
+                        }
+
+
+
+
+
+
+                        for (int r1 = 0; r1 < 3; r1++)
+                        {
+                            //(31)
+                            Vector dg1_dr = a1r.GetColumn(r1) + da3_dksidr[r1] * z;
+                            Vector dg2_dr = a2r.GetColumn(r1) + da3_dhetadr[r1] * z;
+
+                            //Vector dg3_dr = a3r. ....
+
+                            //(39)
+                            double[,] dF_3D_dr = new double[3, 3] { { dg1_dr[0]*G_1[0]+dg2_dr[0]*G_2[0], dg1_dr[0]*G_1[1]+dg2_dr[0]*G_2[1], dg1_dr[0]*G_1[2]+dg2_dr[0]*G_2[2] },
+                                                                 { dg1_dr[1]*G_1[0]+dg2_dr[1]*G_2[0], dg1_dr[1]*G_1[1]+dg2_dr[1]*G_2[1], dg1_dr[1]*G_1[2]+dg2_dr[1]*G_2[2] },
+                                                                 { dg1_dr[2]*G_1[0]+dg2_dr[2]*G_2[0], dg1_dr[2]*G_1[1]+dg2_dr[2]*G_2[1], dg1_dr[2]*G_1[2]+dg2_dr[2]*G_2[2] }, };
+
+                            double[] dF_3D_dr_vec = { dF_3D_dr[0, 0], dF_3D_dr[1, 1], dF_3D_dr[2, 2], dF_3D_dr[0, 1], dF_3D_dr[1, 2], dF_3D_dr[2, 0], dF_3D_dr[0, 2], dF_3D_dr[1, 0], dF_3D_dr[2, 1] };
+
+                            if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
+                            { ElementStiffnesses.ProccessVariable(18, dF_3D_dr_vec, true, 3 * i + r1); }
+
+                            for (int i2 = 0; i2 < 9; i2++)
+                            {
+                                forceIntegration[i1, r1] += FPK_3D_vec[i2] * dF_3D_dr_vec[i2] * wfactor;
+                                thicknesCoeffs[i1, r1] = w;
+
+                                forcesDevelop[3 * i + r1] += FPK_3D_vec[i2] * dF_3D_dr_vec[i2] * wfactor * w;
+                                forcesDevelopGp[3 * i + r1] += FPK_3D_vec[i2] * dF_3D_dr_vec[i2] * wfactor * w;
+                            }
+
+                            if ((j == ElementStiffnesses.gpNumberToCheck) && (i == 0) && (r1 == 1) && (i1 == 0))
+                            {
+                                if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = true; }
+
+                                ElementStiffnesses.ProccessVariable(27, dF_3D_dr_vec, false);
+
+                                if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = false; }
+                            }
+
+
+                        }
+                        //  (31) 
+
+
+
+                    }
+                }
+
+                #endregion
+
+            }
+
+            if ((ElementStiffnesses.saveForcesState1 | ElementStiffnesses.saveForcesState2s) | ElementStiffnesses.saveForcesState0)
+            {
+                ElementStiffnesses.SaveNodalForces(elementNodalMembraneForces, elementNodalBendingForces, element);
+            }
+
+            if (runNewForces)
+            { return forcesDevelop; }
+            else
+            {
+                return elementNodalForces;
+            }
+
+
+
+        }
+
+        public double[] CalculateForces_originalimplemntation(IElement element, double[] localDisplacements, double[] localdDisplacements)
+        {
+            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop)element;
+            var elementNodalForces = new double[shellElement.ControlPointsDictionary.Count * 3];
+            var elementNodalMembraneForces = new double[shellElement.ControlPointsDictionary.Count * 3];
+            var elementNodalBendingForces = new double[shellElement.ControlPointsDictionary.Count * 3];
+
+            _solution = localDisplacements;
+
+            var newControlPoints = CurrentControlPoint(_controlPoints);
+            var nurbs = CalculateShapeFunctions(shellElement, _controlPoints);
+            var gaussPoints = materialsAtThicknessGP.Keys.ToArray();
+
+            var Bmembrane = new double[3, _controlPoints.Length * 3];
+            var Bbending = new double[3, _controlPoints.Length * 3];
+            var numberOfControlPoints = _controlPoints.Length;
+            var MembraneForces = new Forces();
+            var BendingMoments = new Forces();
+
+            var forcesDevelop = new double[shellElement.ControlPointsDictionary.Count * 3];
+
+
 
             for (int j = 0; j < gaussPoints.Length; j++)
             {
@@ -221,7 +654,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
 
 
-                        if (j == ElementStiffnesses.gpNumberToCheck)
+                    if (j == ElementStiffnesses.gpNumberToCheck)
                     {
                         var Bmem_matrix = Matrix.CreateFromArray(Bmembrane);
                         var Bben_matrix = Matrix.CreateFromArray(Bbending);
@@ -247,7 +680,7 @@ namespace ISAAR.MSolve.IGA.Elements
                         }
                     }
 
-                    
+
                     //for (int i = 0; i < Bmembrane.GetLength(1); i++)
                     //{
                     //    elementNodalForces[i] +=
@@ -463,7 +896,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
                         //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, G_i, F_3D);
                         //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, Gi, F_3D);
-                        (double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, _ ,_ , double[,] ei, double[,] F_rve ) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
+                        (double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, _, _, double[,] ei, double[,] F_rve) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
 
                         if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
                         {
@@ -475,7 +908,7 @@ namespace ISAAR.MSolve.IGA.Elements
                             ElementStiffnesses.ProccessVariable(30, /*dFPK_3D_dr_vec*/ FPK_3D_vec, false);
                             ElementStiffnesses.ProccessVariable(33, /*dFPK_3D_dr_vec*/ FPK_3D_vec, false);
 
-                            ElementStiffnesses.ProccessVariable(31,new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }, false);
+                            ElementStiffnesses.ProccessVariable(31, new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }, false);
 
                             ElementStiffnesses.ProccessVariable(32, new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }, false);
 
@@ -509,12 +942,12 @@ namespace ISAAR.MSolve.IGA.Elements
                                 forcesDevelopGp[3 * i + r1] += FPK_3D_vec[i2] * dF_3D_dr_vec[i2] * wfactor * w;
                             }
 
-                            if ((j == ElementStiffnesses.gpNumberToCheck)&&(i==0)&&(r1==1)&&(i1==0))
+                            if ((j == ElementStiffnesses.gpNumberToCheck) && (i == 0) && (r1 == 1) && (i1 == 0))
                             {
                                 if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = true; }
 
                                 ElementStiffnesses.ProccessVariable(27, dF_3D_dr_vec, false);
-                                
+
                                 if (ElementStiffnesses.saveForcesState1) { ElementStiffnesses.saveVariationStates = false; }
                             }
 
