@@ -180,10 +180,48 @@ namespace ISAAR.MSolve.IGA.Elements
                         surfaceBasisVectorDerivative12, Bbending);
 
 
-                    // Bbending = Matrix.CreateFromArray(Bbending).Scale(-1).CopytoArray2D();
-                    IntegratedStressesOverThickness(gaussPoints[j], ref MembraneForces, ref BendingMoments);
+                    //IntegratedStressesOverThickness(gaussPoints[j], ref MembraneForces, ref BendingMoments);
 
-                    if (j == ElementStiffnesses.gpNumberToCheck)
+                    var thicknessPoints = thicknessIntegrationPoints[gaussPoints[j]];
+
+                    for (int j1 = 0; j1 < thicknessPoints.Count; j1++)
+                    {
+                        var thicknessPoint = thicknessPoints[j1];
+                        var material = materialsAtThicknessGP[gaussPoints[j]][thicknessPoints[j1]];
+                        var w = thicknessPoint.WeightFactor;
+                        var z = thicknessPoint.Zeta;
+                        MembraneForces.v0 += material.Stresses[0] * w;
+                        MembraneForces.v1 += material.Stresses[1] * w;
+                        MembraneForces.v2 += material.Stresses[2] * w;
+
+                        BendingMoments.v0 += material.Stresses[0] * w * z;
+                        BendingMoments.v1 += material.Stresses[1] * w * z;
+                        BendingMoments.v2 += material.Stresses[2] * w * z;
+
+                        for (int j2 = 0; j2 < Bmembrane.GetLength(1); j2++)
+                        {
+                            //elementNodalForces[j2] +=
+                            //    (Bmembrane[0, j2] * MembraneForces.v0 * wfactor + Bbending[0, j2] * BendingMoments.v0 * wfactor) +
+                            //    (Bmembrane[1, j2] * MembraneForces.v1 * wfactor + Bbending[1, j2] * BendingMoments.v1 * wfactor) +
+                            //    (Bmembrane[2, j2] * MembraneForces.v2 * wfactor + Bbending[2, j2] * BendingMoments.v2 * wfactor);
+
+                            double[] strainVar = new double[] { Bmembrane[0, j2] + z * Bbending[0, j2] ,
+                            Bmembrane[1, j2] + z * Bbending[1, j2],
+                            Bmembrane[2, j2] + z * Bbending[2, j2],
+                            };
+
+                            for (int j3 = 0; j3 < 3; j3++)
+                            {
+
+                                elementNodalForces[j2] += strainVar[j3] * material.Stresses[j3] * wfactor * w;
+                            }
+
+                        }
+                    }
+
+
+
+                        if (j == ElementStiffnesses.gpNumberToCheck)
                     {
                         var Bmem_matrix = Matrix.CreateFromArray(Bmembrane);
                         var Bben_matrix = Matrix.CreateFromArray(Bbending);
@@ -194,8 +232,6 @@ namespace ISAAR.MSolve.IGA.Elements
 
                         }
                     }
-
-
                     if (j == ElementStiffnesses.gpNumberToCheck)
                     {
                         for (int i = 0; i < _controlPoints.Length; i++)
@@ -211,29 +247,27 @@ namespace ISAAR.MSolve.IGA.Elements
                         }
                     }
 
+                    
+                    //for (int i = 0; i < Bmembrane.GetLength(1); i++)
+                    //{
+                    //    elementNodalForces[i] +=
+                    //        (Bmembrane[0, i] * MembraneForces.v0 * wfactor + Bbending[0, i] * BendingMoments.v0 * wfactor) +
+                    //        (Bmembrane[1, i] * MembraneForces.v1 * wfactor + Bbending[1, i] * BendingMoments.v1 * wfactor) +
+                    //        (Bmembrane[2, i] * MembraneForces.v2 * wfactor + Bbending[2, i] * BendingMoments.v2 * wfactor);
 
+                    //    if ((ElementStiffnesses.saveForcesState1 | ElementStiffnesses.saveForcesState2s) | ElementStiffnesses.saveForcesState0)
+                    //    {
+                    //        elementNodalMembraneForces[i] +=
+                    //         (Bmembrane[0, i] * MembraneForces.v0 * wfactor) +
+                    //         (Bmembrane[1, i] * MembraneForces.v1 * wfactor) +
+                    //         (Bmembrane[2, i] * MembraneForces.v2 * wfactor);
 
-
-                    for (int i = 0; i < Bmembrane.GetLength(1); i++)
-                    {
-                        elementNodalForces[i] +=
-                            (Bmembrane[0, i] * MembraneForces.v0 * wfactor + Bbending[0, i] * BendingMoments.v0 * wfactor) +
-                            (Bmembrane[1, i] * MembraneForces.v1 * wfactor + Bbending[1, i] * BendingMoments.v1 * wfactor) +
-                            (Bmembrane[2, i] * MembraneForces.v2 * wfactor + Bbending[2, i] * BendingMoments.v2 * wfactor);
-
-                        if ((ElementStiffnesses.saveForcesState1 | ElementStiffnesses.saveForcesState2s) | ElementStiffnesses.saveForcesState0)
-                        {
-                            elementNodalMembraneForces[i] +=
-                             (Bmembrane[0, i] * MembraneForces.v0 * wfactor) +
-                             (Bmembrane[1, i] * MembraneForces.v1 * wfactor) +
-                             (Bmembrane[2, i] * MembraneForces.v2 * wfactor);
-
-                            elementNodalBendingForces[i] +=
-                             (Bbending[0, i] * BendingMoments.v0 * wfactor) +
-                             (Bbending[1, i] * BendingMoments.v1 * wfactor) +
-                             (Bbending[2, i] * BendingMoments.v2 * wfactor);
-                        }
-                    }
+                    //        elementNodalBendingForces[i] +=
+                    //         (Bbending[0, i] * BendingMoments.v0 * wfactor) +
+                    //         (Bbending[1, i] * BendingMoments.v1 * wfactor) +
+                    //         (Bbending[2, i] * BendingMoments.v2 * wfactor);
+                    //    }
+                    //}
 
                     if (j == ElementStiffnesses.gpNumberToCheck)
                     {
