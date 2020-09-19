@@ -14,44 +14,44 @@ namespace ISAAR.MSolve.Materials
     /// </summary>
     public class ShellElasticMaterial2DtransformationbDefGrad : IShellMaterial
     {
-		public double[] NormalVectorV3 { get; set; }
-		public double[] TangentVectorV1 { get; set; }
-		public double[] TangentVectorV2 { get; set; }
-		public double YoungModulus { get; set; }
-		public double PoissonRatio { get; set; }
+        public double[] NormalVectorV3 { get; set; }
+        public double[] TangentVectorV1 { get; set; }
+        public double[] TangentVectorV2 { get; set; }
+        public double YoungModulus { get; set; }
+        public double PoissonRatio { get; set; }
         Matrix transformationMatrix; // gia to shell
 
-        private bool modified; 
-		private double[,] CartesianConstitutiveMatrix;
-		private double[] CartesianStresses = new double[6];
+        private bool modified;
+        private double[,] CartesianConstitutiveMatrix;
+        private double[] CartesianStresses = new double[6];
 
-		object ICloneable.Clone() => Clone();
+        object ICloneable.Clone() => Clone();
 
-		public IShellMaterial Clone()
-		{
-			return new ShellElasticMaterial2DtransformationbDefGrad()
-			{
-				YoungModulus = this.YoungModulus,
-				PoissonRatio = this.PoissonRatio,
-			};
-		}
+        public IShellMaterial Clone()
+        {
+            return new ShellElasticMaterial2DtransformationbDefGrad()
+            {
+                YoungModulus = this.YoungModulus,
+                PoissonRatio = this.PoissonRatio,
+            };
+        }
 
-		public void UpdateMaterial(double[] cartesianStrains) //TODO: rename cartesian strains to strains 
-		{
-			if (CartesianConstitutiveMatrix == null)
-			{
-				this.CalculateConstitutiveMatrix(Vector.CreateFromArray(TangentVectorV1), Vector.CreateFromArray(TangentVectorV2));
-			}
+        public void UpdateMaterial(double[] cartesianStrains) //TODO: rename cartesian strains to strains 
+        {
+            if (CartesianConstitutiveMatrix == null)
+            {
+                this.CalculateConstitutiveMatrix(Vector.CreateFromArray(TangentVectorV1), Vector.CreateFromArray(TangentVectorV2));
+            }
 
-			for (int l = 0; l < 3; l++)
-			{
-				CartesianStresses[l] = 0;
-				for (int m = 0; m < 3; m++)
-				{
-					CartesianStresses[l] += CartesianConstitutiveMatrix[l, m] * cartesianStrains[m];
-				}
-			}
-		}
+            for (int l = 0; l < 3; l++)
+            {
+                CartesianStresses[l] = 0;
+                for (int m = 0; m < 3; m++)
+                {
+                    CartesianStresses[l] += CartesianConstitutiveMatrix[l, m] * cartesianStrains[m];
+                }
+            }
+        }
 
         /// <summary>
         /// 
@@ -134,14 +134,14 @@ namespace ISAAR.MSolve.Materials
                 double[,] exampleSpkTensorTransformed = Transform_F3D_to_Frve(exampleSpkTensor, exampleQijcov, exampleQij1cov);
             }
 
-            
+
 
 
             double[] GLvec = Transform2DDefGradToGL(F_rve);
-            (double[] SPKvec, double[,] ConsCartes )= CalculateSPK(GLvec);
+            (double[] SPKvec, double[,] ConsCartes) = CalculateSPK(GLvec);
 
             double[,] SPKMat = new double[2, 2] { { SPKvec[0], SPKvec[2] }, { SPKvec[2], SPKvec[1] } };
-            double[,] FPKrve = TransformSPKvecToFPK(F_rve, SPKMat );
+            double[,] FPKrve = TransformSPKvecToFPK(F_rve, SPKMat);
 
             double[,] Cinpk = ExpandCijrs(ConsCartes);
 
@@ -162,7 +162,7 @@ namespace ISAAR.MSolve.Materials
                 var exampleG1 = Vector.CreateFromArray(new double[] { -0.010109380507998852, 1.2063529570299063, 7.1865868866394246E-10 });
                 var exampleG2 = Vector.CreateFromArray(new double[] { -0.00819119424556895, -6.8721022557950172E-05, 1.0857567150015821 });
                 var exampleG3 = Vector.CreateFromArray(new double[] { 0.99993643119452769, 0.0083795855951000336, 0.0075442769836465062 }); // a3_init dld einai hdh normalised
-                
+
                 double exampleG1_norm_sqred = exampleG1.DotProduct(exampleG1);
                 double exampleG2_norm_sqred = exampleG2.DotProduct(exampleG2);
                 //double G3_norm_sqred = a3.DotProduct(a3);
@@ -197,7 +197,7 @@ namespace ISAAR.MSolve.Materials
                 //double[,] exampleBasis = new double[3, 3] {{ 14.285714922100491, -1.7441909127627026E-08, 0 }, { 8.3652124878453923E-07, 14.285714288340733,0},
                 //{ 0,0,1} };
 
-                
+
 
                 var exampleG1 = Vector.CreateFromArray(new double[] { -0.010125086915473506, 1.2082272041845672, 5.403943148540348E-17 });
                 var exampleG2 = Vector.CreateFromArray(new double[] { -0.0082039172057740226, -6.8828411272038153E-05, 1.0874431657141146 });
@@ -221,7 +221,7 @@ namespace ISAAR.MSolve.Materials
                 double[,] exampleTensorTransformed = Transform_F3D_to_Frve(exampleGlTensr, exampleQij, exampleQij1);
 
 
-                 double[,] exampleSpkTensor = new double[,] { { 2365.2521089180445, 171.93028053115697,0    },
+                double[,] exampleSpkTensor = new double[,] { { 2365.2521089180445, 171.93028053115697,0    },
                 {171.93028053115697, 7000.4556652076062, 0 },  { 0,0,0} };
                 var exampleQijcov = CalculateRotationMatrix(tG_i, exampleCovarBasis);
                 var exampleQij1cov = CalculateRotationMatrix(tgi, exampleCovarBasis);
@@ -235,10 +235,10 @@ namespace ISAAR.MSolve.Materials
                 //double[,] exampleBasis = new double[3, 3] {{ 14.285714922100491, -1.7441909127627026E-08, 0 }, { 8.3652124878453923E-07, 14.285714288340733,0},
                 //{ 0,0,1} };
 
-               
 
-                var exampleG1 = Vector.CreateFromArray(new double[] { -0.01014079332294816, 1.2101014513392281, -7.1865858058507949E-10});
-                var exampleG2 = Vector.CreateFromArray(new double[] { -0.0082166401659790958, - 6.8935799986126134E-05, 1.0891296164266471 });
+
+                var exampleG1 = Vector.CreateFromArray(new double[] { -0.01014079332294816, 1.2101014513392281, -7.1865858058507949E-10 });
+                var exampleG2 = Vector.CreateFromArray(new double[] { -0.0082166401659790958, -6.8935799986126134E-05, 1.0891296164266471 });
                 var exampleG3 = Vector.CreateFromArray(new double[] { 0.99993643119452769, 0.0083795855951000336, 0.0075442769836465062 }); // a3_init dld einai hdh normalised
 
                 double exampleG1_norm_sqred = exampleG1.DotProduct(exampleG1);
@@ -261,7 +261,7 @@ namespace ISAAR.MSolve.Materials
                 var exampleQij1 = CalculateRotationMatrix(tgi, exampleBasis);
                 double[,] exampleTensorTransformed = Transform_F3D_to_Frve(exampleGlTensr, exampleQij, exampleQij1);
 
-               
+
                 double[,] exampleSpkTensor = new double[,] { { 5164.0442904259, 48.748518031151249,0    },
                 {48.748518031151249, 6543.1821336104158, 0 },  { 0,0,0} };
                 var exampleQijcov = CalculateRotationMatrix(tG_i, exampleCovarBasis);
@@ -320,7 +320,7 @@ namespace ISAAR.MSolve.Materials
 
 
                 var exampleG1 = Vector.CreateFromArray(new double[] { -0.010109380507998852, 1.2063529570299063, 7.1865868866394246E-10 });
-                var exampleG2 = Vector.CreateFromArray(new double[] { -0.00819119424556895, -6.8721022557950172E-05, 1.0857567150015821});
+                var exampleG2 = Vector.CreateFromArray(new double[] { -0.00819119424556895, -6.8721022557950172E-05, 1.0857567150015821 });
                 var exampleG3 = Vector.CreateFromArray(new double[] { 1.7157003609709955, 0.014377772008092392, 0.012944541613155218 }); // a3_init dld einai hdh normalised
 
                 double exampleG1_norm_sqred = exampleG1.DotProduct(exampleG1);
@@ -335,7 +335,7 @@ namespace ISAAR.MSolve.Materials
 
 
 
-                
+
 
 
 
@@ -349,7 +349,7 @@ namespace ISAAR.MSolve.Materials
 
 
 
-                
+
 
 
                 double[,] exampleSpkTensor = new double[,] { { 5228.5269163275243, 49.357152115028043,0    },
@@ -381,7 +381,7 @@ namespace ISAAR.MSolve.Materials
             { exampleG_1[2],exampleG_2[2],exampleG3[2]} };
                 double[,] exampleCovarBasis = new double[3, 3] {{ exampleG1[0], exampleG2[0], exampleG3[0] }, { exampleG1[1], exampleG2[1],exampleG3[1] },
             { exampleG1[2],exampleG2[2],exampleG3[2]} };
-                
+
                 double[,] exampleGlTensr = new double[3, 3] { { 2.0737144890037307E-05, 0.5 * (1.1308041227672513E-05), 0  },
                 { 0.5 * (1.1308041227672513E-05),0.00012549972453512748, 0 },  { 0,0,0} };
 
@@ -404,7 +404,7 @@ namespace ISAAR.MSolve.Materials
 
             var Aijkl_3D = Transform_Aijkl_rve_to_Aijkl_3D(Aijkl_rve, Qpi, Qqj, Qrk, Qsl);
 
-            double[] FPK_3D_vec = new double[9] { FPK_3D[0, 0], FPK_3D[1, 1], FPK_3D[2, 2], FPK_3D[0, 1], FPK_3D[1, 2], FPK_3D[2, 0], FPK_3D[0, 2], FPK_3D[1, 0], FPK_3D[2, 1]  };
+            double[] FPK_3D_vec = new double[9] { FPK_3D[0, 0], FPK_3D[1, 1], FPK_3D[2, 2], FPK_3D[0, 1], FPK_3D[1, 2], FPK_3D[2, 0], FPK_3D[0, 2], FPK_3D[1, 0], FPK_3D[2, 1] };
 
             return (Aijkl_3D, FPK_3D_vec);
 
@@ -528,6 +528,37 @@ namespace ISAAR.MSolve.Materials
             double[] GLvec = new double[3] { GL[0, 0], GL[1, 1], 2 * GL[1, 0], };
 
             return GLvec;
+
+        }
+
+        public double[,] Transform3DDefGradToGL(double[,] F)
+        {
+            //double[,] GL = new double[2, 2];
+
+            double[,] FtrF = new double[3, 3];
+
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    for (int k1 = 0; k1 < 3; k1++)
+                    {
+                        FtrF[i1, i2] += F[k1, i1] * F[k1, i2];
+                    }
+                }
+            }
+
+            FtrF[0, 0] += -1;
+            FtrF[1, 1] += -1;
+
+            FtrF[2, 2] += -1;
+
+            var GL = new double[3, 3] { { 0.5 * FtrF[0, 0], 0.5 * FtrF[0, 1],  0.5 * FtrF[0, 2] }, { 0.5 * FtrF[1, 0], 0.5 * FtrF[1, 1],  0.5 * FtrF[1, 2] },
+             { 0.5 * FtrF[2,0], 0.5 * FtrF[2, 1],  0.5 * FtrF[2, 2] }};
+
+            //double[] GLvec = new double[3] { GL[0, 0], GL[1, 1], 2 * GL[1, 0], };
+
+            return GL;
 
         }
 
@@ -703,7 +734,7 @@ namespace ISAAR.MSolve.Materials
 
 
         private void CalculateConstitutiveMatrix(Vector surfaceBasisVector1, Vector surfaceBasisVector2)
-		{
+        {
             this.CalculateTransformationMatrix(Vector.CreateFromArray(TangentVectorV1), Vector.CreateFromArray(TangentVectorV2));
 
             var OriginalConstitutiveMatrix = new double[3, 3];
@@ -749,7 +780,7 @@ namespace ISAAR.MSolve.Materials
             //         ConstitutiveMatrix.Scale(YoungModulus / (1 - Math.Pow(PoissonRatio, 2)));
             var constitutiveMatrix = (transformationMatrix.Transpose() * (Matrix.CreateFromArray(OriginalConstitutiveMatrix)) * transformationMatrix);
             CartesianConstitutiveMatrix = constitutiveMatrix.CopyToArray2D();
-		}
+        }
 
         private void CalculateTransformationMatrix(Vector surfaceBasisVector1, Vector surfaceBasisVector2)
         {
@@ -775,7 +806,7 @@ namespace ISAAR.MSolve.Materials
             //Normalised covariant base vectors
             double[][] Ei = new double[2][];// to trito den xreiazetai
 
-            Ei[0] =surfaceBasisVector1.CopyToArray();
+            Ei[0] = surfaceBasisVector1.CopyToArray();
             double G1_norm = surfaceBasisVector1.Norm2();
             for (int i1 = 0; i1 < 3; i1++) { Ei[0][i1] = Ei[0][i1] / G1_norm; }
 
@@ -806,60 +837,63 @@ namespace ISAAR.MSolve.Materials
         }
 
         private bool CheckIfConstitutiveMatrixChanged()
-		{
-			return false;
-		}
+        {
+            return false;
+        }
 
-		public double[] Stresses 
-		{
-			get { return CartesianStresses; }
-		}
+        public double[] Stresses
+        {
+            get { return CartesianStresses; }
+        }
 
-		public IMatrixView ConstitutiveMatrix
-		{
-			get
-			{
-				if (CartesianConstitutiveMatrix == null) UpdateMaterial(new double[6]);
-				return Matrix.CreateFromArray(CartesianConstitutiveMatrix);
-			}
-		}
+        public IMatrixView ConstitutiveMatrix
+        {
+            get
+            {
+                if (CartesianConstitutiveMatrix == null) UpdateMaterial(new double[6]);
+                return Matrix.CreateFromArray(CartesianConstitutiveMatrix);
+            }
+        }
 
-		public void SaveState()
-		{
-		}
+        public void SaveState()
+        {
+        }
 
-		public bool Modified => modified;
+        public bool Modified => modified;
 
-		public void ResetModified()
-		{
-			modified = false;
-		}
+        public void ResetModified()
+        {
+            modified = false;
+        }
 
-		public int ID
-		{
-			get { throw new NotImplementedException(); }
-		}
+        public int ID
+        {
+            get { throw new NotImplementedException(); }
+        }
 
-		public void ClearState()
-		{
-		}
-		public void ClearStresses()
-		{
+        public void ClearState()
+        {
+        }
+        public void ClearStresses()
+        {
 
-		}
+        }
 
-		public double[] Coordinates
-		{
+        public double[] Coordinates
+        {
 
-			get { throw new NotImplementedException(); }
-			set { throw new InvalidOperationException(); }
-		}
+            get { throw new NotImplementedException(); }
+            set { throw new InvalidOperationException(); }
+        }
 
-        public (double[,] ,double[], double[,],double[,], double[,], double[,], double[,] ) CalculateTransformationsV2(Vector g1, Vector g2, Vector g3, Vector G1, Vector G2, Vector G3, double[] G_1, double[] G_2, double[] G_3)
+        public (double[,], double[], double[,], double[,], double[,], double[,], double[,], double[,], double[,], double[,], double[,], double[,], double[], double[],
+            double[], tensorOrder2, tensorOrder2, tensorOrder2, tensorOrder2) CalculateTransformationsV2(Vector g1, Vector g2, Vector g3, Vector G1, Vector G2, Vector G3, double[] G_1, double[] G_2, double[] G_3)
         {
             double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
             double[,] tgi = new double[3, 3] { { g1[0], g2[0], g3[0] }, { g1[1], g2[1], g3[1] }, { g1[2], g2[2], g3[2] } };
             double[,] Gi = new double[3, 3] { { G1[0], G2[0], G3[0] }, { G1[1], G2[1], G3[1] }, { G1[2], G2[2], G3[2] } };
+            double[,] G_i = new double[3, 3] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } };
+
 
             for (int i1 = 0; i1 < 3; i1++)
             {
@@ -882,21 +916,55 @@ namespace ISAAR.MSolve.Materials
 
             }
 
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                double norm = G_i[0, i1] * G_i[0, i1] + G_i[1, i1] * G_i[1, i1] + G_i[2, i1] * G_i[2, i1];
+                norm = Math.Sqrt(norm);
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    G_i[i2, i1] = G_i[i2, i1] / norm;
+                }
+
+            }
+
             OrthogonaliseBasisMembranePart(tgi);
             OrthogonaliseBasisMembranePart(Gi);
+            OrthogonaliseBasisMembranePart(G_i);
 
             var ei = tgi;
             var Ei = Gi;
-                                    //[..,0] 
-            double[] g1__ei =new double[] {g1[0]*ei[0,0]+g1[1]*ei[1,0]+g1[2]*ei[2,0],g1[0]*ei[0,1]+g1[1]*ei[1,1]+g1[2]*ei[2,1],g1[0]*ei[0,2]+g1[1]*ei[1,2]+g1[2]*ei[2,2]};
-            double[] g2__ei =new double[] {g2[0]*ei[0,0]+g2[1]*ei[1,0]+g2[2]*ei[2,0],g2[0]*ei[0,1]+g2[1]*ei[1,1]+g2[2]*ei[2,1],g2[0]*ei[0,2]+g2[1]*ei[1,2]+g2[2]*ei[2,2]};
-            double[] g3__ei =new double[] {g3[0]*ei[0,0]+g3[1]*ei[1,0]+g3[2]*ei[2,0],g3[0]*ei[0,1]+g3[1]*ei[1,1]+g3[2]*ei[2,1],g3[0]*ei[0,2]+g3[1]*ei[1,2]+g3[2]*ei[2,2]};
+            var E_i = G_i;
 
-            double[] G_1__Ei =new double[] {G_1[0]*Ei[0,0]+G_1[1]*Ei[1,0]+G_1[2]*Ei[2,0],G_1[0]*Ei[0,1]+G_1[1]*Ei[1,1]+G_1[2]*Ei[2,1],G_1[0]*Ei[0,2]+G_1[1]*Ei[1,2]+G_1[2]*Ei[2,2]};
-            double[] G_2__Ei =new double[] {G_2[0]*Ei[0,0]+G_2[1]*Ei[1,0]+G_2[2]*Ei[2,0],G_2[0]*Ei[0,1]+G_2[1]*Ei[1,1]+G_2[2]*Ei[2,1],G_2[0]*Ei[0,2]+G_2[1]*Ei[1,2]+G_2[2]*Ei[2,2]};
-            double[] G_3__Ei =new double[] {G_3[0]*Ei[0,0]+G_3[1]*Ei[1,0]+G_3[2]*Ei[2,0],G_3[0]*Ei[0,1]+G_3[1]*Ei[1,1]+G_3[2]*Ei[2,1],G_3[0]*Ei[0,2]+G_3[1]*Ei[1,2]+G_3[2]*ei[2,2]};
+
+            //[..,0] 
+            double[] g1__ei = new double[] { g1[0] * ei[0, 0] + g1[1] * ei[1, 0] + g1[2] * ei[2, 0], g1[0] * ei[0, 1] + g1[1] * ei[1, 1] + g1[2] * ei[2, 1], g1[0] * ei[0, 2] + g1[1] * ei[1, 2] + g1[2] * ei[2, 2] };
+            double[] g2__ei = new double[] { g2[0] * ei[0, 0] + g2[1] * ei[1, 0] + g2[2] * ei[2, 0], g2[0] * ei[0, 1] + g2[1] * ei[1, 1] + g2[2] * ei[2, 1], g2[0] * ei[0, 2] + g2[1] * ei[1, 2] + g2[2] * ei[2, 2] };
+            double[] g3__ei = new double[] { g3[0] * ei[0, 0] + g3[1] * ei[1, 0] + g3[2] * ei[2, 0], g3[0] * ei[0, 1] + g3[1] * ei[1, 1] + g3[2] * ei[2, 1], g3[0] * ei[0, 2] + g3[1] * ei[1, 2] + g3[2] * ei[2, 2] };
+
+            //double[] g1__Ei = new double[] { g1[0] * Ei[0, 0] + g1[1] * Ei[1, 0] + g1[2] * Ei[2, 0], g1[0] * Ei[0, 1] + g1[1] * Ei[1, 1] + g1[2] * Ei[2, 1], g1[0] * Ei[0, 2] + g1[1] * Ei[1, 2] + g1[2] * Ei[2, 2] };
+            //double[] g2__Ei = new double[] { g2[0] * Ei[0, 0] + g2[1] * Ei[1, 0] + g2[2] * Ei[2, 0], g2[0] * Ei[0, 1] + g2[1] * Ei[1, 1] + g2[2] * Ei[2, 1], g2[0] * Ei[0, 2] + g2[1] * Ei[1, 2] + g2[2] * Ei[2, 2] };
+            //double[] g3__Ei = new double[] { g3[0] * Ei[0, 0] + g3[1] * Ei[1, 0] + g3[2] * Ei[2, 0], g3[0] * Ei[0, 1] + g3[1] * Ei[1, 1] + g3[2] * Ei[2, 1], g3[0] * Ei[0, 2] + g3[1] * Ei[1, 2] + g3[2] * Ei[2, 2] };
+
+            double[] G_1__Ei = new double[] { G_1[0] * Ei[0, 0] + G_1[1] * Ei[1, 0] + G_1[2] * Ei[2, 0], G_1[0] * Ei[0, 1] + G_1[1] * Ei[1, 1] + G_1[2] * Ei[2, 1], G_1[0] * Ei[0, 2] + G_1[1] * Ei[1, 2] + G_1[2] * Ei[2, 2] };
+            double[] G_2__Ei = new double[] { G_2[0] * Ei[0, 0] + G_2[1] * Ei[1, 0] + G_2[2] * Ei[2, 0], G_2[0] * Ei[0, 1] + G_2[1] * Ei[1, 1] + G_2[2] * Ei[2, 1], G_2[0] * Ei[0, 2] + G_2[1] * Ei[1, 2] + G_2[2] * Ei[2, 2] };
+            double[] G_3__Ei = new double[] { G_3[0] * Ei[0, 0] + G_3[1] * Ei[1, 0] + G_3[2] * Ei[2, 0], G_3[0] * Ei[0, 1] + G_3[1] * Ei[1, 1] + G_3[2] * Ei[2, 1], G_3[0] * Ei[0, 2] + G_3[1] * Ei[1, 2] + G_3[2] * Ei[2, 2] };
+
+            double[] G1__Ei = new double[] { G1[0] * Ei[0, 0] + G1[1] * Ei[1, 0] + G1[2] * Ei[2, 0], G1[0] * Ei[0, 1] + G1[1] * Ei[1, 1] + G1[2] * Ei[2, 1], G1[0] * Ei[0, 2] + G1[1] * Ei[1, 2] + G1[2] * Ei[2, 2] };
+            double[] G2__Ei = new double[] { G2[0] * Ei[0, 0] + G2[1] * Ei[1, 0] + G2[2] * Ei[2, 0], G2[0] * Ei[0, 1] + G2[1] * Ei[1, 1] + G2[2] * Ei[2, 1], G2[0] * Ei[0, 2] + G2[1] * Ei[1, 2] + G2[2] * Ei[2, 2] };
+            double[] G3__Ei = new double[] { G3[0] * Ei[0, 0] + G3[1] * Ei[1, 0] + G3[2] * Ei[2, 0], G3[0] * Ei[0, 1] + G3[1] * Ei[1, 1] + G3[2] * Ei[2, 1], G3[0] * Ei[0, 2] + G3[1] * Ei[1, 2] + G3[2] * Ei[2, 2] };
+
+            (double[] G_1__Ei_alte, double[] G_2__Ei_alte, double[] G_3__Ei_alte) = CalculateContravariants(Vector.CreateFromArray(G1__Ei), Vector.CreateFromArray(G2__Ei), Vector.CreateFromArray(G3__Ei));
+
+
+            double[] G_1__E_i = new double[] { G_1[0] * E_i[0, 0] + G_1[1] * E_i[1, 0] + G_1[2] * E_i[2, 0], G_1[0] * E_i[0, 1] + G_1[1] * E_i[1, 1] + G_1[2] * E_i[2, 1], G_1[0] * E_i[0, 2] + G_1[1] * E_i[1, 2] + G_1[2] * E_i[2, 2] };
+            double[] G_2__E_i = new double[] { G_2[0] * E_i[0, 0] + G_2[1] * E_i[1, 0] + G_2[2] * E_i[2, 0], G_2[0] * E_i[0, 1] + G_2[1] * E_i[1, 1] + G_2[2] * E_i[2, 1], G_2[0] * E_i[0, 2] + G_2[1] * E_i[1, 2] + G_2[2] * E_i[2, 2] };
+            double[] G_3__E_i = new double[] { G_3[0] * E_i[0, 0] + G_3[1] * E_i[1, 0] + G_3[2] * E_i[2, 0], G_3[0] * E_i[0, 1] + G_3[1] * E_i[1, 1] + G_3[2] * E_i[2, 1], G_3[0] * E_i[0, 2] + G_3[1] * E_i[1, 2] + G_3[2] * E_i[2, 2] };
 
             double[,] F = CaclculateDefGrad3D(g1__ei, g2__ei, g3__ei, G_1__Ei, G_2__Ei, G_3__Ei);
+
+            double[,] F_case_a = CaclculateDefGrad3D(g1__ei, g2__ei, g3__ei, G_1__E_i, G_2__E_i, G_3__E_i);
+
+            //double[,] F_case_b = CaclculateDefGrad3D(g1__Ei, g2__Ei, g3__Ei, G_1__E_i, G_2__E_i, G_3__E_i);
 
             double[,] F_rve = new double[,]
             {
@@ -904,8 +972,39 @@ namespace ISAAR.MSolve.Materials
                 {F[1,0], F[1,1] }
             };
 
+            double[,] F_rve_case_a = new double[,]
+            {
+                {F_case_a[0,0], F_case_a[0,1] },
+                {F_case_a[1,0], F_case_a[1,1] }
+            };
+
             double[] GLvec = Transform2DDefGradToGL(F_rve);
+
+            var GL_coeffs = new double[3, 3]
+                            {
+                                {GLvec[0],0.5*GLvec[2],0 },
+                                {0.5*GLvec[2],GLvec[1],0 },
+                                {0,0,0 },
+                            };
+
+            tensorOrder2 GLtensor = new tensorOrder2(GL_coeffs, Ei, Ei);
+            var GLtensorProjected = GLtensor.ProjectIn3DCartesianBasis();
+
             (double[] SPKvec, double[,] ConsCartes) = CalculateSPK(GLvec);
+
+            var SPK_coeffs = new double[3, 3]
+                            {
+                                {SPKvec[0],SPKvec[2],0 },
+                                {SPKvec[2],SPKvec[1],0 },
+                                {0,0,0 },
+                            };
+
+            tensorOrder2 SPKtensor = new tensorOrder2(SPK_coeffs, Ei, Ei);
+            var SPKtensorProjected = SPKtensor.ProjectIn3DCartesianBasis();
+
+
+
+
 
             double[,] SPKMat = new double[2, 2] { { SPKvec[0], SPKvec[2] }, { SPKvec[2], SPKvec[1] } };
             double[,] FPKrve = TransformSPKvecToFPK(F_rve, SPKMat);
@@ -914,14 +1013,72 @@ namespace ISAAR.MSolve.Materials
 
             double[,] Aijkl_rve = TransformCinpk(Cinpk, F_rve, SPKMat/*,...*/);
 
+            #region more case a transformations
+            double[] GLvec_a = Transform2DDefGradToGL(F_rve_case_a);
+            (double[] SPKvec_a, double[,] ConsCartes_a) = CalculateSPK(GLvec_a);
+
+            double[,] SPKMat_a = new double[2, 2] { { SPKvec_a[0], SPKvec_a[2] }, { SPKvec_a[2], SPKvec_a[1] } };
+            double[,] FPKrve_a = TransformSPKvecToFPK(F_rve_case_a, SPKMat_a);
+
+            double[,] Cinpk_a = ExpandCijrs(ConsCartes_a);
+
+            double[,] Aijkl_rve_a = TransformCinpk(Cinpk_a, F_rve_case_a, SPKMat_a/*,...*/);
+            #endregion
+
             var cartes_to_Gi = CalculateRotationMatrix(Gi, eye);
             var cartes_to_tgi = CalculateRotationMatrix(tgi, eye);
 
             FPKrve = new double[3, 3] { { FPKrve[0, 0], FPKrve[0, 1], 0 }, { FPKrve[1, 0], FPKrve[1, 1], 0 }, { 0, 0, 0 } };
             double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPKrve, cartes_to_Gi, cartes_to_tgi);// 1);
 
-            var ch01_FPK_3D = Calculate3DtensorFrom2D(new double[2, 2] { { FPKrve[0, 0], FPKrve[0, 1] }, { FPKrve[1, 0], FPKrve[1, 1] } }, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }),
+            double[,] FPK_3D_tr_basis = Transform_FPK_rve_To_FPK_3D(FPKrve, cartes_to_tgi, cartes_to_Gi);// 1); 
+
+            var FPKrve_coeffs = tensorOrder2.CopyBasis(FPKrve);
+
+            tensorOrder2 FPKtensor = new tensorOrder2(FPKrve_coeffs, Ei, ei);
+            var FPKtensorProjected = SPKtensor.ProjectIn3DCartesianBasis();
+
+
+
+            #region more case a calculations
+            var cartes_to_G_i = CalculateRotationMatrix(G_i, eye);
+            FPKrve_a = new double[3, 3] { { FPKrve_a[0, 0], FPKrve_a[0, 1], 0 }, { FPKrve_a[1, 0], FPKrve_a[1, 1], 0 }, { 0, 0, 0 } };
+            double[,] FPK_3D_a = Transform_FPK_rve_To_FPK_3D(FPKrve_a, cartes_to_Gi, cartes_to_tgi);// 1);
+
+            double[,] FPK_3D_tr_basis_a = Transform_FPK_rve_To_FPK_3D(FPKrve_a, cartes_to_tgi, cartes_to_Gi);// 1); 
+
+            #endregion
+
+
+            var ch01_FPK_3D = Calculate3DtensorFrom2D(new double[2, 2] { { FPKrve[0, 0], FPKrve[0, 1] }, { FPKrve[1, 0], FPKrve[1, 1] } },
+                Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }),
             Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
+                //var ch02_FPK_3D = Calculate3DtensorFrom2D(new double[2, 2] { { FPKrve[0, 0], FPKrve[0, 1] }, { FPKrve[1, 0], FPKrve[1, 1] } },
+                //    Vector.CreateFromArray(new double[] { Ei[0, 0], Ei[1, 0], Ei[2, 0] }), Vector.CreateFromArray(new double[] { Ei[0, 1], Ei[1, 1], Ei[2, 1] }),
+                //ei);
+
+            double[,] ch02_FPK_3D = Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(new double[,] { { FPKrve[0, 0], FPKrve[0, 1], 0 }, { FPKrve[1, 0], FPKrve[1, 1], 0 }, { 0, 0, 0 } }, Vector.CreateFromArray(new double[] { Ei[0, 0], Ei[1, 0], Ei[2, 0] }), Vector.CreateFromArray(new double[] { Ei[0, 1], Ei[1, 1], Ei[2, 1] }),
+                Vector.CreateFromArray(new double[] { Ei[0, 2], Ei[1, 2], Ei[2, 2] }), new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }, new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }, new double[] { ei[0, 2], ei[1, 2], ei[2, 2] });
+            double[] ch02_FPK_3D_vec = new double[9] { ch02_FPK_3D[0, 0], ch02_FPK_3D[1, 1], ch02_FPK_3D[2, 2], ch02_FPK_3D[0, 1], ch02_FPK_3D[1, 2], ch02_FPK_3D[2, 0], ch02_FPK_3D[0, 2], ch02_FPK_3D[1, 0], ch02_FPK_3D[2, 1] };
+
+            tensorOrder2 ch03_FPK_3D = new tensorOrder2() { basis1 = Ei, basis2 = ei, coefficients = new double[,] { { FPKrve[0, 0], FPKrve[0, 1], 0 }, { FPKrve[1, 0], FPKrve[1, 1], 0 }, { 0, 0, 0 } } };
+
+            //FPK_3D = ch01_FPK_3D;
+
+            var ch01_GL_3D = Calculate3DtensorFrom2D(new double[2, 2] { { GLvec[0], 0.5 * GLvec[2] }, { 0.5 * GLvec[2], GLvec[1] } }, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }),
+            Ei);
+            var ch01_SPKMat_3D = Calculate3DtensorFrom2D(SPKMat, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }),
+            Ei);
+
+            var GL_exte = new double[3, 3] { { GLvec[0], 0.5 * GLvec[2], 0 }, { 0.5 * GLvec[2], GLvec[1], 0 }, { 0, 0, 0 } };
+
+            var SPK_exte = new double[3, 3] { { SPKvec[0], SPKvec[2], 0 }, { SPKvec[2], SPKvec[1], 0 }, { 0, 0, 0 } };
+
+            var GL3D = Transform_FPK_rve_To_FPK_3D(GL_exte, cartes_to_Gi, cartes_to_tgi);
+
+            var SPKMat3D = Transform_FPK_rve_To_FPK_3D(SPK_exte, cartes_to_Gi, cartes_to_tgi);
+
+
 
             var Qpi = CalculateRotationMatrix(eye, tgi);
             var Qqj = CalculateRotationMatrix(eye, Gi);
@@ -930,15 +1087,19 @@ namespace ISAAR.MSolve.Materials
 
             var Aijkl_3D = Transform_Aijkl_rve_to_Aijkl_3D(Aijkl_rve, Qpi, Qqj, Qrk, Qsl);
             //var Aijkl_3D = Transform_Aijkl_rve_to_Aijkl_3D(Aijkl_rve, Qqj, Qpi, Qsl, Qrk);
+            double[] FPK_3D_a_vec = new double[9] { FPK_3D_a[0, 0], FPK_3D_a[1, 1], FPK_3D_a[2, 2], FPK_3D_a[0, 1], FPK_3D_a[1, 2], FPK_3D_a[2, 0], FPK_3D_a[0, 2], FPK_3D_a[1, 0], FPK_3D_a[2, 1] };
 
             double[] FPK_3D_vec = new double[9] { FPK_3D[0, 0], FPK_3D[1, 1], FPK_3D[2, 2], FPK_3D[0, 1], FPK_3D[1, 2], FPK_3D[2, 0], FPK_3D[0, 2], FPK_3D[1, 0], FPK_3D[2, 1] };
 
-            return (Aijkl_3D, FPK_3D_vec, FPKrve,Ei, Aijkl_rve, ei , F_rve );
+            double[] FPK_3D_tr_basis_a_vec = new double[9] { FPK_3D_tr_basis_a[0, 0], FPK_3D_tr_basis_a[1, 1], FPK_3D_tr_basis_a[2, 2], FPK_3D_tr_basis_a[0, 1], FPK_3D_tr_basis_a[1, 2], FPK_3D_tr_basis_a[2, 0], FPK_3D_tr_basis_a[0, 2], FPK_3D_tr_basis_a[1, 0], FPK_3D_tr_basis_a[2, 1] };
+
+            return (Aijkl_3D, FPK_3D_vec, FPKrve, Ei, Aijkl_rve, ei, F_rve, GL3D, SPKMat3D, ch01_GL_3D, ch01_SPKMat_3D, FPK_3D_tr_basis, FPK_3D_a_vec, FPK_3D_tr_basis_a_vec,
+                ch02_FPK_3D_vec, ch03_FPK_3D, GLtensorProjected, SPKtensorProjected, FPKtensorProjected);
         }
 
         private double[,] CaclculateDefGrad3D(double[] g1__ei, double[] g2__ei, double[] g3__ei, double[] G_1__Ei, double[] G_2__Ei, double[] G_3__Ei)
         {
-            double[,] F = new double[3, 3] { 
+            double[,] F = new double[3, 3] {
                 { g1__ei[0]*G_1__Ei[0]+g2__ei[0]*G_2__Ei[0]+g3__ei[0]*G_3__Ei[0], g1__ei[0]*G_1__Ei[1]+g2__ei[0]*G_2__Ei[1]+g3__ei[0]*G_3__Ei[1], g1__ei[0]*G_1__Ei[2]+g2__ei[0]*G_2__Ei[2]+g3__ei[0]*G_3__Ei[2] },
                 { g1__ei[1]*G_1__Ei[0]+g2__ei[1]*G_2__Ei[0]+g3__ei[1]*G_3__Ei[0], g1__ei[1]*G_1__Ei[1]+g2__ei[1]*G_2__Ei[1]+g3__ei[1]*G_3__Ei[1], g1__ei[1]*G_1__Ei[2]+g2__ei[1]*G_2__Ei[2]+g3__ei[1]*G_3__Ei[2] },
                 { g1__ei[2]*G_1__Ei[0]+g2__ei[2]*G_2__Ei[0]+g3__ei[2]*G_3__Ei[0], g1__ei[2]*G_1__Ei[1]+g2__ei[2]*G_2__Ei[1]+g3__ei[2]*G_3__Ei[1], g1__ei[2]*G_1__Ei[2]+g2__ei[2]*G_2__Ei[2]+g3__ei[2]*G_3__Ei[2] },
@@ -972,6 +1133,139 @@ namespace ISAAR.MSolve.Materials
             }
 
             return tensor3D;
+        }
+
+        private (double[] G_1, double[] G_2, double[] G_3) CalculateContravariants(Vector g1, Vector g2, Vector a3)
+        {
+            var auxMatrix1 = Matrix.CreateZero(3, 3);  //auxMatrix: covariant metric coefficients gab
+            auxMatrix1[0, 0] = g1.DotProduct(g1);
+            auxMatrix1[0, 1] = g1.DotProduct(g2);
+            auxMatrix1[0, 2] = g1.DotProduct(a3);
+            auxMatrix1[1, 0] = g2.DotProduct(g1);
+            auxMatrix1[1, 1] = g2.DotProduct(g2);
+            auxMatrix1[1, 2] = g2.DotProduct(a3);
+            auxMatrix1[2, 0] = a3.DotProduct(g1);
+            auxMatrix1[2, 1] = a3.DotProduct(g2);
+            auxMatrix1[2, 2] = a3.DotProduct(a3);
+            Matrix inverse = auxMatrix1.Invert(); //inverse: contravariant metric coefficients g_ab (ekthetis ta a,b)
+                                                  //TODO: auxMatrix1.Invert2x2AndDeterminant(1e-20) for bad geometry
+
+            //Contravariant base vectors
+            double[][] G_i = new double[3][];
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                G_i[i1] = new double[3];
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    G_i[i1][i2] = inverse[i1, 0] * g1[i2] + inverse[i1, 1] * g2[i2] + inverse[i1, 2] * a3[i2];
+                }
+            }
+
+            return (G_i[0], G_i[1], G_i[2]);
+        }
+
+        private double[,] Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(double[,] eye3, Vector dg1_dr, Vector dg2_dr, Vector da3_dr, double[] G_1, double[] G_2, double[] G_3)
+        {
+            //double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
+
+            #region create and normalise ei
+            double[,] ei = new double[3, 3];
+            double norm_e1 = dg1_dr[0] * dg1_dr[0] + dg1_dr[1] * dg1_dr[1] + dg1_dr[2] * dg1_dr[2];
+            norm_e1 = Math.Sqrt(norm_e1);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 0] = dg1_dr[i2] / norm_e1;
+            }
+
+            double norm_e2 = dg2_dr[0] * dg2_dr[0] + dg2_dr[1] * dg2_dr[1] + dg2_dr[2] * dg2_dr[2];
+            norm_e2 = Math.Sqrt(norm_e2);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 1] = dg2_dr[i2] / norm_e2;
+            }
+
+            double norm_e3 = da3_dr[0] * da3_dr[0] + da3_dr[1] * da3_dr[1] + da3_dr[2] * da3_dr[2];
+            norm_e3 = Math.Sqrt(norm_e3);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 2] = da3_dr[i2] / norm_e3;
+            }
+            #endregion
+
+            #region adapt FPK_2D for normalisation of basis vectors
+
+            double coef1 = 0;
+            double coef2 = 0;
+            double[,] FPK_2D_in_normalised = new double[3, 3];
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                if (i1 == 0) { coef1 = norm_e1; }
+                else if (i1 == 1) { coef1 = norm_e2; }
+                else if (i1 == 2) { coef1 = norm_e3; }
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    //if (i2 == 0) { coef2 = norm_e1; }
+                    //else if (i2 == 1) { coef2 = norm_e2; }
+
+                    //FPK_2D_in_normalised[i1, i2] = FPK_2D[i1, i2] * coef1 * coef2;
+                    FPK_2D_in_normalised[i1, i2] = eye3[i1, i2] * coef1;// * coef2;
+                }
+            }
+            #endregion
+
+            #region create and normalise Ei
+            double[,] Ei = new double[3, 3];
+            double norm_E1 = G_1[0] * G_1[0] + G_1[1] * G_1[1] + G_1[2] * G_1[2];
+            norm_E1 = Math.Sqrt(norm_E1);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                Ei[i2, 0] = G_1[i2] / norm_E1;
+            }
+
+            double norm_E2 = G_2[0] * G_2[0] + G_2[1] * G_2[1] + G_2[2] * G_2[2];
+            norm_E2 = Math.Sqrt(norm_E2);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                Ei[i2, 1] = G_2[i2] / norm_E2;
+            }
+
+            double norm_E3 = G_3[0] * G_3[0] + G_3[1] * G_3[1] + G_3[2] * G_3[2];
+            norm_E3 = Math.Sqrt(norm_E3);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                Ei[i2, 2] = G_3[i2] / norm_E3;
+            }
+            #endregion
+
+            #region adapt FPK_2D for normalisation of basis vectors
+
+            //double coef1 = 0;
+            //double coef2 = 0;
+            //double[,] FPK_2D_in_normalised = new double[3, 3];
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    if (i2 == 0) { coef2 = norm_E1; }
+                    else if (i2 == 1) { coef2 = norm_E2; }
+                    else if (i2 == 2) { coef2 = norm_E3; }
+
+                    //FPK_2D_in_normalised[i1, i2] = FPK_2D[i1, i2] * coef1 * coef2;
+                    FPK_2D_in_normalised[i1, i2] = FPK_2D_in_normalised[i1, i2] * coef2;
+                }
+            }
+            #endregion
+
+            double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
+            var cartes_to_Gi = CalculateRotationMatrix(Ei, eye);
+            var cartes_to_tgi = CalculateRotationMatrix(ei, eye);
+
+            double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPK_2D_in_normalised, cartes_to_Gi, cartes_to_tgi);// 1);
+
+
+
+            return FPK_3D;
         }
     }
 }

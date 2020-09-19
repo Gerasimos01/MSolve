@@ -87,7 +87,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
         public double[,] CalculateDisplacementsForPostProcessing(Element element, Matrix localDisplacements)
         {
-            var nurbsElement = (NurbsKirchhoffLoveShellElementNLDevelop) element;
+            var nurbsElement = (NurbsKirchhoffLoveShellElementNLDevelop)element;
             var knotParametricCoordinatesKsi = Vector.CreateFromArray(Knots.Select(k => k.Ksi).ToArray());
             var knotParametricCoordinatesHeta = Vector.CreateFromArray(Knots.Select(k => k.Heta).ToArray());
 
@@ -95,7 +95,7 @@ namespace ISAAR.MSolve.IGA.Elements
                 knotParametricCoordinatesHeta);
 
             var knotDisplacements = new double[4, 3];
-            var paraviewKnotRenumbering = new int[] {0, 3, 1, 2};
+            var paraviewKnotRenumbering = new int[] { 0, 3, 1, 2 };
             for (var j = 0; j < knotDisplacements.GetLength(0); j++)
             {
                 for (int i = 0; i < element.ControlPoints.Count(); i++)
@@ -116,7 +116,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
         public double[] CalculateForces(IElement element, double[] localDisplacements, double[] localdDisplacements)
         {
-            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop) element;
+            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop)element;
             var elementNodalForces = new double[shellElement.ControlPointsDictionary.Count * 3];
             var elementNodalMembraneForces = new double[shellElement.ControlPointsDictionary.Count * 3];
             var elementNodalBendingForces = new double[shellElement.ControlPointsDictionary.Count * 3];
@@ -134,6 +134,7 @@ namespace ISAAR.MSolve.IGA.Elements
             var BendingMoments = new Forces();
 
             var forcesDevelop = new double[shellElement.ControlPointsDictionary.Count * 3];
+            var forcesDevelop_v2 = new double[shellElement.ControlPointsDictionary.Count * 3];
 
 
 
@@ -351,6 +352,7 @@ namespace ISAAR.MSolve.IGA.Elements
                 double[,] thicknesCoeffs = new double[thicknessGPoints.Count(), 3]; //[thickness,dof]
                 for (int i1 = 0; i1 < thicknessPoints.Count; i1++)
                 {
+                    var contributionsVec = new double[forcesDevelop.Length];
                     var thicknessPoint = thicknessPoints[i1];
                     var material = materialsAtThicknessGP[gaussPoints[j]][thicknessPoints[i1]];
                     var w = thicknessPoint.WeightFactor;
@@ -403,7 +405,84 @@ namespace ISAAR.MSolve.IGA.Elements
 
                     //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, G_i, F_3D);
                     //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, Gi, F_3D);
-                    (double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, _, _, double[,] ei, double[,] F_rve) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
+                    //(double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, _, _, double[,] ei, double[,] F_rve) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
+                    (double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, double[,] Ei, _, double[,] ei, double[,] F_rve, double[,] GL3D, double[,] SPKMat3D,
+                            double[,] ch01_GL_3D, double[,] ch01_SPKMat_3D, double[,] FPK_3D_tr_basis, double[] FPK_3D_a_vec, double[] FPK_3D_tr_basis_a_vec,
+                            double[] ch02_FPK_3D_vec, tensorOrder2 ch03_FPK_3D, tensorOrder2 GLtensorProjected2, tensorOrder2 SPKtensorProjected2, tensorOrder2 FPKtensorProjected2
+                            ) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
+
+                    double[,] ch_F_3D = Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }, g1, g2, a3, G_1, G_2, G_3);
+
+                    double[,] ch_GL_3D = transformations.Transform3DDefGradToGL(ch_F_3D);
+
+                    double[,] ch_F_3D__2 = new double[3, 3] { { g1[0]*G_1[0]+g2[0]*G_2[0]+a3[0]*G_3[0], g1[0]*G_1[1]+g2[0]*G_2[1]+a3[0]*G_3[1], g1[0]*G_1[2]+g2[0]*G_2[2]+a3[0]*G_3[0] },
+                                                               { g1[1]*G_1[0]+g2[1]*G_2[0]+a3[1]*G_3[0], g1[1]*G_1[1]+g2[1]*G_2[1]+a3[1]*G_3[1], g1[1]*G_1[2]+g2[1]*G_2[2]+a3[1]*G_3[0] },
+                                                               { g1[2]*G_1[0]+g2[2]*G_2[0]+a3[2]*G_3[0], g1[2]*G_1[1]+g2[2]*G_2[1]+a3[2]*G_3[1], g1[2]*G_1[2]+g2[2]*G_2[2]+a3[2]*G_3[0] },
+                        };
+
+
+                    double[,] ch_GL_3D__2 = transformations.Transform3DDefGradToGL(ch_F_3D__2);
+
+                    tensorOrder2 GLtensorProjected;
+                    tensorOrder2 SPKtensorProjected = new tensorOrder2();
+                    tensorOrder2 defGradTensor = new tensorOrder2();
+                    var defGradTensorTr = new tensorOrder2();
+                    tensorOrder2 FPKtensorProjected = new tensorOrder2();
+                    tensorOrder2 SPKtensor = new tensorOrder2();
+
+                    bool moreChecks = true;
+                    if (moreChecks)
+                    {
+                        var GL_coeffs = new double[3, 3]
+                        {
+                                {g1.DotProduct(g1)-G1.DotProduct(G1),g1.DotProduct(g2)-G1.DotProduct(G2),g1.DotProduct(a3)-G1.DotProduct(a3_init) },
+                                {g2.DotProduct(g1)-G2.DotProduct(G1),g2.DotProduct(g2)-G2.DotProduct(G2),g2.DotProduct(a3)-G2.DotProduct(a3_init) },
+                                {a3.DotProduct(g1)-a3_init.DotProduct(G1),a3.DotProduct(g2)-a3_init.DotProduct(G2),a3.DotProduct(a3)-a3_init.DotProduct(a3_init) },
+                        };
+
+                        tensorOrder2 GLtensor = new tensorOrder2(GL_coeffs);
+                        GLtensor = GLtensor.Scale(0.5);
+
+                        GLtensor.ReplaceBasisWithVector(G_1, G_2, G_3, true);
+                        GLtensor.ReplaceBasisWithVector(G_1, G_2, G_3, false);
+
+                        GLtensorProjected = GLtensor.ProjectIn3DCartesianBasis();
+
+                        var materialaux_ = material.Clone();
+                        materialaux_.TangentVectorV1 = material.TangentVectorV1;
+                        materialaux_.TangentVectorV2 = material.TangentVectorV2;
+                        materialaux_.NormalVectorV3 = material.NormalVectorV3;
+
+                        materialaux_.UpdateMaterial(new double[] { GLtensor.coefficients[0, 0], GLtensor.coefficients[1, 1], 2 * GLtensor.coefficients[0, 1] });
+
+                        var stresses = materialaux_.Stresses;
+
+                        var SPK_coeffs = new double[3, 3]
+                        {
+                                {stresses[0], stresses[2], 0 },
+                                {stresses[2], stresses[1], 0 },
+                                {0,0,0 },
+                        };
+
+                        SPKtensor = new tensorOrder2(SPK_coeffs);
+
+                        SPKtensor.ReplaceBasisWithVector(G1, G2, a3_init, true);
+                        SPKtensor.ReplaceBasisWithVector(G1, G2, a3_init, false);
+
+                        SPKtensorProjected = SPKtensor.ProjectIn3DCartesianBasis();
+
+                        defGradTensor = new tensorOrder2(ch_F_3D);
+
+                        defGradTensorTr = defGradTensor.Transpose();
+
+                        var FPKtensor = SPKtensorProjected.SingleContract(defGradTensorTr);
+
+                        FPKtensorProjected = FPKtensor.ProjectIn3DCartesianBasis();
+
+
+
+                    }
+
 
                     if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
                     {
@@ -488,6 +567,27 @@ namespace ISAAR.MSolve.IGA.Elements
                             Vector dg1_dr = a1r.GetColumn(r1) + da3_dksidr[r1] * z;
                             Vector dg2_dr = a2r.GetColumn(r1) + da3_dhetadr[r1] * z;
 
+                            var Eab_dr_coeffs = new double[2, 2];
+                            bool check1 = true;
+                            if (check1)
+                            {
+                                Eab_dr_coeffs = new double[2, 2]
+                                {
+                                {dg1_dr.DotProduct(g1)+g1.DotProduct(dg1_dr),dg1_dr.DotProduct(g2)+g1.DotProduct(dg2_dr) },
+                                {dg2_dr.DotProduct(g1)+g2.DotProduct(dg1_dr),dg2_dr.DotProduct(g2)+g2.DotProduct(dg2_dr) },
+
+                                };
+
+                                for (int j1 = 0; j1 < 2; j1++)
+                                {
+                                    for (int j2 = 0; j2 < 2; j2++)
+                                    {
+                                        Eab_dr_coeffs[j1, j2] = 0.5 * Eab_dr_coeffs[j1, j2];
+                                    }
+                                }
+
+                            }
+
                             //Vector dg3_dr = a3r. ....
 
                             //(39)
@@ -495,7 +595,25 @@ namespace ISAAR.MSolve.IGA.Elements
                                                                  { dg1_dr[1]*G_1[0]+dg2_dr[1]*G_2[0], dg1_dr[1]*G_1[1]+dg2_dr[1]*G_2[1], dg1_dr[1]*G_1[2]+dg2_dr[1]*G_2[2] },
                                                                  { dg1_dr[2]*G_1[0]+dg2_dr[2]*G_2[0], dg1_dr[2]*G_1[1]+dg2_dr[2]*G_2[1], dg1_dr[2]*G_1[2]+dg2_dr[2]*G_2[2] }, };
 
+                            Vector da3_dr = CalculateDerivativeOfVectorNormalised(a3_tilde, Vector.CreateFromArray(da3tilde_dr[r1]));
+
                             double[] dF_3D_dr_vec = { dF_3D_dr[0, 0], dF_3D_dr[1, 1], dF_3D_dr[2, 2], dF_3D_dr[0, 1], dF_3D_dr[1, 2], dF_3D_dr[2, 0], dF_3D_dr[0, 2], dF_3D_dr[1, 0], dF_3D_dr[2, 1] };
+
+                            tensorOrder2 dF3Dtensor_dr = new tensorOrder2()
+                            {
+                                basis1 = new double[,] { { dg1_dr[0], dg2_dr[0], da3_dr[0] }, { dg1_dr[1], dg2_dr[1], da3_dr[1] }, { dg1_dr[2], dg2_dr[2], da3_dr[2] } },
+                                basis2 = new double[,] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } },
+                                coefficients = new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }
+                            };
+
+                            tensorOrder2 dF3Dtensor_dr_Tr = dF3Dtensor_dr.Transpose();
+
+                            var tensor1 = dF3Dtensor_dr_Tr.SingleContract(defGradTensor).ProjectIn3DCartesianBasis();
+                            var tensor2 = defGradTensorTr.SingleContract(dF3Dtensor_dr).ProjectIn3DCartesianBasis();
+
+                            var tensor3 = tensor1.AddTensor(tensor2);
+                            var tensor4 = tensor3.Scale(0.5);
+                            var dGLtensor_dr = tensor4;
 
                             if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
                             { ElementStiffnesses.ProccessVariable(18, dF_3D_dr_vec, true, 3 * i + r1); }
@@ -508,6 +626,12 @@ namespace ISAAR.MSolve.IGA.Elements
                                 forcesDevelop[3 * i + r1] += FPK_3D_vec[i2] * dF_3D_dr_vec[i2] * wfactor * w;
                                 forcesDevelopGp[3 * i + r1] += FPK_3D_vec[i2] * dF_3D_dr_vec[i2] * wfactor * w;
                             }
+
+                            //forcesDevelop_v2[3 * i + r1] += ch03_FPK_3D.doubleContract(dF3Dtensor_dr) * wfactor * w;
+                            forcesDevelop_v2[3 * i + r1] += SPKtensorProjected.doubleContract(dGLtensor_dr) * wfactor * w;
+
+                            double contribution = SPKtensorProjected.doubleContract(dGLtensor_dr) * wfactor * w;
+                            contributionsVec[3 * i + r1] += SPKtensorProjected.doubleContract(dGLtensor_dr) * wfactor * w;
 
                             if ((j == ElementStiffnesses.gpNumberToCheck) && (i == 0) && (r1 == 1) && (i1 == 0))
                             {
@@ -896,7 +1020,10 @@ namespace ISAAR.MSolve.IGA.Elements
 
                         //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, G_i, F_3D);
                         //(double[,] Aijkl_3D, double[] FPK_3D_vec) = transformations.CalculateTransformations(tgi, Gi, F_3D);
-                        (double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, _, _, double[,] ei, double[,] F_rve) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
+                        (double[,] Aijkl_3D, double[] FPK_3D_vec, double[,] FPK_2D, double[,] Ei, _, double[,] ei, double[,] F_rve, double[,] GL3D, double[,] SPKMat3D,
+                             double[,] ch01_GL_3D, double[,] ch01_SPKMat_3D, double[,] FPK_3D_tr_basis, double[] FPK_3D_a_vec, double[] FPK_3D_tr_basis_a_vec,
+                             double[] ch02_FPK_3D_vec, tensorOrder2 ch03_FPK_3D, tensorOrder2 GLtensorProjected2, tensorOrder2 SPKtensorProjected2, tensorOrder2 FPKtensorProjected2
+                             ) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
 
                         if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0))
                         {
@@ -982,7 +1109,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
         private (double[] G_1, double[] G_2, double[] G_3) CalculateContravariants(Vector g1, Vector g2, Vector a3)
         {
-            var auxMatrix1 = Matrix.CreateZero(3,3);  //auxMatrix: covariant metric coefficients gab
+            var auxMatrix1 = Matrix.CreateZero(3, 3);  //auxMatrix: covariant metric coefficients gab
             auxMatrix1[0, 0] = g1.DotProduct(g1);
             auxMatrix1[0, 1] = g1.DotProduct(g2);
             auxMatrix1[0, 2] = g1.DotProduct(a3);
@@ -1143,7 +1270,7 @@ namespace ISAAR.MSolve.IGA.Elements
             return (da3tilde_dksidr, da3tilde_dhetadr);
         }
 
-        private (Vector da3tilde_dksi, Vector da3tilde_dheta, double da3norm_dksi, double da3norm_dheta, Vector da3_dksi, Vector da3_dheta) 
+        private (Vector da3tilde_dksi, Vector da3tilde_dheta, double da3norm_dksi, double da3norm_dheta, Vector da3_dksi, Vector da3_dheta)
             Calculate_da3tilde_dksi_524_525_526_b(Vector a1, Vector a2, Vector a11, Vector a22, Vector a12, Vector a3, double normA3)
         {
             var da3tilde_dksi = a11.CrossProduct(a2) + a1.CrossProduct(a12);
@@ -1190,7 +1317,7 @@ namespace ISAAR.MSolve.IGA.Elements
         public Tuple<double[], double[]> CalculateStresses(IElement element, double[] localDisplacements,
             double[] localdDisplacements)
         {
-            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop) element;
+            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop)element;
             var elementControlPoints = shellElement.ControlPoints.ToArray();
             var nurbs = CalculateShapeFunctions(shellElement, elementControlPoints);
 
@@ -1223,7 +1350,7 @@ namespace ISAAR.MSolve.IGA.Elements
                 surfaceBasisVector3[0] /= J1;
                 surfaceBasisVector3[1] /= J1;
                 surfaceBasisVector3[2] /= J1;
-                
+
                 var surfaceBasisVectorDerivative1 = CalculateSurfaceBasisVector1(hessianMatrix, 0);
                 var surfaceBasisVectorDerivative2 = CalculateSurfaceBasisVector1(hessianMatrix, 1);
                 var surfaceBasisVectorDerivative12 = CalculateSurfaceBasisVector1(hessianMatrix, 2);
@@ -1263,7 +1390,7 @@ namespace ISAAR.MSolve.IGA.Elements
                           surfaceBasisVector1[2] * surfaceBasisVector2[2];
 
 
-                var membraneStrain = new double[] {0.5 * (a11 - A11), 0.5 * (a22 - A22), a12 - A12};
+                var membraneStrain = new double[] { 0.5 * (a11 - A11), 0.5 * (a22 - A22), a12 - A12 };
 
                 if (j == ElementStiffnesses.gpNumberToCheck)
                 {
@@ -1305,7 +1432,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     ElementStiffnesses.ProccessVariable(5, bendingStrain, false);
                 }
 
-                
+
 
                 foreach (var keyValuePair in materialsAtThicknessGP[midsurfaceGP[j]])
                 {
@@ -1328,7 +1455,7 @@ namespace ISAAR.MSolve.IGA.Elements
         public Dictionary<int, double> CalculateSurfaceDistributedLoad(Element element, IDofType loadedDof,
             double loadMagnitude)
         {
-            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop) element;
+            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop)element;
             var elementControlPoints = shellElement.ControlPoints.ToArray();
             var gaussPoints = CreateElementGaussPoints(shellElement);
             var distributedLoad = new Dictionary<int, double>();
@@ -1368,7 +1495,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
         public Dictionary<int, double> CalculateSurfacePressure(Element element, double pressureMagnitude)
         {
-            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop) element;
+            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop)element;
             var elementControlPoints = shellElement.ControlPoints.ToArray();
             var gaussPoints = CreateElementGaussPoints(shellElement);
             var pressureLoad = new Dictionary<int, double>();
@@ -1460,8 +1587,8 @@ namespace ISAAR.MSolve.IGA.Elements
         internal void IntegratedStressesOverThickness(
             GaussLegendrePoint3D midSurfaceGaussPoint, ref Forces MembraneForces, ref Forces BendingMoments)
         {
-            MembraneForces= new Forces();
-            BendingMoments= new Forces();
+            MembraneForces = new Forces();
+            BendingMoments = new Forces();
             var thicknessPoints = thicknessIntegrationPoints[midSurfaceGaussPoint];
 
             for (int i = 0; i < thicknessPoints.Count; i++)
@@ -1470,7 +1597,7 @@ namespace ISAAR.MSolve.IGA.Elements
                 var material = materialsAtThicknessGP[midSurfaceGaussPoint][thicknessPoints[i]];
                 var w = thicknessPoint.WeightFactor;
                 var z = thicknessPoint.Zeta;
-                MembraneForces.v0+= material.Stresses[0] * w;
+                MembraneForces.v0 += material.Stresses[0] * w;
                 MembraneForces.v1 += material.Stresses[1] * w;
                 MembraneForces.v2 += material.Stresses[2] * w;
 
@@ -1497,14 +1624,14 @@ namespace ISAAR.MSolve.IGA.Elements
 
         private Nurbs2D _nurbs;
 
-        public static bool  runDevelop= false;
+        public static bool runDevelop = false;
         public static bool newMatrix = false;
 
         public static int matrix_vi = 1;
 
         public IMatrix StiffnessMatrix(IElement element)
         {
-            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop) element;
+            var shellElement = (NurbsKirchhoffLoveShellElementNLDevelop)element;
             var gaussPoints = materialsAtThicknessGP.Keys.ToArray();
             var nurbs = CalculateShapeFunctions(shellElement, _controlPoints);
 
@@ -1515,7 +1642,7 @@ namespace ISAAR.MSolve.IGA.Elements
             }
 
             var elementControlPoints = CurrentControlPoint(_controlPoints);
-            
+
             var bRows = 3;
             var bCols = elementControlPoints.Length * 3;
             var stiffnessMatrix = new double[bCols, bCols];
@@ -1559,8 +1686,8 @@ namespace ISAAR.MSolve.IGA.Elements
                     surfaceBasisVector1[0] * surfaceBasisVector2[1] - surfaceBasisVector1[1] * surfaceBasisVector2[0],
                 };
 
-                var J1 = Math.Sqrt(surfaceBasisVector3[0]* surfaceBasisVector3[0]+
-                                   surfaceBasisVector3[1] * surfaceBasisVector3[1]+
+                var J1 = Math.Sqrt(surfaceBasisVector3[0] * surfaceBasisVector3[0] +
+                                   surfaceBasisVector3[1] * surfaceBasisVector3[1] +
                                    surfaceBasisVector3[2] * surfaceBasisVector3[2]);
 
                 surfaceBasisVector3[0] /= J1;
@@ -1602,12 +1729,12 @@ namespace ISAAR.MSolve.IGA.Elements
 
             if (ElementStiffnesses.saveStiffnessMatrixState)
             {
-                ElementStiffnesses.SaveStiffnessMatrixes((Matrix.CreateFromArray(stiffnessMatrix)- Matrix.CreateFromArray(KmembraneNL_total) - Matrix.CreateFromArray(KbendingNL_total)).CopytoArray2D(),
+                ElementStiffnesses.SaveStiffnessMatrixes((Matrix.CreateFromArray(stiffnessMatrix) - Matrix.CreateFromArray(KmembraneNL_total) - Matrix.CreateFromArray(KbendingNL_total)).CopytoArray2D(),
                     KmembraneNL_total, KbendingNL_total, Matrix.CreateFromArray(KbendingNL_total) + Matrix.CreateFromArray(KmembraneNL_total),
-                     KmembraneL, KbendingL,element);
+                     KmembraneL, KbendingL, element);
             }
 
-            double[,] StiffnessDevelop_v2 = new double[1, 1]; 
+            double[,] StiffnessDevelop_v2 = new double[1, 1];
             double[,] StiffnessDevelop = new double[1, 1];
             double[,] StiffnessDevelop_v3 = new double[1, 1];
             double[,] StiffnessDevelopLinear = new double[1, 1];
@@ -1705,8 +1832,8 @@ namespace ISAAR.MSolve.IGA.Elements
                     var thicknessPoints = thicknessIntegrationPoints[gaussPoints[j]];
                     double[][,] Aijkl_3D_ofGPs = new double[thicknessGPoints.Count()][,];
                     double[][,] FPK_2D_ofGPs = new double[thicknessGPoints.Count()][,];
-                    double[][] FPK_3D_vec_ofGPs = new double[thicknessGPoints.Count()][]; 
-                    double[][] G_1_ofGPs = new double[thicknessGPoints.Count()][]; 
+                    double[][] FPK_3D_vec_ofGPs = new double[thicknessGPoints.Count()][];
+                    double[][] G_1_ofGPs = new double[thicknessGPoints.Count()][];
                     double[][] G_2_ofGPs = new double[thicknessGPoints.Count()][];
                     double[][,] Ei_of_Gps = new double[thicknessGPoints.Count()][,];
                     double[][,] Aijkl_2D_ofGPs = new double[thicknessGPoints.Count()][,];
@@ -1751,7 +1878,8 @@ namespace ISAAR.MSolve.IGA.Elements
 
                         //(Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1]) = transformations.CalculateTransformations(tgi, G_i, F_3D);
                         //(Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1]) = transformations.CalculateTransformations(tgi, Gi, F_3D);
-                        (Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1], FPK_2D_ofGPs[i1], Ei_of_Gps[i1], Aijkl_2D_ofGPs[i1], ei_of_Gps[i1], _ ) = transformations.CalculateTransformationsV2(g1,g2,a3, G1,G2,a3_init,G_1,G_2,G_3);
+                        (Aijkl_3D_ofGPs[i1], FPK_3D_vec_ofGPs[i1], FPK_2D_ofGPs[i1], Ei_of_Gps[i1], Aijkl_2D_ofGPs[i1], ei_of_Gps[i1],
+                            _, /*GL3D, SPKMat3D,*/_,_,_,_ /* ch01_GL_3D, ch01_SPKMat_3D*/, _, _, _, _, _, _, _, _) = transformations.CalculateTransformationsV2(g1, g2, a3, G1, G2, a3_init, G_1, G_2, G_3);
 
                     }
                     #endregion
@@ -1774,7 +1902,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     var da3norm_dhetadrArray = new double[elementControlPoints.Length][];
                     var da3_dksidrArray = new Vector[elementControlPoints.Length][];
                     var da3_dhetadrArray = new Vector[elementControlPoints.Length][];
-                    double[,][] dF_3D_dr_vecArray = new double[3*elementControlPoints.Length, thicknessPoints.Count()][];
+                    double[,][] dF_3D_dr_vecArray = new double[3 * elementControlPoints.Length, thicknessPoints.Count()][];
                     for (int i = 0; i < elementControlPoints.Length; i++)
                     {
                         var a3r = new a3r();
@@ -1815,7 +1943,7 @@ namespace ISAAR.MSolve.IGA.Elements
                             var material = materialsAtThicknessGP[gaussPoints[j]][thicknessPoints[i1]];
                             var w = thicknessPoint.WeightFactor;
                             var z = thicknessPoint.Zeta;
-                            
+
                             for (int r1 = 0; r1 < 3; r1++)
                             {
                                 //(31)
@@ -1824,7 +1952,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
                                 //Vector dg3_dr = a3r. ....
 
-                                var G_1=G_1_ofGPs[i1];
+                                var G_1 = G_1_ofGPs[i1];
                                 var G_2 = G_2_ofGPs[i1];
 
                                 //(39)
@@ -1834,7 +1962,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
                                 //double[] dF_3D_dr_vec =
                                 dF_3D_dr_vecArray[3 * i + r1, i1] = new double[] { dF_3D_dr[0, 0], dF_3D_dr[1, 1], dF_3D_dr[2, 2], dF_3D_dr[0, 1], dF_3D_dr[1, 2], dF_3D_dr[2, 0], dF_3D_dr[0, 2], dF_3D_dr[1, 0], dF_3D_dr[2, 1] };
-                                                             
+
                             }
                             //  (31) 
 
@@ -2026,7 +2154,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                 var ei = ei_of_Gps[i1];
                                 Vector g1 = a1 + da3_dksi.Scale(z);
                                 Vector g2 = a2 + da3_dheta.Scale(z);
-                                Vector e2_init = g2.Scale((double)1/g2.Norm2()); // einai to g2 unit 
+                                Vector e2_init = g2.Scale((double)1 / g2.Norm2()); // einai to g2 unit 
 
                                 for (int r1 = 0; r1 < 3; r1++)
                                 {
@@ -2035,7 +2163,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                     Vector dg2_dr = a2rArray[i].GetColumn(r1) + da3_dhetadrArray[i][r1] * z;
                                     Vector da3_dr = Vector.CreateZero(3);
                                     if (r1 == 0) { da3_dr = Vector.CreateFromArray(new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }); }
-                                    else if(r1==1) { da3_dr = Vector.CreateFromArray(new double[] { a3r.a3r01, a3r.a3r11, a3r.a3r21 }); }
+                                    else if (r1 == 1) { da3_dr = Vector.CreateFromArray(new double[] { a3r.a3r01, a3r.a3r11, a3r.a3r21 }); }
                                     else if (r1 == 2) { da3_dr = Vector.CreateFromArray(new double[] { a3r.a3r02, a3r.a3r12, a3r.a3r22 }); }
 
                                     Vector de1_dr = CalculateDerivativeOfVectorNormalised(g1, dg1_dr);
@@ -2043,7 +2171,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                     Vector de2_dr = CalculateDerivativeOfOrthogonalisedNormalisedCovariantBasis(ei, de1_dr, e2_init, de2_init_dr);
 
 
-                                    
+
 
                                     for (int s1 = 0; s1 < 3; s1++)
                                     {
@@ -2198,7 +2326,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                                     ElementStiffnesses.ProccessVariable(28, dF2D_coefs_dr_vec, true, 3 * i + r1);
                                                     ElementStiffnesses.ProccessVariable(29, dFPK2D_coefs_dr_vec, true, 3 * i + r1);
 
-                                                    
+
 
                                                     ElementStiffnesses.ProccessVariable(30, dFPK_3D_dr_vec_v3, true, 3 * i + r1);
                                                     ElementStiffnesses.ProccessVariable(33, new double[9], true, 3 * i + r1);
@@ -2214,12 +2342,12 @@ namespace ISAAR.MSolve.IGA.Elements
                                             }
                                         }
 
-                                        
+
 
 
                                     }
                                 }
-                                
+
 
                             }
                         }
@@ -2249,13 +2377,13 @@ namespace ISAAR.MSolve.IGA.Elements
         private double[,] Calculate_dFPK_3D_dr(double[,] ei, double[,] Ei, double[,] FPK_2D, double[,] dFPK2D_coefs_dr, double[,] dei_dr)
         {
             var tgi = ei;
-            var   Gi = Ei;
+            var Gi = Ei;
             var eye = new double[3, 3] { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
             var cartes_to_Gi = CalculateRotationMatrix(Gi, eye);
             var cartes_to_tgi = CalculateRotationMatrix(tgi, eye);
             var dcartes_to_tgi_dr = CalculateRotationMatrix(dei_dr, eye);
 
-            var FPK_2D_exte= new double[3, 3] { { FPK_2D[0, 0], FPK_2D[0, 1], 0 }, { FPK_2D[1, 0], FPK_2D[1, 1], 0 }, { 0, 0, 0 } };
+            var FPK_2D_exte = new double[3, 3] { { FPK_2D[0, 0], FPK_2D[0, 1], 0 }, { FPK_2D[1, 0], FPK_2D[1, 1], 0 }, { 0, 0, 0 } };
             var dFPK2D_coefs_dr_exte = new double[3, 3] { { dFPK2D_coefs_dr[0, 0], dFPK2D_coefs_dr[0, 1], 0 }, { dFPK2D_coefs_dr[1, 0], dFPK2D_coefs_dr[1, 1], 0 }, { 0, 0, 0 } };
 
             double[,] dFPK_3D_dr_term1 = Transform_FPK_rve_To_FPK_3D(dFPK2D_coefs_dr_exte, cartes_to_Gi, cartes_to_tgi);// 1);
@@ -2316,7 +2444,7 @@ namespace ISAAR.MSolve.IGA.Elements
             Vector de2_dr = CalculateDerivativeOfVectorNormalised(e2_tilde, de2tilde_dr);
 
             return de2_dr;
-         }
+        }
 
         public double[,] CalculateRotationMatrix(double[,] e_new, double[,] e_old)
         {
@@ -2371,8 +2499,8 @@ namespace ISAAR.MSolve.IGA.Elements
 
             //double[,] Pcontributions = Calculate3DtensorFrom2D(dFPK2D_coefs_dr, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }),
             //   Ei);
-            double[,] Pcontributions=Calculate3DtensorFrom2Dcorrected(dFPK2D_coefs_dr, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }), a3, Ei);
-            
+            double[,] Pcontributions = Calculate3DtensorFrom2Dcorrected(dFPK2D_coefs_dr, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }), a3, Ei);
+
             return (Pcontributions, dF2D_coefs_dr_vec, dFPK2D_coefs_dr_vec, dFPK2D_coefs_dr);
         }
 
@@ -2394,10 +2522,10 @@ namespace ISAAR.MSolve.IGA.Elements
                     {
                         for (int i4 = 0; i4 < 3; i4++)
                         {
-                            tensor3D[i3, i4] = FPK_2D[i1,i2]*leftVec[i3] * rigthVec[i4];
+                            tensor3D[i3, i4] = FPK_2D[i1, i2] * leftVec[i3] * rigthVec[i4];
                         }
                     }
-                    
+
                 }
             }
 
@@ -2442,14 +2570,14 @@ namespace ISAAR.MSolve.IGA.Elements
             norm_e1 = Math.Sqrt(norm_e1);
             for (int i2 = 0; i2 < 3; i2++)
             {
-                ei[i2,0] = dg1_dr[i2] / norm_e1;
+                ei[i2, 0] = dg1_dr[i2] / norm_e1;
             }
 
             double norm_e2 = dg2_dr[0] * dg2_dr[0] + dg2_dr[1] * dg2_dr[1] + dg2_dr[2] * dg2_dr[2];
             norm_e2 = Math.Sqrt(norm_e2);
             for (int i2 = 0; i2 < 3; i2++)
             {
-                ei[i2,1] = dg2_dr[i2] / norm_e2;
+                ei[i2, 1] = dg2_dr[i2] / norm_e2;
             }
 
             double norm_e3 = da3_dr[0] * da3_dr[0] + da3_dr[1] * da3_dr[1] + da3_dr[2] * da3_dr[2];
@@ -2464,11 +2592,11 @@ namespace ISAAR.MSolve.IGA.Elements
 
             double coef1 = 0;
             double coef2 = 0;
-            double[,] FPK_2D_in_normalised = new double[3,3];
+            double[,] FPK_2D_in_normalised = new double[3, 3];
             for (int i1 = 0; i1 < 2; i1++)
             {
                 if (i1 == 0) { coef1 = norm_e1; }
-                else if(i1 == 1) { coef1 = norm_e2; }
+                else if (i1 == 1) { coef1 = norm_e2; }
                 for (int i2 = 0; i2 < 2; i2++)
                 {
                     if (i2 == 0) { coef2 = norm_e1; }
@@ -2485,7 +2613,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
             double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPK_2D_in_normalised, cartes_to_Gi, cartes_to_tgi);// 1);
 
-            
+
 
             return FPK_3D;
         }
@@ -2535,7 +2663,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                         da3tilde_dksidr[r1].Scale(t_ar_coeff) + da3tilde_dksids[s1].Scale(t_as_coeff) + da3tilde_dksi.Scale(t_a_coeff) +
                                         Vector.CreateFromArray(da3tilde_drds[r1, s1].Scale(t_rs_coeff)) + Vector.CreateFromArray(da3tilde_dr[r1].Scale(t_r_coeff)) + Vector.CreateFromArray(da3tilde_ds[s1].Scale(t_s_coeff)) +
                                         a3_tilde.Scale(t_coef);
-                                                         
+
                 }
             }
 
@@ -2570,7 +2698,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
         private (double[,] da3norm_dksidrds, double[,] da3norm_dhetadrds) Calculate_531_c(double J1, Vector[] da3tilde_dksidr, Vector[] da3tilde_dhetadr
             , Vector[] da3tilde_dksids, Vector[] da3tilde_dhetads, Vector a3_tilde, Vector[,] da3tilde_dksidrds, Vector[,] da3tilde_dhetadrds,
-            a3r a3r, a3r a3s, Vector da3_dksi, Vector da3_dheta, Vector a3, double[,][] da3tilde_drds, 
+            a3r a3r, a3r a3s, Vector da3_dksi, Vector da3_dheta, Vector a3, double[,][] da3tilde_drds,
             double[][] da3tilde_dr, double[][] da3tilde_ds, double[] dnorma3_dr, double[] dnorma3_ds, Vector da3tilde_dksi, Vector da3tilde_dheta)
         {
             var da3norm_dksidrds = new double[3, 3];
@@ -2743,7 +2871,7 @@ namespace ISAAR.MSolve.IGA.Elements
                         mem = Bmembrane[k, m];
                         ben = Bbending[k, m];
                         stiffnessMatrix[i, m] += tempm * mem + tempb * ben + tempmb * ben + tempbm * mem;
-                        if(ElementStiffnesses.saveStiffnessMatrixState)
+                        if (ElementStiffnesses.saveStiffnessMatrixState)
                         {
                             KbendingL[i, m] += tempb * ben + tempbm * mem;
                             KmembraneL[i, m] += tempm * mem + tempmb * ben;
@@ -2896,7 +3024,7 @@ namespace ISAAR.MSolve.IGA.Elements
             }
         }
 
-        internal static void CalculateCrossProduct(double[] vector1, double[] vector2, double[] result )
+        internal static void CalculateCrossProduct(double[] vector1, double[] vector2, double[] result)
         {
             result[0] = vector1[1] * vector2[2] - vector1[2] * vector2[1];
             result[1] = vector1[2] * vector2[0] - vector1[0] * vector2[2];
@@ -2916,7 +3044,7 @@ namespace ISAAR.MSolve.IGA.Elements
         internal void CalculateInitialConfigurationData(ControlPoint[] controlPoints,
             Nurbs2D nurbs, IList<GaussLegendrePoint3D> gaussPoints)
         {
-            bool useDifferenetTicknessCovariants = true; 
+            bool useDifferenetTicknessCovariants = true;
             var numberOfGP = gaussPoints.Count;
             InitialJ1 = new double[numberOfGP];
             initialSurfaceBasisVectors1 = new double[numberOfGP][];
@@ -2961,7 +3089,7 @@ namespace ISAAR.MSolve.IGA.Elements
             Calculate_da3tilde_dksi_524_525_526_b(a1_init, a2_init, a11_init, a22_init, a12_init, a3_init, InitialJ1[j]);
 
                 var thicknessPoints = thicknessIntegrationPoints[gaussPoints[j]];
-                for (int i1 = 0; i1 < thicknessPoints.Count ; i1++)
+                for (int i1 = 0; i1 < thicknessPoints.Count; i1++)
                 {
                     var integrationPointMaterial = materialsAtThicknessGP[gaussPoints[j]][thicknessPoints[i1]];
                     //}
@@ -2989,10 +3117,10 @@ namespace ISAAR.MSolve.IGA.Elements
             }
         }
 
-        private a3rs a3rs=new a3rs();
+        private a3rs a3rs = new a3rs();
         private Bab_rs Bab_rs = new Bab_rs();
-        private a3r a3r= new a3r();
-        private a3r a3s= new a3r();
+        private a3r a3r = new a3r();
+        private a3r a3s = new a3r();
         private ControlPoint[] _controlPoints;
 
         internal void CalculateKbendingNL(ControlPoint[] controlPoints,
@@ -3004,14 +3132,14 @@ namespace ISAAR.MSolve.IGA.Elements
             var a3rArray = new a3r[controlPoints.Length];
             for (var i = 0; i < controlPoints.Length; i++)
             {
-                var a3r= new a3r();
+                var a3r = new a3r();
                 var dksi_r = nurbs.NurbsDerivativeValuesKsi[i, j];
                 var dheta_r = nurbs.NurbsDerivativeValuesHeta[i, j];
                 CalculateA3r(surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3, dksi_r,
                     dheta_r, J1, ref a3r);
                 a3rArray[i] = a3r;
             }
-            
+
             for (int i = 0; i < controlPoints.Length; i++)
             {
                 var dksi_r = nurbs.NurbsDerivativeValuesKsi[i, j];
@@ -3049,18 +3177,18 @@ namespace ISAAR.MSolve.IGA.Elements
 
                     var dksi_s = nurbs.NurbsDerivativeValuesKsi[k, j];
                     var dheta_s = nurbs.NurbsDerivativeValuesHeta[k, j];
-                    
+
                     var a3s = a3rArray[k];
-                    a3rs=new a3rs();//Clear struct values
+                    a3rs = new a3rs();//Clear struct values
                     //var a1s = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesKsi[k, j]);
                     //var a2s = Matrix3by3.CreateIdentity().Scale(nurbs.NurbsDerivativeValuesHeta[k, j]);
                     (a3rs a3rsAlternative, var da3tilde_drds, var da3tilde_dr, var da3tilde_ds,
                         double[] dnorma3_dr, double[] dnorma3_ds, double[,] dnorma3_drds, var a3_tilde, var da3_drds) =
-                        Calculate_a3rs(Vector.CreateFromArray(surfaceBasisVector1), Vector.CreateFromArray(surfaceBasisVector2), 
-                            Vector.CreateFromArray(surfaceBasisVector3),J1, dksi_r,dksi_s, dheta_r, dheta_s);
-                    
+                        Calculate_a3rs(Vector.CreateFromArray(surfaceBasisVector1), Vector.CreateFromArray(surfaceBasisVector2),
+                            Vector.CreateFromArray(surfaceBasisVector3), J1, dksi_r, dksi_s, dheta_r, dheta_s);
+
                     Bab_rs Bab_rsAlternative = CalculateBab_rs(surfaceBasisVectorDerivative1, surfaceBasisVectorDerivative2,
-                        surfaceBasisVectorDerivative12,d2Ksi_dr2,d2Ksi_ds2, d2Heta_dr2,d2Heta_ds2, d2KsiHeta_dr2,d2KsiHeta_ds2,
+                        surfaceBasisVectorDerivative12, d2Ksi_dr2, d2Ksi_ds2, d2Heta_dr2, d2Heta_ds2, d2KsiHeta_dr2, d2KsiHeta_ds2,
                         a3rsAlternative, a3r, a3s, da3_drds);
                     Bab_rs = Bab_rsAlternative;
 
@@ -3069,7 +3197,7 @@ namespace ISAAR.MSolve.IGA.Elements
                         if ((ElementStiffnesses.gpNumber == ElementStiffnesses.gpNumberToCheck) && ElementStiffnesses.saveStiffnessMatrixState)
                         {
                             ElementStiffnesses.saveOriginalState = true;
-                            ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }, true, 3 * i+ 0);
+                            ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }, true, 3 * i + 0);
                             ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r01, a3r.a3r11, a3r.a3r21 }, true, 3 * i + 1);
                             ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r02, a3r.a3r12, a3r.a3r22 }, true, 3 * i + 2); ;
 
@@ -3101,7 +3229,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
                             if (i == 0) // ennoume thn paragwgo ws pros r gia k=0 kai gai to x dof
                             {
-                                ElementStiffnesses.ProccessVariable(9,new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }, false);
+                                ElementStiffnesses.ProccessVariable(9, new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }, false);
                                 //ElementStiffnesses.ProccessVariable(9, new double[] { a3rs.a3rs00_0, a3rs.a3rs00_1, a3rs.a3rs00_2 }, true, 3 * k + 0);
                                 //ElementStiffnesses.ProccessVariable(9, new double[] { a3rs.a3rs01_0, a3rs.a3rs01_1, a3rs.a3rs01_2 }, true, 3 * k + 1);
                                 //ElementStiffnesses.ProccessVariable(9, new double[] { a3rs.a3rs02_0, a3rs.a3rs02_1, a3rs.a3rs02_2 }, true, 3 * k + 2);
@@ -3137,7 +3265,7 @@ namespace ISAAR.MSolve.IGA.Elements
         /// <param name="surfaceBasisVectorDerivative12"></param>
         /// <param name="ddksi_r">Second derivative ksi[i,j]</param>
         /// <param name="ddksi_s">Second derivative ksi[k,j]</param>
-        
+
         /// <param name="ddheta_r">Second derivative heta[i,j]</param>
         /// <param name="ddheta_s">Second derivative heta[i,j]</param>
         /// <param name="dksidheta_r">Second derivative ksi and heta[i,j]</param>
@@ -3149,8 +3277,8 @@ namespace ISAAR.MSolve.IGA.Elements
         /// <returns></returns>
         internal static Bab_rs CalculateBab_rs(double[] surfaceBasisVectorDerivative1,
             double[] surfaceBasisVectorDerivative2, double[] surfaceBasisVectorDerivative12,
-            double ddksi_r, double ddksi_s, double ddheta_r, double ddheta_s,  double dksidheta_r,
-            double dksidheta_s,a3rs a3rsAlternative, a3r a3r, a3r a3s, double[,][] da3_drds)
+            double ddksi_r, double ddksi_s, double ddheta_r, double ddheta_s, double dksidheta_r,
+            double dksidheta_s, a3rs a3rsAlternative, a3r a3r, a3r a3s, double[,][] da3_drds)
         {
             var s11 = surfaceBasisVectorDerivative1;
             var s22 = surfaceBasisVectorDerivative2;
@@ -3187,71 +3315,71 @@ namespace ISAAR.MSolve.IGA.Elements
             var Bab_rsAlternative = new Bab_rs();
 
             //...............................[r, s].............[r, s]
-            var da3 = new double[3] {da3_drds[0, 0][0], da3_drds[0, 0][1], da3_drds[0, 0][2]};
+            var da3 = new double[3] { da3_drds[0, 0][0], da3_drds[0, 0][1], da3_drds[0, 0][2] };
             //[A]: 0--> b11rs , a11r ,a11s surfaceBasisVectorDerivative1,   
             //     1--> b22rs , a22r ,a22s surfaceBasisVectorDerivative2, 
             //     2--> b12rs , a12r ,a12s surfaceBasisVectorDerivative12, times x2
             //......................rs[A]..[A}..[r].........s_r.+..[A].[s].........r_s..........................................
-            Bab_rsAlternative.Bab_rs00_0 = ddksi_r*a3sVecs_s0_0 + ddksi_s*a3rVecs_r0_0 + s11[0]*da3[0]+s11[1]*da3[1]+s11[2]*da3[2];
-            Bab_rsAlternative.Bab_rs00_1 = ddheta_r*a3sVecs_s0_0 + ddheta_s*a3rVecs_r0_0 + s22[0]*da3[0]+s22[1]*da3[1]+s22[2]*da3[2]; 
-            Bab_rsAlternative.Bab_rs00_2 = dksidheta_r*a3sVecs_s0_0 + dksidheta_s*a3rVecs_r0_0 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2]
-                                         + dksidheta_r*a3sVecs_s0_0 + dksidheta_s*a3rVecs_r0_0 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2];
+            Bab_rsAlternative.Bab_rs00_0 = ddksi_r * a3sVecs_s0_0 + ddksi_s * a3rVecs_r0_0 + s11[0] * da3[0] + s11[1] * da3[1] + s11[2] * da3[2];
+            Bab_rsAlternative.Bab_rs00_1 = ddheta_r * a3sVecs_s0_0 + ddheta_s * a3rVecs_r0_0 + s22[0] * da3[0] + s22[1] * da3[1] + s22[2] * da3[2];
+            Bab_rsAlternative.Bab_rs00_2 = dksidheta_r * a3sVecs_s0_0 + dksidheta_s * a3rVecs_r0_0 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2]
+                                         + dksidheta_r * a3sVecs_s0_0 + dksidheta_s * a3rVecs_r0_0 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2];
             //...............[r, s]
             da3[0] = da3_drds[0, 1][0]; da3[1] = da3_drds[0, 1][1]; da3[2] = da3_drds[0, 1][2];
             //......................rs[A]..[A}..[r].........s_r.+..[A].[s].........r_s.......................................................................[r,s]
-            Bab_rsAlternative.Bab_rs01_0 = ddksi_r*a3sVecs_s1_0 + ddksi_s*a3rVecs_r0_1 + s11[0]*da3[0]+s11[1]*da3[1]+s11[2]*da3[2];
-            Bab_rsAlternative.Bab_rs01_1 = ddheta_r*a3sVecs_s1_0 + ddheta_s*a3rVecs_r0_1 + s22[0]*da3[0]+s22[1]*da3[1]+s22[2]*da3[2]; 
-            Bab_rsAlternative.Bab_rs01_2 = dksidheta_r*a3sVecs_s1_0 + dksidheta_s*a3rVecs_r0_1 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2]
-                                         + dksidheta_r*a3sVecs_s1_0 + dksidheta_s*a3rVecs_r0_1 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2];
+            Bab_rsAlternative.Bab_rs01_0 = ddksi_r * a3sVecs_s1_0 + ddksi_s * a3rVecs_r0_1 + s11[0] * da3[0] + s11[1] * da3[1] + s11[2] * da3[2];
+            Bab_rsAlternative.Bab_rs01_1 = ddheta_r * a3sVecs_s1_0 + ddheta_s * a3rVecs_r0_1 + s22[0] * da3[0] + s22[1] * da3[1] + s22[2] * da3[2];
+            Bab_rsAlternative.Bab_rs01_2 = dksidheta_r * a3sVecs_s1_0 + dksidheta_s * a3rVecs_r0_1 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2]
+                                         + dksidheta_r * a3sVecs_s1_0 + dksidheta_s * a3rVecs_r0_1 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2];
             //...............[r, s]
             da3[0] = da3_drds[0, 2][0]; da3[1] = da3_drds[0, 2][1]; da3[2] = da3_drds[0, 2][2];
             //......................rs[A]..[A}..[r].........s_r.+..[A].[s]..........r_s............................................................................[r,s]
-            Bab_rsAlternative.Bab_rs02_0 = ddksi_r*a3sVecs_s2_0 + ddksi_s*a3rVecs_r0_2 + s11[0]*da3[0]+s11[1]*da3[1]+s11[2]*da3[2];
-            Bab_rsAlternative.Bab_rs02_1 = ddheta_r*a3sVecs_s2_0 + ddheta_s*a3rVecs_r0_2 + s22[0]*da3[0]+s22[1]*da3[1]+s22[2]*da3[2];
-            Bab_rsAlternative.Bab_rs02_2 = dksidheta_r*a3sVecs_s2_0 + dksidheta_s*a3rVecs_r0_2 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2] 
-                                         + dksidheta_r*a3sVecs_s2_0 + dksidheta_s*a3rVecs_r0_2 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2];
+            Bab_rsAlternative.Bab_rs02_0 = ddksi_r * a3sVecs_s2_0 + ddksi_s * a3rVecs_r0_2 + s11[0] * da3[0] + s11[1] * da3[1] + s11[2] * da3[2];
+            Bab_rsAlternative.Bab_rs02_1 = ddheta_r * a3sVecs_s2_0 + ddheta_s * a3rVecs_r0_2 + s22[0] * da3[0] + s22[1] * da3[1] + s22[2] * da3[2];
+            Bab_rsAlternative.Bab_rs02_2 = dksidheta_r * a3sVecs_s2_0 + dksidheta_s * a3rVecs_r0_2 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2]
+                                         + dksidheta_r * a3sVecs_s2_0 + dksidheta_s * a3rVecs_r0_2 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2];
             //............[r, s]
             da3[0] = da3_drds[1, 0][0]; da3[1] = da3_drds[1, 0][1]; da3[2] = da3_drds[1, 0][2];
             //......................rs[A]..[A}..[r].........s_r.+..[A].[s].........r_s..........................................................................[r,s]
-            Bab_rsAlternative.Bab_rs10_0 = ddksi_r*a3sVecs_s0_1 + ddksi_s*a3rVecs_r1_0 + s11[0]*da3[0]+s11[1]*da3[1]+s11[2]*da3[2];
-            Bab_rsAlternative.Bab_rs10_1 = ddheta_r*a3sVecs_s0_1 + ddheta_s*a3rVecs_r1_0 + s22[0]*da3[0]+s22[1]*da3[1]+s22[2]*da3[2]; 
-            Bab_rsAlternative.Bab_rs10_2 = dksidheta_r*a3sVecs_s0_1 + dksidheta_s*a3rVecs_r1_0 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2] 
-                                         + dksidheta_r*a3sVecs_s0_1 + dksidheta_s*a3rVecs_r1_0 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2];
+            Bab_rsAlternative.Bab_rs10_0 = ddksi_r * a3sVecs_s0_1 + ddksi_s * a3rVecs_r1_0 + s11[0] * da3[0] + s11[1] * da3[1] + s11[2] * da3[2];
+            Bab_rsAlternative.Bab_rs10_1 = ddheta_r * a3sVecs_s0_1 + ddheta_s * a3rVecs_r1_0 + s22[0] * da3[0] + s22[1] * da3[1] + s22[2] * da3[2];
+            Bab_rsAlternative.Bab_rs10_2 = dksidheta_r * a3sVecs_s0_1 + dksidheta_s * a3rVecs_r1_0 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2]
+                                         + dksidheta_r * a3sVecs_s0_1 + dksidheta_s * a3rVecs_r1_0 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2];
             //............[r, s]
             da3[0] = da3_drds[1, 1][0]; da3[1] = da3_drds[1, 1][1]; da3[2] = da3_drds[1, 1][2];
             //......................rs[A]..[A}..[r].........s_r.+..[A].[s].........r_s...........................................................................................[r,s]
-            Bab_rsAlternative.Bab_rs11_0 = ddksi_r*a3sVecs_s1_1 + ddksi_s*a3rVecs_r1_1 + s11[0]*da3[0]+s11[1]*da3[1]+s11[2]*da3[2]; 
-            Bab_rsAlternative.Bab_rs11_1 = ddheta_r*a3sVecs_s1_1 + ddheta_s*a3rVecs_r1_1 + s22[0]*da3[0]+s22[1]*da3[1]+s22[2]*da3[2];
-            Bab_rsAlternative.Bab_rs11_2 = dksidheta_r*a3sVecs_s1_1 + dksidheta_s*a3rVecs_r1_1 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2] 
-                                         + dksidheta_r*a3sVecs_s1_1 + dksidheta_s*a3rVecs_r1_1 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2];
+            Bab_rsAlternative.Bab_rs11_0 = ddksi_r * a3sVecs_s1_1 + ddksi_s * a3rVecs_r1_1 + s11[0] * da3[0] + s11[1] * da3[1] + s11[2] * da3[2];
+            Bab_rsAlternative.Bab_rs11_1 = ddheta_r * a3sVecs_s1_1 + ddheta_s * a3rVecs_r1_1 + s22[0] * da3[0] + s22[1] * da3[1] + s22[2] * da3[2];
+            Bab_rsAlternative.Bab_rs11_2 = dksidheta_r * a3sVecs_s1_1 + dksidheta_s * a3rVecs_r1_1 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2]
+                                         + dksidheta_r * a3sVecs_s1_1 + dksidheta_s * a3rVecs_r1_1 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2];
             //............[r, s]
             da3[0] = da3_drds[1, 2][0]; da3[1] = da3_drds[1, 2][1]; da3[2] = da3_drds[1, 2][2];
             //......................rs[A]..[A}..[r].........s_r.+..[A].[s].........r_s...........................................................................................[r,s].....
-            Bab_rsAlternative.Bab_rs12_0 = ddksi_r*a3sVecs_s2_1 + ddksi_s*a3rVecs_r1_2 + s11[0]*da3[0]+s11[1]*da3[1]+s11[2]*da3[2];
-            Bab_rsAlternative.Bab_rs12_1 = ddheta_r*a3sVecs_s2_1 + ddheta_s*a3rVecs_r1_2 + s22[0]*da3[0]+s22[1]*da3[1]+s22[2]*da3[2];
-            Bab_rsAlternative.Bab_rs12_2 = dksidheta_r*a3sVecs_s2_1 + dksidheta_s*a3rVecs_r1_2 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2] 
-                                         + dksidheta_r*a3sVecs_s2_1 + dksidheta_s*a3rVecs_r1_2 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2];
+            Bab_rsAlternative.Bab_rs12_0 = ddksi_r * a3sVecs_s2_1 + ddksi_s * a3rVecs_r1_2 + s11[0] * da3[0] + s11[1] * da3[1] + s11[2] * da3[2];
+            Bab_rsAlternative.Bab_rs12_1 = ddheta_r * a3sVecs_s2_1 + ddheta_s * a3rVecs_r1_2 + s22[0] * da3[0] + s22[1] * da3[1] + s22[2] * da3[2];
+            Bab_rsAlternative.Bab_rs12_2 = dksidheta_r * a3sVecs_s2_1 + dksidheta_s * a3rVecs_r1_2 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2]
+                                         + dksidheta_r * a3sVecs_s2_1 + dksidheta_s * a3rVecs_r1_2 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2];
             //............[r, s]
             da3[0] = da3_drds[2, 0][0]; da3[1] = da3_drds[2, 0][1]; da3[2] = da3_drds[2, 0][2];
             //......................rs[A]..[A}..[r].........s_r.+..[A].[s].........r_s...........................................................................................[r,s]..
-            Bab_rsAlternative.Bab_rs20_0 = ddksi_r*a3sVecs_s0_2 + ddksi_s*a3rVecs_r2_0 +s11[0]*da3[0]+s11[1]*da3[1]+s11[2]*da3[2];
-            Bab_rsAlternative.Bab_rs20_1 = ddheta_r*a3sVecs_s0_2 + ddheta_s*a3rVecs_r2_0 + s22[0]*da3[0]+s22[1]*da3[1]+s22[2]*da3[2];
-            Bab_rsAlternative.Bab_rs20_2 = dksidheta_r*a3sVecs_s0_2 + dksidheta_s*a3rVecs_r2_0 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2] 
-                                         + dksidheta_r*a3sVecs_s0_2 + dksidheta_s*a3rVecs_r2_0 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2];
+            Bab_rsAlternative.Bab_rs20_0 = ddksi_r * a3sVecs_s0_2 + ddksi_s * a3rVecs_r2_0 + s11[0] * da3[0] + s11[1] * da3[1] + s11[2] * da3[2];
+            Bab_rsAlternative.Bab_rs20_1 = ddheta_r * a3sVecs_s0_2 + ddheta_s * a3rVecs_r2_0 + s22[0] * da3[0] + s22[1] * da3[1] + s22[2] * da3[2];
+            Bab_rsAlternative.Bab_rs20_2 = dksidheta_r * a3sVecs_s0_2 + dksidheta_s * a3rVecs_r2_0 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2]
+                                         + dksidheta_r * a3sVecs_s0_2 + dksidheta_s * a3rVecs_r2_0 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2];
             //............[r, s]
             da3[0] = da3_drds[2, 1][0]; da3[1] = da3_drds[2, 1][1]; da3[2] = da3_drds[2, 1][2];
             //......................rs[A]..[A}..[r].........s_r.+..[A].[s].........r_s...........................................................................................[r,s].
-            Bab_rsAlternative.Bab_rs21_0 = ddksi_r*a3sVecs_s1_2 + ddksi_s*a3rVecs_r2_1 + s11[0]*da3[0]+s11[1]*da3[1]+s11[2]*da3[2];
-            Bab_rsAlternative.Bab_rs21_1 = ddheta_r*a3sVecs_s1_2 + ddheta_s*a3rVecs_r2_1 + s22[0]*da3[0]+s22[1]*da3[1]+s22[2]*da3[2];
-            Bab_rsAlternative.Bab_rs21_2 = dksidheta_r*a3sVecs_s1_2 + dksidheta_s*a3rVecs_r2_1 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2] 
-                                         + dksidheta_r*a3sVecs_s1_2 + dksidheta_s*a3rVecs_r2_1 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2];
+            Bab_rsAlternative.Bab_rs21_0 = ddksi_r * a3sVecs_s1_2 + ddksi_s * a3rVecs_r2_1 + s11[0] * da3[0] + s11[1] * da3[1] + s11[2] * da3[2];
+            Bab_rsAlternative.Bab_rs21_1 = ddheta_r * a3sVecs_s1_2 + ddheta_s * a3rVecs_r2_1 + s22[0] * da3[0] + s22[1] * da3[1] + s22[2] * da3[2];
+            Bab_rsAlternative.Bab_rs21_2 = dksidheta_r * a3sVecs_s1_2 + dksidheta_s * a3rVecs_r2_1 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2]
+                                         + dksidheta_r * a3sVecs_s1_2 + dksidheta_s * a3rVecs_r2_1 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2];
             //............[r, s]
             da3[0] = da3_drds[2, 2][0]; da3[1] = da3_drds[2, 2][1]; da3[2] = da3_drds[2, 2][2];
             //......................rs[A]..[A}..[r].........s_r.+..[A].[s].........r_s...........................................................................................[r,s]..
-            Bab_rsAlternative.Bab_rs22_0 = ddksi_r*a3sVecs_s2_2 + ddksi_s*a3rVecs_r2_2 + s11[0]*da3[0]+s11[1]*da3[1]+s11[2]*da3[2];
-            Bab_rsAlternative.Bab_rs22_1 = ddheta_r*a3sVecs_s2_2 + ddheta_s*a3rVecs_r2_2 + s22[0]*da3[0]+s22[1]*da3[1]+s22[2]*da3[2];
-            Bab_rsAlternative.Bab_rs22_2 = dksidheta_r*a3sVecs_s2_2 + dksidheta_s*a3rVecs_r2_2 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2] 
-                                         + dksidheta_r*a3sVecs_s2_2 + dksidheta_s*a3rVecs_r2_2 + s12[0]*da3[0]+s12[1]*da3[1]+s12[2]*da3[2];
+            Bab_rsAlternative.Bab_rs22_0 = ddksi_r * a3sVecs_s2_2 + ddksi_s * a3rVecs_r2_2 + s11[0] * da3[0] + s11[1] * da3[1] + s11[2] * da3[2];
+            Bab_rsAlternative.Bab_rs22_1 = ddheta_r * a3sVecs_s2_2 + ddheta_s * a3rVecs_r2_2 + s22[0] * da3[0] + s22[1] * da3[1] + s22[2] * da3[2];
+            Bab_rsAlternative.Bab_rs22_2 = dksidheta_r * a3sVecs_s2_2 + dksidheta_s * a3rVecs_r2_2 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2]
+                                         + dksidheta_r * a3sVecs_s2_2 + dksidheta_s * a3rVecs_r2_2 + s12[0] * da3[0] + s12[1] * da3[1] + s12[2] * da3[2];
 
             return Bab_rsAlternative;
         }
@@ -3402,35 +3530,35 @@ namespace ISAAR.MSolve.IGA.Elements
             a3rsOut.a3rs00_0 = (2 * s30 * aux3 - s30 * aux8) / J1squared;
             a3rsOut.a3rs00_1 = (aux4 + aux5 + 2 * s31 * aux3 - s31 * aux8) / J1squared;
             a3rsOut.a3rs00_2 = -(aux6 + aux7 - 2 * s32 * aux3 + s32 * aux8) / J1squared;
-            
-            a3rsOut.a3rs01_0 = -(aux5 + 2 * s30 * aux9- s30 * aux15) / J1squared;
+
+            a3rsOut.a3rs01_0 = -(aux5 + 2 * s30 * aux9 - s30 * aux15) / J1squared;
             a3rsOut.a3rs01_1 = -(aux13 + 2 * s31 * aux9 - s31 * aux15) / J1squared;
             a3rsOut.a3rs01_2 = aux1Term1 + (aux12 + aux14 - 2 * s32 * aux9 + s32 * aux15) / J1squared;
-            
+
             a3rsOut.a3rs02_0 = (aux7 + 2 * s30 * aux16 + s30 * aux21) / J1squared;
             a3rsOut.a3rs02_1 = aux3Term1 + (aux19 - aux14 + 2 * s31 * aux16 + s31 * aux21) / J1squared;
             a3rsOut.a3rs02_2 = -(aux20 - 2 * s32 * aux16 - s32 * aux21) / J1squared;
-            
+
             a3rsOut.a3rs10_0 = -(aux4 + 2 * s30 * aux22 - s30 * aux27) / J1squared;
             a3rsOut.a3rs10_1 = -(aux24 + 2 * s31 * aux22 - s31 * aux27) / J1squared;
             a3rsOut.a3rs10_2 = aux3Term1 + (aux25 + aux26 - 2 * s32 * aux22 + s32 * aux27) / J1squared;
-            
+
             a3rsOut.a3rs11_0 = (aux13 + aux24 + 2 * s30 * aux28 - s30 * aux32) / J1squared;
             a3rsOut.a3rs11_1 = (2 * s31 * aux28 - s31 * aux32) / J1squared;
-            a3rsOut.a3rs11_2 = -(aux30 + aux31 - 2 * s32 * aux28 + s32 * aux32) /J1squared;
-            
+            a3rsOut.a3rs11_2 = -(aux30 + aux31 - 2 * s32 * aux28 + s32 * aux32) / J1squared;
+
             a3rsOut.a3rs12_0 = aux1Term1 - (aux19 + aux26 + 2 * s30 * aux33 - s30 * aux37) / J1squared;
             a3rsOut.a3rs12_1 = (aux31 - 2 * s31 * aux33 + s31 * aux37) / J1squared;
             a3rsOut.a3rs12_2 = (aux36 - 2 * s32 * aux33 + s32 * aux37) / J1squared;
-            
+
             a3rsOut.a3rs20_0 = (aux6 + 2 * s30 * aux38 + s30 * aux42) / J1squared;
             a3rsOut.a3rs20_1 = aux1Term1 - (aux25 - aux40 - 2 * s31 * aux38 - s31 * aux42) / J1squared;
             a3rsOut.a3rs20_2 = -(aux41 - 2 * s32 * aux38 - s32 * aux42) / J1squared;
-            
+
             a3rsOut.a3rs21_0 = aux3Term1 - (aux12 + aux40 + 2 * s30 * aux43 - s30 * aux46) / J1squared;
             a3rsOut.a3rs21_1 = (aux30 - 2 * s31 * aux43 + s31 * aux46) / J1squared;
             a3rsOut.a3rs21_2 = (aux45 - 2 * s32 * aux43 + s32 * aux46) / J1squared;
-            
+
             a3rsOut.a3rs22_0 = (aux20 + aux41 + 2 * s30 * aux47 - s30 * aux48) / J1squared;
             a3rsOut.a3rs22_1 = -(aux36 + aux45 - 2 * s31 * aux47 + s31 * aux48) / J1squared;
             a3rsOut.a3rs22_2 = (2 * s32 * aux47 - s32 * aux48) / J1squared;
@@ -3438,8 +3566,8 @@ namespace ISAAR.MSolve.IGA.Elements
             #endregion
         }
 
-        internal static (a3rs ,double[,][], double[][], double[][], double[], double[], double[,], double[], double[,][] ) Calculate_a3rs(Vector surfaceBasisVector1, Vector surfaceBasisVector2,
-            Vector surfaceBasisVector3, double J1, 
+        internal static (a3rs, double[,][], double[][], double[][], double[], double[], double[,], double[], double[,][]) Calculate_a3rs(Vector surfaceBasisVector1, Vector surfaceBasisVector2,
+            Vector surfaceBasisVector3, double J1,
             double dKsi_r, double dKsi_s, double dHeta_r, double dHeta_s)
         {
             var da3_drds = new double[3, 3][];
@@ -3459,7 +3587,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
             //5.24
             Calculate_da3tilde_dr(surfaceBasisVector1, surfaceBasisVector2, dKsi_s, dHeta_s, da3tilde_ds);
-            
+
 
             //5.25
             a3_tilde = CalculateTerm525(surfaceBasisVector3, J1, dnorma3_dr, da3tilde_dr, dnorma3_ds, da3tilde_ds);
@@ -3498,7 +3626,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     var firstVec_1 = da3tilde_drds[r1, s1][1] / J1;
                     var firstVec_2 = da3tilde_drds[r1, s1][2] / J1;
 
-                    double scale2 = -((double) 1 / (Math.Pow(J1, 2))); //denominator of vectors 2 3 and 4 and a minus.
+                    double scale2 = -((double)1 / (Math.Pow(J1, 2))); //denominator of vectors 2 3 and 4 and a minus.
 
                     var scale3 = dnorma3_ds[s1] * scale2;
                     var secondVec_0 = da3tilde_dr[r1][0] * scale3;
@@ -3515,7 +3643,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     var fourthVec_1 = a3_tilde[1] * scale6;
                     var fourthVec_2 = a3_tilde[2] * scale6;
 
-                    double scale5 = ((double) 1) / Math.Pow(J1, 3);
+                    double scale5 = ((double)1) / Math.Pow(J1, 3);
 
                     var scale7 = 2 * dnorma3_dr[r1] * dnorma3_ds[s1] * scale5;
                     var fifthvector_0 = a3_tilde[0] * scale7;
@@ -3609,20 +3737,20 @@ namespace ISAAR.MSolve.IGA.Elements
         {
             //da3tilde_drds[r1, s1] = a1r.GetColumn(r1).CrossProduct(a2s.GetColumn(s1)) +
             //                        a1s.GetColumn(s1).CrossProduct(a2r.GetColumn(r1));
-            
-            var dksiRxdHetaS = dKsi_r*dHeta_s;
-            var dHetaRxdKsiS = dHeta_r*dKsi_s;
-            da3tilde_drds[0, 0]= new double[3];
-            da3tilde_drds[0, 1]= new double[]{0,0,dksiRxdHetaS-dHetaRxdKsiS};
-            da3tilde_drds[0, 2]= new double[]{0,dHetaRxdKsiS-dksiRxdHetaS,0};
 
-            da3tilde_drds[1, 0]= new double[]{0,0,dHetaRxdKsiS-dksiRxdHetaS};
-            da3tilde_drds[1, 1]= new double[3];
-            da3tilde_drds[1, 2]= new double[]{dksiRxdHetaS-dHetaRxdKsiS,0,0};
+            var dksiRxdHetaS = dKsi_r * dHeta_s;
+            var dHetaRxdKsiS = dHeta_r * dKsi_s;
+            da3tilde_drds[0, 0] = new double[3];
+            da3tilde_drds[0, 1] = new double[] { 0, 0, dksiRxdHetaS - dHetaRxdKsiS };
+            da3tilde_drds[0, 2] = new double[] { 0, dHetaRxdKsiS - dksiRxdHetaS, 0 };
 
-            da3tilde_drds[2, 0]= new double[]{0,dksiRxdHetaS-dHetaRxdKsiS,0};
-            da3tilde_drds[2, 1]= new double[]{dHetaRxdKsiS-dksiRxdHetaS,0,0};
-            da3tilde_drds[2, 2]= new double[3];
+            da3tilde_drds[1, 0] = new double[] { 0, 0, dHetaRxdKsiS - dksiRxdHetaS };
+            da3tilde_drds[1, 1] = new double[3];
+            da3tilde_drds[1, 2] = new double[] { dksiRxdHetaS - dHetaRxdKsiS, 0, 0 };
+
+            da3tilde_drds[2, 0] = new double[] { 0, dksiRxdHetaS - dHetaRxdKsiS, 0 };
+            da3tilde_drds[2, 1] = new double[] { dHetaRxdKsiS - dksiRxdHetaS, 0, 0 };
+            da3tilde_drds[2, 2] = new double[3];
         }
 
         private static void Calculate_da3tilde_dr(Vector surfaceBasisVector1, Vector surfaceBasisVector2, double dksi_r,
@@ -3630,21 +3758,21 @@ namespace ISAAR.MSolve.IGA.Elements
         {
             //da3tilde_dr[r1] = a1r.GetColumn(r1).CrossProduct(surfaceBasisVector2) + surfaceBasisVector1.CrossProduct(a2r.GetColumn(r1));
 
-            da3tilde_dr[0]=new double[]
+            da3tilde_dr[0] = new double[]
             {
                 0,
                 -dksi_r*surfaceBasisVector2[2]+surfaceBasisVector1[2]*dHeta_r,
                 dksi_r*surfaceBasisVector2[1]-surfaceBasisVector1[1]*dHeta_r
             };
 
-            da3tilde_dr[1]=new double[]
+            da3tilde_dr[1] = new double[]
             {
                dksi_r*surfaceBasisVector2[2]-surfaceBasisVector1[2]*dHeta_r,
                0,
                -dksi_r*surfaceBasisVector2[0]+surfaceBasisVector1[0]*dHeta_r
             };
 
-            da3tilde_dr[2]=new double[]
+            da3tilde_dr[2] = new double[]
             {
                -dksi_r*surfaceBasisVector2[1]+dHeta_r*surfaceBasisVector1[1],
                dksi_r*surfaceBasisVector2[0]-dHeta_r*surfaceBasisVector1[0],
@@ -3652,7 +3780,7 @@ namespace ISAAR.MSolve.IGA.Elements
             };
         }
 
-        internal static (a3rs ,Vector[,], Vector[], Vector[], double[], double[], double[,], Vector, Vector[,] ) Calculate_a3rs_OLD(Vector surfaceBasisVector1, Vector surfaceBasisVector2,
+        internal static (a3rs, Vector[,], Vector[], Vector[], double[], double[], double[,], Vector, Vector[,]) Calculate_a3rs_OLD(Vector surfaceBasisVector1, Vector surfaceBasisVector2,
             Vector surfaceBasisVector3, double J1, Matrix3by3 a1r, Matrix3by3 a2s, Matrix3by3 a1s, Matrix3by3 a2r)
         {
             var da3_drds = new Vector[3, 3];
@@ -3718,7 +3846,7 @@ namespace ISAAR.MSolve.IGA.Elements
                 {
                     Vector firstVec = da3tilde_drds[r1, s1].Scale(((double)1 / J1));
 
-                    double scale2 =-( (double)1 / (Math.Pow(J1, 2))); //denominator of vectors 2 3 and 4 and a minus.
+                    double scale2 = -((double)1 / (Math.Pow(J1, 2))); //denominator of vectors 2 3 and 4 and a minus.
 
                     Vector secondVec = da3tilde_dr[r1].Scale(dnorma3_ds[s1]).Scale(scale2);
 
@@ -3750,7 +3878,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
             return (a3rsAlternative, da3tilde_drds, da3tilde_dr, da3tilde_ds, dnorma3_dr, dnorma3_ds, dnorma3_drds, a3_tilde, da3_drds);
         }
-        
+
         private void CalculateA3r_OLD(double[] surfaceBasisVector1,
             double[] surfaceBasisVector2, double[] surfaceBasisVector3,
             double dksi_r, double dheta_r, double J1, ref a3r da3_unit_dr_out)
@@ -3823,11 +3951,11 @@ namespace ISAAR.MSolve.IGA.Elements
             var s30 = surfaceBasisVector3[0];
             var s31 = surfaceBasisVector3[1];
             var s32 = surfaceBasisVector3[2];
-            
+
             var da3tilde_dr = new double[3][];
             //5.24
-            var a1r= new double[3];
-            var a2r= new double[3];
+            var a1r = new double[3];
+            var a2r = new double[3];
             var sum1 = new double[3];
             var sum2 = new double[3];
 
@@ -3850,8 +3978,8 @@ namespace ISAAR.MSolve.IGA.Elements
             a2r[0] = 0.0;
             a1r[1] = dksi_r;
             a2r[1] = dheta_r;
-            sum1[0] = 0.0;sum1[1] = 0.0;sum1[2] = 0.0;
-            sum2[0] = 0.0;sum2[1] = 0.0;sum2[2] = 0.0;
+            sum1[0] = 0.0; sum1[1] = 0.0; sum1[2] = 0.0;
+            sum2[0] = 0.0; sum2[1] = 0.0; sum2[2] = 0.0;
             CalculateCrossProduct(a1r, surfaceBasisVector2, sum1);
             CalculateCrossProduct(surfaceBasisVector1, a2r, sum2);
 
@@ -3869,8 +3997,8 @@ namespace ISAAR.MSolve.IGA.Elements
             a2r[1] = 0.0;
             a1r[2] = dksi_r;
             a2r[2] = dheta_r;
-            sum1[0] = 0.0;sum1[1] = 0.0;sum1[2] = 0.0;
-            sum2[0] = 0.0;sum2[1] = 0.0;sum2[2] = 0.0;
+            sum1[0] = 0.0; sum1[1] = 0.0; sum1[2] = 0.0;
+            sum2[0] = 0.0; sum2[1] = 0.0; sum2[2] = 0.0;
             CalculateCrossProduct(a1r, surfaceBasisVector2, sum1);
             CalculateCrossProduct(surfaceBasisVector1, a2r, sum2);
 
@@ -3882,7 +4010,7 @@ namespace ISAAR.MSolve.IGA.Elements
             var da3_tilde_dr12 = sum2[1];
             var da3_tilde_dr22 = sum2[2];
 
-            
+
             var dnorma3_dr0 = s30 * da3_tilde_dr00 +
                               s31 * da3_tilde_dr10 +
                               s32 * da3_tilde_dr20;
@@ -3921,7 +4049,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     var dksi_s = nurbs.NurbsDerivativeValuesKsi[k, j];
                     var dheta_s = nurbs.NurbsDerivativeValuesHeta[k, j];
 
-                    
+
                     var aux = membraneForces.v0 * dksi_r * dksi_s +
                               membraneForces.v1 * dheta_r * dheta_s +
                               membraneForces.v2 * (dksi_r * dheta_s + dksi_s * dheta_r);
@@ -3932,7 +4060,7 @@ namespace ISAAR.MSolve.IGA.Elements
                 }
             }
         }
-        
+
         internal void CalculateMembraneDeformationMatrix(int controlPointsCount, Nurbs2D nurbs, int j,
             double[] surfaceBasisVector1, double[] surfaceBasisVector2, double[,] BmembraneOut)
         {
@@ -3948,11 +4076,11 @@ namespace ISAAR.MSolve.IGA.Elements
             {
                 var dKsi = nurbs.NurbsDerivativeValuesKsi[column / 3, j];
                 var dHeta = nurbs.NurbsDerivativeValuesHeta[column / 3, j];
-                
+
                 BmembraneOut[0, column] = dKsi * s1_0;
                 BmembraneOut[0, column + 1] = dKsi * s1_1;
                 BmembraneOut[0, column + 2] = dKsi * s1_2;
-                
+
                 BmembraneOut[1, column] = dHeta * s2_0;
                 BmembraneOut[1, column + 1] = dHeta * s2_1;
                 BmembraneOut[1, column + 2] = dHeta * s2_2;
@@ -3962,7 +4090,7 @@ namespace ISAAR.MSolve.IGA.Elements
                 BmembraneOut[2, column + 2] = dHeta * s1_2 + dKsi * s2_2;
             }
         }
-        
+
         private IList<GaussLegendrePoint3D> CreateElementGaussPoints(NurbsKirchhoffLoveShellElementNLDevelop shellElement)
         {
             var gauss = new GaussQuadrature();
@@ -3988,7 +4116,159 @@ namespace ISAAR.MSolve.IGA.Elements
         private const int ThicknessIntegrationDegree = 2;
 
         public double Thickness { get; set; }
+
+
+        private double[,] Calculate3DtensorFrom2Dcorrected_normaliseBothBasesCase(double[,] eye3, Vector dg1_dr, Vector dg2_dr, Vector da3_dr, double[] G_1, double[] G_2, double[] G_3)
+        {
+            //double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
+
+            #region create and normalise ei
+            double[,] ei = new double[3, 3];
+            double norm_e1 = dg1_dr[0] * dg1_dr[0] + dg1_dr[1] * dg1_dr[1] + dg1_dr[2] * dg1_dr[2];
+            norm_e1 = Math.Sqrt(norm_e1);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 0] = dg1_dr[i2] / norm_e1;
+            }
+
+            double norm_e2 = dg2_dr[0] * dg2_dr[0] + dg2_dr[1] * dg2_dr[1] + dg2_dr[2] * dg2_dr[2];
+            norm_e2 = Math.Sqrt(norm_e2);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 1] = dg2_dr[i2] / norm_e2;
+            }
+
+            double norm_e3 = da3_dr[0] * da3_dr[0] + da3_dr[1] * da3_dr[1] + da3_dr[2] * da3_dr[2];
+            norm_e3 = Math.Sqrt(norm_e3);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 2] = da3_dr[i2] / norm_e3;
+            }
+            #endregion
+
+            #region adapt FPK_2D for normalisation of basis vectors
+
+            double coef1 = 0;
+            double coef2 = 0;
+            double[,] FPK_2D_in_normalised = new double[3, 3];
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                if (i1 == 0) { coef1 = norm_e1; }
+                else if (i1 == 1) { coef1 = norm_e2; }
+                else if (i1 == 2) { coef1 = norm_e3; }
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    //if (i2 == 0) { coef2 = norm_e1; }
+                    //else if (i2 == 1) { coef2 = norm_e2; }
+
+                    //FPK_2D_in_normalised[i1, i2] = FPK_2D[i1, i2] * coef1 * coef2;
+                    FPK_2D_in_normalised[i1, i2] = eye3[i1, i2] * coef1;// * coef2;
+                }
+            }
+            #endregion
+
+            #region create and normalise Ei
+            double[,] Ei = new double[3, 3];
+            double norm_E1 = G_1[0] * G_1[0] + G_1[1] * G_1[1] + G_1[2] * G_1[2];
+            norm_E1 = Math.Sqrt(norm_E1);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                Ei[i2, 0] = G_1[i2] / norm_E1;
+            }
+
+            double norm_E2 = G_2[0] * G_2[0] + G_2[1] * G_2[1] + G_2[2] * G_2[2];
+            norm_E2 = Math.Sqrt(norm_E2);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                Ei[i2, 1] = G_2[i2] / norm_E2;
+            }
+
+            double norm_E3 = G_3[0] * G_3[0] + G_3[1] * G_3[1] + G_3[2] * G_3[2];
+            norm_E3 = Math.Sqrt(norm_E3);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                Ei[i2, 2] = G_3[i2] / norm_E3;
+            }
+            #endregion
+
+            #region adapt FPK_2D for normalisation of basis vectors
+
+            //double coef1 = 0;
+            //double coef2 = 0;
+            //double[,] FPK_2D_in_normalised = new double[3, 3];
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    if (i2 == 0) { coef2 = norm_E1; }
+                    else if (i2 == 1) { coef2 = norm_E2; }
+                    else if (i2 == 2) { coef2 = norm_E3; }
+
+                    //FPK_2D_in_normalised[i1, i2] = FPK_2D[i1, i2] * coef1 * coef2;
+                    FPK_2D_in_normalised[i1, i2] = FPK_2D_in_normalised[i1, i2] * coef2;
+                }
+            }
+            #endregion
+
+            double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
+            var cartes_to_Gi = CalculateRotationMatrix(Ei, eye);
+            var cartes_to_tgi = CalculateRotationMatrix(ei, eye);
+
+            double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPK_2D_in_normalised, cartes_to_Gi, cartes_to_tgi);// 1);
+
+
+
+            return FPK_3D;
+        }
+
+        //public double[,] CalculateRotationMatrix(double[,] e_new, double[,] e_old)
+        //{
+        //    double[,] Qij = new double[3, 3];
+
+        //    for (int i1 = 0; i1 < 3; i1++)
+        //    {
+        //        for (int i2 = 0; i2 < 3; i2++)
+        //        {
+        //            for (int k1 = 0; k1 < 3; k1++)
+        //            {
+        //                Qij[i1, i2] += +e_new[k1, i2] * e_old[k1, i1];
+        //            }
+        //        }
+        //    }
+
+        //    return Qij;
+
+        //}
+        //private double[,] Transform_FPK_rve_To_FPK_3D(double[,] FPKrve, double[,] Qij, double[,] Qij1)
+        //{
+        //    var FPK_rve_times_QijT = new double[3, 3]; // ta loops tou transformation tou FPK apo rve se 3D mporoun na veltistopoiithoun. to FPK_rve einai 2x2
+        //    for (int i1 = 0; i1 < 3; i1++)
+        //    {
+        //        for (int i2 = 0; i2 < 3; i2++)
+        //        {
+        //            for (int k1 = 0; k1 < 3; k1++)
+        //            {
+        //                FPK_rve_times_QijT[i1, i2] += FPKrve[i1, k1] * Qij[i2, k1];
+        //            }
+        //        }
+        //    }
+
+        //    var FPK_3D = new double[3, 3];
+        //    for (int i1 = 0; i1 < 3; i1++)
+        //    {
+        //        for (int i2 = 0; i2 < 3; i2++)
+        //        {
+        //            for (int k1 = 0; k1 < 3; k1++)
+        //            {
+        //                FPK_3D[i1, i2] += Qij1[i1, k1] * FPK_rve_times_QijT[k1, i2];
+        //            }
+        //        }
+        //    }
+
+        //    return FPK_3D;
+        //}
     }
 
-    
-}
+
+    }
