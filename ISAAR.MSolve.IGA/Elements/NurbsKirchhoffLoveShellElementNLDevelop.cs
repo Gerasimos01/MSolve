@@ -112,7 +112,7 @@ namespace ISAAR.MSolve.IGA.Elements
             return knotDisplacements;
         }
 
-        public static bool runNewForces = false;
+        public static bool runNewForces = true;
 
         public double[] CalculateForces(IElement element, double[] localDisplacements, double[] localdDisplacements)
         {
@@ -1655,7 +1655,7 @@ namespace ISAAR.MSolve.IGA.Elements
         public static bool runDevelop = false;
         public static bool newMatrix = false;
 
-        public static int matrix_vi = 1;
+        public static int matrix_vi = 2;
 
         public IMatrix StiffnessMatrix(IElement element)
         {
@@ -2232,6 +2232,32 @@ namespace ISAAR.MSolve.IGA.Elements
 
                                             (double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec, double[] dFPK2D_coefs_dr_vec, double[,] dFPK2D_coefs_dr) = Calculate_FPK_variation_term1(Aijkl_2D, dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
 
+                                            var p_contrib_coeffs_ = new double[3, 3]
+                                            {
+                                                {FPK_2D[0,0] ,FPK_2D[0,1],0 },
+                                                {FPK_2D[1,0] ,FPK_2D[1,1],0  },
+                                                {0,0,0 },
+                                            };
+                                            tensorOrder2 P_contrib_tensor = new tensorOrder2(p_contrib_coeffs_,Ei,ei);
+                                            P_contrib_tensor.ReplaceBasisWithVector(de1_dr, de2_dr, da3_dr, false);
+                                            P_contrib_tensor = P_contrib_tensor.ProjectIn3DCartesianBasis();
+
+
+                                            var p_contrib_term_1_coeffs_ = new double[3, 3]
+                                            {
+                                                {dFPK2D_coefs_dr[0,0] ,dFPK2D_coefs_dr[0,1],0 },
+                                                {dFPK2D_coefs_dr[1,0] ,dFPK2D_coefs_dr[1,1],0 },
+                                                {0,0,0 },
+                                            };
+                                            tensorOrder2 P_contrib_term1_tensor = new tensorOrder2(p_contrib_term_1_coeffs_, Ei, ei);
+                                            P_contrib_term1_tensor = P_contrib_term1_tensor.ProjectIn3DCartesianBasis();
+
+                                            tensorOrder2 dFPK_tensor_dr = P_contrib_tensor.AddTensor(P_contrib_term1_tensor);
+
+                                            double[] dFPK_tensor_dr_vec = { dFPK_tensor_dr.coefficients[0, 0], dFPK_tensor_dr.coefficients[1, 1], dFPK_tensor_dr.coefficients[2, 2], dFPK_tensor_dr.coefficients[0, 1], dFPK_tensor_dr.coefficients[1, 2], dFPK_tensor_dr.coefficients[2, 0], dFPK_tensor_dr.coefficients[0, 2], dFPK_tensor_dr.coefficients[1, 0], dFPK_tensor_dr.coefficients[2, 1] };// 
+
+
+
                                             var Pcontributions_dr_vec = new double[] { Pcontributions[0, 0], Pcontributions[1, 1], Pcontributions[2, 2], Pcontributions[0, 1], Pcontributions[1, 2], Pcontributions[2, 0], Pcontributions[0, 2], Pcontributions[1, 0], Pcontributions[2, 1] };
                                             var Pcontributions_term_1_dr_vec = new double[] { Pcontributions_term_1[0, 0], Pcontributions_term_1[1, 1], Pcontributions_term_1[2, 2], Pcontributions_term_1[0, 1], Pcontributions_term_1[1, 2], Pcontributions_term_1[2, 0], Pcontributions_term_1[0, 2], Pcontributions_term_1[1, 0], Pcontributions_term_1[2, 1] };
 
@@ -2267,10 +2293,17 @@ namespace ISAAR.MSolve.IGA.Elements
                                                     StiffnessDevelopNonLinear[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
                                                 }
 
+                                                //for (int p1 = 0; p1 < 9; p1++)
+                                                //{
+                                                //    StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += Pcontributions_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
+                                                //    StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += Pcontributions_term_1_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
+
+                                                //}
+
                                                 for (int p1 = 0; p1 < 9; p1++)
                                                 {
-                                                    StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += Pcontributions_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
-                                                    StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += Pcontributions_term_1_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
+                                                    StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += dFPK_tensor_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
+                                                    //StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += Pcontributions_term_1_dr_vec[p1] * dF_3D_ds1[p1] * w * wFactor;
 
                                                 }
                                                 #endregion
