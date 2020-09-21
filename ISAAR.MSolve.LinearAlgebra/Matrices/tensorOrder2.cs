@@ -76,7 +76,7 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
             }
         }
 
-        public double doubleContract(tensorOrder2 otherTensor)
+        public double doubleContractCopy1(tensorOrder2 otherTensor)
         {
             double result = 0;
 
@@ -87,6 +87,59 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
                     var dot1 = basis1[0, i1] * otherTensor.basis1[0, i1] + basis1[1, i1] * otherTensor.basis1[1, i1] + basis1[2, i1] * otherTensor.basis1[2, i1];
                     var dot2 = basis2[0, i2] * otherTensor.basis2[0, i2] + basis2[1, i2] * otherTensor.basis2[1, i2] + basis2[2, i2] * otherTensor.basis2[2, i2];
                     result += dot1 * dot2 * coefficients[i1, i2] * otherTensor.coefficients[i1, i2];
+                }
+            }
+
+
+            return result;
+        }
+
+        public double doubleContract(tensorOrder2 otherTensor)
+        {
+            //Dot products
+
+            var EiEk = new double[3, 3];
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    EiEk[i1, i2] = basis1[0, i1] * otherTensor.basis1[0, i2] + basis1[1, i1] * otherTensor.basis1[1, i2] + basis1[2, i1] * otherTensor.basis1[2, i2];
+                }
+            }
+
+            var EjEl = new double[3, 3];
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                for (int i2 = 0; i2 < 3; i2++)
+                {
+                    EjEl[i1, i2] = basis2[0, i1] * otherTensor.basis2[0, i2] + basis2[1, i1] * otherTensor.basis2[1, i2] + basis2[2, i1] * otherTensor.basis2[2, i2];
+                }
+            }
+
+
+            double result = 0;
+
+            //for (int i1 = 0; i1 < 3; i1++)
+            //{
+            //    for (int i2 = 0; i2 < 3; i2++)
+            //    {
+            //        var dot1 = basis1[0, i1] * otherTensor.basis1[0, i1] + basis1[1, i1] * otherTensor.basis1[1, i1] + basis1[2, i1] * otherTensor.basis1[2, i1];
+            //        var dot2 = basis2[0, i2] * otherTensor.basis2[0, i2] + basis2[1, i2] * otherTensor.basis2[1, i2] + basis2[2, i2] * otherTensor.basis2[2, i2];
+            //        result += dot1 * dot2 * coefficients[i1, i2] * otherTensor.coefficients[i1, i2];
+            //    }
+            //}
+
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        for (int l = 0; l < 3; l++)
+                        {
+                            result+= EiEk[i,k] * EjEl[j,l]* coefficients[i,j] * otherTensor.coefficients[k,l];
+                        }
+                    }
                 }
             }
 

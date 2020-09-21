@@ -136,7 +136,7 @@ namespace ISAAR.MSolve.IGA.Elements
             var forcesDevelop = new double[shellElement.ControlPointsDictionary.Count * 3];
             var forcesDevelop_v2 = new double[shellElement.ControlPointsDictionary.Count * 3];
 
-
+            var forcesDevelop_v3 = new double[shellElement.ControlPointsDictionary.Count * 3];
 
             for (int j = 0; j < gaussPoints.Length; j++)
             {
@@ -372,9 +372,11 @@ namespace ISAAR.MSolve.IGA.Elements
                     //}
 
                     // (14) 
-                    Vector G1 = a1_init + da3_dksi_init.Scale(z);
+                    //Vector G1 = a1_init /*+ da3_dksi_init.Scale(z);*/;
+                    //Vector G2 = a2_init /*+ da3_dheta_init.Scale(z);*/;
+                    Vector G1 = a1_init + da3_dksi_init.Scale(z); 
                     Vector G2 = a2_init + da3_dheta_init.Scale(z);
-
+                    
                     //double G1_norm_sqred = G1.DotProduct(G1);
                     //double G2_norm_sqred = G2.DotProduct(G2);
                     double G3_norm_sqred = a3.DotProduct(a3);
@@ -383,6 +385,8 @@ namespace ISAAR.MSolve.IGA.Elements
                     //double[] G_2 = new double[3] { G2[0] / G2_norm_sqred, G2[1] / G2_norm_sqred, G2[2] / G2_norm_sqred };
                     (double[] G_1, double[] G_2, double[] G_3) = CalculateContravariants(G1, G2, a3_init);
 
+                    //Vector g1 = a1 /*+ da3_dksi.Scale(z);
+                    //Vector g2 = a2 /*+ da3_dheta.Scale(z)*/;
                     Vector g1 = a1 + da3_dksi.Scale(z);
                     Vector g2 = a2 + da3_dheta.Scale(z);
 
@@ -433,6 +437,13 @@ namespace ISAAR.MSolve.IGA.Elements
                     bool moreChecks = true;
                     if (moreChecks)
                     {
+                        //var GL_coeffs = new double[3, 3]
+                        //{
+                        //        {g1.DotProduct(g1)-G1.DotProduct(G1),g1.DotProduct(g2)-G1.DotProduct(G2),g1.DotProduct(a3)-G1.DotProduct(a3_init) },
+                        //        {g2.DotProduct(g1)-G2.DotProduct(G1),g2.DotProduct(g2)-G2.DotProduct(G2),g2.DotProduct(a3)-G2.DotProduct(a3_init) },
+                        //        {a3.DotProduct(g1)-a3_init.DotProduct(G1),a3.DotProduct(g2)-a3_init.DotProduct(G2),a3.DotProduct(a3)-a3_init.DotProduct(a3_init) },
+                        //};
+
                         var GL_coeffs = new double[3, 3]
                         {
                                 {g1.DotProduct(g1)-G1.DotProduct(G1),g1.DotProduct(g2)-G1.DotProduct(G2),g1.DotProduct(a3)-G1.DotProduct(a3_init) },
@@ -440,6 +451,19 @@ namespace ISAAR.MSolve.IGA.Elements
                                 {a3.DotProduct(g1)-a3_init.DotProduct(G1),a3.DotProduct(g2)-a3_init.DotProduct(G2),a3.DotProduct(a3)-a3_init.DotProduct(a3_init) },
                         };
 
+                        var corrections = new double[2, 2]
+                        {
+                            {-da3_dksi.Scale(z).DotProduct(da3_dksi.Scale(z))+da3_dksi_init.Scale(z).DotProduct(da3_dksi_init.Scale(z)),-da3_dksi.Scale(z).DotProduct(da3_dheta.Scale(z))+da3_dksi_init.Scale(z).DotProduct(da3_dheta_init.Scale(z)) },
+                            {-da3_dheta.Scale(z).DotProduct(da3_dksi.Scale(z))+da3_dheta_init.Scale(z).DotProduct(da3_dksi_init.Scale(z)),-da3_dheta.Scale(z).DotProduct(da3_dheta.Scale(z))+da3_dheta_init.Scale(z).DotProduct(da3_dheta_init.Scale(z)) }
+                        };
+
+                        //for (int j1 = 0; j1 < 2; j1++)
+                        //{
+                        //    for (int j2 = 0; j2 < 2; j2++)
+                        //    {
+                        //        GL_coeffs[j1, j2] += corrections[j1, j2];
+                        //    }
+                        //}
                         tensorOrder2 GLtensor = new tensorOrder2(GL_coeffs);
                         GLtensor = GLtensor.Scale(0.5);
 
@@ -564,6 +588,8 @@ namespace ISAAR.MSolve.IGA.Elements
                         for (int r1 = 0; r1 < 3; r1++)
                         {
                             //(31)
+                            //Vector dg1_dr = a1r.GetColumn(r1) /*+ da3_dksidr[r1] * z*/;
+                            //Vector dg2_dr = a2r.GetColumn(r1) /*+ da3_dhetadr[r1] * z*/;
                             Vector dg1_dr = a1r.GetColumn(r1) + da3_dksidr[r1] * z;
                             Vector dg2_dr = a2r.GetColumn(r1) + da3_dhetadr[r1] * z;
 
@@ -629,6 +655,8 @@ namespace ISAAR.MSolve.IGA.Elements
 
                             //forcesDevelop_v2[3 * i + r1] += ch03_FPK_3D.doubleContract(dF3Dtensor_dr) * wfactor * w;
                             forcesDevelop_v2[3 * i + r1] += SPKtensorProjected.doubleContract(dGLtensor_dr) * wfactor * w;
+
+                            forcesDevelop_v3[3 * i + r1] += FPKtensorProjected.doubleContract(dF3Dtensor_dr_Tr) * wfactor * w;
 
                             double contribution = SPKtensorProjected.doubleContract(dGLtensor_dr) * wfactor * w;
                             contributionsVec[3 * i + r1] += SPKtensorProjected.doubleContract(dGLtensor_dr) * wfactor * w;
