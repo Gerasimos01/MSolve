@@ -695,7 +695,7 @@ namespace ISAAR.MSolve.IGA.Elements
             }
 
             if (runNewForces)
-            { return forcesDevelop_v2; }
+            { return forcesDevelop_v3; }
             else
             {
                 return elementNodalForces;
@@ -2580,11 +2580,20 @@ namespace ISAAR.MSolve.IGA.Elements
             if (newMatrix)
             {
                 if (matrix_vi == 1)
-                { return Matrix.CreateFromArray(StiffnessDevelop); }
+                {
+                    SymmetrizeMatrix(StiffnessDevelop);
+                    return Matrix.CreateFromArray(StiffnessDevelop);
+                }
                 else if (matrix_vi == 2)
-                { return Matrix.CreateFromArray(StiffnessDevelop_v2); }
+                {
+                    SymmetrizeMatrix(StiffnessDevelop_v2);
+                    return Matrix.CreateFromArray(StiffnessDevelop_v2);
+                }
                 else if (matrix_vi == 3)
-                { return Matrix.CreateFromArray(StiffnessDevelop_v3); }
+                {
+                    SymmetrizeMatrix(StiffnessDevelop_v3);
+                    return Matrix.CreateFromArray(StiffnessDevelop_v3);
+                }
                 else { throw new NotImplementedException(); }
             }
             else
@@ -2592,6 +2601,23 @@ namespace ISAAR.MSolve.IGA.Elements
                 return Matrix.CreateFromArray(stiffnessMatrix);
             }
         }
+
+        private void SymmetrizeMatrix(double[,] matrix)
+        {
+            for (int i1 = 1; i1 < matrix.GetLength(0); i1++)
+            {
+                for (int i2 = 0; i2 < i1; i2++)
+                {
+                    matrix[i1, i2] = matrix[i2, i1];
+
+                    if (double.IsNaN(matrix[i1, i2]))
+                    {
+                        var breakpoint1 = "here";
+                    }
+                }
+            }
+        }
+
 
         private double[,] Calculate_dFPK_3D_dr(double[,] ei, double[,] Ei, double[,] FPK_2D, double[,] dFPK2D_coefs_dr, double[,] dei_dr)
         {

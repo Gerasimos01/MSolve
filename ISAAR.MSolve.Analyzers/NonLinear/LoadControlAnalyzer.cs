@@ -60,7 +60,8 @@ namespace ISAAR.MSolve.Analyzers.NonLinear
                             BuildMatrices();
                         }
                         //(new ISAAR.MSolve.LinearAlgebra.Output.Array1DWriter()).WriteToFile(uPlusdu[0].CopyToArray(), $@"C:\Users\acivi\Documents\notes_elegxoi_2\develop_nl_iga_shell\MSolve_output\1\uPlusdu{increment}.txt");
-                        (new ISAAR.MSolve.LinearAlgebra.Output.Array1DWriter()).WriteToFile(uPlusdu[0].CopyToArray(), $@"C:\Users\cluster\Documents\Large_rves\develop_nl_iga_shell\MSolve_output\fast2_duplicate_3\1\uPlusdu{increment}.txt");
+                        //(new ISAAR.MSolve.LinearAlgebra.Output.Array1DWriter()).WriteToFile(uPlusdu[0].CopyToArray(), $@"C:\Users\cluster\Documents\Large_rves\develop_nl_iga_shell\MSolve_output\fast2_duplicate_3\1\uPlusdu{increment}.txt");
+                        //(new ISAAR.MSolve.LinearAlgebra.Output.Array1DWriter()).WriteToFile(uPlusdu[0].CopyToArray(), $@"C:\Users\cluster\Documents\Large_rves\develop_nl_iga_shell\MSolve_output\fast2_duplicate_3\1\uPlusdu{increment}_more_corrections_symmetrize_1.txt");
                         break;
                     }
 
