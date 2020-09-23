@@ -460,7 +460,7 @@ namespace ISAAR.MSolve.Materials
                         {
                             col = thesi[k, l];
 
-                            Aijkl[row, col] += Aijkl[row, col] + SPKMat[i, k] * dlj[l, j];
+                            Aijkl[row, col] += SPKMat[i, k] * dlj[l, j];
 
                             //eswterika loop einai to athroisma logw n kai p
                             for (int n = 0; n < 2; n++)
@@ -479,6 +479,14 @@ namespace ISAAR.MSolve.Materials
                     }
                 }
             }
+
+            Aijkl = new double[4, 4]
+            {
+                {Aijkl[0,0], Aijkl[0,1], Aijkl[0,3], Aijkl[0,2] },
+                {Aijkl[1,0], Aijkl[1,1], Aijkl[1,3], Aijkl[1,2]},
+                {Aijkl[2,0], Aijkl[2,1], Aijkl[2,3], Aijkl[2,2]},
+                {Aijkl[3,0], Aijkl[3,1], Aijkl[3,3], Aijkl[3,2]}
+            };
 
             return Aijkl;
 

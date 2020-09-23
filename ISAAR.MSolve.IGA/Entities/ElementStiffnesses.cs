@@ -83,8 +83,8 @@ namespace ISAAR.MSolve.IGA.Entities
 
         public static double variationSize = 0.0000001;
 
-        public static int[] variableIds = new int[] { 1, 2, 3, 4, 5, 6, 7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33 }; //a1,1,ur   //a2,2,ur  // a1,2,ur  // a1,r
-        public static int[] variableSizes = new int[] { 3, 3, 3, 3, 3, 3, 3,3,3,3,1,3,3,1,1,3,3,9,3,3,1,1,3,3,9,4,4,9,3,3,9  };
+        public static int[] variableIds = new int[] { 1, 2, 3, 4, 5, 6, 7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34 }; //a1,1,ur   //a2,2,ur  // a1,2,ur  // a1,r
+        public static int[] variableSizes = new int[] { 3, 3, 3, 3, 3, 3, 3,3,3,3,1,3,3,1,1,3,3,9,3,3,1,1,3,3,9,4,4,9,3,3,9,9  };
 
         public static int elementId { get; set; }
 
@@ -265,7 +265,7 @@ namespace ISAAR.MSolve.IGA.Entities
             (new ISAAR.MSolve.LinearAlgebra.Output.Array2DWriter()).WriteToFile(derivativesCalculated[elementId][18], @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_nl_iga_shell\MSolve_output\derivativesCalculated18.txt");
             (new ISAAR.MSolve.LinearAlgebra.Output.Array2DWriter()).WriteToFile(derivativesExpected[elementId][18], @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_nl_iga_shell\MSolve_output\derivativesExpected18.txt");
 
-            for (int i1 = 21; i1 < 34; i1++) //mporei na ginei me variableids
+            for (int i1 = 21; i1 < 35; i1++) //mporei na ginei me variableids
             {
                 (new ISAAR.MSolve.LinearAlgebra.Output.Array2DWriter()).WriteToFile(derivativesCalculated[elementId][i1], $@"C:\Users\acivi\Documents\notes_elegxoi_2\develop_nl_iga_shell\MSolve_output\derivativesCalculated{i1}.txt");
                 (new ISAAR.MSolve.LinearAlgebra.Output.Array2DWriter()).WriteToFile(derivativesExpected[elementId][i1], $@"C:\Users\acivi\Documents\notes_elegxoi_2\develop_nl_iga_shell\MSolve_output\derivativesExpected{i1}.txt");

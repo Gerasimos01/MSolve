@@ -335,6 +335,41 @@ namespace ISAAR.MSolve.LinearAlgebra.Matrices
             }
                 
         }
+
+        public void CorrectLimitsToZero()
+        {
+            double norm = 0;
+            double tol = 1e-8;
+            for (int i1 = 0; i1 < 3; i1++)
+            {
+                norm = basis1[0, i1] * basis1[0, i1] + basis1[1, i1] * basis1[1, i1] + basis1[2, i1] * basis1[2, i1];
+
+                norm = Math.Sqrt(norm);
+
+                if (norm < tol)
+                {
+                    for (int i2 = 0; i2 < 3; i2++)
+                    {
+                        coefficients[i1, i2] = 0;
+                    }
+                }
+            }
+
+            for (int j1 = 0; j1 < 3; j1++)
+            {
+                norm = basis2[0, j1] * basis2[0, j1] + basis2[1, j1] * basis2[1, j1] + basis2[2, j1] * basis2[2, j1];
+
+                norm = Math.Sqrt(norm);
+
+                if (norm < tol)
+                {
+                    for (int i2 = 0; i2 < 3; i2++)
+                    {
+                        coefficients[i2, j1] = 0;
+                    }
+                }
+            }
+        }
     }
 }
 
