@@ -1044,7 +1044,7 @@ namespace ISAAR.MSolve.Materials
             var FPKrve_coeffs = tensorOrder2.CopyBasis(FPKrve);
 
             tensorOrder2 FPKtensor = new tensorOrder2(FPKrve_coeffs, Ei, ei);
-            var FPKtensorProjected = SPKtensor.ProjectIn3DCartesianBasis();
+            var FPKtensorProjected = FPKtensor.ProjectIn3DCartesianBasis();
 
 
 

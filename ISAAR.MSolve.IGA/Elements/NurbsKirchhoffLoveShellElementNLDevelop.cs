@@ -662,7 +662,7 @@ namespace ISAAR.MSolve.IGA.Elements
                             //forcesDevelop_v2[3 * i + r1] += ch03_FPK_3D.doubleContract(dF3Dtensor_dr) * wfactor * w;
                             forcesDevelop_v2[3 * i + r1] += SPKtensorProjected.doubleContract(dGLtensor_dr) * wfactor * w;
 
-                            forcesDevelop_v3[3 * i + r1] += FPKtensorProjected.doubleContract(dF3Dtensor_dr_Tr) * wfactor * w;
+                            forcesDevelop_v3[3 * i + r1] += FPKtensorProjected2.doubleContract(dF3Dtensor_dr_Tr) * wfactor * w;
 
                             double contribution = SPKtensorProjected.doubleContract(dGLtensor_dr) * wfactor * w;
                             contributionsVec[3 * i + r1] += SPKtensorProjected.doubleContract(dGLtensor_dr) * wfactor * w;
