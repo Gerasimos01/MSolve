@@ -503,7 +503,7 @@ namespace ISAAR.MSolve.IGA.Tests
         }
 
         [Fact]
-        public void PinchedSemiCylinderShellCoarse()
+        public void PinchedSemiCylinderShellCoarseAndCluster5()
         {
             Model model = new Model();
             var filename = "PinchedSemiCylindricalShell8x8Scaled";
@@ -511,10 +511,11 @@ namespace ISAAR.MSolve.IGA.Tests
             IsogeometricShellReader modelReader = new IsogeometricShellReader(model, filepath);
             modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinear);
 
+            //TODO:Find load from previous papers
             model.Loads.Add(new Load()
             {
                 Amount = -1000,
-                Node = model.ControlPoints.ToList()[31],
+                Node = model.ControlPoints.ToList()[7],
                 DOF = StructuralDof.TranslationZ
             });
 
@@ -585,77 +586,6 @@ namespace ISAAR.MSolve.IGA.Tests
 
             var paraview = new ParaviewNurbsShells(model, childAnalyzer.uPlusdu[0], filename);
             //paraview.CreateParaviewFile();
-        }
-
-        [Fact]
-        public void PinchedSemiCylinderShellCoarseDimitris()
-        {
-            Model model = new Model();
-            var filename = "PinchedSemiCylindricalShell8x8";
-            var filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", $"{filename}.txt");
-            IsogeometricShellReader modelReader = new IsogeometricShellReader(model, filepath);
-            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinear);
-
-            //TODO:Find load from previous papers
-            model.Loads.Add(new Load()
-            {
-                Amount = -1000,
-                Node = model.ControlPoints.ToList()[7],
-                DOF = StructuralDof.TranslationZ
-            });
-
-            //TODO: Possibly the tangent should also be fixes due to symmetry
-            //TODO:Check boundary conditions
-            foreach (var controlPoint in model.Patches[0].EdgesDictionary[1].ControlPointsDictionary)
-            {
-                var id = controlPoint.Value.ID;
-                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
-                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
-
-                model.ControlPointsDictionary[id - 8].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
-                model.ControlPointsDictionary[id - 8].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY });
-                model.ControlPointsDictionary[id - 8].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
-            }
-
-            //TODO: constrain rotation
-            foreach (var controlPoint in model.Patches[0].EdgesDictionary[2].ControlPointsDictionary)
-            {
-                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
-                var id = controlPoint.Value.ID;
-                model.ControlPointsDictionary[id + 1].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ });
-            }
-
-            foreach (var controlPoint in model.Patches[0].EdgesDictionary[3].ControlPointsDictionary)
-            {
-                controlPoint.Value.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
-
-                var id = controlPoint.Value.ID;
-                model.ControlPointsDictionary[id - 1].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX });
-            }
-
-            // Solvers
-            var solverBuilder = new SuiteSparseSolver.Builder();
-            ISolver solver = solverBuilder.BuildSolver(model);
-
-            // Structural problem provider
-            var provider = new ProblemStructural(model, solver);
-
-            // Linear static analysis
-            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, 100);
-            var childAnalyzer = newtonRaphsonBuilder.Build();
-            var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
-
-            var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 100,
-                model.ControlPoints.ToList()[7], StructuralDof.TranslationZ, "PinchedSemiCylindricalShell8x8.txt");
-            //var loggerB = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
-            //    model.ControlPointsDictionary[790], StructuralDof.TranslationZ, "SplitAnnularPlateWb.txt");
-            childAnalyzer.IncrementalLogs.Add(0, loggerA);
-            //childAnalyzer.IncrementalLogs.Add(1, loggerB);
-
-            // Run the analysis
-            parentAnalyzer.Initialize();
-            parentAnalyzer.Solve();
         }
 
 
