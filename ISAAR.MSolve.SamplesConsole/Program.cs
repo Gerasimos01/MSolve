@@ -50,6 +50,9 @@ namespace ISAAR.MSolve.SamplesConsole
 
             //MeshPartitioningExamples.PartitionMeshes();
 
+            //ProfilerSemiCylinder.InternalForcesTestSermiCylinder();
+            ProfilerSemiCylinder.StiffnessMatrixTestSermiCylinderForNonlinearity();
+
         }
 
         private static void SolveBuildingInNoSoilSmall()

@@ -21,6 +21,7 @@ using ISAAR.MSolve.Materials.Interfaces;
 using Element = ISAAR.MSolve.IGA.Entities.Element;
 
 [assembly: InternalsVisibleTo("ISAAR.MSolve.IGA.Tests")]
+[assembly: InternalsVisibleTo("ISAAR.MSolve.SamplesConsole")]
 
 namespace ISAAR.MSolve.IGA.Elements
 {

@@ -107,7 +107,7 @@ namespace ISAAR.MSolve.Analyzers.NonLinear
 
                 //TODO: remove cast
                 //(new ISAAR.MSolve.LinearAlgebra.Output.Array1DWriter()).WriteToFile(uPlusdu[id].CopyToArray(), @"C:\Users\acivi\Documents\notes_elegxoi_2\develop_nl_iga_shell\MSolve_output\uPlusdu.txt");
-                //uPlusdu[id] = Vector.CreateFromArray((new ISAAR.MSolve.LinearAlgebra.Input.Array1DReader(false)).ReadFile(@"C:\Users\acivi\Documents\notes_elegxoi_2\develop_nl_iga_shell\MSolve_output\uPlusdu.txt"));
+                ////uPlusdu[id] = Vector.CreateFromArray((new ISAAR.MSolve.LinearAlgebra.Input.Array1DReader(false)).ReadFile(@"C:\Users\acivi\Documents\notes_elegxoi_2\develop_nl_iga_shell\MSolve_output\uPlusdu_iteration3_vi_2_correction_Semicylinder.txt"));
 
                 IVector internalRhs = subdomainUpdaters[id].GetRhsFromSolution(uPlusdu[id], du[id]);//TODOMaria this calculates the internal forces
                 provider.ProcessInternalRhs(linearSystem.Subdomain, uPlusdu[id], internalRhs);//TODOMaria this does nothing
