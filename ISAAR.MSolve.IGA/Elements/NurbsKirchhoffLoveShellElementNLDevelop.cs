@@ -4793,7 +4793,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
 
             var forcesDevelop_v3 = new double[shellElement.ControlPointsDictionary.Count * 3];
-
+            double[,] dF3Dtensor_dr_Tr_check = new double[3, 3];
             for (int j = 0; j < gaussPoints.Length; j++)
             {
 
@@ -4941,10 +4941,19 @@ namespace ISAAR.MSolve.IGA.Elements
 
 
                     double[,] FPKrve = new double[2, 2] { { materialDevelop.Stresses[0], materialDevelop.Stresses[2] }, { materialDevelop.Stresses[3], materialDevelop.Stresses[1] } };
-                    double[,] FPKrve_coeffs = new double[3, 3] { { FPKrve[0, 0], FPKrve[0, 1], 0 }, { FPKrve[1, 0], FPKrve[1, 1], 0 }, { 0, 0, 0 } }; //TODO speed up this operation since only 2x2  are nonzero
-                    tensorOrder2 FPKtensor = new tensorOrder2(FPKrve_coeffs, Ei, ei);
-                    var FPKtensorProjected2 = FPKtensor.ProjectIn3DCartesianBasis(); //TODO: Speed up this operation.
+                    //double[,] FPKrve_coeffs = new double[3, 3] { { FPKrve[0, 0], FPKrve[0, 1], 0 }, { FPKrve[1, 0], FPKrve[1, 1], 0 }, { 0, 0, 0 } }; //TODO speed up this operation since only 2x2  are nonzero
+                    //tensorOrder2 FPKtensor = new tensorOrder2(FPKrve_coeffs, Ei, ei);
+                    //var FPKtensorProjected2 = FPKtensor.ProjectIn3DCartesianBasis(); //TODO: Speed up this operation.
 
+                    var FPKtensorProjected2_check = new double[3, 3];
+                    for (int j1 = 0; j1 < 3; j1++)
+                    {
+                        for (int j2 = 0; j2 < 3; j2++)
+                        {
+                            FPKtensorProjected2_check[j1, j2] += FPKrve[0, 0] * Ei[j1, 0] * ei[j2, 0] + FPKrve[0, 1] * Ei[j1, 0] * ei[j2, 1] +
+                                                                 FPKrve[1, 0] * Ei[j1, 1] * ei[j2, 0] + FPKrve[1, 1] * Ei[j1, 1] * ei[j2, 1];
+                        }
+                    }
 
 
                     if ((j == ElementStiffnesses.gpNumberToCheck) && (i1 == 0) && ElementStiffnesses.performCalculations)
@@ -5109,20 +5118,35 @@ namespace ISAAR.MSolve.IGA.Elements
 
                             
 
-                            tensorOrder2 dF3Dtensor_dr = new tensorOrder2()
+                            //tensorOrder2 dF3Dtensor_dr = new tensorOrder2()
+                            //{
+                            //    basis1 = new double[,] { { dg1_dr[0], dg2_dr[0], da3_dr[0] }, { dg1_dr[1], dg2_dr[1], da3_dr[1] }, { dg1_dr[2], dg2_dr[2], da3_dr[2] } },
+                            //    basis2 = new double[,] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } },
+                            //    coefficients = new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }
+                            //};
+
+                            //tensorOrder2 dF3Dtensor_dr_Tr = dF3Dtensor_dr.Transpose();
+
+
+                            Array.Clear(dF3Dtensor_dr_Tr_check, 0, 9);
+                            for (int j1 = 0; j1 < 3; j1++)
                             {
-                                basis1 = new double[,] { { dg1_dr[0], dg2_dr[0], da3_dr[0] }, { dg1_dr[1], dg2_dr[1], da3_dr[1] }, { dg1_dr[2], dg2_dr[2], da3_dr[2] } },
-                                basis2 = new double[,] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } },
-                                coefficients = new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }
-                            };
-
-                            tensorOrder2 dF3Dtensor_dr_Tr = dF3Dtensor_dr.Transpose();
-
+                                for (int j2 = 0; j2 < 3; j2++)
+                                {
+                                    dF3Dtensor_dr_Tr_check[j2, j1] += dg1_dr[j1] * G_1[j2] + dg2_dr[j1] * G_2[j2] + da3_dr[j1] * G_3[j2];
+                                }
+                            }
 
 
-                            
+                            //forcesDevelop_v3[3 * i + r1] += FPKtensorProjected2.doubleContract(dF3Dtensor_dr_Tr) * wfactor * w;// this is going to be replaced by simplified tensor expressions speed
+                            for (int j1 = 0; j1 < 3; j1++)
+                            {
+                                for (int j2 = 0; j2 < 3; j2++)
+                                {
+                                    forcesDevelop_v3[3 * i + r1] += FPKtensorProjected2_check[j1, j2] * dF3Dtensor_dr_Tr_check[j1, j2] * wfactor * w;
+                                }
+                            }
 
-                            forcesDevelop_v3[3 * i + r1] += FPKtensorProjected2.doubleContract(dF3Dtensor_dr_Tr) * wfactor * w;
 
 
 
@@ -5422,14 +5446,14 @@ namespace ISAAR.MSolve.IGA.Elements
 
                         #region for higher order terms
                         var FPK_2D = FPK_2D_ofGPs[i1];
-                        var FPK3Dcoeffs = new double[3, 3]
-                                {
-                                                {FPK_2D[0,0] ,FPK_2D[0,1],0 },
-                                                {FPK_2D[1,0] ,FPK_2D[1,1],0  },
-                                                {0,0,0 },
-                                };
-                        tensorOrder2 FPK_3D_tensor = new tensorOrder2(FPK3Dcoeffs, Ei_of_Gps[i1], ei_of_Gps[i1]);
-                        FPK_3D_tensor_ofGPs[i1] = FPK_3D_tensor.ProjectIn3DCartesianBasis();
+                        //var FPK3Dcoeffs = new double[3, 3]
+                        //        {
+                        //                        {FPK_2D[0,0] ,FPK_2D[0,1],0 },
+                        //                        {FPK_2D[1,0] ,FPK_2D[1,1],0  },
+                        //                        {0,0,0 },
+                        //        };
+                        //tensorOrder2 FPK_3D_tensor = new tensorOrder2(FPK3Dcoeffs, Ei_of_Gps[i1], ei_of_Gps[i1]);
+                        //FPK_3D_tensor_ofGPs[i1] = FPK_3D_tensor.ProjectIn3DCartesianBasis();
                         FPK_3D_tensor_ofGPs_check[i1] = new double[3, 3];
                         for (int j1 = 0; j1 < 3; j1++)
                         {
@@ -5527,6 +5551,8 @@ namespace ISAAR.MSolve.IGA.Elements
                     var da3_dhetadrArray = new Vector[elementControlPoints.Length][];
                     double[,][] dF_3D_dr_vecArray = new double[3 * elementControlPoints.Length, thicknessPoints.Count()][];
                     double[,][] dF_3D_dr_tensor_tr_vecArray = new double[3 * elementControlPoints.Length, thicknessPoints.Count()][];
+
+                    double[,] dF3Dtensor_dr_Tr_check = new double[3, 3];
                     for (int i = 0; i < elementControlPoints.Length; i++)
                     {
                         var a3r = new a3r();
@@ -5593,17 +5619,26 @@ namespace ISAAR.MSolve.IGA.Elements
                                 else if (r1 == 1) { da3_dr = Vector.CreateFromArray(new double[] { a3r.a3r01, a3r.a3r11, a3r.a3r21 }); }
                                 else if (r1 == 2) { da3_dr = Vector.CreateFromArray(new double[] { a3r.a3r02, a3r.a3r12, a3r.a3r22 }); }
 
-                                tensorOrder2 dF3Dtensor_dr = new tensorOrder2()
+                                //tensorOrder2 dF3Dtensor_dr = new tensorOrder2()
+                                //{
+                                //    basis1 = new double[,] { { dg1_dr[0], dg2_dr[0], da3_dr[0] }, { dg1_dr[1], dg2_dr[1], da3_dr[1] }, { dg1_dr[2], dg2_dr[2], da3_dr[2] } },
+                                //    basis2 = new double[,] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } },
+                                //    coefficients = new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }
+                                //};
+
+                                //tensorOrder2 dF3Dtensor_dr_Tr = dF3Dtensor_dr.Transpose().ProjectIn3DCartesianBasis();
+
+                                Array.Clear(dF3Dtensor_dr_Tr_check, 0, 9);
+                                for (int j1 = 0; j1 < 3; j1++)
                                 {
-                                    basis1 = new double[,] { { dg1_dr[0], dg2_dr[0], da3_dr[0] }, { dg1_dr[1], dg2_dr[1], da3_dr[1] }, { dg1_dr[2], dg2_dr[2], da3_dr[2] } },
-                                    basis2 = new double[,] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } },
-                                    coefficients = new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }
-                                };
+                                    for (int j2 = 0; j2 < 3; j2++)
+                                    {
+                                        dF3Dtensor_dr_Tr_check[j2, j1] += dg1_dr[j1] * G_1[j2] + dg2_dr[j1] * G_2[j2] + da3_dr[j1] * G_3[j2];
+                                    }
+                                }
 
-                                tensorOrder2 dF3Dtensor_dr_Tr = dF3Dtensor_dr.Transpose().ProjectIn3DCartesianBasis();
 
-
-                                dF_3D_dr_tensor_tr_vecArray[3 * i + r1, i1] = new double[] { dF3Dtensor_dr_Tr.coefficients[0, 0], dF3Dtensor_dr_Tr.coefficients[1, 1], dF3Dtensor_dr_Tr.coefficients[2, 2], dF3Dtensor_dr_Tr.coefficients[0, 1], dF3Dtensor_dr_Tr.coefficients[1, 2], dF3Dtensor_dr_Tr.coefficients[2, 0], dF3Dtensor_dr_Tr.coefficients[0, 2], dF3Dtensor_dr_Tr.coefficients[1, 0], dF3Dtensor_dr_Tr.coefficients[2, 1] };
+                                dF_3D_dr_tensor_tr_vecArray[3 * i + r1, i1] = new double[] { dF3Dtensor_dr_Tr_check[0, 0], dF3Dtensor_dr_Tr_check[1, 1], dF3Dtensor_dr_Tr_check[2, 2], dF3Dtensor_dr_Tr_check[0, 1], dF3Dtensor_dr_Tr_check[1, 2], dF3Dtensor_dr_Tr_check[2, 0], dF3Dtensor_dr_Tr_check[0, 2], dF3Dtensor_dr_Tr_check[1, 0], dF3Dtensor_dr_Tr_check[2, 1] };
 
                             }
                             //  (31) 
@@ -5856,29 +5891,29 @@ namespace ISAAR.MSolve.IGA.Elements
                                                                                                                                                                    // to do anti gia copy to array i methodos na mporei na doulevei me IMatrixView
 
 
-                                        var p_contrib_coeffs_ = new double[3, 3]
-                                        {
-                                                {FPK_2D[0,0] ,FPK_2D[0,1],0 },
-                                                {FPK_2D[1,0] ,FPK_2D[1,1],0  },
-                                                {0,0,0 },
-                                        };
-                                        tensorOrder2 P_contrib_tensor = new tensorOrder2(p_contrib_coeffs_, Ei, ei);
-                                        P_contrib_tensor.ReplaceBasisWithVector(de1_dr, de2_dr, da3_dr, false);
-                                        P_contrib_tensor = P_contrib_tensor.ProjectIn3DCartesianBasis();
+                                        //var p_contrib_coeffs_ = new double[3, 3]
+                                        //{
+                                        //        {FPK_2D[0,0] ,FPK_2D[0,1],0 },
+                                        //        {FPK_2D[1,0] ,FPK_2D[1,1],0  },
+                                        //        {0,0,0 },
+                                        //};
+                                        //tensorOrder2 P_contrib_tensor = new tensorOrder2(p_contrib_coeffs_, Ei, ei);
+                                        //P_contrib_tensor.ReplaceBasisWithVector(de1_dr, de2_dr, da3_dr, false);
+                                        //P_contrib_tensor = P_contrib_tensor.ProjectIn3DCartesianBasis();
 
 
-                                        var p_contrib_term_1_coeffs_ = new double[3, 3]
-                                        {
-                                                {dFPK2D_coefs_dr[0,0] ,dFPK2D_coefs_dr[0,1],0 },
-                                                {dFPK2D_coefs_dr[1,0] ,dFPK2D_coefs_dr[1,1],0 },
-                                                {0,0,0 },
-                                        };
-                                        tensorOrder2 P_contrib_term1_tensor = new tensorOrder2(p_contrib_term_1_coeffs_, Ei, ei);
-                                        P_contrib_term1_tensor = P_contrib_term1_tensor.ProjectIn3DCartesianBasis();
+                                        //var p_contrib_term_1_coeffs_ = new double[3, 3]
+                                        //{
+                                        //        {dFPK2D_coefs_dr[0,0] ,dFPK2D_coefs_dr[0,1],0 },
+                                        //        {dFPK2D_coefs_dr[1,0] ,dFPK2D_coefs_dr[1,1],0 },
+                                        //        {0,0,0 },
+                                        //};
+                                        //tensorOrder2 P_contrib_term1_tensor = new tensorOrder2(p_contrib_term_1_coeffs_, Ei, ei);
+                                        //P_contrib_term1_tensor = P_contrib_term1_tensor.ProjectIn3DCartesianBasis();
 
-                                        tensorOrder2 dFPK_tensor_dr = P_contrib_tensor.AddTensor(P_contrib_term1_tensor);
-                                        dFPK_tensor_dr.CorrectLimitsToZero();
-                                        double[] dFPK_tensor_dr_vec = { dFPK_tensor_dr.coefficients[0, 0], dFPK_tensor_dr.coefficients[1, 1], dFPK_tensor_dr.coefficients[2, 2], dFPK_tensor_dr.coefficients[0, 1], dFPK_tensor_dr.coefficients[1, 2], dFPK_tensor_dr.coefficients[2, 0], dFPK_tensor_dr.coefficients[0, 2], dFPK_tensor_dr.coefficients[1, 0], dFPK_tensor_dr.coefficients[2, 1] };// 
+                                        //tensorOrder2 dFPK_tensor_dr = P_contrib_tensor.AddTensor(P_contrib_term1_tensor);
+                                        //dFPK_tensor_dr.CorrectLimitsToZero();
+                                        //double[] dFPK_tensor_dr_vec = { dFPK_tensor_dr.coefficients[0, 0], dFPK_tensor_dr.coefficients[1, 1], dFPK_tensor_dr.coefficients[2, 2], dFPK_tensor_dr.coefficients[0, 1], dFPK_tensor_dr.coefficients[1, 2], dFPK_tensor_dr.coefficients[2, 0], dFPK_tensor_dr.coefficients[0, 2], dFPK_tensor_dr.coefficients[1, 0], dFPK_tensor_dr.coefficients[2, 1] };// 
 
                                         Array.Clear(dFPK_tensor_dr_check, 0, 9);
                                         for (int j1 = 0; j1 < 3; j1++)
@@ -5890,7 +5925,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                             }
                                         }
 
-                                        dFPK_tensor_dr_vec =new double[] { dFPK_tensor_dr_check[0, 0], dFPK_tensor_dr_check[1, 1], dFPK_tensor_dr_check[2, 2], dFPK_tensor_dr_check[0, 1], dFPK_tensor_dr_check[1, 2], dFPK_tensor_dr_check[2, 0], dFPK_tensor_dr_check[0, 2], dFPK_tensor_dr_check[1, 0], dFPK_tensor_dr_check[2, 1] };// 
+                                        double[] dFPK_tensor_dr_vec = new double[] { dFPK_tensor_dr_check[0, 0], dFPK_tensor_dr_check[1, 1], dFPK_tensor_dr_check[2, 2], dFPK_tensor_dr_check[0, 1], dFPK_tensor_dr_check[1, 2], dFPK_tensor_dr_check[2, 0], dFPK_tensor_dr_check[0, 2], dFPK_tensor_dr_check[1, 0], dFPK_tensor_dr_check[2, 1] };// 
 
 
 
@@ -5899,15 +5934,15 @@ namespace ISAAR.MSolve.IGA.Elements
 
 
 
-                                        #region Higher order terms FPK:Ft_drds
-                                        tensorOrder2 dF3Dtensor_drds = new tensorOrder2()
-                                        {
-                                            basis1 = new double[,] { { dg1_drds[0], dg2_drds[0], da3_drds[r1, s1][0] }, { dg1_drds[1], dg2_drds[1], da3_drds[r1, s1][1] }, { dg1_drds[2], dg2_drds[2], da3_drds[r1, s1][2] } },
-                                            basis2 = new double[,] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } },
-                                            coefficients = new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }
-                                        };
+                                        //#region Higher order terms FPK:Ft_drds
+                                        //tensorOrder2 dF3Dtensor_drds = new tensorOrder2()
+                                        //{
+                                        //    basis1 = new double[,] { { dg1_drds[0], dg2_drds[0], da3_drds[r1, s1][0] }, { dg1_drds[1], dg2_drds[1], da3_drds[r1, s1][1] }, { dg1_drds[2], dg2_drds[2], da3_drds[r1, s1][2] } },
+                                        //    basis2 = new double[,] { { G_1[0], G_2[0], G_3[0] }, { G_1[1], G_2[1], G_3[1] }, { G_1[2], G_2[2], G_3[2] } },
+                                        //    coefficients = new double[,] { { 1, 0, 0 }, { 0, 1, 0, }, { 0, 0, 1 } }
+                                        //};
 
-                                        tensorOrder2 dF3Dtensor_drds_Tr = dF3Dtensor_drds.Transpose().ProjectIn3DCartesianBasis();
+                                        //tensorOrder2 dF3Dtensor_drds_Tr = dF3Dtensor_drds.Transpose().ProjectIn3DCartesianBasis();
 
 
                                         Array.Clear(dF3Dtensor_drds_Tr_check, 0, 9);
@@ -6032,7 +6067,7 @@ namespace ISAAR.MSolve.IGA.Elements
                         }
                     }
 
-                    #endregion
+                    
 
                 }
 
