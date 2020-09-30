@@ -181,6 +181,65 @@ namespace ISAAR.MSolve.SamplesConsole
             }
         }
 
+        public static void InternalForcesTestSermiCylinderDevelop()
+        {
+            var controlPoints = ElementControlPoints().ToArray();
+            var shellElement = Element;
+
+            var nurbs = new Nurbs2D(shellElement, controlPoints);
+            var gaussPoints = shellElement.materialsAtThicknessGP.Keys.ToArray();
+            shellElement.CalculateInitialConfigurationData(controlPoints, nurbs, gaussPoints);
+            shellElement.CalculateStressesDevelop(shellElement, localSolution, new double[27]);
+            var f = shellElement.CalculateForcesDevelop1(shellElement, localSolution, new double[27]);
+
+            var expectedForces = new double[48]
+            {
+                -4475874511.6703205, -460505704.67915344, -521958924.80092776, -1636389571.34632, -454686747.3297115, 2596964237.0245924, 6212880155.002533,
+                30746666.69804227, 4359693512.940589, 1713850335.7118824, 28763849.307121132, 928636487.32193434, -6728006086.4731855, -1111253448.2442992,
+                916806505.492374, -4552631231.625246, 138153058.40934575, -2499355211.8332977, 7970041652.2430191, 1760091337.3699565, -4318875872.3011389,
+                2461338167.8724332, 398795166.24829733, -881449694.7845453, -3382002623.9320226, -430550944.3491326, 829847975.84043252, -2273984471.4064822,
+                -233602885.72271252, 37058342.897073761, 3802334834.4444332, 339683015.47409087, -1232819191.862458, 1166886598.116899, 88098778.670311511,
+                -293671857.34619135, -464657651.00243622, -38888505.0231959, 118532858.48272517, -375335435.19537985, -52073310.575925149, 79684644.195540756,
+                423734126.86863887, -4290467.937362656, -92428023.980797991, 137815712.39155602, 1520141.6843277283, -26665787.285910059,
+
+            };
+
+            for (var j = 0; j < expectedForces.Length; j++)
+            {
+                Assert.True(AreValuesEqual(expectedForces[j], f[j],
+                    Tolerance));
+            }
+        }
+
+        public static void StiffnessMatrixTestSermiCylinderForNonlinearityDevelop()// TODO: metakinhseis tha perasoun sto calculateStresses kai tha xreiazomaste ekeino pia.
+        {
+            var controlPoints = ElementControlPoints().ToArray();
+            var shellElement = Element;
+
+            var nurbs = new Nurbs2D(shellElement, controlPoints);
+            var gaussPoints = shellElement.materialsAtThicknessGP.Keys.ToArray();
+            shellElement.CalculateInitialConfigurationData(controlPoints, nurbs, gaussPoints);
+            shellElement.CalculateStressesDevelop(shellElement, localSolution, new double[27]);
+
+
+
+
+            var Stiffness1 = shellElement.StiffnessMatrixDevelop(shellElement);
+
+            var expectedStiffnessMatr1 = GetExpectedStiffnessMatrixForNonlinearityCheck();  //.
+
+            for (var j = 0; j < expectedStiffnessMatr1.GetLength(0); j++)
+            {
+                for (int k = 0; k < expectedStiffnessMatr1.GetLength(0); k++)
+                {
+
+
+                    Assert.True(AreValuesEqual(Stiffness1[j, k], expectedStiffnessMatr1[j, k],
+                        Tolerance));
+                }
+            }
+        }
+
         internal static bool AreTensorsEqual(IReadOnlyList<double[]> tensors1, IReadOnlyList<double[]> tensors2, double tolerance)
         {
             if (tensors1.Count != tensors2.Count) return false;

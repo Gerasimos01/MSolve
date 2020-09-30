@@ -51,7 +51,9 @@ namespace ISAAR.MSolve.SamplesConsole
             //MeshPartitioningExamples.PartitionMeshes();
 
             //ProfilerSemiCylinder.InternalForcesTestSermiCylinder();
-            ProfilerSemiCylinder.StiffnessMatrixTestSermiCylinderForNonlinearity();
+            //ProfilerSemiCylinder.StiffnessMatrixTestSermiCylinderForNonlinearity();
+            //ProfilerSemiCylinder.InternalForcesTestSermiCylinderDevelop();
+            ProfilerSemiCylinder.StiffnessMatrixTestSermiCylinderForNonlinearityDevelop();
 
         }
 

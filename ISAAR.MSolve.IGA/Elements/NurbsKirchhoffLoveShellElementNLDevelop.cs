@@ -5224,13 +5224,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
 
             var bCols = elementControlPoints.Length * 3;
-            var stiffnessMatrix = new double[bCols, bCols];
-            var KmembraneL = new double[bCols, bCols];
-            var KbendingL = new double[bCols, bCols];
-
-
-            var KmembraneNL_total = new double[bCols, bCols];
-            var KbendingNL_total = new double[bCols, bCols];
+            
 
             //var KL_total = new double[bCols, bCols];
 
@@ -5373,6 +5367,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     double[][] G_2_ofGPs = new double[thicknessGPoints.Count()][];
                     double[][] G_3_ofGPs = new double[thicknessGPoints.Count()][];
                     tensorOrder2[] FPK_3D_tensor_ofGPs = new tensorOrder2[thicknessGPoints.Count()];
+                    double[][,] FPK_3D_tensor_ofGPs_check = new double[thicknessGPoints.Count()] [,];
                     //tensorOrder2[] FPKtensorProjected_ofGPs = new tensorOrder2[thicknessGPoints.Count()];
                     double[][,] Ei_of_Gps = new double[thicknessGPoints.Count()][,];
                     double[][,] Aijkl_2D_ofGPs = new double[thicknessGPoints.Count()][,];
@@ -5435,6 +5430,16 @@ namespace ISAAR.MSolve.IGA.Elements
                                 };
                         tensorOrder2 FPK_3D_tensor = new tensorOrder2(FPK3Dcoeffs, Ei_of_Gps[i1], ei_of_Gps[i1]);
                         FPK_3D_tensor_ofGPs[i1] = FPK_3D_tensor.ProjectIn3DCartesianBasis();
+                        FPK_3D_tensor_ofGPs_check[i1] = new double[3, 3];
+                        for (int j1 = 0; j1 < 3; j1++)
+                        {
+                            for (int j2 = 0; j2 < 3; j2++)
+                            {
+                                FPK_3D_tensor_ofGPs_check[i1][j1, j2] += FPK_2D[0, 0] * Ei_of_Gps[i1][j1, 0] * ei_of_Gps[i1][j2, 0] + FPK_2D[0, 1] * Ei_of_Gps[i1][j1, 0] * ei_of_Gps[i1][j2, 1] + FPK_2D[1, 0] * Ei_of_Gps[i1][j1, 1] * ei_of_Gps[i1][j2, 0] + FPK_2D[1, 1] * Ei_of_Gps[i1][j1, 1] * ei_of_Gps[i1][j2, 1];
+                            }
+                        }
+
+
                         #endregion
 
                         #region higher order for check
@@ -5610,6 +5615,8 @@ namespace ISAAR.MSolve.IGA.Elements
                     #endregion
 
                     #region actual loop, total calculations
+                    var dFPK_tensor_dr_check = new double[3, 3];
+                    var dF3Dtensor_drds_Tr_check = new double[3, 3];
                     for (int i = 0; i < elementControlPoints.Length; i++)
                     {
                         var dksi_r = nurbs.NurbsDerivativeValuesKsi[i, j];
@@ -5806,6 +5813,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                 //FPK_3D_tensor = FPK_3D_tensor.ProjectIn3DCartesianBasis();
 
                                 tensorOrder2 FPK_3D_tensor = FPK_3D_tensor_ofGPs[i1];
+                                var FPK_3D_tensor_check = FPK_3D_tensor_ofGPs_check[i1];
                                 //tensorOrder2 FPKtensorProjected = FPKtensorProjected_ofGPs[i1];
                                 #endregion
 
@@ -5833,32 +5841,20 @@ namespace ISAAR.MSolve.IGA.Elements
                                         // linear stiffness
                                         var dF_3D_ds1 = dF_3D_dr_vecArray[3 * k + s1, i1];
                                         var dF_3D_tr_ds1 = dF_3D_dr_tensor_tr_vecArray[3 * k + s1, i1];
-                                        //Vector dg1_ds = a1rArray[k].GetColumn(s1) + da3_dksidrArray[k][s1] * z;
-                                        //Vector dg2_ds = a2rArray[k].GetColumn(s1) + da3_dhetadrArray[k][s1] * z;
-                                        //Vector da3_ds = Vector.CreateZero(3);
-                                        //if (s1 == 0) { da3_ds = Vector.CreateFromArray(new double[] { a3s.a3r00, a3s.a3r10, a3s.a3r20 }); }
-                                        //else if (s1 == 1) { da3_ds = Vector.CreateFromArray(new double[] { a3s.a3r01, a3s.a3r11, a3s.a3r21 }); }
-                                        //else if (s1 == 2) { da3_ds = Vector.CreateFromArray(new double[] { a3s.a3r02, a3s.a3r12, a3s.a3r22 }); }
-                                        // 
-
+                                        
 
 
                                         var dg1_drds = da3_dksidrds[r1, s1].Scale(z); //Scale(z);
                                         var dg2_drds = da3_dhetadrds[r1, s1].Scale(z);// .Scale(z);
-                                        double[,] dF_3D_drds = new double[3, 3] { { dg1_drds[0]*G_1[0]+dg2_drds[0]*G_2[0], dg1_drds[0]*G_1[1]+dg2_drds[0]*G_2[1], dg1_drds[0]*G_1[2]+dg2_drds[0]*G_2[2] },
-                                                                 { dg1_drds[1]*G_1[0]+dg2_drds[1]*G_2[0], dg1_drds[1]*G_1[1]+dg2_drds[1]*G_2[1], dg1_drds[1]*G_1[2]+dg2_drds[1]*G_2[2] },
-                                                                 { dg1_drds[2]*G_1[0]+dg2_drds[2]*G_2[0], dg1_drds[2]*G_1[1]+dg2_drds[2]*G_2[1], dg1_drds[2]*G_1[2]+dg2_drds[2]*G_2[2] }, };
-
-                                        //double[] dF_3D_dr_vec =
-                                        var dF_3D_drds_vecArray = new double[] { dF_3D_drds[0, 0], dF_3D_drds[1, 1], dF_3D_drds[2, 2], dF_3D_drds[0, 1], dF_3D_drds[1, 2], dF_3D_drds[2, 0], dF_3D_drds[0, 2], dF_3D_drds[1, 0], dF_3D_drds[2, 1] };
-
-
-
-
-
-                                        (_,_/*double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec*/, double[] dFPK2D_coefs_dr_vec, double[,] dFPK2D_coefs_dr) = Calculate_FPK_variation_term1(materialDevelop.ConstitutiveMatrix.CopytoArray2D(), dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
-                                        // to do anti gia copy to array i methodos na mporei na doulevei me IMatrixView
                                         
+
+
+
+
+                                        (_,_/*double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec*/, double[] dFPK2D_coefs_dr_vec, double[,] dFPK2D_coefs_dr) = Calculate_FPK_variation_term1(
+                                            materialDevelop.ConstitutiveMatrix.CopytoArray2D(), dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
+                                                                                                                                                                   // to do anti gia copy to array i methodos na mporei na doulevei me IMatrixView
+
 
                                         var p_contrib_coeffs_ = new double[3, 3]
                                         {
@@ -5882,12 +5878,27 @@ namespace ISAAR.MSolve.IGA.Elements
 
                                         tensorOrder2 dFPK_tensor_dr = P_contrib_tensor.AddTensor(P_contrib_term1_tensor);
                                         dFPK_tensor_dr.CorrectLimitsToZero();
-
                                         double[] dFPK_tensor_dr_vec = { dFPK_tensor_dr.coefficients[0, 0], dFPK_tensor_dr.coefficients[1, 1], dFPK_tensor_dr.coefficients[2, 2], dFPK_tensor_dr.coefficients[0, 1], dFPK_tensor_dr.coefficients[1, 2], dFPK_tensor_dr.coefficients[2, 0], dFPK_tensor_dr.coefficients[0, 2], dFPK_tensor_dr.coefficients[1, 0], dFPK_tensor_dr.coefficients[2, 1] };// 
 
+                                        Array.Clear(dFPK_tensor_dr_check, 0, 9);
+                                        for (int j1 = 0; j1 < 3; j1++)
+                                        {
+                                            for (int j2 = 0; j2 < 3; j2++)
+                                            {
+                                                dFPK_tensor_dr_check[j1, j2] += FPK_2D[0, 0] * Ei[j1, 0] * de1_dr[j2] + FPK_2D[0, 1] * Ei[j1, 0] * de2_dr[j2] + FPK_2D[1, 0] * Ei[j1, 1] * de1_dr[j2] + FPK_2D[1, 1] * Ei[j1, 1] * de2_dr[j2] +
+                                                    dFPK2D_coefs_dr[0, 0] * Ei[j1, 0] * ei[j2, 0] + dFPK2D_coefs_dr[0, 1] * Ei[j1, 0] * ei[j2, 1] + dFPK2D_coefs_dr[1, 0] * Ei[j1, 1] * ei[j2, 0] + dFPK2D_coefs_dr[1, 1] * Ei[j1, 1] * ei[j2, 1];
+                                            }
+                                        }
+
+                                        dFPK_tensor_dr_vec =new double[] { dFPK_tensor_dr_check[0, 0], dFPK_tensor_dr_check[1, 1], dFPK_tensor_dr_check[2, 2], dFPK_tensor_dr_check[0, 1], dFPK_tensor_dr_check[1, 2], dFPK_tensor_dr_check[2, 0], dFPK_tensor_dr_check[0, 2], dFPK_tensor_dr_check[1, 0], dFPK_tensor_dr_check[2, 1] };// 
 
 
-                                        
+
+
+
+
+
+
                                         #region Higher order terms FPK:Ft_drds
                                         tensorOrder2 dF3Dtensor_drds = new tensorOrder2()
                                         {
@@ -5899,6 +5910,14 @@ namespace ISAAR.MSolve.IGA.Elements
                                         tensorOrder2 dF3Dtensor_drds_Tr = dF3Dtensor_drds.Transpose().ProjectIn3DCartesianBasis();
 
 
+                                        Array.Clear(dF3Dtensor_drds_Tr_check, 0, 9);
+                                        for (int j1 = 0; j1 < 3; j1++)
+                                        {
+                                            for (int j2 = 0; j2 < 3; j2++)
+                                            {
+                                                dF3Dtensor_drds_Tr_check[j2, j1] += dg1_drds[j1] * G_1[j2] + dg2_drds[j1] * G_2[j2] + da3_drds[r1, s1][j1] * G_3[j2];
+                                            }
+                                        }
                                         #endregion
 
 
@@ -5907,13 +5926,17 @@ namespace ISAAR.MSolve.IGA.Elements
                                         for (int i2 = 0; i2 < 9; i2++)
                                         {
                                             //StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += FPK_3D_vec[i2] * dF_3D_drds_vecArray[i2] * w * wFactor;
-
-
-
-
                                         }
 
-                                        StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += FPK_3D_tensor.doubleContract(dF3Dtensor_drds_Tr) * w * wFactor;
+                                        //StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += FPK_3D_tensor.doubleContract(dF3Dtensor_drds_Tr) * w * wFactor;//this is going to be replaced
+                                        for (int j1 = 0; j1 < 3; j1++)
+                                        {
+                                            for (int j2 = 0; j2 < 3; j2++)
+                                            {
+                                                StiffnessDevelop_v2[3 * i + r1, 3 * k + s1] += FPK_3D_tensor_check[j1,j2] * dF3Dtensor_drds_Tr_check[j1,j2] * w * wFactor;
+                                            }
+                                            
+                                        }
 
                                         //stiffnessDevelop_v2_part1[3 * i + r1, 3 * k + s1] += FPK_3D_tensor.doubleContract(dF3Dtensor_drds_Tr) * w * wFactor;
                                         //for (int p1 = 0; p1 < 9; p1++)
@@ -5939,8 +5962,16 @@ namespace ISAAR.MSolve.IGA.Elements
 
                                         if (ElementStiffnesses.performCalculations)
                                         {
+
                                             if ((ElementStiffnesses.gpNumber == ElementStiffnesses.gpNumberToCheck) && ElementStiffnesses.saveStiffnessMatrixState && (i == 0) && (r1 == 1) && (i1 == 0))
                                             {
+                                                double[,] dF_3D_drds = new double[3, 3] { { dg1_drds[0]*G_1[0]+dg2_drds[0]*G_2[0], dg1_drds[0]*G_1[1]+dg2_drds[0]*G_2[1], dg1_drds[0]*G_1[2]+dg2_drds[0]*G_2[2] },
+                                                                 { dg1_drds[1]*G_1[0]+dg2_drds[1]*G_2[0], dg1_drds[1]*G_1[1]+dg2_drds[1]*G_2[1], dg1_drds[1]*G_1[2]+dg2_drds[1]*G_2[2] },
+                                                                 { dg1_drds[2]*G_1[0]+dg2_drds[2]*G_2[0], dg1_drds[2]*G_1[1]+dg2_drds[2]*G_2[1], dg1_drds[2]*G_1[2]+dg2_drds[2]*G_2[2] }, };
+
+                                                //double[] dF_3D_dr_vec =
+                                                var dF_3D_drds_vecArray = new double[] { dF_3D_drds[0, 0], dF_3D_drds[1, 1], dF_3D_drds[2, 2], dF_3D_drds[0, 1], dF_3D_drds[1, 2], dF_3D_drds[2, 0], dF_3D_drds[0, 2], dF_3D_drds[1, 0], dF_3D_drds[2, 1] };
+
                                                 ElementStiffnesses.saveOriginalState = true;
                                                 ElementStiffnesses.ProccessVariable(27, dF_3D_drds_vecArray, true, 3 * k + s1);
 
@@ -5987,7 +6018,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                         }
 
 
-                                        
+
 
 
 
