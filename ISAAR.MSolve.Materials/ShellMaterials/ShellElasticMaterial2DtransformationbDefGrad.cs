@@ -12,7 +12,7 @@ namespace ISAAR.MSolve.Materials
     /// Isotropic elastic shell material that accounts for no out of plane shear deformation
     /// Authors Gerasimos Sotiropoulos
     /// </summary>
-    public class ShellElasticMaterial2DtransformationbDefGrad : IShellMaterial
+    public class ShellElasticMaterial2DtransformationbDefGrad : IShellMaterialDefGrad2D
     {
         public double[] NormalVectorV3 { get; set; }
         public double[] TangentVectorV1 { get; set; }
@@ -36,22 +36,54 @@ namespace ISAAR.MSolve.Materials
             };
         }
 
-        public void UpdateMaterial(double[] cartesianStrains) //TODO: rename cartesian strains to strains 
-        {
-            if (CartesianConstitutiveMatrix == null)
-            {
-                this.CalculateConstitutiveMatrix(Vector.CreateFromArray(TangentVectorV1), Vector.CreateFromArray(TangentVectorV2));
-            }
+        //public void UpdateMaterial(double[] cartesianStrains) //TODO: rename cartesian strains to strains 
+        //{
+        //    if (CartesianConstitutiveMatrix == null)
+        //    {
+        //        this.CalculateConstitutiveMatrix(Vector.CreateFromArray(TangentVectorV1), Vector.CreateFromArray(TangentVectorV2));
+        //    }
 
-            for (int l = 0; l < 3; l++)
-            {
-                CartesianStresses[l] = 0;
-                for (int m = 0; m < 3; m++)
-                {
-                    CartesianStresses[l] += CartesianConstitutiveMatrix[l, m] * cartesianStrains[m];
-                }
-            }
+        //    for (int l = 0; l < 3; l++)
+        //    {
+        //        CartesianStresses[l] = 0;
+        //        for (int m = 0; m < 3; m++)
+        //        {
+        //            CartesianStresses[l] += CartesianConstitutiveMatrix[l, m] * cartesianStrains[m];
+        //        }
+        //    }
+        //}
+
+        public void UpdateState(double[,] F_rve) //TODO: rename cartesian strains to strains 
+        {
+            double[] GLvec = Transform2DDefGradToGL(F_rve);
+            (double[] SPKvec, double[,] ConsCartes) = CalculateSPK(GLvec);
+            double[,] SPKMat = new double[2, 2] { { SPKvec[0], SPKvec[2] }, { SPKvec[2], SPKvec[1] } };
+            FPKrve = TransformSPKvecToFPK(F_rve, SPKMat);
+
+            double[,] Cinpk = ExpandCijrs(ConsCartes);
+            Aijkl_rve = TransformCinpk(Cinpk, F_rve, SPKMat/*,...*/);
+                                    
         }
+
+        public void UpdateMaterial(double[] F_rve_vec) //TODO: rename cartesian strains to strains 
+        {
+            var F_rve = new double[2, 2] { { F_rve_vec[0], F_rve_vec[2] }, { F_rve_vec[3], F_rve_vec[1] } };
+            double[] GLvec = Transform2DDefGradToGL(F_rve);
+            (double[] SPKvec, double[,] ConsCartes) = CalculateSPK(GLvec);
+            double[,] SPKMat = new double[2, 2] { { SPKvec[0], SPKvec[2] }, { SPKvec[2], SPKvec[1] } };
+            FPKrve = TransformSPKvecToFPK(F_rve, SPKMat);
+
+            double[,] Cinpk = ExpandCijrs(ConsCartes);
+            Aijkl_rve = TransformCinpk(Cinpk, F_rve, SPKMat/*,...*/);
+
+        }
+
+
+
+
+
+        public double[,] FPKrve { get; set; }
+        public double[,] Aijkl_rve { get; set; }
 
         /// <summary>
         /// 
@@ -851,15 +883,15 @@ namespace ISAAR.MSolve.Materials
 
         public double[] Stresses
         {
-            get { return CartesianStresses; }
+            get { return new double[] { FPKrve[0, 0], FPKrve[1, 1], FPKrve[0, 1], FPKrve[1, 0] }; }
         }
 
         public IMatrixView ConstitutiveMatrix
         {
             get
             {
-                if (CartesianConstitutiveMatrix == null) UpdateMaterial(new double[6]);
-                return Matrix.CreateFromArray(CartesianConstitutiveMatrix);
+                if (Aijkl_rve == null) UpdateMaterial(new double[4] { 1, 1, 0, 0 });
+                return Matrix.CreateFromArray(Aijkl_rve);
             }
         }
 
