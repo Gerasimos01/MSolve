@@ -2771,6 +2771,57 @@ namespace ISAAR.MSolve.IGA.Elements
             return (Pcontributions, dF2D_coefs_dr_vec, dFPK2D_coefs_dr_vec, dFPK2D_coefs_dr);
         }
 
+        private  double[,] Calculate_FPK_variation_term1_Short(double[,] Aijkl_2D, Vector dg1_dr, Vector dg2_dr, Vector de1_dr, Vector de2_dr, double[] G_1, double[] G_2, a3r a3r, double[,] Ei, double[,] ei, Vector g1, Vector g2)//.
+        {
+            double[,] dF2D_coefs_dr = new double[2, 2];
+
+            //dF2D_coefs_dr[0, 0] = (dg1_dr.CopyToArray().DotProduct(new double[3] { ei[0, 0], ei[1, 0], ei[2, 0] }) + g1.DotProduct(de1_dr)) * (G_1.DotProduct(new double[] { Ei[0, 0], Ei[1, 0], Ei[2, 0] })) +
+            //                        (dg2_dr.CopyToArray().DotProduct(new double[3] { ei[0, 0], ei[1, 0], ei[2, 0] }) + g2.DotProduct(de1_dr)) * (G_2.DotProduct(new double[] { Ei[0, 0], Ei[1, 0], Ei[2, 0] }));
+
+            dF2D_coefs_dr[0, 0] = (dg1_dr[0] * ei[0, 0] + dg1_dr[1] * ei[1, 0] + dg1_dr[2] * ei[2, 0] + g1[0] * de1_dr[0] + g1[1] * de1_dr[1] + g1[2] * de1_dr[2]) * (G_1[0] * Ei[0, 0] + G_1[1] * Ei[1, 0] + G_1[2] * Ei[2, 0]) +
+                (dg2_dr[0] * ei[0, 0] + dg2_dr[1] * ei[1, 0] + dg2_dr[2] * ei[2, 0] + g2[0] * de1_dr[0] + g2[1] * de1_dr[1] + g2[2] * de1_dr[2]) * (G_2[0] * Ei[0, 0] + G_2[1] * Ei[1, 0] + G_2[2] * Ei[2, 0]);
+
+            //dF2D_coefs_dr[0, 1] = (dg1_dr.CopyToArray().DotProduct(new double[3] { ei[0, 0], ei[1, 0], ei[2, 0] }) + g1.DotProduct(de1_dr)) * (G_1.DotProduct(new double[] { Ei[0, 1], Ei[1, 1], Ei[2, 1] })) +
+            //                        (dg2_dr.CopyToArray().DotProduct(new double[3] { ei[0, 0], ei[1, 0], ei[2, 0] }) + g2.DotProduct(de1_dr)) * (G_2.DotProduct(new double[] { Ei[0, 1], Ei[1, 1], Ei[2, 1] }));
+
+            dF2D_coefs_dr[0, 1] = (dg1_dr[0] * ei[0, 0] + dg1_dr[1] * ei[1, 0] + dg1_dr[2] * ei[2, 0] + g1[0] * de1_dr[0] + g1[1] * de1_dr[1] + g1[2] * de1_dr[2]) * (G_1[0] * Ei[0, 1] + G_1[1] * Ei[1, 1] + G_1[2] * Ei[2, 1]) +
+                (dg2_dr[0] * ei[0, 0] + dg2_dr[1] * ei[1, 0] + dg2_dr[2] * ei[2, 0] + g2[0] * de1_dr[0] + g2[1] * de1_dr[1] + g2[2] * de1_dr[2]) * (G_2[0] * Ei[0, 1] + G_2[1] * Ei[1, 1] + G_2[2] * Ei[2, 1]);
+
+            //dF2D_coefs_dr[1, 0] = (dg1_dr.CopyToArray().DotProduct(new double[3] { ei[0, 1], ei[1, 1], ei[2, 1] }) + g1.DotProduct(de2_dr)) * (G_1.DotProduct(new double[] { Ei[0, 0], Ei[1, 0], Ei[2, 0] })) +
+            //                        (dg2_dr.CopyToArray().DotProduct(new double[3] { ei[0, 1], ei[1, 1], ei[2, 1] }) + g2.DotProduct(de2_dr)) * (G_2.DotProduct(new double[] { Ei[0, 0], Ei[1, 0], Ei[2, 0] }));
+
+            dF2D_coefs_dr[1, 0] = (dg1_dr[0] * ei[0, 1] + dg1_dr[1] * ei[1, 1] + dg1_dr[2] * ei[2, 1]+ g1[0] * de2_dr[0] + g1[1] * de2_dr[1] + g1[2] * de2_dr[2]) * (G_1[0] * Ei[0, 0] + G_1[1] * Ei[1, 0] + G_1[2] * Ei[2, 0]) +
+                                  (dg2_dr[0] * ei[0, 1] + dg2_dr[1] * ei[1, 1] + dg2_dr[2] * ei[2, 1]+ g2[0] * de2_dr[0] + g2[1] * de2_dr[1] + g2[2] * de2_dr[2]) * (G_2[0] * Ei[0, 0] + G_2[1] * Ei[1, 0] + G_2[2] * Ei[2, 0]);
+
+            //dF2D_coefs_dr[1, 1] = (dg1_dr.CopyToArray().DotProduct(new double[3] { ei[0, 1], ei[1, 1], ei[2, 1] }) + g1.DotProduct(de2_dr)) * (G_1.DotProduct(new double[] { Ei[0, 1], Ei[1, 1], Ei[2, 1] })) +
+            //                        (dg2_dr.CopyToArray().DotProduct(new double[3] { ei[0, 1], ei[1, 1], ei[2, 1] }) + g2.DotProduct(de2_dr)) * (G_2.DotProduct(new double[] { Ei[0, 1], Ei[1, 1], Ei[2, 1] }));
+
+            dF2D_coefs_dr[1, 1] = (dg1_dr[0] * ei[0, 1] + dg1_dr[1] * ei[1, 1] + dg1_dr[2] * ei[2, 1]+ g1[0] * de2_dr[0] + g1[1] * de2_dr[1] + g1[2] * de2_dr[2]) * (G_1[0] * Ei[0, 1] + G_1[1] * Ei[1, 1] + G_1[2] * Ei[2, 1]) +
+                                  (dg2_dr[0] * ei[0, 1] + dg2_dr[1] * ei[1, 1] + dg2_dr[2] * ei[2, 1] + g2[0] * de2_dr[0] + g2[1] * de2_dr[1] + g2[2] * de2_dr[2]) * (G_2[0] * Ei[0, 1] + G_2[1] * Ei[1, 1] + G_2[2] * Ei[2, 1]);
+
+            double[] dF2D_coefs_dr_vec = new double[] { dF2D_coefs_dr[0, 0], dF2D_coefs_dr[1, 1], dF2D_coefs_dr[0, 1], dF2D_coefs_dr[1, 0] }; // to [1,0] vgainei iso  me to [0,1]
+
+            double[] dFPK2D_coefs_dr_vec = new double[4];
+
+
+            for (int i1 = 0; i1 < 4; i1++)
+            {
+
+                for (int i2 = 0; i2 < 4; i2++)
+                {
+                    dFPK2D_coefs_dr_vec[i1] += Aijkl_2D[i1, i2] * dF2D_coefs_dr_vec[i2];
+                }
+            }
+
+            var dFPK2D_coefs_dr = new double[,] { { dFPK2D_coefs_dr_vec[0], dFPK2D_coefs_dr_vec[2] }, { dFPK2D_coefs_dr_vec[3], dFPK2D_coefs_dr_vec[1] } };
+
+            
+
+            
+
+             return dFPK2D_coefs_dr;
+        }
+
         private double[,] Calculate3DtensorFrom2D(double[,] FPK_2D, Vector dg1_dr, Vector dg2_dr, a3r a3r, double[,] Ei)
         {
             double[,] tensor3D = new double[3, 3];
@@ -6121,10 +6172,10 @@ namespace ISAAR.MSolve.IGA.Elements
 
 
 
-                                        (_,_/*double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec*/, double[] dFPK2D_coefs_dr_vec, double[,] dFPK2D_coefs_dr) = Calculate_FPK_variation_term1(
-                                            materialDevelop.ConstitutiveMatrix.CopytoArray2D(), dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
-                                                                                                                                                                   // to do anti gia copy to array i methodos na mporei na doulevei me IMatrixView
-
+                                        //(_,_/*double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec*/, double[] dFPK2D_coefs_dr_vec, double[,] dFPK2D_coefs_dr) = Calculate_FPK_variation_term1(
+                                            //materialDevelop.ConstitutiveMatrix.CopytoArray2D(), dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);// to do anti gia copy to array i methodos na mporei na doulevei me IMatrixView
+                                        double[,] dFPK2D_coefs_dr = Calculate_FPK_variation_term1_Short(
+                                            materialDevelop.ConstitutiveMatrix.CopytoArray2D(), dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2);// to do anti gia copy to array i methodos na mporei na doulevei me IMatrixView
 
                                         //var p_contrib_coeffs_ = new double[3, 3]
                                         //{
