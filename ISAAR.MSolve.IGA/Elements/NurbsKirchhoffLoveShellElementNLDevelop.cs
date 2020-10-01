@@ -3958,17 +3958,35 @@ namespace ISAAR.MSolve.IGA.Elements
             double term05a = da3tilde_dksi.DotProduct(a3_tilde);
             for (int r1 = 0; r1 < 3; r1++)
             {
-                double term01 = da3tilde_dksidr[r1].DotProduct(a3_tilde) + da3tilde_dksi.DotProduct(Vector.CreateFromArray(da3tilde_dr[r1]));
-                double TERM03 = (da3tilde_dksi.DotProduct(a3_tilde)) * (da3tilde_dr[r1].DotProduct(a3_tilde.CopyToArray()));
-                double term04b = da3tilde_dr[r1].DotProduct(a3_tilde.CopyToArray());
+                //double term01 = da3tilde_dksidr[r1].DotProduct(a3_tilde) + da3tilde_dksi.DotProduct(Vector.CreateFromArray(da3tilde_dr[r1]));
+                double term01 = da3tilde_dksidr[r1][0] * a3_tilde[0] + da3tilde_dksidr[r1][1] * a3_tilde[1] + da3tilde_dksidr[r1][2] * a3_tilde[2] +
+                    da3tilde_dksi[0] * da3tilde_dr[r1][0] + da3tilde_dksi[1] * da3tilde_dr[r1][1] + da3tilde_dksi[2] * da3tilde_dr[r1][2];
+
+
+                //double TERM03 = (da3tilde_dksi.DotProduct(a3_tilde)) * (da3tilde_dr[r1].DotProduct(a3_tilde.CopyToArray()));
+                double TERM03 = (da3tilde_dksi[0] * a3_tilde[0] + da3tilde_dksi[1] * a3_tilde[1] + da3tilde_dksi[2] * a3_tilde[2]) *
+                    (da3tilde_dr[r1][0] * a3_tilde[0] + da3tilde_dr[r1][1] * a3_tilde[1] + da3tilde_dr[r1][2] * a3_tilde[2]);
+
+
+                //double term04b = da3tilde_dr[r1].DotProduct(a3_tilde.CopyToArray());
+                double term04b = da3tilde_dr[r1][0] * a3_tilde[0] + da3tilde_dr[r1][1] * a3_tilde[1] + da3tilde_dr[r1][2] * a3_tilde[2];
+
                 for (int s1 = 0; s1 < 3; s1++)
                 {
-                    double term02 = da3tilde_dksidrds[r1, s1].DotProduct(a3_tilde) + da3tilde_dksidr[r1].CopyToArray().DotProduct(da3tilde_ds[s1]) +
-                        da3tilde_dksids[s1].CopyToArray().DotProduct(da3tilde_dr[r1]) + da3tilde_dksi.CopyToArray().DotProduct(da3tilde_drds[r1, s1]);
+                    //double term02 = da3tilde_dksidrds[r1, s1].DotProduct(a3_tilde) + da3tilde_dksidr[r1].CopyToArray().DotProduct(da3tilde_ds[s1]) +
+                    //da3tilde_dksids[s1].CopyToArray().DotProduct(da3tilde_dr[r1]) + da3tilde_dksi.CopyToArray().DotProduct(da3tilde_drds[r1, s1]);
+                    double term02 = da3tilde_dksidrds[r1, s1][0] * a3_tilde[0] + da3tilde_dksidrds[r1, s1][1] * a3_tilde[1] + da3tilde_dksidrds[r1, s1][2] * a3_tilde[2] +
+                        da3tilde_dksidr[r1][0] * da3tilde_ds[s1][0] + da3tilde_dksidr[r1][1] * da3tilde_ds[s1][1] + da3tilde_dksidr[r1][2] * da3tilde_ds[s1][2] +
+                        da3tilde_dksids[s1][0] * da3tilde_dr[r1][0] + da3tilde_dksids[s1][1] * da3tilde_dr[r1][1] + da3tilde_dksids[s1][2] * da3tilde_dr[r1][2] +
+                        da3tilde_dksi[0] * da3tilde_drds[r1, s1][0] + da3tilde_dksi[1] * da3tilde_drds[r1, s1][1] + da3tilde_dksi[2] * da3tilde_drds[r1, s1][2];
 
-                    double term04a = da3tilde_dksids[s1].DotProduct(a3_tilde) + da3tilde_dksi.CopyToArray().DotProduct(da3tilde_ds[s1]);
+                    //double term04a = da3tilde_dksids[s1].DotProduct(a3_tilde) + da3tilde_dksi.CopyToArray().DotProduct(da3tilde_ds[s1]);
+                    double term04a = da3tilde_dksids[s1][0] * a3_tilde[0] + da3tilde_dksids[s1][1] * a3_tilde[1] + da3tilde_dksids[s1][2] * a3_tilde[2] +
+                        da3tilde_dksi[0] * da3tilde_ds[s1][0] + da3tilde_dksi[1] * da3tilde_ds[s1][1] + da3tilde_dksi[2] * da3tilde_ds[s1][2];
 
-                    double term05b = da3tilde_drds[r1, s1].DotProduct(a3_tilde.CopyToArray()) + da3tilde_dr[r1].DotProduct(da3tilde_ds[s1]);
+                    //double term05b = da3tilde_drds[r1, s1].DotProduct(a3_tilde.CopyToArray()) + da3tilde_dr[r1].DotProduct(da3tilde_ds[s1]);
+                    double term05b = da3tilde_drds[r1, s1][0] * a3_tilde[0] + da3tilde_drds[r1, s1][1] * a3_tilde[1] + da3tilde_drds[r1, s1][2] * a3_tilde[2] +
+                        da3tilde_dr[r1][0] * da3tilde_ds[s1][0] + da3tilde_dr[r1][1] * da3tilde_ds[s1][1] + da3tilde_dr[r1][2] * da3tilde_ds[s1][2];
 
                     da3norm_dksidrds[r1, s1] = (term02 / J1) - (term01 * dnorma3_ds[s1] / (Math.Pow(J1, 2))) -
                         ((double)1 / (Math.Pow(J1, 3))) * ((term04a * term04b) + (term05a * term05b)) + TERM03 * 3 * dnorma3_ds[s1] * ((double)1 / Math.Pow(J1, 4));
@@ -3978,17 +3996,35 @@ namespace ISAAR.MSolve.IGA.Elements
             term05a = da3tilde_dheta.DotProduct(a3_tilde);
             for (int r1 = 0; r1 < 3; r1++)
             {
-                double term01 = da3tilde_dhetadr[r1].DotProduct(a3_tilde) + da3tilde_dheta.DotProduct(Vector.CreateFromArray(da3tilde_dr[r1]));
-                double TERM03 = (da3tilde_dheta.DotProduct(a3_tilde)) * (da3tilde_dr[r1].DotProduct(a3_tilde.CopyToArray()));
-                double term04b = da3tilde_dr[r1].DotProduct(a3_tilde.CopyToArray());
+                //double term01 = da3tilde_dhetadr[r1].DotProduct(a3_tilde) + da3tilde_dheta.DotProduct(Vector.CreateFromArray(da3tilde_dr[r1]));
+                double term01 = da3tilde_dhetadr[r1][0] * a3_tilde[0] + da3tilde_dhetadr[r1][1] * a3_tilde[1] + da3tilde_dhetadr[r1][2] * a3_tilde[2] +
+                    da3tilde_dheta[0] * da3tilde_dr[r1][0] + da3tilde_dheta[1] * da3tilde_dr[r1][1] + da3tilde_dheta[2] * da3tilde_dr[r1][2];
+                //double TERM03 = (da3tilde_dheta.DotProduct(a3_tilde)) * (da3tilde_dr[r1].DotProduct(a3_tilde.CopyToArray()));
+                double TERM03 = da3tilde_dheta[0] * a3_tilde[0] + da3tilde_dheta[1] * a3_tilde[1] + da3tilde_dheta[2] * a3_tilde[2] +
+                    da3tilde_dr[r1][0] * a3_tilde[0] + da3tilde_dr[r1][1] * a3_tilde[1] + da3tilde_dr[r1][2] * a3_tilde[2];
+                //double term04b = da3tilde_dr[r1].DotProduct(a3_tilde.CopyToArray());
+                double term04b = da3tilde_dr[r1][0] * a3_tilde[0] + da3tilde_dr[r1][1] * a3_tilde[1] + da3tilde_dr[r1][2] * a3_tilde[2];
                 for (int s1 = 0; s1 < 3; s1++)
                 {
-                    double term02 = da3tilde_dhetadrds[r1, s1].DotProduct(a3_tilde) + da3tilde_dhetadr[r1].CopyToArray().DotProduct(da3tilde_ds[s1]) +
-                        da3tilde_dhetads[s1].CopyToArray().DotProduct(da3tilde_dr[r1]) + da3tilde_dheta.CopyToArray().DotProduct(da3tilde_drds[r1, s1]);
+                    //double term02 = da3tilde_dhetadrds[r1, s1].DotProduct(a3_tilde) + da3tilde_dhetadr[r1].CopyToArray().DotProduct(da3tilde_ds[s1]) +
+                    //    da3tilde_dhetads[s1].CopyToArray().DotProduct(da3tilde_dr[r1]) + da3tilde_dheta.CopyToArray().DotProduct(da3tilde_drds[r1, s1]);
 
-                    double term04a = da3tilde_dhetads[s1].DotProduct(a3_tilde) + da3tilde_dheta.CopyToArray().DotProduct(da3tilde_ds[s1]);
+                    double term02 = da3tilde_dhetadrds[r1, s1][0] * a3_tilde[0] + da3tilde_dhetadrds[r1, s1][1] * a3_tilde[1] + da3tilde_dhetadrds[r1, s1][2] * a3_tilde[2] +
+                        da3tilde_dhetadr[r1][0] * da3tilde_ds[s1][0] + da3tilde_dhetadr[r1][1] * da3tilde_ds[s1][1] + da3tilde_dhetadr[r1][2] * da3tilde_ds[s1][2] +
+                        da3tilde_dhetads[s1][0] * da3tilde_dr[r1][0] + da3tilde_dhetads[s1][1] * da3tilde_dr[r1][1] + da3tilde_dhetads[s1][2] * da3tilde_dr[r1][2] +
+                        da3tilde_dheta[0] * da3tilde_drds[r1, s1][0] + da3tilde_dheta[1] * da3tilde_drds[r1, s1][1] + da3tilde_dheta[2] * da3tilde_drds[r1, s1][2];
 
-                    double term05b = da3tilde_drds[r1, s1].DotProduct(a3_tilde.CopyToArray()) + da3tilde_dr[r1].DotProduct(da3tilde_ds[s1]);
+
+
+                    //double term04a = da3tilde_dhetads[s1].DotProduct(a3_tilde) + da3tilde_dheta.CopyToArray().DotProduct(da3tilde_ds[s1]);
+                    double term04a = da3tilde_dhetads[s1][0] * a3_tilde[0] + da3tilde_dhetads[s1][1] * a3_tilde[1] + da3tilde_dhetads[s1][2] * a3_tilde[2] +
+                        da3tilde_dheta[0] * da3tilde_ds[s1][0] + da3tilde_dheta[1] * da3tilde_ds[s1][1] + da3tilde_dheta[2] * da3tilde_ds[s1][2];
+                        
+
+                    
+                    //double term05b = da3tilde_drds[r1, s1].DotProduct(a3_tilde.CopyToArray()) + da3tilde_dr[r1].DotProduct(da3tilde_ds[s1]);
+                    double term05b = (da3tilde_drds[r1, s1][0] * a3_tilde[0] + da3tilde_drds[r1, s1][1] * a3_tilde[1] + da3tilde_drds[r1, s1][2] * a3_tilde[2]) +
+                                     (da3tilde_dr[r1][0] * da3tilde_ds[s1][0] + da3tilde_dr[r1][1] * da3tilde_ds[s1][1] + da3tilde_dr[r1][2] * da3tilde_ds[s1][2]);
 
                     da3norm_dhetadrds[r1, s1] = (term02 / J1) - (term01 * dnorma3_ds[s1] / (Math.Pow(J1, 2))) -
                         ((double)1 / (Math.Pow(J1, 3))) * ((term04a * term04b) + (term05a * term05b)) + TERM03 * 3 * dnorma3_ds[s1] * ((double)1 / Math.Pow(J1, 4));
