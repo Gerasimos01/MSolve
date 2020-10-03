@@ -3294,13 +3294,15 @@ namespace ISAAR.MSolve.IGA.Elements
 
         private double[] CalculateDerivativeOfVectorNormalisedArray(double[] g1, double[] dg1_dr)
         {
-            double norm = g1.Norm2();
+            double norm =Math.Sqrt(g1[0] * g1[0] + g1[1] * g1[1] + g1[2] * g1[2]);
 
-            double dnorm_dr = (g1.DotProduct(dg1_dr)) * ((double)1 / norm);
+            double dnorm_dr = (g1[0] * dg1_dr[0] + g1[1] * dg1_dr[1] + g1[2] * dg1_dr[2]) * ((double)1 / norm);
 
-            double[] firstTerm1 = dg1_dr.Scale((double)1 / norm); // 5.26
+            double[] firstTerm1 =new double[] { dg1_dr[0] * ((double)1 / norm), dg1_dr[1] * ((double)1 / norm), dg1_dr[2] * ((double)1 / norm) }; // 5.26
 
-            double[] secondTerm1 = g1.Scale(-dnorm_dr / (Math.Pow(norm, 2)));
+
+            double coeff = -dnorm_dr / (Math.Pow(norm, 2));
+            double[] secondTerm1 = new double[] { g1[0] * coeff, g1[1] * coeff, g1[2] * coeff };
 
             return new double[] { firstTerm1[0] + secondTerm1[0], firstTerm1[1] + secondTerm1[1], firstTerm1[2] + secondTerm1[2] };
         }
@@ -4390,7 +4392,8 @@ namespace ISAAR.MSolve.IGA.Elements
             var da3norm_dksidrds = new double[3, 3];
             var da3norm_dhetadrds = new double[3, 3];
 
-            double term05a = da3tilde_dksi.DotProduct(a3_tilde);
+            //double term05a = da3tilde_dksi.DotProduct(a3_tilde);
+            double term05a = da3tilde_dksi[0] * a3_tilde[0] + da3tilde_dksi[1] * a3_tilde[1] + da3tilde_dksi[2] * a3_tilde[2];
             for (int r1 = 0; r1 < 3; r1++)
             {
                 //double term01 = da3tilde_dksidr[r1].DotProduct(a3_tilde) + da3tilde_dksi.DotProduct(Vector.CreateFromArray(da3tilde_dr[r1]));
@@ -4428,7 +4431,8 @@ namespace ISAAR.MSolve.IGA.Elements
                 }
             }
 
-            term05a = da3tilde_dheta.DotProduct(a3_tilde);
+            //term05a = da3tilde_dheta.DotProduct(a3_tilde);
+            term05a = da3tilde_dheta[0] * a3_tilde[0] + da3tilde_dheta[1] * a3_tilde[1] + da3tilde_dheta[2] * a3_tilde[2];
             for (int r1 = 0; r1 < 3; r1++)
             {
                 //double term01 = da3tilde_dhetadr[r1].DotProduct(a3_tilde) + da3tilde_dheta.DotProduct(Vector.CreateFromArray(da3tilde_dr[r1]));
