@@ -1292,6 +1292,93 @@ namespace ISAAR.MSolve.IGA.Elements
             return (da3_dksidr, da3_dhetadr);
         }
 
+        private (Vector[] da3_dksidr, Vector[] da3_dhetadr) Calculate_da3_dksidrDevelop(double[][] da3tilde_dksidr, double[][] da3tilde_dhetadr, Vector da3tilde_dksi,
+            Vector da3tilde_dheta, double[] dnorma3_dr, Vector a3_tilde, double[] da3norm_dksidr, double[] da3norm_dhetadr, double da3norm_dksi,
+            double da3norm_dheta, double J1, double[][] da3tilde_dr)
+        {
+            Vector[] da3_dksidr = new Vector[3];
+            Vector[] da3_dhetadr = new Vector[3];
+
+            for (int r1 = 0; r1 < 3; r1++)
+            {
+                var firstVec_0 = da3tilde_dksidr[r1][0] / J1;
+                var firstVec_1 = da3tilde_dksidr[r1][1] / J1;
+                var firstVec_2 = da3tilde_dksidr[r1][2] / J1;
+
+                double scale2 = -((double)1 / (Math.Pow(J1, 2))); //denominator of vectors 2 3 and 4 and a minus.
+
+                var scale3 = dnorma3_dr[r1] * scale2;
+                var secondVec_0 = da3tilde_dksi[0] * scale3;
+                var secondVec_1 = da3tilde_dksi[1] * scale3;
+                var secondVec_2 = da3tilde_dksi[2] * scale3;
+
+                var scale4 = da3norm_dksi * scale2;
+                var thirdVec_0 = da3tilde_dr[r1][0] * scale4;
+                var thirdVec_1 = da3tilde_dr[r1][1] * scale4;
+                var thirdVec_2 = da3tilde_dr[r1][2] * scale4;
+
+                var scale6 = da3norm_dksidr[r1] * scale2;
+                var fourthVec_0 = a3_tilde[0] * scale6;
+                var fourthVec_1 = a3_tilde[1] * scale6;
+                var fourthVec_2 = a3_tilde[2] * scale6;
+
+                double scale5 = ((double)1) / Math.Pow(J1, 3);
+                var scale7 = 2 * da3norm_dksi * dnorma3_dr[r1] * scale5;
+                var fifthvector_0 = a3_tilde[0] * scale7;
+                var fifthvector_1 = a3_tilde[1] * scale7;
+                var fifthvector_2 = a3_tilde[2] * scale7;
+
+                da3_dksidr[r1] = Vector.CreateFromArray(new double[]
+                {
+                    firstVec_0 + secondVec_0 + thirdVec_0 + fourthVec_0 + fifthvector_0,
+                    firstVec_1 + secondVec_1 + thirdVec_1 + fourthVec_1 + fifthvector_1,
+                    firstVec_2 + secondVec_2 + thirdVec_2 + fourthVec_2 + fifthvector_2,
+                });
+
+            }
+
+            for (int r1 = 0; r1 < 3; r1++)
+            {
+                var firstVec_0 = da3tilde_dhetadr[r1][0] / J1;
+                var firstVec_1 = da3tilde_dhetadr[r1][1] / J1;
+                var firstVec_2 = da3tilde_dhetadr[r1][2] / J1;
+
+                double scale2 = -((double)1 / (Math.Pow(J1, 2))); //denominator of vectors 2 3 and 4 and a minus.
+
+                var scale3 = dnorma3_dr[r1] * scale2;
+                var secondVec_0 = da3tilde_dheta[0] * scale3;
+                var secondVec_1 = da3tilde_dheta[1] * scale3;
+                var secondVec_2 = da3tilde_dheta[2] * scale3;
+
+                var scale4 = da3norm_dheta * scale2;
+                var thirdVec_0 = da3tilde_dr[r1][0] * scale4;
+                var thirdVec_1 = da3tilde_dr[r1][1] * scale4;
+                var thirdVec_2 = da3tilde_dr[r1][2] * scale4;
+
+                var scale6 = da3norm_dhetadr[r1] * scale2;
+                var fourthVec_0 = a3_tilde[0] * scale6;
+                var fourthVec_1 = a3_tilde[1] * scale6;
+                var fourthVec_2 = a3_tilde[2] * scale6;
+
+                double scale5 = ((double)1) / Math.Pow(J1, 3);
+                var scale7 = 2 * da3norm_dheta * dnorma3_dr[r1] * scale5;
+                var fifthvector_0 = a3_tilde[0] * scale7;
+                var fifthvector_1 = a3_tilde[1] * scale7;
+                var fifthvector_2 = a3_tilde[2] * scale7;
+
+                da3_dhetadr[r1] = Vector.CreateFromArray(new double[]
+                {
+                    firstVec_0 + secondVec_0 + thirdVec_0 + fourthVec_0 + fifthvector_0,
+                    firstVec_1 + secondVec_1 + thirdVec_1 + fourthVec_1 + fifthvector_1,
+                    firstVec_2 + secondVec_2 + thirdVec_2 + fourthVec_2 + fifthvector_2,
+                });
+
+
+            }
+
+            return (da3_dksidr, da3_dhetadr);
+        }
+
         private (double[] da3norm_dksidr, double[] da3norm_dhetadr) Calculate_da3norm_dksidr(Vector[] da3tilde_dksidr, Vector[] da3tilde_dhetadr, Vector a3_tilde, Vector da3tilde_dksi, Vector da3tilde_dheta, double[][] da3tilde_dr, double J1)
         {
             var da3norm_dksidr = new double[3];
@@ -1324,6 +1411,47 @@ namespace ISAAR.MSolve.IGA.Elements
             return (da3norm_dksidr, da3norm_dhetadr);
         }
 
+        private (double[] da3norm_dksidr, double[] da3norm_dhetadr) Calculate_da3norm_dksidr_Develop(double[][] da3tilde_dksidr, double[][] da3tilde_dhetadr, Vector a3_tilde, Vector da3tilde_dksi, Vector da3tilde_dheta, double[][] da3tilde_dr, double J1)
+        {
+            var da3norm_dksidr = new double[3];
+            var da3norm_dhetadr = new double[3];
+
+            for (int r1 = 0; r1 < 3; r1++)
+            {
+                //double firstNumerator = da3tilde_dksidr[r1].DotProduct(a3_tilde) + da3tilde_dksi.DotProduct(Vector.CreateFromArray(da3tilde_dr[r1]));
+                double firstNumerator = da3tilde_dksidr[r1][0] * a3_tilde[0] + da3tilde_dksidr[r1][1] * a3_tilde[1] + da3tilde_dksidr[r1][2] * a3_tilde[2] +
+                                        da3tilde_dksi[0] * da3tilde_dr[r1][0] + da3tilde_dksi[1] * da3tilde_dr[r1][1] + da3tilde_dksi[2] * da3tilde_dr[r1][2];
+
+                double firstDenominator = J1;
+
+                //double secondNumerator = da3tilde_dksi.DotProduct(a3_tilde) * da3tilde_dr[r1].DotProduct(a3_tilde.CopyToArray());
+                double secondNumerator = (da3tilde_dksi[0] * a3_tilde[0] + da3tilde_dksi[1] * a3_tilde[1] + da3tilde_dksi[2] * a3_tilde[2]) *
+                    (da3tilde_dr[r1][0] * a3_tilde[0] + da3tilde_dr[r1][1] * a3_tilde[1] + da3tilde_dr[r1][2] * a3_tilde[2]);
+
+                double secondDenominator = Math.Pow(J1, 3);
+
+                da3norm_dksidr[r1] = (firstNumerator / firstDenominator) - (secondNumerator / secondDenominator);
+
+            }
+
+            for (int r1 = 0; r1 < 3; r1++)
+            {
+                //double firstNumerator = da3tilde_dhetadr[r1].DotProduct(a3_tilde) + da3tilde_dheta.DotProduct(Vector.CreateFromArray(da3tilde_dr[r1]));
+                double firstNumerator = da3tilde_dhetadr[r1][0] * a3_tilde[0] + da3tilde_dhetadr[r1][1] * a3_tilde[1] + da3tilde_dhetadr[r1][2] * a3_tilde[2] +
+                    +da3tilde_dheta[0] * da3tilde_dr[r1][0] + da3tilde_dheta[1] * da3tilde_dr[r1][1] + da3tilde_dheta[2] * da3tilde_dr[r1][2];
+
+                double firstDenominator = J1;
+
+                double secondNumerator = da3tilde_dheta.DotProduct(a3_tilde) * da3tilde_dr[r1].DotProduct(a3_tilde.CopyToArray());
+                double secondDenominator = Math.Pow(J1, 3);
+
+                da3norm_dhetadr[r1] = (firstNumerator / firstDenominator) - (secondNumerator / secondDenominator);
+
+            }
+
+            return (da3norm_dksidr, da3norm_dhetadr);
+        }
+
         private (Vector[] da3tilde_dksidr, Vector[] da3tilde_dhetadr) Calculate_da3tilde_dksidr(Matrix3by3 a1r, Matrix3by3 a2r, Matrix3by3 a11r, Matrix3by3 a22r, Matrix3by3 a12r,
             Vector a1, Vector a2, Vector a11, Vector a22, Vector a12)
         {
@@ -1339,17 +1467,28 @@ namespace ISAAR.MSolve.IGA.Elements
             return (da3tilde_dksidr, da3tilde_dhetadr);
         }
 
-        private (Vector[] da3tilde_dksidr, Vector[] da3tilde_dhetadr) Calculate_da3tilde_dksidrDvelop(Matrix3by3 a1r, Matrix3by3 a2r, Matrix3by3 a11r, Matrix3by3 a22r, Matrix3by3 a12r,
-            Vector a1, Vector a2, Vector a11, Vector a22, Vector a12)
+        private (double[][] da3tilde_dksidr, double[][] da3tilde_dhetadr) Calculate_da3tilde_dksidrDvelop(
+            double[] a1, double[] a2, double[] a11, double[] a22, double[] a12,
+            double dksi_r, double dheta_r, double d2Ksi_dr, double d2Heta_dr, double d2KsiHeta_dr)
         {
-            Vector[] da3tilde_dksidr = new Vector[3];
-            Vector[] da3tilde_dhetadr = new Vector[3];
+            double[][] da3tilde_dksidr = new double[3][];
+            double[][] da3tilde_dhetadr = new double[3][];
 
-            for (int r1 = 0; r1 < 3; r1++)
-            {
-                da3tilde_dksidr[r1] = a11r.GetColumn(r1).CrossProduct(a2) + a11.CrossProduct(a2r.GetColumn(r1)) + a1r.GetColumn(r1).CrossProduct(a12) + a1.CrossProduct(a12r.GetColumn(r1));
-                da3tilde_dhetadr[r1] = a12r.GetColumn(r1).CrossProduct(a2) + a12.CrossProduct(a2r.GetColumn(r1)) + a1r.GetColumn(r1).CrossProduct(a22) + a1.CrossProduct(a22r.GetColumn(r1));
-            }
+            //for (int r1 = 0; r1 < 3; r1++)
+            //{
+            //    da3tilde_dksidr[r1] = a11r.GetColumn(r1).CrossProduct(a2) + a11.CrossProduct(a2r.GetColumn(r1)) + a1r.GetColumn(r1).CrossProduct(a12) + a1.CrossProduct(a12r.GetColumn(r1));
+            //    da3tilde_dhetadr[r1] = a12r.GetColumn(r1).CrossProduct(a2) + a12.CrossProduct(a2r.GetColumn(r1)) + a1r.GetColumn(r1).CrossProduct(a22) + a1.CrossProduct(a22r.GetColumn(r1));
+            //}
+
+            da3tilde_dksidr[0] = new double[3] { 0, a1[2] * d2KsiHeta_dr - a2[2] * d2Ksi_dr + a11[2] * dheta_r - a12[2] * dksi_r, a2[1] * d2Ksi_dr - a1[1] * d2KsiHeta_dr - a11[1] * dheta_r + a12[1] * dksi_r };
+            da3tilde_dksidr[1] = new double[3] { a2[2] * d2Ksi_dr - a1[2] * d2KsiHeta_dr - a11[2] * dheta_r + a12[2] * dksi_r, 0, a1[0] * d2KsiHeta_dr - a2[0] * d2Ksi_dr + a11[0] * dheta_r - a12[0] * dksi_r };
+            da3tilde_dksidr[2] = new double[3] { a1[1] * d2KsiHeta_dr - a2[1] * d2Ksi_dr + a11[1] * dheta_r - a12[1] * dksi_r, a2[0] * d2Ksi_dr - a1[0] * d2KsiHeta_dr - a11[0] * dheta_r + a12[0] * dksi_r, 0 };
+
+            da3tilde_dhetadr[0] = new double[3] { 0, a1[2] * d2Heta_dr - a2[2] * d2KsiHeta_dr + a12[2] * dheta_r - a22[2] * dksi_r, a2[1] * d2KsiHeta_dr - a1[1] * d2Heta_dr - a12[1] * dheta_r + a22[1] * dksi_r };
+            da3tilde_dhetadr[1] = new double[3] { a2[2] * d2KsiHeta_dr - a1[2] * d2Heta_dr - a12[2] * dheta_r + a22[2] * dksi_r, 0, a1[0] * d2Heta_dr - a2[0] * d2KsiHeta_dr + a12[0] * dheta_r - a22[0] * dksi_r };
+            da3tilde_dhetadr[2] = new double[3] { a1[1] * d2Heta_dr - a2[1] * d2KsiHeta_dr + a12[1] * dheta_r - a22[1] * dksi_r, a2[0] * d2KsiHeta_dr - a1[0] * d2Heta_dr - a12[0] * dheta_r + a22[0] * dksi_r, 0 };
+
+
 
             return (da3tilde_dksidr, da3tilde_dhetadr);
         }
@@ -2423,7 +2562,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
 
                                             //double[,] Pcontributions = Calculate3DtensorFrom2D(FPK_2D, dg1_dr, dg2_dr, a3r, Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
-                                            double[,] Pcontributions = Calculate3DtensorFrom2Dcorrected(FPK_2D, de1_dr, de2_dr, da3_dr, Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
+                                            double[,] Pcontributions = Calculate3DtensorFrom2DcorrectedSlow(FPK_2D, de1_dr, de2_dr, da3_dr, Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
 
                                             (double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec, double[] dFPK2D_coefs_dr_vec, double[,] dFPK2D_coefs_dr) = Calculate_FPK_variation_term1(Aijkl_2D, dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
 
@@ -2765,6 +2904,31 @@ namespace ISAAR.MSolve.IGA.Elements
             return de2_dr;
         }
 
+        private double[] CalculateDerivativeOfOrthogonalisedNormalisedCovariantBasisArray(double[,] ei, double[] de1_dr, double[] e2_init, double[] de2_init_dr)
+        {
+            Vector e1 = Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] });
+
+            double e1_dot_e2_init = ei[0,0] * e2_init[0] + ei[1,0] * e2_init[1] + ei[2,0] * e2_init[2];
+            double e1_dot_de2_init_dr = ei[0,0] * de2_init_dr[0] + ei[1,0] * de2_init_dr[1] + ei[2,0] * de2_init_dr[2];
+            double de1_dr_dot_e2_init = de1_dr[0] * e2_init[0] + de1_dr[1] * e2_init[1] + de1_dr[2] * e2_init[2];
+
+            //Vector projection = e1.Scale(e1_dot_e2_init);
+            double[] projection = new double[] { ei[0,0] * e1_dot_e2_init, ei[1,0] * e1_dot_e2_init, ei[2,0] * e1_dot_e2_init };
+
+            //Vector dprojection_dr = e1.Scale(e1_dot_de2_init_dr + de1_dr_dot_e2_init) + de1_dr.Scale(e1_dot_e2_init);
+            double e1coeff = e1_dot_de2_init_dr + de1_dr_dot_e2_init;
+            double[] dprojection_dr = new double[] { ei[0,0] * e1coeff + de1_dr[0] * e1_dot_e2_init, ei[1,0] * e1coeff + de1_dr[1] * e1_dot_e2_init, ei[2,0] * e1coeff + de1_dr[2] * e1_dot_e2_init };
+
+
+            double[] e2_tilde = new double[] { e2_init[0] - projection[0], e2_init[1] - projection[1], e2_init[2] - projection[2] };
+
+            double[] de2tilde_dr = new double[] { de2_init_dr[0] - dprojection_dr[0], de2_init_dr[1] - dprojection_dr[1], de2_init_dr[2] - dprojection_dr[2] };
+
+            double[] de2_dr = CalculateDerivativeOfVectorNormalisedArray(e2_tilde, de2tilde_dr);
+
+            return de2_dr;
+        }
+
         public double[,] CalculateRotationMatrix(double[,] e_new, double[,] e_old)
         {
             double[,] Qij = new double[3, 3];
@@ -2818,12 +2982,12 @@ namespace ISAAR.MSolve.IGA.Elements
 
             //double[,] Pcontributions = Calculate3DtensorFrom2D(dFPK2D_coefs_dr, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }),
             //   Ei);
-            double[,] Pcontributions = Calculate3DtensorFrom2Dcorrected(dFPK2D_coefs_dr, Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }), Vector.CreateFromArray(new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }), a3, Ei);
+            double[,] Pcontributions = Calculate3DtensorFrom2Dcorrected(dFPK2D_coefs_dr, new double[] { ei[0, 0], ei[1, 0], ei[2, 0] }, new double[] { ei[0, 1], ei[1, 1], ei[2, 1] }, a3.CopyToArray(), Ei);
 
             return (Pcontributions, dF2D_coefs_dr_vec, dFPK2D_coefs_dr_vec, dFPK2D_coefs_dr);
         }
 
-        private  double[,] Calculate_FPK_variation_term1_Short(double[,] Aijkl_2D, Vector dg1_dr, Vector dg2_dr, Vector de1_dr, Vector de2_dr, double[] G_1, double[] G_2, a3r a3r, double[,] Ei, double[,] ei, Vector g1, Vector g2)//.
+        private  double[,] Calculate_FPK_variation_term1_Short(double[,] Aijkl_2D, double[] dg1_dr, double[] dg2_dr, double[] de1_dr, double[] de2_dr, double[] G_1, double[] G_2, a3r a3r, double[,] Ei, double[,] ei, double[] g1, double[] g2)//.
         {
             double[,] dF2D_coefs_dr = new double[2, 2];
 
@@ -2930,7 +3094,65 @@ namespace ISAAR.MSolve.IGA.Elements
             return tensor3D;
         }
 
-        private double[,] Calculate3DtensorFrom2Dcorrected(double[,] FPK_2D, Vector dg1_dr, Vector dg2_dr, Vector da3_dr, double[,] Ei)
+        private double[,] Calculate3DtensorFrom2Dcorrected(double[,] FPK_2D, double[] dg1_dr, double[] dg2_dr, double[] da3_dr, double[,] Ei)
+        {
+            double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
+
+            #region create and normalise ei
+            double[,] ei = new double[3, 3];
+            double norm_e1 = dg1_dr[0] * dg1_dr[0] + dg1_dr[1] * dg1_dr[1] + dg1_dr[2] * dg1_dr[2];
+            norm_e1 = Math.Sqrt(norm_e1);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 0] = dg1_dr[i2] / norm_e1;
+            }
+
+            double norm_e2 = dg2_dr[0] * dg2_dr[0] + dg2_dr[1] * dg2_dr[1] + dg2_dr[2] * dg2_dr[2];
+            norm_e2 = Math.Sqrt(norm_e2);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 1] = dg2_dr[i2] / norm_e2;
+            }
+
+            double norm_e3 = da3_dr[0] * da3_dr[0] + da3_dr[1] * da3_dr[1] + da3_dr[2] * da3_dr[2];
+            norm_e3 = Math.Sqrt(norm_e3);
+            for (int i2 = 0; i2 < 3; i2++)
+            {
+                ei[i2, 2] = da3_dr[i2] / norm_e3;
+            }
+            #endregion
+
+            #region adapt FPK_2D for normalisation of basis vectors
+
+            double coef1 = 0;
+            double coef2 = 0;
+            double[,] FPK_2D_in_normalised = new double[3, 3];
+            for (int i1 = 0; i1 < 2; i1++)
+            {
+                if (i1 == 0) { coef1 = norm_e1; }
+                else if (i1 == 1) { coef1 = norm_e2; }
+                for (int i2 = 0; i2 < 2; i2++)
+                {
+                    if (i2 == 0) { coef2 = norm_e1; }
+                    else if (i2 == 1) { coef2 = norm_e2; }
+
+                    //FPK_2D_in_normalised[i1, i2] = FPK_2D[i1, i2] * coef1 * coef2;
+                    FPK_2D_in_normalised[i1, i2] = FPK_2D[i1, i2] * coef1;// * coef2;
+                }
+            }
+            #endregion
+
+            var cartes_to_Gi = CalculateRotationMatrix(Ei, eye);
+            var cartes_to_tgi = CalculateRotationMatrix(ei, eye);
+
+            double[,] FPK_3D = Transform_FPK_rve_To_FPK_3D(FPK_2D_in_normalised, cartes_to_Gi, cartes_to_tgi);// 1);
+
+
+
+            return FPK_3D;
+        }
+
+        private double[,] Calculate3DtensorFrom2DcorrectedSlow(double[,] FPK_2D, Vector dg1_dr, Vector dg2_dr, Vector da3_dr, double[,] Ei)
         {
             double[,] eye = new double[3, 3]; eye[0, 0] = 1; eye[1, 1] = 1; eye[2, 2] = 1;
 
@@ -2999,6 +3221,19 @@ namespace ISAAR.MSolve.IGA.Elements
             Vector secondTerm1 = g1.Scale(-dnorm_dr / (Math.Pow(norm, 2)));
 
             return (firstTerm1 + secondTerm1);
+        }
+
+        private double[] CalculateDerivativeOfVectorNormalisedArray(double[] g1, double[] dg1_dr)
+        {
+            double norm = g1.Norm2();
+
+            double dnorm_dr = (g1.DotProduct(dg1_dr)) * ((double)1 / norm);
+
+            double[] firstTerm1 = dg1_dr.Scale((double)1 / norm); // 5.26
+
+            double[] secondTerm1 = g1.Scale(-dnorm_dr / (Math.Pow(norm, 2)));
+
+            return new double[] { firstTerm1[0] + secondTerm1[0], firstTerm1[1] + secondTerm1[1], firstTerm1[2] + secondTerm1[2] };
         }
 
         private (Vector[,] da3_dksidrds, Vector[,] da3_dhetadrds) Calculate_532_c(double J1, Vector[] da3tilde_dksidr, Vector[] da3tilde_dhetadr,
@@ -3987,7 +4222,7 @@ namespace ISAAR.MSolve.IGA.Elements
 
         private (double[,][] da3_drds, double[,][] da3_dksidrds, double[,][] da3_dhetadrds) Calculate_dvariable_drds_second_derivatives(Vector surfaceBasisVector1, Vector surfaceBasisVector2,
             Vector surfaceBasisVector3, double J1, double dKsi_r, double dKsi_s, double dHeta_r, double dHeta_s,
-             Vector[] da3tilde_dksidr, Vector[] da3tilde_dhetadr, Vector[] da3tilde_dksids, Vector[] da3tilde_dhetads, Vector a3_tilde,   Vector da3tilde_dksi, Vector da3tilde_dheta, double da3norm_dksi,
+             double[][] da3tilde_dksidr, double[][] da3tilde_dhetadr, double[][] da3tilde_dksids, double[][] da3tilde_dhetads, Vector a3_tilde,   Vector da3tilde_dksi, Vector da3tilde_dheta, double da3norm_dksi,
             double da3norm_dheta, double[] da3norm_dksids, double[] da3norm_dhetads, double[] da3norm_dhetadr, double[] da3norm_dksidr,
             double dksi_r, double dheta_r, double d2Ksi_dr, double d2Heta_dr , double d2KsiHeta_dr  ,
             double d2Ksi_ds, double d2Heta_ds, double d2KsiHeta_ds, double dksi_s, double dheta_s)
@@ -5865,8 +6100,8 @@ namespace ISAAR.MSolve.IGA.Elements
 
                     var da3tilde_drArray = new double[elementControlPoints.Length][][]; //now an index will be necessary
                     var dnorma3_drArray = new double[elementControlPoints.Length][];
-                    var da3tilde_dksidrArray = new Vector[elementControlPoints.Length][];
-                    var da3tilde_dhetadrArray = new Vector[elementControlPoints.Length][];
+                    var da3tilde_dksidrArray = new double[elementControlPoints.Length][][];
+                    var da3tilde_dhetadrArray = new double[elementControlPoints.Length][][];
                     var da3norm_dksidrArray = new double[elementControlPoints.Length][];
                     var da3norm_dhetadrArray = new double[elementControlPoints.Length][];
                     var da3_dksidrArray = new Vector[elementControlPoints.Length][];
@@ -5880,6 +6115,10 @@ namespace ISAAR.MSolve.IGA.Elements
                         var a3r = new a3r();
                         var dksi_r = nurbs.NurbsDerivativeValuesKsi[i, j];
                         var dheta_r = nurbs.NurbsDerivativeValuesHeta[i, j];
+                        var d2Ksi_dr = nurbs.NurbsSecondDerivativeValueKsi[i, j];
+                        var d2Heta_dr = nurbs.NurbsSecondDerivativeValueHeta[i, j];
+                        var d2KsiHeta_dr = nurbs.NurbsSecondDerivativeValueKsiHeta[i, j];
+
                         CalculateA3r(surfaceBasisVector1, surfaceBasisVector2, surfaceBasisVector3, dksi_r,
                             dheta_r, J1, ref a3r);
                         a3rArray[i] = a3r;
@@ -5899,14 +6138,17 @@ namespace ISAAR.MSolve.IGA.Elements
                         a3_tilde = Vector.CreateFromArray(CalculateTerm525(a3, J1, dnorma3_drArray[i], da3tilde_drArray[i]));
 
                         //5.30 b
-                        (da3tilde_dksidrArray[i], da3tilde_dhetadrArray[i]) = Calculate_da3tilde_dksidr(a1rArray[i], a2rArray[i], a11rArray[i], a22rArray[i], a12rArray[i], a1, a2, a11, a22, a12);
+                        //(da3tilde_dksidrArray[i], da3tilde_dhetadrArray[i]) = Calculate_da3tilde_dksidr(a1rArray[i], a2rArray[i], a11rArray[i], a22rArray[i], a12rArray[i], a1, a2, a11, a22, a12);
+                        (da3tilde_dksidrArray[i], da3tilde_dhetadrArray[i])= Calculate_da3tilde_dksidrDvelop(a1.CopyToArray(), a2.CopyToArray(), a11.CopyToArray(), a22.CopyToArray(), a12.CopyToArray(),
+                            dksi_r, dheta_r, d2Ksi_dr, d2Heta_dr, d2KsiHeta_dr);
+
 
                         //5.31 b
-                        (da3norm_dksidrArray[i], da3norm_dhetadrArray[i]) = Calculate_da3norm_dksidr(da3tilde_dksidrArray[i], da3tilde_dhetadrArray[i],
+                        (da3norm_dksidrArray[i], da3norm_dhetadrArray[i]) = Calculate_da3norm_dksidr_Develop(da3tilde_dksidrArray[i], da3tilde_dhetadrArray[i],
                             a3_tilde, da3tilde_dksi, da3tilde_dheta, da3tilde_drArray[i], J1);
 
                         //5.32 b
-                        (da3_dksidrArray[i], da3_dhetadrArray[i]) = Calculate_da3_dksidr(da3tilde_dksidrArray[i], da3tilde_dhetadrArray[i], da3tilde_dksi, da3tilde_dheta,
+                        (da3_dksidrArray[i], da3_dhetadrArray[i]) = Calculate_da3_dksidrDevelop(da3tilde_dksidrArray[i], da3tilde_dhetadrArray[i], da3tilde_dksi, da3tilde_dheta,
                             dnorma3_drArray[i], a3_tilde, da3norm_dksidrArray[i], da3norm_dhetadrArray[i], da3norm_dksi, da3norm_dheta, J1, da3tilde_drArray[i]);
 
                         for (int i1 = 0; i1 < thicknessPoints.Count; i1++)
@@ -5919,10 +6161,16 @@ namespace ISAAR.MSolve.IGA.Elements
                             for (int r1 = 0; r1 < 3; r1++)
                             {
                                 //(31)
-                                Vector dg1_dr = a1rArray[i].GetColumn(r1) + da3_dksidrArray[i][r1] * z;
-                                Vector dg2_dr = a2rArray[i].GetColumn(r1) + da3_dhetadrArray[i][r1] * z;
+                                //Vector dg1_dr = a1rArray[i].GetColumn(r1) + da3_dksidrArray[i][r1] * z;
+                                double[] dg1_dr = new double[3] { da3_dksidrArray[i][r1][0] * z, da3_dksidrArray[i][r1][1] * z, da3_dksidrArray[i][r1][2] * z };
+                                dg1_dr[r1] += dksi_r;
 
-                                //Vector dg3_dr = a3r. ....
+                                //Vector dg2_dr = a2rArray[i].GetColumn(r1) + da3_dhetadrArray[i][r1] * z;
+                                double[] dg2_dr = new double[3] { da3_dhetadrArray[i][r1][0] * z, da3_dhetadrArray[i][r1][1] * z, da3_dhetadrArray[i][r1][2] * z };
+                                dg2_dr[r1] += dheta_r;
+
+
+
 
                                 var G_1 = G_1_ofGPs[i1];
                                 var G_2 = G_2_ofGPs[i1];
@@ -6123,9 +6371,9 @@ namespace ISAAR.MSolve.IGA.Elements
                                     {
                                         //ElementStiffnesses.ProccessVariable(9, new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }, false);
 
-                                        ElementStiffnesses.ProccessVariable(21, da3tilde_dksidr[0].CopyToArray(), false);
+                                        ElementStiffnesses.ProccessVariable(21, da3tilde_dksidr[0], false);
 
-                                        ElementStiffnesses.ProccessVariable(22, da3tilde_dhetadr[0].CopyToArray(), false);
+                                        ElementStiffnesses.ProccessVariable(22, da3tilde_dhetadr[0], false);
 
                                         ElementStiffnesses.ProccessVariable(23, new double[] { da3norm_dksidr[0] }, false);
 
@@ -6157,9 +6405,11 @@ namespace ISAAR.MSolve.IGA.Elements
                                 var Ei = Ei_of_Gps[i1];
                                 var Aijkl_2D = Aijkl_2D_ofGPs[i1];
                                 var ei = ei_of_Gps[i1];
-                                Vector g1 = a1 + da3_dksi.Scale(z);
-                                Vector g2 = a2 + da3_dheta.Scale(z);
-                                Vector e2_init = g2.Scale((double)1 / g2.Norm2()); // einai to g2 unit 
+                                double[]  g1 = new double[] { a1[0] + da3_dksi[0] * z, a1[1] + da3_dksi[1] * z, a1[2] + da3_dksi[2] * z };
+                                double[]  g2 = new double[] { a2[0] + da3_dheta[0] * z, a2[1] + da3_dheta[1] * z, a2[2] + da3_dheta[2] * z } ;
+
+                                double norm_g2 = g2.Norm2();
+                                double[] e2_init = new double[] { g2[0] * ((double)1 / norm_g2), g2[1] * ((double)1 / norm_g2), g2[2] * ((double)1 / norm_g2) }; // einai to g2 unit 
 
                                 #region higher order terms FPK:F3D_drds
 
@@ -6182,16 +6432,23 @@ namespace ISAAR.MSolve.IGA.Elements
                                 for (int r1 = 0; r1 < 3; r1++)
                                 {
                                     var dF_3D_dr1 = dF_3D_dr_vecArray[3 * i + r1, i1];
-                                    Vector dg1_dr = a1rArray[i].GetColumn(r1) + da3_dksidrArray[i][r1] * z;
-                                    Vector dg2_dr = a2rArray[i].GetColumn(r1) + da3_dhetadrArray[i][r1] * z;
-                                    Vector da3_dr = Vector.CreateZero(3);
-                                    if (r1 == 0) { da3_dr = Vector.CreateFromArray(new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }); }
-                                    else if (r1 == 1) { da3_dr = Vector.CreateFromArray(new double[] { a3r.a3r01, a3r.a3r11, a3r.a3r21 }); }
-                                    else if (r1 == 2) { da3_dr = Vector.CreateFromArray(new double[] { a3r.a3r02, a3r.a3r12, a3r.a3r22 }); }
+                                    //(31)
+                                    //Vector dg1_dr = a1rArray[i].GetColumn(r1) + da3_dksidrArray[i][r1] * z;
+                                    double[] dg1_dr = new double[3] { da3_dksidrArray[i][r1][0] * z, da3_dksidrArray[i][r1][1] * z, da3_dksidrArray[i][r1][2] * z };
+                                    dg1_dr[r1] += dksi_r;
 
-                                    Vector de1_dr = CalculateDerivativeOfVectorNormalised(g1, dg1_dr);
-                                    Vector de2_init_dr = CalculateDerivativeOfVectorNormalised(g2, dg2_dr); // einai to dg2unit_dr
-                                    Vector de2_dr = CalculateDerivativeOfOrthogonalisedNormalisedCovariantBasis(ei, de1_dr, e2_init, de2_init_dr);
+                                    //Vector dg2_dr = a2rArray[i].GetColumn(r1) + da3_dhetadrArray[i][r1] * z;
+                                    double[] dg2_dr = new double[3] { da3_dhetadrArray[i][r1][0] * z, da3_dhetadrArray[i][r1][1] * z, da3_dhetadrArray[i][r1][2] * z };
+                                    dg2_dr[r1] += dheta_r;
+
+                                    var da3_dr = new double[3];
+                                    if (r1 == 0) { da3_dr[0] = a3r.a3r00; da3_dr[1] = a3r.a3r10 ; da3_dr[2] = a3r.a3r20 ; }
+                                    else if (r1 == 1) { da3_dr[0] = a3r.a3r01; da3_dr[1] = a3r.a3r11; da3_dr[2] =a3r.a3r21 ; }
+                                    else if (r1 == 2) { da3_dr[0] = a3r.a3r02; da3_dr[1] = a3r.a3r12; da3_dr[2] = a3r.a3r22; }//.
+
+                                    double[] de1_dr = CalculateDerivativeOfVectorNormalisedArray(g1, dg1_dr);
+                                    double[] de2_init_dr = CalculateDerivativeOfVectorNormalisedArray(g2, dg2_dr); // einai to dg2unit_dr
+                                    double[] de2_dr = CalculateDerivativeOfOrthogonalisedNormalisedCovariantBasisArray(ei, de1_dr, e2_init, de2_init_dr);
 
 
 
@@ -6345,7 +6602,10 @@ namespace ISAAR.MSolve.IGA.Elements
 
                                                 double[,] Pcontributions = Calculate3DtensorFrom2Dcorrected(FPK_2D, de1_dr, de2_dr, da3_dr, Ei);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
 
-                                                (double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec, double[] dFPK2D_coefs_dr_vec_1, double[,] dFPK2D_coefs_dr_v2) = Calculate_FPK_variation_term1(Aijkl_2D, dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
+                                                (double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec, double[] dFPK2D_coefs_dr_vec_1, double[,] dFPK2D_coefs_dr_v2) = Calculate_FPK_variation_term1(Aijkl_2D,Vector.CreateFromArray( dg1_dr), Vector.CreateFromArray(dg2_dr),
+                                                    Vector.CreateFromArray(de1_dr), Vector.CreateFromArray(de2_dr), G_1, G_2, a3r, Ei, ei, Vector.CreateFromArray(g1), Vector.CreateFromArray(g2), a3);//revisit this maybe we should pass dg de1_dr instead of dg1_dr.
+                                               
+
 
                                                 ElementStiffnesses.saveOriginalState = true;
                                                 //ElementStiffnesses.ProccessVariable(8, new double[] { a3r.a3r00, a3r.a3r10, a3r.a3r20 }, true, 3 * i + 0);
@@ -6366,9 +6626,9 @@ namespace ISAAR.MSolve.IGA.Elements
 
                                                 ElementStiffnesses.ProccessVariable(30, new double[9], true, 3 * i + r1);
                                                 ElementStiffnesses.ProccessVariable(33, dFPK_3D_dr_vec, true, 3 * i + r1);
-                                                ElementStiffnesses.ProccessVariable(31, de1_dr.CopyToArray(), true, 3 * i + r1);
+                                                ElementStiffnesses.ProccessVariable(31, de1_dr, true, 3 * i + r1);
 
-                                                ElementStiffnesses.ProccessVariable(32, de2_dr.CopyToArray(), true, 3 * i + r1);
+                                                ElementStiffnesses.ProccessVariable(32, de2_dr, true, 3 * i + r1);
                                                 ElementStiffnesses.ProccessVariable(34, dFPK_tensor_dr_vec, true, 3 * i + r1);
                                                 ElementStiffnesses.saveOriginalState = false;
 
