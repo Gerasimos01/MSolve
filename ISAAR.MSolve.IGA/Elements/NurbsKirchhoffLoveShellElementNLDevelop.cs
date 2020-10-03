@@ -4293,7 +4293,11 @@ namespace ISAAR.MSolve.IGA.Elements
             double da3norm_dheta, double[] da3norm_dksids, double[] da3norm_dhetads, double[] da3norm_dhetadr, double[] da3norm_dksidr,
             double dksi_r, double dheta_r, double d2Ksi_dr, double d2Heta_dr , double d2KsiHeta_dr  ,
             double d2Ksi_ds, double d2Heta_ds, double d2KsiHeta_ds, double dksi_s, double dheta_s, double[,][] da3_drds, double[,][] da3tilde_drds)
-        { 
+        {
+            double J1_squared = Math.Pow(J1, 2);
+            var J1_cubed = Math.Pow(J1, 3);
+            double J1_fourth = Math.Pow(J1, 4);
+
             #region Calculate_a3rs
             //var da3_drds = new double[3, 3][];
             //var da3tilde_drds = new double[3, 3][];
@@ -4422,8 +4426,8 @@ namespace ISAAR.MSolve.IGA.Elements
                     double term05b = da3tilde_drds[r1, s1][0] * a3_tilde[0] + da3tilde_drds[r1, s1][1] * a3_tilde[1] + da3tilde_drds[r1, s1][2] * a3_tilde[2] +
                         da3tilde_dr[r1][0] * da3tilde_ds[s1][0] + da3tilde_dr[r1][1] * da3tilde_ds[s1][1] + da3tilde_dr[r1][2] * da3tilde_ds[s1][2];
 
-                    da3norm_dksidrds[r1, s1] = (term02 / J1) - (term01 * dnorma3_ds[s1] / (Math.Pow(J1, 2))) -
-                        ((double)1 / (Math.Pow(J1, 3))) * ((term04a * term04b) + (term05a * term05b)) + TERM03 * 3 * dnorma3_ds[s1] * ((double)1 / Math.Pow(J1, 4));
+                    da3norm_dksidrds[r1, s1] = (term02 / J1) - (term01 * dnorma3_ds[s1] / (J1_squared)) -
+                        ((double)1 / (J1_cubed)) * ((term04a * term04b) + (term05a * term05b)) + TERM03 * 3 * dnorma3_ds[s1] * ((double)1 / J1_fourth);
                 }
             }
 
@@ -4461,8 +4465,8 @@ namespace ISAAR.MSolve.IGA.Elements
                     double term05b = (da3tilde_drds[r1, s1][0] * a3_tilde[0] + da3tilde_drds[r1, s1][1] * a3_tilde[1] + da3tilde_drds[r1, s1][2] * a3_tilde[2]) +
                                      (da3tilde_dr[r1][0] * da3tilde_ds[s1][0] + da3tilde_dr[r1][1] * da3tilde_ds[s1][1] + da3tilde_dr[r1][2] * da3tilde_ds[s1][2]);
 
-                    da3norm_dhetadrds[r1, s1] = (term02 / J1) - (term01 * dnorma3_ds[s1] / (Math.Pow(J1, 2))) -
-                        ((double)1 / (Math.Pow(J1, 3))) * ((term04a * term04b) + (term05a * term05b)) + TERM03 * 3 * dnorma3_ds[s1] * ((double)1 / Math.Pow(J1, 4));
+                    da3norm_dhetadrds[r1, s1] = (term02 / J1) - (term01 * dnorma3_ds[s1] / (J1_squared)) -
+                        ((double)1 / (J1_cubed)) * ((term04a * term04b) + (term05a * term05b)) + TERM03 * 3 * dnorma3_ds[s1] * ((double)1 / J1_fourth);
                 }
             }
             #endregion
@@ -4471,8 +4475,9 @@ namespace ISAAR.MSolve.IGA.Elements
             double[,][] da3_dksidrds = new double[3, 3][];
             double[,][] da3_dhetadrds = new double[3, 3][];//.
 
-            double J1_squared = Math.Pow(J1, 2);
-            var J1_cubed = Math.Pow(J1, 3);
+            
+
+
 
             double t_ars_coeff = (double)1 / J1;
             for (int r1 = 0; r1 < 3; r1++)
@@ -4486,7 +4491,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     double t_rs_coeff = -da3norm_dksi / J1_squared;
                     double t_r_coeff = (2 * da3norm_dksi * dnorma3_ds[s1] / J1_cubed) - (da3norm_dksids[s1] / J1_squared);
 
-                    double t_coef = -(6 * da3norm_dksi * dnorma3_dr[r1] * dnorma3_ds[s1] / Math.Pow(J1, 4)) +
+                    double t_coef = -(6 * da3norm_dksi * dnorma3_dr[r1] * dnorma3_ds[s1] / J1_fourth) +
                                     (2 * da3norm_dksids[s1] * dnorma3_dr[r1] / J1_cubed) +
                                     (2 * da3norm_dksi * dnorma3_drds[r1, s1] / J1_cubed) +
                                     (2 * da3norm_dksidr[r1] * dnorma3_ds[s1] / J1_cubed) -
@@ -4524,7 +4529,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     double t_rs_coeff = -da3norm_dheta / J1_squared;
                     double t_r_coeff = (2 * da3norm_dheta * dnorma3_ds[s1] / J1_cubed) - (da3norm_dhetads[s1] / J1_squared);
 
-                    double t_coef = -(6 * da3norm_dheta * dnorma3_dr[r1] * dnorma3_ds[s1] / Math.Pow(J1, 4)) +
+                    double t_coef = -(6 * da3norm_dheta * dnorma3_dr[r1] * dnorma3_ds[s1] / J1_fourth) +
                                     (2 * da3norm_dhetads[s1] * dnorma3_dr[r1] / J1_cubed) +
                                     (2 * da3norm_dheta * dnorma3_drds[r1, s1] / J1_cubed) +
                                     (2 * da3norm_dhetadr[r1] * dnorma3_ds[s1] / J1_cubed) -
@@ -4547,12 +4552,14 @@ namespace ISAAR.MSolve.IGA.Elements
             #endregion
 
             return (da3_dksidrds, da3_dhetadrds);
+            
         }
 
         private static void CalculateTerm532(double J1, double[,][] da3tilde_drds, double[] dnorma3_ds, double[][] da3tilde_dr,
             double[] dnorma3_dr, double[][] da3tilde_ds, double[,] dnorma3_drds, double[] a3_tilde, double[,][] da3_drds)
         {
             double scale2 = -((double)1 / (Math.Pow(J1, 2))); //denominator of vectors 2 3 and 4 and a minus.
+            double scale5 = ((double)1) / Math.Pow(J1, 3);
 
             for (int r1 = 0; r1 < 3; r1++)
             {
@@ -4579,7 +4586,7 @@ namespace ISAAR.MSolve.IGA.Elements
                     var fourthVec_1 = a3_tilde[1] * scale6;
                     var fourthVec_2 = a3_tilde[2] * scale6;
 
-                    double scale5 = ((double)1) / Math.Pow(J1, 3);
+                    
 
                     var scale7 = 2 * dnorma3_dr[r1] * dnorma3_ds[s1] * scale5;
                     var fifthvector_0 = a3_tilde[0] * scale7;
@@ -4599,6 +4606,7 @@ namespace ISAAR.MSolve.IGA.Elements
         private static void CalculateTerm531(double J1, double[,][] da3tilde_drds, double[] a3_tilde, double[][] da3tilde_dr,
             double[][] da3tilde_ds, double[,] dnorma3_drds)
         {
+            double secondDenominator = Math.Pow(J1, 3);
             for (int r1 = 0; r1 < 3; r1++)
             {
                 for (int s1 = 0; s1 < 3; s1++)
@@ -4614,7 +4622,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                               da3tilde_dr[r1][2] * a3_tilde[2]) *
                                              (da3tilde_ds[s1][0] * a3_tilde[0] + da3tilde_ds[s1][1] * a3_tilde[1] +
                                               da3tilde_ds[s1][2] * a3_tilde[2]);
-                    double secondDenominator = Math.Pow(J1, 3);
+                    
 
                     dnorma3_drds[r1, s1] = (firstNumerator / firstDenominator) - (secondNumerator / secondDenominator);
                 }
