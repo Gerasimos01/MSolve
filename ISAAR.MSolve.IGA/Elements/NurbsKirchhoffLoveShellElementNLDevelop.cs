@@ -3056,7 +3056,7 @@ namespace ISAAR.MSolve.IGA.Elements
             return (Pcontributions, dF2D_coefs_dr_vec, dFPK2D_coefs_dr_vec, dFPK2D_coefs_dr);
         }
 
-        private  double[,] Calculate_FPK_variation_term1_Short(double[,] Aijkl_2D, double[] dg1_dr, double[] dg2_dr, double[] de1_dr, double[] de2_dr, double[] G_1, double[] G_2, a3r a3r, double[,] Ei, double[,] ei, double[] g1, double[] g2)//.
+        private  double[,] Calculate_FPK_variation_term1_Short(IMatrixView Aijkl_2D, double[] dg1_dr, double[] dg2_dr, double[] de1_dr, double[] de2_dr, double[] G_1, double[] G_2, a3r a3r, double[,] Ei, double[,] ei, double[] g1, double[] g2)//.
         {
             double[,] dF2D_coefs_dr = new double[2, 2];
 
@@ -6635,7 +6635,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                         //(_,_/*double[,] Pcontributions_term_1, double[] dF2D_coefs_dr_vec*/, double[] dFPK2D_coefs_dr_vec, double[,] dFPK2D_coefs_dr) = Calculate_FPK_variation_term1(
                                             //materialDevelop.ConstitutiveMatrix.CopytoArray2D(), dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2, a3);// to do anti gia copy to array i methodos na mporei na doulevei me IMatrixView
                                         double[,] dFPK2D_coefs_dr = Calculate_FPK_variation_term1_Short(
-                                            materialDevelop.ConstitutiveMatrix.CopytoArray2D(), dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2);// to do anti gia copy to array i methodos na mporei na doulevei me IMatrixView
+                                            materialDevelop.ConstitutiveMatrix, dg1_dr, dg2_dr, de1_dr, de2_dr, G_1, G_2, a3r, Ei, ei, g1, g2);// to do anti gia copy to array i methodos na mporei na doulevei me IMatrixView
 
                                         //var p_contrib_coeffs_ = new double[3, 3]
                                         //{
