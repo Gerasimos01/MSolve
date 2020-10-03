@@ -6017,7 +6017,7 @@ namespace ISAAR.MSolve.IGA.Elements
                 {
                     var thicknessGPoints = thicknessIntegrationPoints[gaussPoints[j]];
                     var materialpoint = materialsAtThicknessGP[gaussPoints[j]][thicknessGPoints[0]];
-                    var transformations = new ShellElasticMaterial2DtransformationbDefGrad() { YoungModulus = materialpoint.YoungModulus, PoissonRatio = materialpoint.PoissonRatio };
+                    //var transformations = new ShellElasticMaterial2DtransformationbDefGrad() { YoungModulus = materialpoint.YoungModulus, PoissonRatio = materialpoint.PoissonRatio };
 
                     ElementStiffnesses.gpNumber = j;
 
@@ -6624,11 +6624,11 @@ namespace ISAAR.MSolve.IGA.Elements
                                         // linear stiffness
                                         var dF_3D_ds1 = dF_3D_dr_vecArray[3 * k + s1, i1];
                                         var dF_3D_tr_ds1 = dF_3D_dr_tensor_tr_vecArray[3 * k + s1, i1];
-                                        
 
 
-                                        var dg1_drds = da3_dksidrds[r1, s1].Scale(z); //Scale(z);
-                                        var dg2_drds = da3_dhetadrds[r1, s1].Scale(z);// .Scale(z);
+
+                                        var dg1_drds = new double[] { da3_dksidrds[r1, s1][0] * z, da3_dksidrds[r1, s1][1] * z, da3_dksidrds[r1, s1][2] * z }; //Scale(z);
+                                        var dg2_drds = new double[] { da3_dhetadrds[r1, s1][0] * z, da3_dhetadrds[r1, s1][1] * z, da3_dhetadrds[r1, s1][2] * z };//.
                                         
 
 
