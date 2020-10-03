@@ -82,7 +82,7 @@ namespace ISAAR.MSolve.Materials
 
 
 
-        public double[,] FPKrve { get; set; }
+        public double[,] FPKrve { get; set; } = new double[2, 2] { { 0, 0, }, { 0, 0 } };
         public double[,] Aijkl_rve { get; set; }
 
         /// <summary>
