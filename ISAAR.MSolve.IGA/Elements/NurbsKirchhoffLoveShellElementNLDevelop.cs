@@ -2975,8 +2975,6 @@ namespace ISAAR.MSolve.IGA.Elements
 
         private double[] CalculateDerivativeOfOrthogonalisedNormalisedCovariantBasisArray(double[,] ei, double[] de1_dr, double[] e2_init, double[] de2_init_dr)
         {
-            Vector e1 = Vector.CreateFromArray(new double[] { ei[0, 0], ei[1, 0], ei[2, 0] });
-
             double e1_dot_e2_init = ei[0,0] * e2_init[0] + ei[1,0] * e2_init[1] + ei[2,0] * e2_init[2];
             double e1_dot_de2_init_dr = ei[0,0] * de2_init_dr[0] + ei[1,0] * de2_init_dr[1] + ei[2,0] * de2_init_dr[2];
             double de1_dr_dot_e2_init = de1_dr[0] * e2_init[0] + de1_dr[1] * e2_init[1] + de1_dr[2] * e2_init[2];
@@ -6576,7 +6574,7 @@ namespace ISAAR.MSolve.IGA.Elements
                                 double[]  g1 = new double[] { a1[0] + da3_dksi[0] * z, a1[1] + da3_dksi[1] * z, a1[2] + da3_dksi[2] * z };
                                 double[]  g2 = new double[] { a2[0] + da3_dheta[0] * z, a2[1] + da3_dheta[1] * z, a2[2] + da3_dheta[2] * z } ;
 
-                                double norm_g2 = g2.Norm2();
+                                double norm_g2 = Math.Sqrt(g2[0] * g2[0] + g2[1] * g2[1] + g2[2] * g2[2]);
                                 double[] e2_init = new double[] { g2[0] * ((double)1 / norm_g2), g2[1] * ((double)1 / norm_g2), g2[2] * ((double)1 / norm_g2) }; // einai to g2 unit 
 
                                 #region higher order terms FPK:F3D_drds
