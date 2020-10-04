@@ -21,6 +21,7 @@ using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Logging;
 using ISAAR.MSolve.Materials;
+using ISAAR.MSolve.Materials.Interfaces;
 using ISAAR.MSolve.Problems;
 using ISAAR.MSolve.Solvers;
 using ISAAR.MSolve.Solvers.Direct;
@@ -83,14 +84,14 @@ namespace ISAAR.MSolve.IGA.Tests
                 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 13, 13, 13            });
         }
 
-        private ShellElasticMaterial2DtransformationbDefGrad Material => new ShellElasticMaterial2DtransformationbDefGrad()
+        private IContinuumMaterial3DDefGrad Material => new ShellElasticMaterial2DtransformationbDefGrad()
         {
             YoungModulus = 68250000,
             PoissonRatio = 0.3,
-            //ta vectors einai tuxaia giati den tha xrhsimopoiithoun
-            TangentVectorV1 = new double[] { 1.000000000000000000000000000000000000, 0.000000000000000053342746886286800000, 0.000000000000000000000000000000000000 },
-            TangentVectorV2 = new double[] { 3.90312782094781000000000000000000E-18, 9.99999999999999000000000000000000E-01, 0.00000000000000000000000000000000E+00, },
-            NormalVectorV3 = new double[] { 0, 0, 1 }
+            ////ta vectors einai tuxaia giati den tha xrhsimopoiithoun
+            //TangentVectorV1 = new double[] { 1.000000000000000000000000000000000000, 0.000000000000000053342746886286800000, 0.000000000000000000000000000000000000 },
+            //TangentVectorV2 = new double[] { 3.90312782094781000000000000000000E-18, 9.99999999999999000000000000000000E-01, 0.00000000000000000000000000000000E+00, },
+            //NormalVectorV3 = new double[] { 0, 0, 1 }
         };
         
         private NurbsKirchhoffLoveShellElementNLDevelop Element

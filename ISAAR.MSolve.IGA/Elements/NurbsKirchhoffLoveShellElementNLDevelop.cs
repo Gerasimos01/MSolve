@@ -39,14 +39,14 @@ namespace ISAAR.MSolve.IGA.Elements
             materialsAtThicknessGP =
                 new Dictionary<GaussLegendrePoint3D, Dictionary<GaussLegendrePoint3D, IShellMaterial>>();
 
-        internal Dictionary<GaussLegendrePoint3D, Dictionary<GaussLegendrePoint3D, IShellMaterialDefGrad2D>>
+        internal Dictionary<GaussLegendrePoint3D, Dictionary<GaussLegendrePoint3D, IContinuumMaterial3DDefGrad>>
             materialsAtThicknessGPDevelop =
-                new Dictionary<GaussLegendrePoint3D, Dictionary<GaussLegendrePoint3D, IShellMaterialDefGrad2D>>();
+                new Dictionary<GaussLegendrePoint3D, Dictionary<GaussLegendrePoint3D, IContinuumMaterial3DDefGrad>>();
 
         private bool isInitialized;
         internal double[] _solution;
 
-        public NurbsKirchhoffLoveShellElementNLDevelop(IShellMaterialDefGrad2D shellMaterial, IList<Knot> elementKnots,
+        public NurbsKirchhoffLoveShellElementNLDevelop(IContinuumMaterial3DDefGrad shellMaterial, IList<Knot> elementKnots,
             IList<ControlPoint> elementControlPoints, Patch patch, double thickness)
         {
             Contract.Requires(shellMaterial != null);
@@ -67,12 +67,21 @@ namespace ISAAR.MSolve.IGA.Elements
             }
 
             CreateElementGaussPoints(this);
+            var aux_Mat= new ShellElasticMaterial2Dtransformationb()
+            {
+                YoungModulus = 20685000,
+                PoissonRatio = 0.3,
+                //ta vectors einai tuxaia giati den tha xrhsimopoiithoun
+                TangentVectorV1 = new double[] { 1.000000000000000000000000000000000000, 0.000000000000000053342746886286800000, 0.000000000000000000000000000000000000 },
+                TangentVectorV2 = new double[] { 3.90312782094781000000000000000000E-18, 9.99999999999999000000000000000000E-01, 0.00000000000000000000000000000000E+00, },
+                NormalVectorV3 = new double[] { 0, 0, 1 }
+            };
             foreach (var medianSurfaceGP in thicknessIntegrationPoints.Keys)
             {
                 materialsAtThicknessGP.Add(medianSurfaceGP, new Dictionary<GaussLegendrePoint3D, IShellMaterial>());
                 foreach (var point in thicknessIntegrationPoints[medianSurfaceGP])
                 {
-                    materialsAtThicknessGP[medianSurfaceGP].Add(point, shellMaterial.Clone());
+                    materialsAtThicknessGP[medianSurfaceGP].Add(point, aux_Mat.Clone());
                 }
             }
 
@@ -85,10 +94,10 @@ namespace ISAAR.MSolve.IGA.Elements
 
             foreach (var medianSurfaceGP in thicknessIntegrationPoints.Keys)
             {
-                materialsAtThicknessGPDevelop.Add(medianSurfaceGP, new Dictionary<GaussLegendrePoint3D, IShellMaterialDefGrad2D>());
+                materialsAtThicknessGPDevelop.Add(medianSurfaceGP, new Dictionary<GaussLegendrePoint3D, IContinuumMaterial3DDefGrad>());
                 foreach (var point in thicknessIntegrationPoints[medianSurfaceGP])
                 {
-                    materialsAtThicknessGPDevelop[medianSurfaceGP].Add(point, (IShellMaterialDefGrad2D)shellMaterial.Clone());
+                    materialsAtThicknessGPDevelop[medianSurfaceGP].Add(point, (IContinuumMaterial3DDefGrad)shellMaterial.Clone());
                 }
             }
 

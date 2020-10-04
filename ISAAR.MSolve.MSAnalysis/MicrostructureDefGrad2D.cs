@@ -39,8 +39,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         private readonly Func<Model, ISolver> createSolver;
 
         // aparaithta gia to implementation tou IFiniteElementMaterial3D
-        Matrix constitutiveMatrix;
-        private double[] SPK_vec=new double[3];
+        //Matrix constitutiveMatrix;
+        double[,] Aijkl_rve; // { get; set; }
+        public double[,] FPKrve { get; set; } = new double[2, 2] { { 0, 0, }, { 0, 0 } };
+
+        //private double[] SPK_vec=new double[3];
         private bool modified; // opws sto MohrCoulomb gia to modified
 
         private double[,] Cijrs_prev;
@@ -48,11 +51,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         private double tol;
         public void InitializeMatrices()
         {
-            Cijrs_prev = new double[3, 3];
+            Cijrs_prev = new double[4,4];
             matrices_not_initialized = false;
             tol = Math.Pow(10, -19);
-            constitutiveMatrix = Matrix.CreateZero(3, 3);
+            Aijkl_rve = new double[4,4];
         }
+
+        
+        //public double[,] Aijkl_rve 
 
 
         //double[] Stresses { get; }
@@ -152,10 +158,10 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                 }
             }
 
-            for (int i1 = 0; i1 < 3; i1++)
+            for (int i1 = 0; i1 < 4; i1++)
             {
-                for (int j1 = 0; j1 < 3; j1++)
-                {Cijrs_prev[i1, j1] = constitutiveMatrix[i1, j1];}
+                for (int j1 = 0; j1 < 4; j1++)
+                {Cijrs_prev[i1, j1] = Aijkl_rve[i1, j1];}
             }
 
             #region Rve prescribed Dofs total DIsplacement Dictionary Creation (nessesary for NRNLAnalyzer)
@@ -197,10 +203,13 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             for (int i1 = 0; i1 < DqFpp.Length; i1++)
             { FPK_vec[i1]=(1 / volume) * DqFpp[i1]; }
 
-            double[,] DefGradMat = new double[2,2] { { DefGradVec[0], DefGradVec[2] }, { DefGradVec[3], DefGradVec[1]  } };
-            double[,] FPK_mat = new double[2,2] { { FPK_vec[0], FPK_vec[2] }, { FPK_vec[3] , FPK_vec[1] } };
-            double[,] SPK_mat = transformFPKtoSPK(DefGradMat, FPK_mat);
-            SPK_vec = new double[3] { SPK_mat[0,0], SPK_mat[1,1],  SPK_mat[0,1] };
+            FPKrve[0, 0] = FPK_vec[0]; FPKrve[0, 1] = FPK_vec[3];
+            FPKrve[1, 0] = FPK_vec[2]; FPKrve[1, 1] = FPK_vec[1]; // einai skopimws edw to transposed dioti etssi prokuptoun apo to rve 
+
+            //double[,] DefGradMat = new double[2,2] { { DefGradVec[0], DefGradVec[2] }, { DefGradVec[3], DefGradVec[1]  } };
+            //double[,] FPK_mat = new double[2,2] { { FPK_vec[0], FPK_vec[2] }, { FPK_vec[3] , FPK_vec[1] } };
+            ////double[,] SPK_mat = transformFPKtoSPK(DefGradMat, FPK_mat);
+            //SPK_vec = new double[3] { SPK_mat[0,0], SPK_mat[1,1],  SPK_mat[0,1] };
             //TODOna elegxthei h parapanw anadiataxh kai o pollaplasiasmos
             #endregion
 
@@ -235,25 +244,31 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             #endregion
 
             #region constitutive tensors transformation methods
-            double[,] d2W_dFtrdFtr = Reorder_d2Wdfdf_to_d2W_dFtrdFtr(d2W_dfdf);
-
-            Cinpk = Transform_d2WdFtrdFtr_to_Cijrs(d2W_dFtrdFtr, SPK_mat, DefGradMat); // to onomazoume Cinpk epeidh einai to 9x9 kai to diakrinoume etsi apo to Cijrs 6x6
-            
-            double[,] Cijrs = CombineCinpkTensorTermsIntoMatrix(Cinpk);
-            
+            UpdateAijklFromd2WdfdfReordered(d2W_dfdf);
             #endregion
-
-            constitutiveMatrix = Matrix.CreateFromArray(Cijrs);
 
             //PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);
             this.modified = CheckIfConstitutiveMatrixChanged(); 
-        }        
+        }
+
+        private void UpdateAijklFromd2WdfdfReordered(double[,] d2W_dfdf)
+        {
+            
+            for (int j2 = 0; j2 < 4; j2++)
+            {
+                Aijkl_rve[2, j2] = d2W_dfdf[3, j2];
+                Aijkl_rve[3, j2] = d2W_dfdf[2, j2];
+                Aijkl_rve[1, j2] = d2W_dfdf[1, j2];
+                Aijkl_rve[0, j2] = d2W_dfdf[0, j2];
+            }
+                        
+        }
 
         private bool CheckIfConstitutiveMatrixChanged()
         {
-            for (int i = 0; i < 3; i++)
-                for (int j = 0; j < 3; j++)
-                    if (Math.Abs(Cijrs_prev[i, j] - constitutiveMatrix[i, j]) > 1e-10)
+            for (int i = 0; i < 4; i++)
+                for (int j = 0; j < 4; j++)
+                    if (Math.Abs(Cijrs_prev[i, j] - Aijkl_rve[i, j]) > 1e-10)
                         return true;
 
             return false;
@@ -267,14 +282,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         {
             get
             {
-                if (constitutiveMatrix == null) CalculateOriginalConstitutiveMatrixWithoutNLAnalysis(); // TODOGerasimos arxiko constitutive mporei na upologizetai pio efkola
-                return constitutiveMatrix;
+                if (Aijkl_rve == null) CalculateOriginalConstitutiveMatrixWithoutNLAnalysis(); // TODOGerasimos arxiko constitutive mporei na upologizetai pio efkola
+                return Matrix.CreateFromArray(Aijkl_rve);
             }
         }
 
         public double[] Stresses // opws xrhsimopoeitai sto mohrcoulomb kai hexa8
         {
-            get { return SPK_vec; }
+            get { return new double[] { FPKrve[0, 0], FPKrve[1, 1], FPKrve[0, 1], FPKrve[1, 0] }; }
         }
 
         public void SaveState()
@@ -536,18 +551,11 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
                     d2W_dfdf[i1, i2] = (1 / volume) * DqCondDq[i1, i2];
                 }
             }
-            
+
             #endregion
 
             #region constitutive tensors transformation methods
-            double[,] d2W_dFtrdFtr = Reorder_d2Wdfdf_to_d2W_dFtrdFtr(d2W_dfdf);
-
-            double[,] SPK_mat = new double[2,2] { { 0, 0}, { 0, 0 } }; double[,] DefGradMat=new double[2,2] { { 1, 0 }, { 0, 1 } };
-            Cinpk = Transform_d2WdFtrdFtr_to_Cijrs(d2W_dFtrdFtr, SPK_mat, DefGradMat); // to onomazoume Cinpk epeidh einai to 9x9 kai to diakrinoume etsi apo to Cijrs 6x6
-
-            double[,] Cijrs = CombineCinpkTensorTermsIntoMatrix(Cinpk);
-           
-            constitutiveMatrix = Matrix.CreateFromArray(Cijrs);
+            UpdateAijklFromd2WdfdfReordered(d2W_dfdf);
             #endregion
 
             //PrintMethodsForDebug(KfpDq, f2_vectors, f3_vectors, KppDqVectors, f4_vectors, DqCondDq, d2W_dfdf, Cijrs);

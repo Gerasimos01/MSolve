@@ -188,7 +188,8 @@ namespace ISAAR.MSolve.IGA.Tests
             var filename = "SplitAnnularPlate";
             var filepath = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", $"{filename}.txt");
             IsogeometricShellReader modelReader = new IsogeometricShellReader(model, filepath);
-            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinear);
+            Patch.chosenMaterial = 2;
+            modelReader.CreateShellModelFromFile(GeometricalFormulation.NonLinearDevelop);
 
             Value verticalDistributedLoad = delegate (double x, double y, double z)
             {
@@ -211,11 +212,11 @@ namespace ISAAR.MSolve.IGA.Tests
             var provider = new ProblemStructural(model, solver);
 
             // Linear static analysis
-            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, 500);
+            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, 100);
             var childAnalyzer = newtonRaphsonBuilder.Build();
             var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
-            var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 500,
+            var loggerA = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 100,
                 model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationZ, "SplitAnnularPlateWa.txt");
             //var loggerB = new TotalLoadsDisplacementsPerIncrementLog(model.PatchesDictionary[0], 1000,
             //    model.ControlPointsDictionary[790], StructuralDof.TranslationZ, "SplitAnnularPlateWb.txt");

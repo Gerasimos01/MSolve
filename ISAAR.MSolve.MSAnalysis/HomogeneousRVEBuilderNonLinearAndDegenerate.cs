@@ -18,6 +18,9 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         private grapheneSheetParameters gp;
         private string renumbering_vector_path;
 
+        public double Young_s_Modulus { get; set; } = -0.0000001;
+        public double Poisson_s_Ration { get; set; }
+
         public HomogeneousRVEBuilderNonLinearAndDegenerate()
         {
             //TODOGerasimos
@@ -56,6 +59,14 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             mpgp = FEMMeshBuilder.GetReferenceRveExampleParameters(subdiscr1, discr1, discr3, subdiscr1_shell, discr1_shell);
             mp = mpgp.Item1;
             gp = mpgp.Item2;
+
+            if (Young_s_Modulus > 0)
+            {
+                mp.E_disp = Young_s_Modulus;
+                mp.ni_disp = Poisson_s_Ration;
+            }
+
+            //.
             double[][] ekk_xyz = new double[2][] { new double[] { 0, 0, 0 }, new double[] { 0.25 * 105, 0, 0.25 * 40 } };
 
             int graphene_sheets_number = 0; // 0 gra sheets afou exoume mono hexa

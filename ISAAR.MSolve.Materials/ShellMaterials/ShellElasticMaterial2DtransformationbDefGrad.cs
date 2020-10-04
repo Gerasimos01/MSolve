@@ -12,7 +12,7 @@ namespace ISAAR.MSolve.Materials
     /// Isotropic elastic shell material that accounts for no out of plane shear deformation
     /// Authors Gerasimos Sotiropoulos
     /// </summary>
-    public class ShellElasticMaterial2DtransformationbDefGrad : IShellMaterialDefGrad2D
+    public class ShellElasticMaterial2DtransformationbDefGrad : IContinuumMaterial3DDefGrad
     {
         public double[] NormalVectorV3 { get; set; }
         public double[] TangentVectorV1 { get; set; }
@@ -27,7 +27,7 @@ namespace ISAAR.MSolve.Materials
 
         object ICloneable.Clone() => Clone();
 
-        public IShellMaterial Clone()
+        public IContinuumMaterial3DDefGrad Clone()
         {
             return new ShellElasticMaterial2DtransformationbDefGrad()
             {
