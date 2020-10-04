@@ -82,7 +82,7 @@ namespace ISAAR.MSolve.SamplesConsole
             });
         }
 
-        private static ShellElasticMaterial2D Material => new ShellElasticMaterial2D()
+        private static ShellElasticMaterial2DtransformationbDefGrad Material => new ShellElasticMaterial2DtransformationbDefGrad()
         {
             YoungModulus = 20685000,
             PoissonRatio = 0.3,

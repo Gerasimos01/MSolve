@@ -1128,7 +1128,7 @@ namespace ISAAR.MSolve.IGA.Entities
 							};
 							break;
 						case GeometricalFormulation.NonLinearDevelop:
-							element = new NurbsKirchhoffLoveShellElementNLDevelop(new ShellElasticMaterial2Dtransformationb()
+							element = new NurbsKirchhoffLoveShellElementNLDevelop(new ShellElasticMaterial2DtransformationbDefGrad()
 							{
 								YoungModulus = this.Material.YoungModulus,
 								PoissonRatio = this.Material.PoissonRatio
@@ -1137,7 +1137,7 @@ namespace ISAAR.MSolve.IGA.Entities
 								ID = elementID,
 								Patch = this,
 								Thickness = this.Thickness,
-								ElementType = new NurbsKirchhoffLoveShellElementNLDevelop(new ShellElasticMaterial2Dtransformationb()
+								ElementType = new NurbsKirchhoffLoveShellElementNLDevelop(new ShellElasticMaterial2DtransformationbDefGrad()
 								{
 									YoungModulus = this.Material.YoungModulus,
 									PoissonRatio = this.Material.PoissonRatio

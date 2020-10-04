@@ -46,7 +46,7 @@ namespace ISAAR.MSolve.IGA.Elements
         private bool isInitialized;
         internal double[] _solution;
 
-        public NurbsKirchhoffLoveShellElementNLDevelop(IShellMaterial shellMaterial, IList<Knot> elementKnots,
+        public NurbsKirchhoffLoveShellElementNLDevelop(IShellMaterialDefGrad2D shellMaterial, IList<Knot> elementKnots,
             IList<ControlPoint> elementControlPoints, Patch patch, double thickness)
         {
             Contract.Requires(shellMaterial != null);
@@ -77,17 +77,18 @@ namespace ISAAR.MSolve.IGA.Elements
             }
 
 
-            var gaussPoints = materialsAtThicknessGP.Keys.ToArray();
-            var thicknessGPoints = thicknessIntegrationPoints[gaussPoints[0]];
-            var materialpoint = materialsAtThicknessGP[gaussPoints[0]][thicknessGPoints[0]];
-            var transformations = new ShellElasticMaterial2DtransformationbDefGrad() { YoungModulus = materialpoint.YoungModulus, PoissonRatio = materialpoint.PoissonRatio };
+            //var gaussPoints = materialsAtThicknessGP.Keys.ToArray();
+            var gaussPoints = thicknessIntegrationPoints.Keys.ToArray();
+            //var thicknessGPoints = thicknessIntegrationPoints[gaussPoints[0]];
+            //var materialpoint = materialsAtThicknessGP[gaussPoints[0]][thicknessGPoints[0]];
+            //var transformations = new ShellElasticMaterial2DtransformationbDefGrad() { YoungModulus = materialpoint.YoungModulus, PoissonRatio = materialpoint.PoissonRatio };
 
             foreach (var medianSurfaceGP in thicknessIntegrationPoints.Keys)
             {
                 materialsAtThicknessGPDevelop.Add(medianSurfaceGP, new Dictionary<GaussLegendrePoint3D, IShellMaterialDefGrad2D>());
                 foreach (var point in thicknessIntegrationPoints[medianSurfaceGP])
                 {
-                    materialsAtThicknessGPDevelop[medianSurfaceGP].Add(point, (IShellMaterialDefGrad2D)transformations.Clone());
+                    materialsAtThicknessGPDevelop[medianSurfaceGP].Add(point, (IShellMaterialDefGrad2D)shellMaterial.Clone());
                 }
             }
 

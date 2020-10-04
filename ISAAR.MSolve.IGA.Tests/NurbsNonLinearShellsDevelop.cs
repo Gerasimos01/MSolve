@@ -83,7 +83,7 @@ namespace ISAAR.MSolve.IGA.Tests
                 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 13, 13, 13            });
         }
 
-        private ShellElasticMaterial2D Material => new ShellElasticMaterial2D()
+        private ShellElasticMaterial2DtransformationbDefGrad Material => new ShellElasticMaterial2DtransformationbDefGrad()
         {
             YoungModulus = 68250000,
             PoissonRatio = 0.3,
