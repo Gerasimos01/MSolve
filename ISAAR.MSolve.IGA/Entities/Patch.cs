@@ -9,6 +9,8 @@ using ISAAR.MSolve.IGA.Readers;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Materials;
 using ISAAR.MSolve.Materials.Interfaces;
+using ISAAR.MSolve.MultiscaleAnalysis;
+using ISAAR.MSolve.Solvers.Direct;
 
 namespace ISAAR.MSolve.IGA.Entities
 {
@@ -1128,26 +1130,54 @@ namespace ISAAR.MSolve.IGA.Entities
 							};
 							break;
 						case GeometricalFormulation.NonLinearDevelop:
-							element = new NurbsKirchhoffLoveShellElementNLDevelop(new ShellElasticMaterial2DtransformationbDefGrad()
+							if (chosenMaterial == 1)
 							{
-								YoungModulus = this.Material.YoungModulus,
-								PoissonRatio = this.Material.PoissonRatio
-							}, knotsOfElement, elementControlPoints, this, this.Thickness)
-							{
-								ID = elementID,
-								Patch = this,
-								Thickness = this.Thickness,
-								ElementType = new NurbsKirchhoffLoveShellElementNLDevelop(new ShellElasticMaterial2DtransformationbDefGrad()
+								element = new NurbsKirchhoffLoveShellElementNLDevelop(new ShellElasticMaterial2DtransformationbDefGrad()
 								{
 									YoungModulus = this.Material.YoungModulus,
 									PoissonRatio = this.Material.PoissonRatio
-								}, knotsOfElement, elementControlPoints.ToList(), this, this.Thickness)
+								}, knotsOfElement, elementControlPoints, this, this.Thickness)
 								{
 									ID = elementID,
 									Patch = this,
-									Thickness = this.Thickness
-								}
-							};
+									Thickness = this.Thickness,
+									ElementType = new NurbsKirchhoffLoveShellElementNLDevelop(new ShellElasticMaterial2DtransformationbDefGrad()
+									{
+										YoungModulus = this.Material.YoungModulus,
+										PoissonRatio = this.Material.PoissonRatio
+									}, knotsOfElement, elementControlPoints.ToList(), this, this.Thickness)
+									{
+										ID = elementID,
+										Patch = this,
+										Thickness = this.Thickness
+									}
+								};
+							}
+							else
+							{
+								element = new NurbsKirchhoffLoveShellElementNLDevelop(new MicrostructureDefGrad2D(new HomogeneousRVEBuilderNonLinearAndDegenerate()
+								{
+									Young_s_Modulus  = this.Material.YoungModulus,
+									Poisson_s_Ration = this.Material.PoissonRatio
+								},
+								model => (new SkylineSolver.Builder()).BuildSolver(model), false, 1), knotsOfElement, elementControlPoints, this, this.Thickness)
+								{
+									ID = elementID,
+									Patch = this,
+									Thickness = this.Thickness,
+									ElementType = new NurbsKirchhoffLoveShellElementNLDevelop(new ShellElasticMaterial2DtransformationbDefGrad()
+									{
+										YoungModulus = this.Material.YoungModulus,
+										PoissonRatio = this.Material.PoissonRatio
+									}, knotsOfElement, elementControlPoints.ToList(), this, this.Thickness)
+									{
+										ID = elementID,
+										Patch = this,
+										Thickness = this.Thickness
+									}
+								};
+							}
+								
 							break;
 						case GeometricalFormulation.SectionNonLinear:
 							element = new NurbsKirchhoffLoveShellElementSectionNL(
@@ -1218,5 +1248,8 @@ namespace ISAAR.MSolve.IGA.Entities
 		{
 			throw new NotImplementedException();
 		}
+
+		public static int chosenMaterial = 1;
+
 	}
 }
