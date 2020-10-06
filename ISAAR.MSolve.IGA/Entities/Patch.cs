@@ -17,6 +17,8 @@ namespace ISAAR.MSolve.IGA.Entities
 	/// </summary>
 	public class Patch : ISubdomain
 	{
+		public List<Load> NodalLoads { get; } = new List<Load>();
+
 		private readonly List<ControlPoint> controlPoints = new List<ControlPoint>();
 
 		/// <summary>
@@ -207,11 +209,11 @@ namespace ISAAR.MSolve.IGA.Entities
 		}
 
 		public int NumElements => Elements.Count;
-		public int NumNodalLoads => throw new NotImplementedException(); //NodalLoads.Count;
+		public int NumNodalLoads => NodalLoads.Count;
 		public int NumNodes => controlPoints.Count;
 
 		public IEnumerable<IElement> EnumerateElements() => Elements;
-		public IEnumerable<INodalLoad> EnumerateNodalLoads() => throw new NotImplementedException(); // NodalLoads;
+		public IEnumerable<INodalLoad> EnumerateNodalLoads() => NodalLoads;
 		public IEnumerable<INode> EnumerateNodes() => controlPoints;
 
 		public IElement GetElement(int elementID) => Elements[elementID];

@@ -12,6 +12,7 @@ namespace ISAAR.MSolve.IGA.Entities
 	/// </summary>
 	public class ControlPoint:INode
 	{
+		private readonly Dictionary<int, ISubdomain> subdomainsDictionary = new Dictionary<int, ISubdomain>();
 		/// <summary>
 		/// List containing degree of freedom constraints.
 		/// </summary>
@@ -40,12 +41,12 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// <summary>
 		/// Dictionary that contains the patches the <see cref="ControlPoint"/> belongs to.
 		/// </summary>
-		public Dictionary<int, Patch> PatchesDictionary { get; } = new Dictionary<int, Patch>();
+		public Dictionary<int, ISubdomain> PatchesDictionary { get; } = new Dictionary<int, ISubdomain>();
 
 		/// <summary>
 		/// Dictionary that contains the patches the <see cref="ControlPoint"/> belongs to.
 		/// </summary>
-		public Dictionary<int, ISubdomain> SubdomainsDictionary => throw new NotImplementedException();
+		public Dictionary<int, ISubdomain> SubdomainsDictionary => PatchesDictionary;
 
 		/// <summary>
 		/// Weight factor of the <see cref="ControlPoint"/>.

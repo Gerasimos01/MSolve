@@ -1,16 +1,21 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ISAAR.MSolve.Analyzers;
 using ISAAR.MSolve.Discretization;
+using ISAAR.MSolve.Discretization.Commons;
 using ISAAR.MSolve.Discretization.FreedomDegrees;
+using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.IGA.Elements;
 using ISAAR.MSolve.IGA.Elements.Structural;
 using ISAAR.MSolve.IGA.Entities;
 using ISAAR.MSolve.IGA.Geometry;
 using ISAAR.MSolve.IGA.Geometry.NurbsMesh;
 using ISAAR.MSolve.IGA.Loading;
+using ISAAR.MSolve.IGA.Loading.Interfaces;
 using ISAAR.MSolve.IGA.Loading.LineLoads;
 using ISAAR.MSolve.IGA.Loading.LoadElementFactories;
 using ISAAR.MSolve.IGA.Loading.NodalLoads;
@@ -134,11 +139,15 @@ namespace ISAAR.MSolve.IGA.Tests
             var (geometry, model)=jsonReader.ReadGeometryAndCreateModel();
             var rightEdgeLoads=geometry.NurbsSurfacePatches[0]
                 .CreateLoadForEdge(model,NurbsSurfaceEdges.Right, new DistributedLineLoad2D(0, -100));
-            foreach (var load in rightEdgeLoads)
-            {
-                model.Loads.Add(load);
-            }
-            geometry.NurbsSurfacePatches[0].ConstraintDofsOfEdge(model, NurbsSurfaceEdges.Left, new List<IDofType>()
+			Table<INode, IDofType, double> loadinfo = GetNodalLoads(new List<List<ILoad>>() { rightEdgeLoads });
+
+			foreach (var entry in loadinfo)
+			{
+				Load load = new Load() { Node = entry.row, DOF = entry.col, Amount = entry.val };
+				model.Loads.Add(load);
+			}
+
+			geometry.NurbsSurfacePatches[0].ConstraintDofsOfEdge(model, NurbsSurfaceEdges.Left, new List<IDofType>()
             {
                 StructuralDof.TranslationX, StructuralDof.TranslationY
             });
@@ -219,10 +228,15 @@ namespace ISAAR.MSolve.IGA.Tests
             var (geometry, model)=jsonReader.ReadGeometryAndCreateModel();
 			
             var rightEdgeLoads=geometry.NurbsSurfacePatches[0].CreateLoadForEdge(model,NurbsSurfaceEdges.Right, new DistributedLineLoad2D(100,0));
-            foreach (var load in rightEdgeLoads)
-            {
-                model.Loads.Add(load);
-            }
+			Table<INode, IDofType, double> loadinfo = GetNodalLoads(new List<List<ILoad>>() { rightEdgeLoads });
+
+			foreach (var entry in loadinfo)
+			{ 
+					Load load = new Load() { Node = entry.row, DOF = entry.col, Amount = entry.val };
+					model.Loads.Add(load);
+			}
+
+            
             geometry.NurbsSurfacePatches[0].ConstraintDofsOfEdge(model, NurbsSurfaceEdges.Left, new List<IDofType>()
             {
                 StructuralDof.TranslationX
@@ -317,7 +331,34 @@ namespace ISAAR.MSolve.IGA.Tests
 
 			#endregion
 		}
-		
+
+		private Table<INode, IDofType, double> GetNodalLoads(List<List<ILoad>> list)
+		{
+			var globalNodalLoads = new Table<INode, IDofType, double>();
+			foreach (var rightEdgeLoads in list)
+			{
+				foreach (var load in rightEdgeLoads)
+				{
+					var loadTable = load.CalculateLoad();
+					foreach ((INode node, IDofType dof, double load) tuple in loadTable)
+					{
+						if (tuple.node.Constraints.Any(x => x.DOF == tuple.dof)) continue;
+						if (globalNodalLoads.Contains(tuple.node, tuple.dof))
+						{
+							globalNodalLoads[tuple.node, tuple.dof] += tuple.load;
+						}
+						else
+						{
+							globalNodalLoads.TryAdd(tuple.node, tuple.dof, tuple.load);
+						}
+
+					}
+				}
+			}
+
+			return globalNodalLoads;
+		}
+
 		[Fact]
 		public void IsogeometricPlaneStrainMixedBC()
 		{
@@ -333,15 +374,36 @@ namespace ISAAR.MSolve.IGA.Tests
 
             var rightEdgeLoads=geometry.NurbsSurfacePatches[0]
                 .CreateLoadForEdge(model,NurbsSurfaceEdges.Right, new DistributedLineLoad2D(-0.3,0));
-            foreach (var load in rightEdgeLoads)
-                model.Loads.Add(load);
+			//foreach (var loads in rightEdgeLoads)
+			//{
+			//	foreach (var loadInfo in loads.CalculateLoad())
+			//	{
+			//		Load load = new Load() { Node = loadInfo.row, DOF = loadInfo.col, Amount = loadInfo.val };
+			//		Debug.WriteLine($"node:{loadInfo.row.ID},dof{ loadInfo.col},Amount = {loadInfo.val}");
+			//		model.Loads.Add(load);
+			//	}
+			//}
 
-            var topEdgeLoads=geometry.NurbsSurfacePatches[0]
+				var topEdgeLoads=geometry.NurbsSurfacePatches[0]
                 .CreateLoadForEdge(model,NurbsSurfaceEdges.Top, new DistributedLineLoad2D(0,-0.3));
-            foreach (var load in topEdgeLoads)
-                model.Loads.Add(load);
+			//foreach (var loads in topEdgeLoads)
+			//{
+			//	foreach (var loadInfo in loads.CalculateLoad())
+			//	{
+			//		Load load = new Load() { Node = loadInfo.row, DOF = loadInfo.col, Amount = loadInfo.val };
+			//		model.Loads.Add(load);
+			//	}
+			//}
 
-            geometry.NurbsSurfacePatches[0].ConstraintDofsOfEdge(model, NurbsSurfaceEdges.Left, new List<IDofType>()
+			Table<INode, IDofType, double> loadinfo = GetNodalLoads(new List<List<ILoad>>() { rightEdgeLoads, topEdgeLoads });
+
+			foreach (var entry in loadinfo)
+			{
+				Load load = new Load() { Node = entry.row, DOF = entry.col, Amount = entry.val };
+				model.Loads.Add(load);
+			}
+
+			geometry.NurbsSurfacePatches[0].ConstraintDofsOfEdge(model, NurbsSurfaceEdges.Left, new List<IDofType>()
             {
                 StructuralDof.TranslationX, StructuralDof.TranslationY
             });

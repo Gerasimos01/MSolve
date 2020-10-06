@@ -113,7 +113,7 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// <summary>
 		/// List containing the loads applied to the the <see cref="Model"/>.
 		/// </summary>
-		public IList<ILoad> Loads { get; private set; } = new List<ILoad>();
+		public IList<Load> Loads { get; private set; } = new List<Load>();
 
 		/// <summary>
 		/// List of <see cref="IMassAccelerationHistoryLoad"/> applied to the <see cref="Model"/>.
@@ -298,10 +298,42 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// </summary>
 		public void ConnectDataStructures()
 		{
+
 			BuildInterconnectionData();
 			AssignConstraints();
+			AssignNodalLoadsToSubdomains();
+			RemoveInactiveTransientNodalLoads();
 		}
-		
+
+		private void AssignNodalLoadsToSubdomains()
+		{
+			// Remove inactive loads added by the user
+			var activeLoads = new List<Load>(Loads.Count);
+			foreach (Load load in Loads)
+			{
+				bool isConstrained = Constraints.Contains(load.Node, load.DOF);
+				if (!isConstrained) activeLoads.Add(load);
+			}
+			Loads = activeLoads;
+
+			// Assign the rest to their subdomains without scaling them. That will be done later by the analyzer and solver.
+			foreach (Load load in Loads)
+			{
+				foreach (Patch subdomain in load.Node.SubdomainsDictionary.Values) subdomain.NodalLoads.Add(load);
+			}
+		}
+
+		private void RemoveInactiveTransientNodalLoads()
+		{
+			var activeLoadsDynamic = new List<ITimeDependentNodalLoad>(TimeDependentNodalLoads.Count);
+			foreach (ITimeDependentNodalLoad load in TimeDependentNodalLoads)
+			{
+				bool isConstrained = Constraints.Contains(load.Node, load.DOF);
+				if (!isConstrained) activeLoadsDynamic.Add(load);
+			}
+			TimeDependentNodalLoads = activeLoadsDynamic;
+		}
+
 		private void AssignConstraints()
 		{
 			foreach (ControlPoint controlPoint in ControlPointsDictionary.Values)
