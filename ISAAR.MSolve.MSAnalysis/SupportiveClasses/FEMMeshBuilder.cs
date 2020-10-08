@@ -978,7 +978,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
 
         }
 
-        public static Dictionary<Node, IList<IDofType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath)
+        public static Dictionary<Node, IList<IDofType>> GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(Model model, int hexa1, int hexa2, int hexa3, string renumberingVectorPath, int[] renumbering_vector = null)
         {
             //Origin : RVEExamplesBuilder.AddConstraintsForNonSingularStiffnessMatrix_withRenumbering()
             //modifications: return type and nodes and dofs to be constrained
@@ -986,7 +986,15 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             Dictionary<Node, IList<IDofType>> RigidBodyNodeConstraints = new Dictionary<Node, IList<IDofType>>();
 
             // Perioxh renumbering initialization 
-            renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
+            renumbering renumbering = new renumbering(new int[] { 0 });
+            if (!(renumbering_vector == null))//.
+            {
+                renumbering = new renumbering(renumbering_vector);
+            }
+            else
+            {
+                renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
+            }
             // perioxh renumbering initialization ews edw 
 
             int kuvos = (hexa1 - 1) * (hexa2 - 1) * (hexa3 - 1);
@@ -3117,10 +3125,18 @@ namespace ISAAR.MSolve.MultiscaleAnalysis.SupportiveClasses
             C[2] = A[0] * B[1] - A[1] * B[0];
         }
 
-        public static void HexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(Model model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes)
+        public static void HexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(Model model, rveMatrixParameters mp, double[,] Dq, string renumberingVectorPath, Dictionary<int, Node> boundaryNodes, int[] renumbering_vecs1)
         {
             // Perioxh renumbering initialization 
-            renumbering renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
+            renumbering renumbering = new renumbering(new int[] { 0 });
+            if (renumbering_vecs1.Length > 1)
+            {
+                renumbering = new renumbering(renumbering_vecs1);
+            }
+            else
+            {
+                renumbering = new renumbering(PrintUtilities.ReadIntVector(renumberingVectorPath));
+            }
             // perioxh renumbering initialization ews edw 
 
             // Perioxh parametroi Rve Matrix

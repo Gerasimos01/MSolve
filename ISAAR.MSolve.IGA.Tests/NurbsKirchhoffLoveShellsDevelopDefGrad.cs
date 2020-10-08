@@ -86,11 +86,11 @@ namespace ISAAR.MSolve.IGA.Tests
             var provider = new ProblemStructural(model, solver);
 
             // Linear static analysis
-            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, 1000);
+            var newtonRaphsonBuilder = new LoadControlAnalyzer.Builder(model, solver, provider, 20); //1000);
             var childAnalyzer = newtonRaphsonBuilder.Build();
             var parentAnalyzer = new StaticAnalyzer(model, solver, provider, childAnalyzer);
 
-            var logger = new TotalLoadsDisplacementsPerIncrementLogIGA(model.PatchesDictionary[0], 1000,
+            var logger = new TotalLoadsDisplacementsPerIncrementLogIGA(model.PatchesDictionary[0], 20, //1000,
                 model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationZ, "CantileverBenchmarkLog16x1.txt");
             childAnalyzer.IncrementalLogs.Add(0, logger);
 

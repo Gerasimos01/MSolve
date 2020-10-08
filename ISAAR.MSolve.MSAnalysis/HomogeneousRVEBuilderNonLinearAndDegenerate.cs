@@ -13,7 +13,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
     /// </summary>
     public class HomogeneousRVEBuilderNonLinearAndDegenerate : IdegenerateRVEbuilder
     {
-        private Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp ;
+        private Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
         private rveMatrixParameters mp;
         private grapheneSheetParameters gp;
         private string renumbering_vector_path;
@@ -29,19 +29,19 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
         }
         public IRVEbuilder Clone(int a) => new HomogeneousRVEBuilderNonLinearAndDegenerate();
 
-        public Tuple<Model, Dictionary<int, Node>,double> GetModelAndBoundaryNodes()
+        public Tuple<Model, Dictionary<int, Node>, double> GetModelAndBoundaryNodes()
         {
-           return Reference2RVEExample10_000withRenumbering_mono_hexa();
+            return Reference2RVEExample10_000withRenumbering_mono_hexa();
         }
 
-        
 
-        public Tuple<Model, Dictionary<int, Node>,double> Reference2RVEExample10_000withRenumbering_mono_hexa()
+
+        public Tuple<Model, Dictionary<int, Node>, double> Reference2RVEExample10_000withRenumbering_mono_hexa()
         {
             Model model = new Model();
-            model.SubdomainsDictionary.Add(1, new Subdomain( 1 ));
+            model.SubdomainsDictionary.Add(1, new Subdomain(1));
 
-            Dictionary<int, Node> boundaryNodes= new Dictionary<int, Node>();
+            Dictionary<int, Node> boundaryNodes = new Dictionary<int, Node>();
             // COPY APO: Reference2RVEExample100_000withRenumbering_mono_hexa
             double[,] Dq = new double[1, 1];
             //Tuple<rveMatrixParameters, grapheneSheetParameters> mpgp;
@@ -73,18 +73,27 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             o_x_parameters[] model_o_x_parameteroi = new o_x_parameters[graphene_sheets_number];
 
 
-            FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(model, mp, Dq, renumbering_vector_path, boundaryNodes);
+            FEMMeshBuilder.HexaElementsOnlyRVEwithRenumbering_forMS_PeripheralNodes(model, mp, Dq, renumbering_vector_path, boundaryNodes, GetRenumbering());
             double volume = mp.L01 * mp.L02 * mp.L03;
 
-            
 
-            return new Tuple<Model, Dictionary<int, Node>,double>(model, boundaryNodes,volume);
+
+            return new Tuple<Model, Dictionary<int, Node>, double>(model, boundaryNodes, volume);
         }
 
         public Dictionary<Node, IList<IDofType>> GetModelRigidBodyNodeConstraints(Model model)
         {
-            return FEMMeshBuilder.GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(model, mp.hexa1, mp.hexa2, mp.hexa3, renumbering_vector_path);
+            return FEMMeshBuilder.GetConstraintsOfDegenerateRVEForNonSingularStiffnessMatrix_withRenumbering(model, mp.hexa1, mp.hexa2, mp.hexa3, renumbering_vector_path, GetRenumbering());
             //TODO:  Pithanws na epistrefetai apo GetModelAndBoundaryNodes ... AndConstraints.
+        }
+
+        public static int[] GetRenumbering()
+        {
+            return new int[]
+            {
+                22, 23, 26, 27, 38, 39, 42, 43, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 40, 41, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64 //.
+
+            };
         }
 
 
