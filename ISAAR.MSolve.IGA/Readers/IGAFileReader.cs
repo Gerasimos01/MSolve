@@ -51,7 +51,7 @@ namespace ISAAR.MSolve.IGA.Readers
 
         public enum TSplineShellType
         {
-            Linear, Section, Thickness
+            Linear, Section, Thickness, DefGrad
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace ISAAR.MSolve.IGA.Readers
         /// <param name="shellMaterial">The material of the shell.</param>
         /// <param name="thickness">The thickness of the shell.</param>
         public void CreateTSplineShellsModelFromFile(TSplineShellType shellType = TSplineShellType.Linear, 
-            IShellMaterial shellMaterial = null, IShellSectionMaterial sectionMaterial=null, double thickness = 1)
+            IShellMaterial shellMaterial = null, IShellSectionMaterial sectionMaterial=null, IContinuumMaterial3DDefGrad defGradMaterial = null, double thickness = 1)
 		{
 			char[] delimeters = { ' ', '=', '\t' };
 			Attributes? name = null;
@@ -153,6 +153,10 @@ namespace ISAAR.MSolve.IGA.Readers
 								case TSplineShellType.Thickness:
 									CreateThicknessShell(elementDegreeKsi, elementDegreeHeta, extractionOperator, connectivity, shellMaterial, thickness);
 									break;
+								case TSplineShellType.DefGrad:
+									CreateDefGradShell(elementDegreeKsi, elementDegreeHeta, extractionOperator, connectivity, defGradMaterial, thickness);
+									break;
+
 							}
 						}
 						break;
@@ -165,7 +169,7 @@ namespace ISAAR.MSolve.IGA.Readers
 
 
 		public void CreateTSplineShellsModelFromFile(TSplineShellType shellType = TSplineShellType.Linear, 
-            List<IShellMaterial> shellMaterials=null, IShellSectionMaterial sectionMaterial=null, double thickness = 1)
+            List<IShellMaterial> shellMaterials=null, IShellSectionMaterial sectionMaterial=null, List<IContinuumMaterial3DDefGrad> defGradMaterials = null, double thickness = 1)
 		{
 			char[] delimeters = { ' ', '=', '\t' };
 			Attributes? name = null;
@@ -257,6 +261,9 @@ namespace ISAAR.MSolve.IGA.Readers
 								case TSplineShellType.Thickness:
 									CreateThicknessShell(elementDegreeKsi, elementDegreeHeta, extractionOperator, connectivity, shellMaterials, thickness);
 									break;
+								case TSplineShellType.DefGrad:
+									CreateDefGradShell(elementDegreeKsi, elementDegreeHeta, extractionOperator, connectivity, defGradMaterials, thickness);
+									break;
 							}
 						}
 						break;
@@ -343,5 +350,55 @@ namespace ISAAR.MSolve.IGA.Readers
             _model.ElementsDictionary.Add(elementIDCounter++, element);
             _model.PatchesDictionary[0].Elements.Add(element);
         }
+
+		private void CreateDefGradShell(int elementDegreeKsi, int elementDegreeHeta, Matrix extractionOperator,
+			int[] connectivity, IContinuumMaterial3DDefGrad shellMaterial, double thickness)
+		{
+			var elementControlPoints = connectivity.Select(t => _model.ControlPointsDictionary[t]).ToArray();
+			var tsplines = new ShapeTSplines2DFromBezierExtraction(elementDegreeKsi, elementDegreeHeta,
+				extractionOperator, elementControlPoints);
+			Element element = new Element
+			{
+				ID = elementIDCounter,
+				Patch = _model.PatchesDictionary[0],
+				ElementType = new KirchhoffLoveShellNLDefGrad(shellMaterial, new List<Knot>
+					{
+						new Knot() {ID = 0, Ksi = -1, Heta = -1, Zeta = 0},
+						new Knot() {ID = 1, Ksi = -1, Heta = 1, Zeta = 0},
+						new Knot() {ID = 2, Ksi = 1, Heta = -1, Zeta = 0},
+						new Knot() {ID = 3, Ksi = 1, Heta = 1, Zeta = 0},
+					}, tsplines, elementControlPoints,
+					_model.PatchesDictionary[0], thickness, elementDegreeKsi, elementDegreeHeta)
+			};
+
+			element.AddControlPoints(elementControlPoints);
+			_model.ElementsDictionary.Add(elementIDCounter++, element);
+			_model.PatchesDictionary[0].Elements.Add(element);
+		}
+
+		private void CreateDefGradShell(int elementDegreeKsi, int elementDegreeHeta, Matrix extractionOperator,
+			int[] connectivity, List<IContinuumMaterial3DDefGrad> shellMaterials, double thickness)
+		{
+			var elementControlPoints = connectivity.Select(t => _model.ControlPointsDictionary[t]).ToArray();
+			var tsplines = new ShapeTSplines2DFromBezierExtraction(elementDegreeKsi, elementDegreeHeta,
+				extractionOperator, elementControlPoints);
+			Element element = new Element
+			{
+				ID = elementIDCounter,
+				Patch = _model.PatchesDictionary[0],
+				ElementType = new KirchhoffLoveShellNLDefGrad(shellMaterials, new List<Knot>
+					{
+						new Knot() {ID = 0, Ksi = -1, Heta = -1, Zeta = 0},
+						new Knot() {ID = 1, Ksi = -1, Heta = 1, Zeta = 0},
+						new Knot() {ID = 2, Ksi = 1, Heta = -1, Zeta = 0},
+						new Knot() {ID = 3, Ksi = 1, Heta = 1, Zeta = 0},
+					}, tsplines, elementControlPoints,
+					_model.PatchesDictionary[0], thickness, elementDegreeKsi, elementDegreeHeta)
+			};
+
+			element.AddControlPoints(elementControlPoints);
+			_model.ElementsDictionary.Add(elementIDCounter++, element);
+			_model.PatchesDictionary[0].Elements.Add(element);
+		}
 	}
 }

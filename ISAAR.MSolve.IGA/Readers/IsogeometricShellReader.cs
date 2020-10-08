@@ -18,7 +18,8 @@ namespace ISAAR.MSolve.IGA.Readers
 	{
 		Linear,
 		NonLinear,
-		SectionNonLinear
+		SectionNonLinear,
+                DefGrad
 	}
 
 	/// <summary>
@@ -30,6 +31,7 @@ namespace ISAAR.MSolve.IGA.Readers
         private readonly GeometricalFormulation _formulation;
         private readonly IShellMaterial _material;
         private readonly IShellSectionMaterial _sectionMaterial;
+        private readonly IContinuumMaterial3DDefGrad _defGradMaterial;
 
         private enum Attributes
 		{
@@ -49,12 +51,13 @@ namespace ISAAR.MSolve.IGA.Readers
 		/// <param name="modelCreator">An <see cref="ModelCreator"/> object responsible for generating the model.</param>
 		/// <param name="filename">The name of the file to be read.</param>
 		public IsogeometricShellReader(GeometricalFormulation formulation,
-            string filename, IShellMaterial material=null,IShellSectionMaterial sectionMaterial=null )
+            string filename, IShellMaterial material=null,IShellSectionMaterial sectionMaterial=null, IContinuumMaterial3DDefGrad defGradMaterial = null )
 		{
 			_filename = filename;
             _formulation = formulation;
             _material = material;
             _sectionMaterial = sectionMaterial;
+            _defGradMaterial = defGradMaterial;
         }
 
 		private Dictionary<int, int[]> ControlPointIDsDictionary = new Dictionary<int, int[]>();
@@ -333,12 +336,27 @@ namespace ISAAR.MSolve.IGA.Readers
                             break;
                         case GeometricalFormulation.SectionNonLinear:
                             throw new NotImplementedException();
-                            //element = new NurbsKirchhoffLoveShellElementSectionNL(_material,knotsOfElement.ToArray(), elementControlPoints, nurbs, model.PatchesDictionary[0],Thickness,DegreeKsi, DegreeHeta)
-                            // {
-                            //    ID = elementID,
-                            //    ElementType = new NurbsKirchhoffLoveShellElementSectionNL(_material, knotsOfElement.ToArray(), elementControlPoints, nurbs, model.PatchesDictionary[0], Thickness, DegreeKsi, DegreeHeta)
-                            //};
-                            //break;
+                        //element = new NurbsKirchhoffLoveShellElementSectionNL(_material,knotsOfElement.ToArray(), elementControlPoints, nurbs, model.PatchesDictionary[0],Thickness,DegreeKsi, DegreeHeta)
+                        // {
+                        //    ID = elementID,
+                        //    ElementType = new NurbsKirchhoffLoveShellElementSectionNL(_material, knotsOfElement.ToArray(), elementControlPoints, nurbs, model.PatchesDictionary[0], Thickness, DegreeKsi, DegreeHeta)
+                        //};
+                        //break;
+                        case GeometricalFormulation.DefGrad:
+                            element = new Element()
+                            {
+                                ID = elementID,
+                                Patch = model.PatchesDictionary[0],
+                                ElementType = new KirchhoffLoveShellNLDefGrad(_defGradMaterial,
+                                    knotsOfElement, nurbs, elementControlPoints, model.PatchesDictionary[0], Thickness,
+                                    DegreeKsi, DegreeHeta)
+                                {
+                                    ID = elementID,
+                                }
+                            };
+                            element.AddKnots(knotsOfElement);
+                            element.AddControlPoints(elementControlPoints);
+                            break;
                     }
                     model.PatchesDictionary[0].Elements.Add(element);
                 }

@@ -44,12 +44,21 @@ namespace ISAAR.MSolve.IGA.Tests
         public void IsogeometricCantileverShell()
         {
             string filename = Path.Combine(Directory.GetCurrentDirectory(), "InputFiles", "CantileverShell.txt");
-            var material = new ShellElasticMaterial2Dtransformationb()
+            //var material = new ShellElasticMaterial2Dtransformationb()
+            //{
+            //    YoungModulus = 100,
+            //    PoissonRatio = 0
+            //};
+            //var modelReader = new IsogeometricShellReader(GeometricalFormulation.NonLinear, filename, material: material);
+
+            var material = new ShellElasticMaterial2DtransformationbDefGrad()
             {
                 YoungModulus = 100,
                 PoissonRatio = 0
             };
-            var modelReader = new IsogeometricShellReader(GeometricalFormulation.NonLinear, filename, material: material);
+            var modelReader = new IsogeometricShellReader(GeometricalFormulation.DefGrad, filename, defGradMaterial: material);
+
+
             var model = modelReader.GenerateModelFromFile();
 
             //Value verticalDistributedLoad = delegate (double x, double y, double z)
@@ -87,9 +96,10 @@ namespace ISAAR.MSolve.IGA.Tests
 
             // Run the analysis
             parentAnalyzer.Initialize();
-            model.Patches[0].Forces[2] = 1.33333333334;
-            model.Patches[0].Forces[5] = 1.33333333334;
-            model.Patches[0].Forces[8] = 1.33333333334;
+            model.Patches[0].Forces[11] = 1.3333333333333344;//..Forces[2] = 1.33333333334;
+            model.Patches[0].Forces[14] = 1.3333333333333335;//..Forces[5] = 1.33333333334;
+            model.Patches[0].Forces[17] = 1.3333333333333344;//..Forces[8] = 1.33333333334;
+
             parentAnalyzer.Solve();
         }
 

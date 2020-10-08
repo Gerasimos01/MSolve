@@ -280,7 +280,8 @@ namespace ISAAR.MSolve.IGA.Elements.Structural
 
         public double[] CalculateForces(Element element, double[] localDisplacements, double[] localdDisplacements)
         {
-            var shellElement = (KirchhoffLoveShellNL)element;
+            //var shellElement = (KirchhoffLoveShellNL)element;
+            var shellElement = element;
             var elementNodalForces = new double[shellElement.ControlPointsDictionary.Count * 3];
 
             _solution = localDisplacements;
@@ -398,7 +399,8 @@ namespace ISAAR.MSolve.IGA.Elements.Structural
         public Tuple<double[], double[]> CalculateStresses(Element element, double[] localDisplacements,
             double[] localdDisplacements)
         {
-            var elementControlPoints = ((KirchhoffLoveShellNL)element).ControlPoints.ToArray();
+            //var elementControlPoints = ((KirchhoffLoveShellNL)element).ControlPoints.ToArray();
+            var elementControlPoints = element.ControlPoints.ToArray();
 
 
             _solution = localDisplacements;
