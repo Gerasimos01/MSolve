@@ -25,6 +25,8 @@ using ISAAR.MSolve.LinearAlgebra.Matrices;
 using ISAAR.MSolve.LinearAlgebra.Vectors;
 using ISAAR.MSolve.Logging;
 using ISAAR.MSolve.Materials;
+using ISAAR.MSolve.MultiscaleAnalysis;
+using ISAAR.MSolve.MultiscaleAnalysis.Interfaces;
 using ISAAR.MSolve.Problems;
 using ISAAR.MSolve.Solvers;
 using ISAAR.MSolve.Solvers.Direct;
@@ -51,11 +53,21 @@ namespace ISAAR.MSolve.IGA.Tests
             //};
             //var modelReader = new IsogeometricShellReader(GeometricalFormulation.NonLinear, filename, material: material);
 
-            var material = new ShellElasticMaterial2DtransformationbDefGrad()
+            //var material = new ShellElasticMaterial2DtransformationbDefGrad()
+            //{
+            //    YoungModulus = 100,
+            //    PoissonRatio = 0
+            //};
+
+            IdegenerateRVEbuilder homogenousRve = new HomogeneousRVEBuilderNonLinearAndDegenerate()
             {
-                YoungModulus = 100,
-                PoissonRatio = 0
+                Young_s_Modulus = 100,
+                Poisson_s_Ration = 0
             };
+            var material = new MicrostructureDefGrad2D(homogenousRve,
+                model => (new SkylineSolver.Builder()).BuildSolver(model), false, 1);
+
+
             var modelReader = new IsogeometricShellReader(GeometricalFormulation.DefGrad, filename, defGradMaterial: material);
 
 
