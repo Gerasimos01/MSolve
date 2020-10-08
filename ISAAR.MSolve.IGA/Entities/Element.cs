@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ISAAR.MSolve.Discretization.Interfaces;
 using ISAAR.MSolve.IGA.Interfaces;
 
@@ -18,6 +19,8 @@ namespace ISAAR.MSolve.IGA.Entities
 		/// <see cref="Dictionary{TKey,TValue}"/> where int is the <see cref="ControlPoint"/> ID.
 		/// </summary>
 		public Dictionary<int, ControlPoint> ControlPointsDictionary { get; } = new Dictionary<int, ControlPoint>();
+
+		public IList<ControlPoint> ControlNodes => ControlPointsDictionary.Values.ToList();
 
 		/// <summary>
 		/// Defines the Element type of the generic element class.

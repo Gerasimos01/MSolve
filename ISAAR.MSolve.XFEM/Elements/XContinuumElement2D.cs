@@ -656,5 +656,10 @@ namespace ISAAR.MSolve.XFEM.Elements
             }
             return (standardElementDisplacements, enrichedElementDisplacements);
         }
+
+        public void ClearMaterialState()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

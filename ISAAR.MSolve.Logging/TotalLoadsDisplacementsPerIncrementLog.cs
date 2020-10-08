@@ -19,7 +19,7 @@ namespace ISAAR.MSolve.Logging
     /// <summary>
     /// This does not work if the requested node belongs to an element that contains embedded elements.
     /// </summary>
-    public class TotalLoadsDisplacementsPerIncrementLog
+    public class TotalLoadsDisplacementsPerIncrementLog: ITotalLoadsDisplacementsPerIncrementLog
     {
         private readonly Subdomain subdomain;
         //private readonly Dictionary<INode, HashSet<DOFType>> monitorDofs = new Dictionary<INode, HashSet<DOFType>>();

@@ -21,5 +21,6 @@ namespace ISAAR.MSolve.Discretization.Interfaces
         IMatrix MassMatrix(IElement element);
         IMatrix DampingMatrix(IElement element);
         IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element);
+        void ClearMaterialState();
     }
 }

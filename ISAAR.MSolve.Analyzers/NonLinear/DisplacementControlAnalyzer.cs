@@ -55,7 +55,7 @@ namespace ISAAR.MSolve.Analyzers.NonLinear
                         foreach (var subdomainLogPair in IncrementalLogs)
                         {
                             int subdomainID = subdomainLogPair.Key;
-                            TotalLoadsDisplacementsPerIncrementLog log = subdomainLogPair.Value;
+                            ITotalLoadsDisplacementsPerIncrementLog log = subdomainLogPair.Value;
                             log.LogTotalDataForIncrement(increment, iteration, errorNorm,
                                 uPlusdu[subdomainID], internalRhsVectors[subdomainID]);
                         }

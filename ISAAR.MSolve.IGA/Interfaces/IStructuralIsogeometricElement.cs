@@ -5,5 +5,6 @@
 	/// </summary>
 	public interface IStructuralIsogeometricElement : IIsogeometricElement
 	{
+		void ClearMaterialState();
 	}
 }
