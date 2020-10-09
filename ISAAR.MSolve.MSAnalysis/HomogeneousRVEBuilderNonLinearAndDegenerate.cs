@@ -27,7 +27,7 @@ namespace ISAAR.MSolve.MultiscaleAnalysis
             // this.renumbering_vector_path=renumbering_vector_path,
             // this.subdiscr1=subdiscr1
         }
-        public IRVEbuilder Clone(int a) => new HomogeneousRVEBuilderNonLinearAndDegenerate();
+        public IRVEbuilder Clone(int a) => new HomogeneousRVEBuilderNonLinearAndDegenerate() { Young_s_Modulus = Young_s_Modulus, Poisson_s_Ration = Poisson_s_Ration };
 
         public Tuple<Model, Dictionary<int, Node>, double> GetModelAndBoundaryNodes()
         {
