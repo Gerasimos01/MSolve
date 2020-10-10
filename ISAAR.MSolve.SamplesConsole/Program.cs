@@ -51,7 +51,7 @@ namespace ISAAR.MSolve.SamplesConsole
 
         //}
 
-        public static void MainMPI(string[] args)
+        public static void Main(string[] args)
         {
             //ProfileFetiDPCantileverBeam2D.Run();
 
@@ -60,11 +60,12 @@ namespace ISAAR.MSolve.SamplesConsole
             //suite.AddFact(materialManagerParrallelExecutionTest1.TestMaterialUpdateOnly);
             //suite.AddFact(Hexa8NonLinearCantileverDefGradDevelop4.ParallelNonLinearCantilever);
             //suite.AddFact(Hexa8NonLinearCantileverDefGradDevelop4Multiscale.ParallelNonLinearCantilever);
-            suite.AddFact(Hexa8NonLinearCantileverDefGradDevelop4MultiscaleGraphene.ParallelNonLinearCantilever);
+            //suite.AddFact(Hexa8NonLinearCantileverDefGradDevelop4MultiscaleGraphene.ParallelNonLinearCantilever);
+            suite.AddFact(ShellNonLinearDefGradDevelopMpi.ParallelNonLinearCantilever);
             suite.RunTests(args);
         }
 
-        public static void Main(string[] args)
+        public static void MainRam(string[] args)
         {
             AssemblyCheck.WritingPhase = true;
             (var sttressesFeti1, var stressesFeti) =MemoryProfilerRveExample.CheckExample46InputInCodeRAMconsumption();

@@ -53,19 +53,19 @@ namespace ISAAR.MSolve.IGA.Tests
             //};
             //var modelReader = new IsogeometricShellReader(GeometricalFormulation.NonLinear, filename, material: material);
 
-            //var material = new ShellElasticMaterial2DtransformationbDefGrad()
-            //{
-            //    YoungModulus = 100,
-            //    PoissonRatio = 0
-            //};
-
-            IdegenerateRVEbuilder homogenousRve = new HomogeneousRVEBuilderNonLinearAndDegenerate()
+            var material = new ShellElasticMaterial2DtransformationbDefGrad()
             {
-                Young_s_Modulus = 100,
-                Poisson_s_Ration = 0
+                YoungModulus = 100,
+                PoissonRatio = 0
             };
-            var material = new MicrostructureDefGrad2D(homogenousRve,
-                model => (new SkylineSolver.Builder()).BuildSolver(model), false, 1);
+
+            //IdegenerateRVEbuilder homogenousRve = new HomogeneousRVEBuilderNonLinearAndDegenerate()
+            //{
+            //    Young_s_Modulus = 100,
+            //    Poisson_s_Ration = 0
+            //};
+            //var material = new MicrostructureDefGrad2D(homogenousRve,
+            //    model => (new SkylineSolver.Builder()).BuildSolver(model), false, 1);
 
 
             var modelReader = new IsogeometricShellReader(GeometricalFormulation.DefGrad, filename, defGradMaterial: material);
@@ -106,6 +106,11 @@ namespace ISAAR.MSolve.IGA.Tests
                 model.ControlPointsDictionary.Values.Last(), StructuralDof.TranslationZ, "CantileverBenchmarkLog16x1.txt");
             childAnalyzer.IncrementalLogs.Add(0, logger);
 
+            var watchDofs = new Dictionary<int, int[]>();
+            watchDofs.Add(0, new int[1] { 17 });
+            var log1 = new TotalDisplacementsPerIterationLog(watchDofs);
+            childAnalyzer.TotalDisplacementsPerIterationLog = log1; //.
+
             // Run the analysis
             parentAnalyzer.Initialize();
             model.Patches[0].Forces[11] = 1.3333333333333344;//..Forces[2] = 1.33333333334;
@@ -113,6 +118,8 @@ namespace ISAAR.MSolve.IGA.Tests
             model.Patches[0].Forces[17] = 1.3333333333333344;//..Forces[8] = 1.33333333334;
 
             parentAnalyzer.Solve();
+            var data = log1.dofDisplacementsPerIter.ToArray().Select(x=>x[0][17]).ToArray();
+
         }
 
         [Fact]

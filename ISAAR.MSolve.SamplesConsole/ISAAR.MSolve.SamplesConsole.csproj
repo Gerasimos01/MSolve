@@ -32,4 +32,9 @@
   <ItemGroup>
     <PackageReference Include="MPI.NET" Version="1.4.0" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="InputFiles\CantileverShell.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

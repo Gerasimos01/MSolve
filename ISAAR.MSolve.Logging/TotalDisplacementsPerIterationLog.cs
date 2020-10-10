@@ -8,7 +8,7 @@ namespace ISAAR.MSolve.Logging
     public class TotalDisplacementsPerIterationLog : IAnalyzerLog
     {
         private readonly Dictionary<int, int[]> watchDofs;
-        private readonly List<Dictionary<int, Dictionary<int, double>>> dofDisplacementsPerIter;
+        public readonly List<Dictionary<int, Dictionary<int, double>>> dofDisplacementsPerIter;
 
         /// <summary>
         /// Initializes a new instance of <see cref="TotalDisplacementsPerIterationLog"/>.
