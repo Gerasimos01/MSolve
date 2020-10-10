@@ -113,7 +113,7 @@
     <None Update="InputFiles\NurbsNonLinearThicknessShell.mat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="InputFiles\PinchedHemisphere.txt">
+    <None Update="InputFiles\PinchedHemisphereDimitrisRefactoringBranch.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="InputFiles\PlateTension.json">
