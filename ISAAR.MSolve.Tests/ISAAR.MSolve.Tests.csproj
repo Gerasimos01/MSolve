@@ -35,7 +35,6 @@
   <ItemGroup>
     <ProjectReference Include="..\ISAAR.MSolve.Analyzers\ISAAR.MSolve.Analyzers.csproj" />
     <ProjectReference Include="..\ISAAR.MSolve.FEM\ISAAR.MSolve.FEM.csproj" />
-    <ProjectReference Include="..\ISAAR.MSolve.IGA\ISAAR.MSolve.IGA.csproj" />
     <ProjectReference Include="..\ISAAR.MSolve.LinearAlgebra.Distributed.Tests\ISAAR.MSolve.LinearAlgebra.Distributed.Tests.csproj" />
     <ProjectReference Include="..\ISAAR.MSolve.LinearAlgebra.Tests\ISAAR.MSolve.LinearAlgebra.Tests.csproj" />
     <ProjectReference Include="..\ISAAR.MSolve.LinearAlgebra\ISAAR.MSolve.LinearAlgebra.csproj" />
@@ -55,6 +54,7 @@
     <Folder Include="MaterialsTest\" />
     <Folder Include="Problems\" />
     <Folder Include="Numerical\" />
+    <Folder Include="RveTemplates\Input\NewFolder\" />
   </ItemGroup>
 
   <ItemGroup>

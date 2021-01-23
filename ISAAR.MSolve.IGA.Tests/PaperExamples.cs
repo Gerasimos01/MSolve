@@ -337,6 +337,42 @@ namespace ISAAR.MSolve.IGA.Tests
             material4.UpdateMaterial(new double[]{0,0,0});
         }
 
+        [Fact]
+        public void CompositeRveWithElastic()
+        {
+            var material3 = new ShellElasticMaterial2Dtransformationb()
+            {
+                YoungModulus = 4.3210,
+                PoissonRatio = 0.0,
+                TangentVectorV1 = new double[3] { 1, 0, 0 },
+                TangentVectorV2 = new double[3] { 0, 1, 0 }
+            };
+
+            //var trandom = new TRandom();
+            //var randomInnerE = trandom.Normal(3.4e9, 0.2e9);
+            var outterMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
+
+            var innerMaterial = new ElasticMaterial3DTotalStrain(0, 4.3210);
+
+
+            var homogeneousRveBuilder1 =
+                new GmshCompositeRveBuilder(outterMaterial, innerMaterial, 2, 2, 2, "..\\..\\..\\RveTemplates\\Input\\Continuum\\t16Solid_physical_entities_no_volume_tag_change_More_inclusions.msh");
+
+            var material4 = new MicrostructureShell2D(homogeneousRveBuilder1,
+                model => (new SkylineSolver.Builder()).BuildSolver(model), true, 1)
+            {
+                TangentVectorV1 = new double[3] { 1, 0, 0 },
+                TangentVectorV2 = new double[3] { 0, 1, 0 }
+            };
+            //material4.UpdateMaterial(new double[] { 0, 0, 0 });
+
+            var cons = material4.ConstitutiveMatrix;
+
+            Assert.Equal(material3.ConstitutiveMatrix[0, 0], cons[0, 0], 7);
+            Assert.Equal(material3.ConstitutiveMatrix[1, 1], cons[1, 1], 7);
+            Assert.Equal(material3.ConstitutiveMatrix[2, 2], cons[2, 2], 7);
+        }
+
 
         ////[Fact]
         //public void BenchmarkEmbedding()
@@ -350,7 +386,7 @@ namespace ISAAR.MSolve.IGA.Tests
         //        var material4 = new Shell2dRVEMaterialHostConst(1, 1, 1, homogeneousRveBuilder1,
         //            constModel => (new SuiteSparseSolver.Builder()).BuildSolver(constModel));
         //    }
-            
+
         //}
     }
 }
