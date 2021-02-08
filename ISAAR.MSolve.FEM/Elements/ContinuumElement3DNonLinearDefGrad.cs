@@ -16,6 +16,7 @@ using ISAAR.MSolve.Materials.Interfaces;
 using ISSAR.MSolve.Discretization.Loads;
 using ISAAR.MSolve.FEM.Interpolation.GaussPointExtrapolation;
 using ISAAR.MSolve.Materials;
+using ISAAR.MSolve.FEM.SupportiveClasses;
 
 namespace ISAAR.MSolve.FEM.Elements
 {
@@ -498,28 +499,31 @@ namespace ISAAR.MSolve.FEM.Elements
                     defGradElasticDeterminant = defGradElasticDeterminant + (defGradElasticTransposed[0, i] * (defGradElasticTransposed[1, (i + 1) % 3]
                         * defGradElasticTransposed[2, (i + 2) % 3] - defGradElasticTransposed[1, (i + 2) % 3] * defGradElasticTransposed[2, (i + 1) % 3]));
 
-                var firstPiola = new double[3, 3];
-                for (int i = 0; i < 3; i++)
-                {
-                    for (int j = 0; j < 3; j++)
-                    {
-                        //firstPiola[i, j] = defGradDeterminant / defGradElasticDeterminant * firstPiolaElastic[i, j] / lambdag;
-                        firstPiola[i, j] = defGradDeterminant / defGradElasticDeterminant * firstPiolaElastic[i, j] / lambdag / defGradElasticDeterminant;
-                    }
-                }
-                //double[,] defGrad_lamdag_inv = new double[3, 3] { { (double)1 / lambdag, 0, 0 }, { 0, (double)1 / lambdag, 0 }, { 0, 0, (double)1 / lambdag } };
-
                 //var firstPiola = new double[3, 3];
                 //for (int i = 0; i < 3; i++)
                 //{
                 //    for (int j = 0; j < 3; j++)
                 //    {
-                //        for (int k = 0; k < 3; k++)
-                //        {
-                //            firstPiola[i, j] += firstPiolaElastic[i, k] * defGrad_lamdag_inv[k, j];
-                //        }
+                //        //firstPiola[i, j] = defGradDeterminant / defGradElasticDeterminant * firstPiolaElastic[i, j] / lambdag;
+                //        firstPiola[i, j] = defGradDeterminant / defGradElasticDeterminant * firstPiolaElastic[i, j] / lambdag / defGradElasticDeterminant;
                 //    }
                 //}
+
+                var detFg = Math.Pow(lambdag, 3);
+
+                double[,] defGrad_lamdag_inv = new double[3, 3] { { (double)1 / lambdag, 0, 0 }, { 0, (double)1 / lambdag, 0 }, { 0, 0, (double)1 / lambdag } };
+
+                var firstPiola = new double[3, 3];
+                for (int i = 0; i < 3; i++)
+                {
+                    for (int j = 0; j < 3; j++)
+                    {
+                        for (int k = 0; k < 3; k++)
+                        {
+                            firstPiola[i, j] += firstPiolaElastic[i, k] * defGrad_lamdag_inv[k, j] * detFg;
+                        }
+                    }
+                }
 
                 double[,] defGradInverseTransposed = new double[3, 3] { { (defGradTransposed[2, 2]*defGradTransposed[1,1]- defGradTransposed[2, 1]
                     * defGradTransposed[1, 2])/defGradDeterminant,
@@ -631,11 +635,12 @@ namespace ISAAR.MSolve.FEM.Elements
             }
 
 
-
+            var secPiolaMat = new double[nGaussPoints][,];
+            var secPiolaElasMat = new double[nGaussPoints][,];
             for (int npoint = 0; npoint < nGaussPoints; npoint++)
             {
                 var stressesElastic = materialsAtGaussPoints[npoint].Stresses;
-                var secondPiolaElastic = new double[3, 3] { {stressesElastic[0],stressesElastic[3],stressesElastic[5] },
+                secPiolaElasMat[npoint] = new double[3, 3] { {stressesElastic[0],stressesElastic[3],stressesElastic[5] },
                     { stressesElastic[3],stressesElastic[1],stressesElastic[4] },
                     {stressesElastic[5],stressesElastic[4],stressesElastic[2] } };
                 //DefGradVec[npoint] = new double[9] { deformationGradientsTransposed[npoint][0, 0], 
@@ -660,7 +665,7 @@ namespace ISAAR.MSolve.FEM.Elements
                     {
                         for (int k = 0; k < 3; k++)
                         {
-                            firstPiolaElastic[i, j] += secondPiolaElastic[i, k] * defGradElasticTransposed[k, j];
+                            firstPiolaElastic[i, j] += secPiolaElasMat[npoint][i, k] * defGradElasticTransposed[k, j];
                         }
                     }
                 }
@@ -674,28 +679,31 @@ namespace ISAAR.MSolve.FEM.Elements
                     defGradElasticDeterminant = defGradElasticDeterminant + (defGradElasticTransposed[0, i] * (defGradElasticTransposed[1, (i + 1) % 3]
                         * defGradElasticTransposed[2, (i + 2) % 3] - defGradElasticTransposed[1, (i + 2) % 3] * defGradElasticTransposed[2, (i + 1) % 3]));
 
-                var firstPiola = new double[3, 3];
-                for (int i = 0; i < 3; i++)
-                {
-                    for (int j = 0; j < 3; j++)
-                    {
-                        //firstPiola[i, j] = defGradDeterminant / defGradElasticDeterminant * firstPiolaElastic[i, j] / lambdag;
-                        firstPiola[i, j] = defGradDeterminant / defGradElasticDeterminant * firstPiolaElastic[i, j] / lambdag / defGradElasticDeterminant;
-                    }
-                }
-                //double[,] defGrad_lamdag_inv = new double[3, 3] { { (double)1 / lambdag, 0, 0 }, { 0, (double)1 / lambdag, 0 }, { 0, 0, (double)1 / lambdag } };
-
                 //var firstPiola = new double[3, 3];
                 //for (int i = 0; i < 3; i++)
                 //{
                 //    for (int j = 0; j < 3; j++)
                 //    {
-                //        for (int k = 0; k < 3; k++)
-                //        {
-                //            firstPiola[i, j] += firstPiolaElastic[i, k] * defGrad_lamdag_inv[k, j];
-                //        }
+                //        //firstPiola[i, j] = defGradDeterminant / defGradElasticDeterminant * firstPiolaElastic[i, j] / lambdag;
+                //        firstPiola[i, j] = defGradDeterminant / defGradElasticDeterminant * firstPiolaElastic[i, j] / lambdag / defGradElasticDeterminant;
                 //    }
                 //}
+                var detFg = Math.Pow(lambdag, 3);
+
+                double[,] defGrad_lamdag_inv = new double[3, 3] { { (double)1 / lambdag, 0, 0 }, { 0, (double)1 / lambdag, 0 }, { 0, 0, (double)1 / lambdag } };
+
+                var firstPiola = new double[3, 3];
+                for (int i = 0; i < 3; i++)
+                {
+                    for (int j = 0; j < 3; j++)
+                    {
+                        for (int k = 0; k < 3; k++)
+                        {
+                            firstPiola[i, j] += firstPiolaElastic[i, k] * defGrad_lamdag_inv[k, j] * detFg;
+                        }
+                    }
+                }
+
                 double[,] defGradInverseTransposed = new double[3, 3] { { (defGradTransposed[2, 2]*defGradTransposed[1,1]- defGradTransposed[2, 1]
                     * defGradTransposed[1, 2])/defGradDeterminant,
                         (-(defGradTransposed[2, 2] * defGradTransposed[0, 1] - defGradTransposed[2, 1]
@@ -708,19 +716,19 @@ namespace ISAAR.MSolve.FEM.Elements
                         (-(defGradTransposed[2,1]*defGradTransposed[0,0]-defGradTransposed[2,0]*defGradTransposed[0,1]))/defGradDeterminant,
                         (defGradTransposed[1,1]*defGradTransposed[0,0]-defGradTransposed[1,0]*defGradTransposed[0,1])/ defGradDeterminant } };
 
-                var secondPiola = new double[3, 3];
+                secPiolaMat[npoint] = new double[3, 3];
                 for (int i = 0; i < 3; i++)
                 {
                     for (int j = 0; j < 3; j++)
                     {
                         for (int k = 0; k < 3; k++)
                         {
-                            secondPiola[i, j] += firstPiola[i, k] * defGradInverseTransposed[k, j];
+                            secPiolaMat[npoint][i, j] += firstPiola[i, k] * defGradInverseTransposed[k, j];
                         }
                     }
                 }
 
-                var stresses = new double[6] { secondPiola[0, 0], secondPiola[1, 1], secondPiola[2, 2], secondPiola[0, 1], secondPiola[1, 2], secondPiola[2, 0] };
+                var stresses = new double[6] { secPiolaMat[npoint][0, 0], secPiolaMat[npoint][1, 1], secPiolaMat[npoint][2, 2], secPiolaMat[npoint][0, 1], secPiolaMat[npoint][1, 2], secPiolaMat[npoint][2, 0] };
 
                 // 
                 integrCoeffsTimesSpkvec[npoint] = stresses.Scale(integrationCoeffs[npoint]);
@@ -783,6 +791,7 @@ namespace ISAAR.MSolve.FEM.Elements
 
             for (int npoint = 0; npoint < nGaussPoints; npoint++)
             {
+                
                 Matrix integrCoeffsTimesStressesTimesbnlMatrices = Matrix.CreateZero(9, 3 * numNodes); //TODO
                 Matrix integrCoeffsTimesConsMatrix = Matrix.CreateZero(6, 6); //TODO
                 Matrix integrCoeffTimesConsMatrixTimesBLMatrices = Matrix.CreateZero(6, 3 * numNodes);//TODO
@@ -800,6 +809,18 @@ namespace ISAAR.MSolve.FEM.Elements
 
                 //
                 IMatrixView consDisp = materialsAtGaussPoints[npoint].ConstitutiveMatrix;
+
+                var DG = new double[3, 3] { { DefGradVec[npoint][0], DefGradVec[npoint][3], DefGradVec[npoint][6] }, { DefGradVec[npoint][7], DefGradVec[npoint][1], DefGradVec[npoint][4] }, { DefGradVec[npoint][5], DefGradVec[npoint][8], DefGradVec[npoint][2] } };
+                var DG_el = new double[3, 3] { { DefGradVec[npoint][0] / lambdag, DefGradVec[npoint][3] / lambdag, DefGradVec[npoint][6] / lambdag }, { DefGradVec[npoint][7] / lambdag, DefGradVec[npoint][1] / lambdag, DefGradVec[npoint][4] / lambdag }, { DefGradVec[npoint][5] / lambdag, DefGradVec[npoint][8] / lambdag, DefGradVec[npoint][2] / lambdag } };
+                var Fg_inv = new double[3, 3] { { (double)1 / lambdag, 0, 0 }, { 0, (double)1 / lambdag, 0 }, { 0, 0, (double)1 / lambdag } };
+                var detFg = Math.Pow(lambdag, 3);
+                var consDisp2 = TransformationMethods.Calculate_dSdE_from_dSdEe(consDisp.CopytoArray2D(), DG, lambdag, secPiolaMat[npoint], DG_el, secPiolaElasMat[npoint], Fg_inv, detFg);
+                consDisp = Matrix.CreateFromArray(consDisp2);
+
+
+
+
+
 
                 for (int m = 0; m < 6; m++)
                 {
